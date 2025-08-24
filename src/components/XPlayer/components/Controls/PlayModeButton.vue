@@ -2,10 +2,10 @@
   <button
     ref="buttonRef"
     :class="[styles.btn.root]"
-    :data-tip="PLAY_MODE_NAMES[currentMode]"
+    data-tip="播放模式"
     @click="toggleMenu"
   >
-    <Icon :icon="PLAY_MODE_ICONS[currentMode]" :class="styles.btn.icon" />
+    <Icon icon="material-symbols:pause-rounded" :class="styles.btn.icon" />
   </button>
   <Popup
     v-model:visible="menuVisible"
@@ -53,8 +53,15 @@ const ctx = usePlayerContext()
 
 /** 当前播放模式 */
 const currentMode = computed(() => {
-  const getCurrentPlayMode = ctx.rootProps.getCurrentPlayMode
-  return getCurrentPlayMode ? getCurrentPlayMode() : PlayMode.STOP
+  try {
+    const getCurrentPlayMode = ctx.rootProps.getCurrentPlayMode
+    const mode = getCurrentPlayMode ? getCurrentPlayMode() : PlayMode.STOP
+    console.log('当前播放模式:', mode)
+    return mode
+  } catch (error) {
+    console.error('获取播放模式失败:', error)
+    return PlayMode.STOP
+  }
 })
 
 /** 所有播放模式 */
