@@ -16,3 +16,7 @@ export const ICON_CLOSE = 'material-symbols:close-rounded'
 export const ICON_RIGHT = 'bytesize:chevron-right'
 // left
 export const ICON_LEFT = 'bytesize:chevron-left'
+
+// 播放控制
+export const ICON_SKIP_PREVIOUS = 'material-symbols:skip-previous-rounded'
+export const ICON_SKIP_NEXT = 'material-symbols:skip-next-rounded'

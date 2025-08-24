@@ -164,6 +164,10 @@ export interface XPlayerProps {
   getCurrentPickCode?: () => string | null
   /** 切换视频 */
   onChangeVideo?: (pickCode: string) => Promise<void> | void
+  /** 上一集 */
+  onPreviousVideo?: () => void
+  /** 下一集 */
+  onNextVideo?: () => void
   /** 当前播放模式 */
   currentPlayMode?: PlayMode
   /** 设置播放模式 */

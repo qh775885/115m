@@ -52,6 +52,8 @@
               :on-change-video="onChangeVideo"
               :current-play-mode="preferences.playMode"
               :set-play-mode="setPlayMode"
+              :on-previous-video="goToPreviousVideo"
+              :on-next-video="goToNextVideo"
             >
               <template #headerLeft>
                 <HeaderInfo
@@ -72,27 +74,24 @@
                   <Icon :icon="ICON_PLAYLIST" :class="[styles.controls.btn.icon]" />
                 </label>
 
-                <!-- 收藏按钮 -->
+                <!-- 上一集按钮 -->
                 <button
-                  v-if="DataFileInfo.isReady"
-                  class="swap swap-rotate" :class="[styles.controls.btn.root, {
-                    'swap-active': !DataMark.isMark.value,
-                  }]"
-                  data-tip="收藏"
-                  @click="handleMark"
+                  v-if="DataPlaylist.state.data && canGoPrevious"
+                  :class="[styles.controls.btn.root]"
+                  data-tip="上一集 (←)"
+                  @click="goToPreviousVideo"
                 >
-                  <Icon
-                    class="swap-off" :class="[
-                      styles.controls.btn.icon,
-                    ]"
-                    :icon="ICON_STAR_FILL"
-                  />
-                  <Icon
-                    class="swap-on" :class="[
-                      styles.controls.btn.icon,
-                    ]"
-                    :icon="ICON_STAR"
-                  />
+                  <Icon :icon="ICON_SKIP_PREVIOUS" :class="[styles.controls.btn.icon]" />
+                </button>
+
+                <!-- 下一集按钮 -->
+                <button
+                  v-if="DataPlaylist.state.data && canGoNext"
+                  :class="[styles.controls.btn.root]"
+                  data-tip="下一集 (→)"
+                  @click="goToNextVideo"
+                >
+                  <Icon :icon="ICON_SKIP_NEXT" :class="[styles.controls.btn.icon]" />
                 </button>
 
                 <!-- IINA 播放按钮 -->
@@ -161,7 +160,7 @@ import XPlayer from '../../components/XPlayer/index.vue'
 import { controlRightStyles } from '../../components/XPlayer/styles/common'
 import { PLUS_VERSION } from '../../constants'
 import { useParamsVideoPage } from '../../hooks/useParams'
-import { ICON_PLAYLIST, ICON_STAR, ICON_STAR_FILL } from '../../icons'
+import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
 import { subtitlePreference } from '../../utils/cache/subtitlePreference'
 import { drive115 } from '../../utils/drive115'
 import { getAvNumber } from '../../utils/getNumber'
@@ -174,7 +173,7 @@ import MovieInfo from './components/MovieInfo/index.vue'
 import Playlist from './components/Playlist/index.vue'
 import { useDataFileInfo } from './data/useDataFileInfo'
 import { useDataHistory } from './data/useDataHistory'
-import { useMark } from './data/useDataMark'
+
 import { useDataMovieInfo } from './data/useDataMovieInfo'
 import { useDataPlaylist } from './data/useDataPlaylist'
 import { usePreferences } from './data/usePreferences'
@@ -242,8 +241,7 @@ const DataFileInfo = useDataFileInfo()
 const DataPlaylist = useDataPlaylist()
 /** 历史记录 */
 const DataHistory = useDataHistory()
-/** 收藏 */
-const DataMark = useMark(DataFileInfo)
+
 /** 是否正在切换视频 */
 const changeing = shallowRef(false)
 /** 视频尺寸 */
@@ -443,14 +441,41 @@ onMounted(async () => {
   await loadData()
 })
 
-/** 处理收藏 */
-async function handleMark() {
-  // 切换星标
-  await DataMark.toggleMark()
-  // 更新播放列表项星标
-  DataPlaylist.updateItemMark(
-    DataFileInfo.state.pick_code,
-    !!DataMark.isMark.value,
-  )
+/** 上一集 */
+const canGoPrevious = computed(() => {
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return false
+  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  return currentIndex > 0
+})
+
+/** 下一集 */
+const canGoNext = computed(() => {
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return false
+  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  return currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1
+})
+
+/** 跳转上一集 */
+async function goToPreviousVideo() {
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return
+  
+  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  if (currentIndex > 0) {
+    const previousItem = DataPlaylist.state.data[currentIndex - 1]
+    console.log('📺 跳转上一集:', previousItem.n)
+    await handleChangeVideo(previousItem.pc)
+  }
+}
+
+/** 跳转下一集 */
+async function goToNextVideo() {
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return
+  
+  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
+    const nextItem = DataPlaylist.state.data[currentIndex + 1]
+    console.log('📺 跳转下一集:', nextItem.n)
+    await handleChangeVideo(nextItem.pc)
+  }
 }
 </script>

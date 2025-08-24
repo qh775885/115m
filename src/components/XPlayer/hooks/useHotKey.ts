@@ -338,6 +338,34 @@ const HOT_KEYS_CONFIG: Record<string, HotKeyConfig> = {
   },
 
   /**
+   * 上一集 ←
+   */
+  previousVideo: {
+    keys: [KEYS.arrowLeft],
+    name: '上一集',
+    keydown: (ctx) => {
+      const onPreviousVideo = ctx.rootProps.onPreviousVideo
+      if (onPreviousVideo) {
+        onPreviousVideo()
+      }
+    },
+  },
+
+  /**
+   * 下一集 →
+   */
+  nextVideo: {
+    keys: [KEYS.arrowRight],
+    name: '下一集',
+    keydown: (ctx) => {
+      const onNextVideo = ctx.rootProps.onNextVideo
+      if (onNextVideo) {
+        onNextVideo()
+      }
+    },
+  },
+
+  /**
    * 按下 \ 重置旋转
    */
   resetRotation: {

@@ -26,10 +26,7 @@
         {{ formatTime(item.play_long) }}
       </div>
 
-      <!-- 收藏 -->
-      <div v-if="item.m" :class="styles.mark.container">
-        <Icon :icon="ICON_STAR_FILL" :class="styles.mark.icon" />
-      </div>
+
 
       <!-- 进度条 -->
       <div v-if="item.current_time > 0" :class="styles.progress.container">
@@ -56,7 +53,7 @@ import { computed, shallowRef } from 'vue'
 import LoadingError from '../../../../components/LoadingError/index.vue'
 import { formatTime } from '../../../../components/XPlayer/utils/time'
 import { useSmartVideoCover } from '../../../../hooks/useVideoCover'
-import { ICON_STAR_FILL } from '../../../../icons'
+
 import { formatFileSize } from '../../../../utils/format'
 
 const props = defineProps<{
