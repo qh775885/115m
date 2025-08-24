@@ -457,25 +457,43 @@ const canGoNext = computed(() => {
 
 /** 跳转上一集 */
 async function goToPreviousVideo() {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return
-  
-  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
-  if (currentIndex > 0) {
-    const previousItem = DataPlaylist.state.data[currentIndex - 1]
-    console.log('📺 跳转上一集:', previousItem.n)
-    await handleChangeVideo(previousItem.pc)
+  try {
+    if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) {
+      console.warn('播放列表或当前视频信息不存在')
+      return
+    }
+    
+    const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+    if (currentIndex > 0) {
+      const previousItem = DataPlaylist.state.data[currentIndex - 1]
+      console.log('📺 跳转上一集:', previousItem.n)
+      await onChangeVideo(previousItem.pc)
+    } else {
+      console.log('🙅 已经是第一集了')
+    }
+  } catch (error) {
+    console.error('跳转上一集失败:', error)
   }
 }
 
 /** 跳转下一集 */
 async function goToNextVideo() {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return
-  
-  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
-  if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
-    const nextItem = DataPlaylist.state.data[currentIndex + 1]
-    console.log('📺 跳转下一集:', nextItem.n)
-    await handleChangeVideo(nextItem.pc)
+  try {
+    if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) {
+      console.warn('播放列表或当前视频信息不存在')
+      return
+    }
+    
+    const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+    if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
+      const nextItem = DataPlaylist.state.data[currentIndex + 1]
+      console.log('📺 跳转下一集:', nextItem.n)
+      await onChangeVideo(nextItem.pc)
+    } else {
+      console.log('🙅 已经是最后一集了')
+    }
+  } catch (error) {
+    console.error('跳转下一集失败:', error)
   }
 }
 </script>
