@@ -21,9 +21,9 @@ export const PLAY_MODE_NAMES = {
 
 /** 播放模式图标映射 */
 export const PLAY_MODE_ICONS = {
-  [PlayMode.STOP]: 'material-symbols:stop-rounded',
-  [PlayMode.REPEAT_ONE]: 'material-symbols:repeat-one-rounded',
-  [PlayMode.AUTO_NEXT]: 'material-symbols:skip-next-rounded'
+  [PlayMode.STOP]: 'material-symbols:pause-rounded',
+  [PlayMode.REPEAT_ONE]: 'material-symbols:restart-alt-rounded', 
+  [PlayMode.AUTO_NEXT]: 'material-symbols:fast-forward-rounded'
 } as const
 
 /** 播放模式描述 */
