@@ -4,6 +4,8 @@ import { PlayerCoreType } from './types'
 import { useAvPlayerCore } from './useAvPlayerCore'
 import { useHlsPlayerCore } from './useHlsPlayerCore'
 import { useNativePlayerCore } from './useNativePlayerCore'
+import { usePlayEndHandler } from '../usePlayEndHandler'
+import { PlayMode } from '../../../../constants/playMode'
 
 /**
  * 视频核心混合封装
@@ -21,6 +23,15 @@ export function usePlayerCoreDecorator(usePlayerCore:
   player.on('timeupdate', ctx.rootProps.onTimeupdate ?? noop)
   player.on('seeking', ctx.rootProps.onSeeking ?? noop)
   player.on('seeked', ctx.rootProps.onSeeked ?? noop)
+  
+  // 播放结束处理
+  const { handlePlayEnd } = usePlayEndHandler(ctx)
+  player.on('ended', () => {
+    // 获取当前播放模式（需要从外部获取）
+    const getCurrentPlayMode = ctx.rootProps.getCurrentPlayMode
+    const playMode = getCurrentPlayMode ? getCurrentPlayMode() : PlayMode.STOP
+    handlePlayEnd(playMode)
+  })
 
   /** 同步响应式数据 */
   const syncRefList = [

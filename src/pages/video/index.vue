@@ -47,6 +47,11 @@
               :on-seeking="DataHistory.handleSeek"
               :on-seeked="DataHistory.handleSeek"
               :on-canplay="handleStartAutoBuffer"
+              :get-current-playlist="getCurrentPlaylist"
+              :get-current-pick-code="getCurrentPickCode"
+              :on-change-video="onChangeVideo"
+              :get-current-play-mode="getCurrentPlayMode"
+              :set-play-mode="setPlayMode"
             >
               <template #headerLeft>
                 <HeaderInfo
@@ -147,6 +152,7 @@
 import type XPlayerInstance from '../../components/XPlayer/index.vue'
 import type { Subtitle } from '../../components/XPlayer/types'
 import type { Entity } from '../../utils/drive115'
+import type { PlayMode } from '../../constants/playMode'
 import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
@@ -356,6 +362,44 @@ function handleClosePlaylist() {
 /** 切换播放列表 */
 function togglePlaylist() {
   preferences.value.showPlaylist = !preferences.value.showPlaylist
+}
+
+/** 获取当前播放列表 */
+function getCurrentPlaylist() {
+  return DataPlaylist.state
+}
+
+/** 获取当前播放代码 */
+function getCurrentPickCode() {
+  return params.pickCode.value
+}
+
+/** 视频切换回调 */
+async function onChangeVideo(pickCode: string) {
+  const playlist = DataPlaylist.state
+  if (!playlist?.data) {
+    console.error('播放列表不存在')
+    return
+  }
+  
+  const item = playlist.data.find(item => item.pc === pickCode)
+  if (!item) {
+    console.error(`找不到播放项: ${pickCode}`)
+    return
+  }
+  
+  await handleChangeVideo(item)
+}
+
+/** 获取当前播放模式 */
+function getCurrentPlayMode() {
+  return preferences.value.playMode
+}
+
+/** 设置播放模式 */
+function setPlayMode(mode: PlayMode) {
+  preferences.value.playMode = mode
+  console.log(`🎮 播放模式已设置为: ${mode}`)
 }
 
 /** 加载数据 */

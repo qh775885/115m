@@ -48,6 +48,8 @@
             <SubtitleButton />
             <!-- 音频 Track -->
             <AudioTrackButton />
+            <!-- 播放模式 -->
+            <PlayModeButton />
             <!-- 播放器核心 -->
             <PlayerCoreButton />
             <!-- 颜色调整 -->
@@ -74,6 +76,7 @@ import FullscreenButton from './FullscreenButton.vue'
 import PipButton from './PipButton.vue'
 import PlaybackRateButton from './PlaybackRateButton.vue'
 import PlayButton from './PlayButton.vue'
+import PlayModeButton from './PlayModeButton.vue'
 import PlayerCoreButton from './PlayerCoreButton.vue'
 import ProgressBar from './ProgressBar.vue'
 import QualityButton from './QualityButton.vue'

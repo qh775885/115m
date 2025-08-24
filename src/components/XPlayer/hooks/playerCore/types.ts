@@ -22,6 +22,8 @@ export interface PlayerCoreEvents {
   seeking: () => void
   /** 跳转完成 */
   seeked: () => void
+  /** 播放结束 */
+  ended: () => void
 }
 
 /**

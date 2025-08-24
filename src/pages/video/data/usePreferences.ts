@@ -1,4 +1,5 @@
 import { useStorage } from '@vueuse/core'
+import { PlayMode } from '../../../constants/playMode'
 
 /**
  * 用户偏好设置
@@ -23,6 +24,8 @@ export function usePreferences() {
       thumbnailsSamplingInterval: 60,
       // 自动播放
       autoPlay: true,
+      // 播放模式
+      playMode: PlayMode.STOP,
     },
     undefined,
     {

@@ -1,6 +1,8 @@
 import type { AVPlayerOptions } from '@libmedia/avplayer'
 import type { HlsConfig } from 'hls.js'
 import type { Ref } from 'vue'
+import type { PlaylistItem } from '../../../utils/drive115/api/entity'
+import type { PlayMode } from '../../../constants/playMode'
 
 /**
  * 缩略图帧
@@ -156,6 +158,16 @@ export interface XPlayerProps {
   onSeeked?: (time: number) => void
   /** 空闲 */
   onIdled?: () => void
+  /** 获取当前播放列表 */
+  getCurrentPlaylist?: () => { data: PlaylistItem[] } | null
+  /** 获取当前播放代码 */
+  getCurrentPickCode?: () => string | null
+  /** 切换视频 */
+  onChangeVideo?: (pickCode: string) => Promise<void> | void
+  /** 获取当前播放模式 */
+  getCurrentPlayMode?: () => PlayMode
+  /** 设置播放模式 */
+  setPlayMode?: (mode: PlayMode) => void
 }
 
 export interface XPlayerEmit {
