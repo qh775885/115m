@@ -1,23 +1,19 @@
 <template>
-  <div class="dropdown dropdown-top dropdown-end">
-    <!-- 播放模式按钮 -->
-    <button
-      tabindex="0"
-      role="button"
-      :class="[
-        styles.btn.root,
-        styles.btn.base,
-      ]"
-      :data-tip="PLAY_MODE_NAMES[currentMode]"
-    >
-      <Icon :icon="PLAY_MODE_ICONS[currentMode]" :class="styles.btn.icon" />
-    </button>
+  <button
+    ref="buttonRef"
+    :class="[styles.btn.root]"
+    :data-tip="PLAY_MODE_NAMES[currentMode]"
+    @click="toggleMenu"
+  >
+    <Icon :icon="PLAY_MODE_ICONS[currentMode]" :class="styles.btn.icon" />
+  </button>
+  <Popup
+    v-model:visible="menuVisible"
+    :trigger="buttonRef"
+    placement="top"
+  >
 
-    <!-- 播放模式选择菜单 -->
-    <ul
-      tabindex="0"
-      :class="styles.dropdown.menu"
-    >
+    <ul :class="styles.menu.root">
       <li
         v-for="mode in modes"
         :key="mode"
@@ -25,30 +21,32 @@
       >
         <a
           :class="[
-            styles.dropdown.item,
-            currentMode === mode && styles.dropdown.itemActive,
+            styles.menu.a,
+            currentMode === mode && styles.menu.active,
           ]"
         >
-          <Icon :icon="PLAY_MODE_ICONS[mode]" :class="styles.dropdown.icon" />
-          <div :class="styles.dropdown.content">
-            <div :class="styles.dropdown.title">
+          <Icon :icon="PLAY_MODE_ICONS[mode]" :class="styles.menu.icon" />
+          <div class="flex flex-col">
+            <span :class="styles.menu.label">
               {{ PLAY_MODE_NAMES[mode] }}
-            </div>
-            <div :class="styles.dropdown.description">
+            </span>
+            <span :class="styles.menu.desc">
               {{ PLAY_MODE_DESCRIPTIONS[mode] }}
-            </div>
+            </span>
           </div>
         </a>
       </li>
     </ul>
-  </div>
+  </Popup>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { PlayMode, PLAY_MODE_DESCRIPTIONS, PLAY_MODE_ICONS, PLAY_MODE_NAMES } from '../../../../constants/playMode'
 import { usePlayerContext } from '../../hooks/usePlayerProvide'
+import { controlStyles } from '../../styles/common'
+import Popup from '../Popup/index.vue'
 
 /** 播放器上下文 */
 const ctx = usePlayerContext()
@@ -62,6 +60,15 @@ const currentMode = computed(() => {
 /** 所有播放模式 */
 const modes = Object.values(PlayMode)
 
+/** 菜单可见性 */
+const buttonRef = shallowRef<HTMLElement>()
+const menuVisible = shallowRef(false)
+
+/** 切换菜单 */
+function toggleMenu() {
+  menuVisible.value = !menuVisible.value
+}
+
 /** 处理播放模式切换 */
 const handleModeChange = (mode: PlayMode) => {
   if (mode !== currentMode.value) {
@@ -69,6 +76,7 @@ const handleModeChange = (mode: PlayMode) => {
     if (setPlayMode) {
       setPlayMode(mode)
       console.log(`🎮 播放模式已切换为: ${PLAY_MODE_NAMES[mode]}`)
+      menuVisible.value = false
     } else {
       console.error('设置播放模式回调函数未提供')
     }
@@ -77,42 +85,6 @@ const handleModeChange = (mode: PlayMode) => {
 
 /** 样式 */
 const styles = {
-  btn: {
-    root: [
-      'btn btn-ghost btn-circle btn-sm',
-      'tooltip tooltip-left',
-      'hover:bg-base-content/10',
-      'transition-colors duration-200',
-    ],
-    base: [
-      'text-base-content/80',
-      'hover:text-base-content',
-    ],
-    icon: 'w-5 h-5',
-  },
-  dropdown: {
-    menu: [
-      'dropdown-content menu',
-      'bg-base-200/95 backdrop-blur-sm',
-      'rounded-box shadow-lg',
-      'w-64 p-2',
-      'border border-base-content/10',
-    ],
-    item: [
-      'flex flex-row items-start gap-3',
-      'p-3 rounded-lg',
-      'hover:bg-base-content/10',
-      'transition-colors duration-200',
-      'cursor-pointer',
-    ],
-    itemActive: [
-      'bg-primary/20',
-      'text-primary',
-    ],
-    icon: 'w-5 h-5 mt-0.5 flex-shrink-0',
-    content: 'flex flex-col gap-1',
-    title: 'font-medium text-sm',
-    description: 'text-xs opacity-70',
-  },
+  ...controlStyles,
 }
 </script>
