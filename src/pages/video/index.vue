@@ -150,8 +150,8 @@
 <script setup lang="ts">
 import type XPlayerInstance from '../../components/XPlayer/index.vue'
 import type { Subtitle } from '../../components/XPlayer/types'
-import type { Entity } from '../../utils/drive115'
 import type { PlayMode } from '../../constants/playMode'
+import type { Entity } from '../../utils/drive115'
 import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
@@ -379,13 +379,13 @@ async function onChangeVideo(pickCode: string) {
     console.error('播放列表不存在')
     return
   }
-  
+
   const item = playlist.data.find(item => item.pc === pickCode)
   if (!item) {
     console.error(`找不到播放项: ${pickCode}`)
     return
   }
-  
+
   await handleChangeVideo(item)
 }
 
@@ -443,14 +443,16 @@ onMounted(async () => {
 
 /** 上一集 */
 const canGoPrevious = computed(() => {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return false
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code)
+    return false
   const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
   return currentIndex > 0
 })
 
 /** 下一集 */
 const canGoNext = computed(() => {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) return false
+  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code)
+    return false
   const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
   return currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1
 })
@@ -462,16 +464,18 @@ async function goToPreviousVideo() {
       console.warn('播放列表或当前视频信息不存在')
       return
     }
-    
+
     const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex > 0) {
       const previousItem = DataPlaylist.state.data[currentIndex - 1]
       console.log('📺 跳转上一集:', previousItem.n)
       await onChangeVideo(previousItem.pc)
-    } else {
+    }
+    else {
       console.log('🙅 已经是第一集了')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('跳转上一集失败:', error)
   }
 }
@@ -483,16 +487,18 @@ async function goToNextVideo() {
       console.warn('播放列表或当前视频信息不存在')
       return
     }
-    
+
     const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
       const nextItem = DataPlaylist.state.data[currentIndex + 1]
       console.log('📺 跳转下一集:', nextItem.n)
       await onChangeVideo(nextItem.pc)
-    } else {
+    }
+    else {
       console.log('🙅 已经是最后一集了')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('跳转下一集失败:', error)
   }
 }

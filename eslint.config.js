@@ -3,6 +3,13 @@ import antfu from '@antfu/eslint-config'
 export default antfu({
   formatters: true,
   vue: true,
+  ignores: [
+    'dist/**',
+    'backup/**',
+    'complete-backup/**',
+    '**/*.user.js',
+    '**/*.meta.js',
+  ],
   rules: {
     /** 禁用 alert */
     'no-alert': 'off',

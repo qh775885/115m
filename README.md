@@ -5,7 +5,7 @@
 [![原作者](https://img.shields.io/badge/原作者-cbingb666-green)](https://github.com/cbingb666/115master)
 [![修改版本](https://img.shields.io/badge/修改版本-1.6.1--mod.0.0.1-orange)](https://github.com/qh775885/115master)
 
-> **基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 修改**  
+> **基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 修改**
 > 修改者：qh775885
 
 115Master 修改版是基于原作者 cbingb666 的 115Master 项目开发的增强版本，新增了画质选择记忆功能，旨在提升 `115网盘` 的浏览体验。
@@ -86,10 +86,10 @@ pnpm build
 ## 📜 版权声明
 
 > **重要声明**: 本项目是基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 的修改版本。
-> 
-> - **原作者**: cbingb666  
-> - **修改者**: qh775885  
-> - **修改内容**: 画质选择记忆功能  
+>
+> - **原作者**: cbingb666
+> - **修改者**: qh775885
+> - **修改内容**: 画质选择记忆功能
 > - **详细声明**: [📜 查看完整版权声明](./ATTRIBUTION.md)
 
 ## 常见问题

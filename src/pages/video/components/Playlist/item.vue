@@ -26,8 +26,6 @@
         {{ formatTime(item.play_long) }}
       </div>
 
-
-
       <!-- 进度条 -->
       <div v-if="item.current_time > 0" :class="styles.progress.container">
         <div :class="styles.progress.bar" :style="{ width: `${progressPercent * 100}%` }" />
@@ -48,7 +46,6 @@
 
 <script setup lang="ts">
 import type { Entity } from '../../../../utils/drive115'
-import { Icon } from '@iconify/vue'
 import { computed, shallowRef } from 'vue'
 import LoadingError from '../../../../components/LoadingError/index.vue'
 import { formatTime } from '../../../../components/XPlayer/utils/time'

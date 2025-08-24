@@ -1,8 +1,8 @@
 import type { AVPlayerOptions } from '@libmedia/avplayer'
 import type { HlsConfig } from 'hls.js'
 import type { Ref } from 'vue'
-import type { PlaylistItem } from '../../../utils/drive115/api/entity'
 import type { PlayMode } from '../../../constants/playMode'
+import type { PlaylistItem } from '../../../utils/drive115/api/entity'
 
 /**
  * 缩略图帧

@@ -12,7 +12,6 @@
     :trigger="buttonRef"
     placement="top"
   >
-
     <ul :class="styles.menu.root">
       <li
         v-for="mode in modes"
@@ -43,7 +42,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { computed, shallowRef } from 'vue'
-import { PlayMode, PLAY_MODE_DESCRIPTIONS, PLAY_MODE_ICONS, PLAY_MODE_NAMES } from '../../../../constants/playMode'
+import { PLAY_MODE_DESCRIPTIONS, PLAY_MODE_ICONS, PLAY_MODE_NAMES, PlayMode } from '../../../../constants/playMode'
 import { usePlayerContext } from '../../hooks/usePlayerProvide'
 import { controlStyles } from '../../styles/common'
 import Popup from '../Popup/index.vue'
@@ -71,22 +70,23 @@ function toggleMenu() {
 }
 
 /** 处理播放模式切换 */
-const handleModeChange = (mode: PlayMode) => {
+function handleModeChange(mode: PlayMode) {
   console.log(`🎮 尝试切换: ${PLAY_MODE_NAMES[currentMode.value]} -> ${PLAY_MODE_NAMES[mode]}`)
-  
+
   const setPlayMode = ctx.rootProps.setPlayMode
   if (setPlayMode) {
     setPlayMode(mode)
     console.log(`✅ 模式已切换为: ${PLAY_MODE_NAMES[mode]}`)
-    
+
     // 等待响应式更新
     setTimeout(() => {
       console.log(`🔍 更新后模式: ${PLAY_MODE_NAMES[currentMode.value]}`)
       console.log(`🎯 应显示图标: ${PLAY_MODE_ICONS[currentMode.value]}`)
     }, 100)
-    
+
     menuVisible.value = false
-  } else {
+  }
+  else {
     console.error('设置播放模式回调函数未提供')
   }
 }
