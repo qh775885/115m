@@ -2,10 +2,10 @@
   <button
     ref="buttonRef"
     :class="[styles.btn.root]"
-    data-tip="播放模式"
+    :data-tip="PLAY_MODE_NAMES[currentMode] || '播放模式'"
     @click="toggleMenu"
   >
-    <Icon icon="material-symbols:pause-rounded" :class="styles.btn.icon" />
+    <Icon :icon="PLAY_MODE_ICONS[currentMode] || 'material-symbols:pause-rounded'" :class="styles.btn.icon" />
   </button>
   <Popup
     v-model:visible="menuVisible"
@@ -53,15 +53,9 @@ const ctx = usePlayerContext()
 
 /** 当前播放模式 */
 const currentMode = computed(() => {
-  try {
-    const getCurrentPlayMode = ctx.rootProps.getCurrentPlayMode
-    const mode = getCurrentPlayMode ? getCurrentPlayMode() : PlayMode.STOP
-    console.log('当前播放模式:', mode)
-    return mode
-  } catch (error) {
-    console.error('获取播放模式失败:', error)
-    return PlayMode.STOP
-  }
+  const mode = ctx.rootProps.currentPlayMode ?? PlayMode.STOP
+  console.log('🔄 currentMode computed:', PLAY_MODE_NAMES[mode], '图标:', PLAY_MODE_ICONS[mode])
+  return mode
 })
 
 /** 所有播放模式 */
@@ -78,15 +72,22 @@ function toggleMenu() {
 
 /** 处理播放模式切换 */
 const handleModeChange = (mode: PlayMode) => {
-  if (mode !== currentMode.value) {
-    const setPlayMode = ctx.rootProps.setPlayMode
-    if (setPlayMode) {
-      setPlayMode(mode)
-      console.log(`🎮 播放模式已切换为: ${PLAY_MODE_NAMES[mode]}`)
-      menuVisible.value = false
-    } else {
-      console.error('设置播放模式回调函数未提供')
-    }
+  console.log(`🎮 尝试切换: ${PLAY_MODE_NAMES[currentMode.value]} -> ${PLAY_MODE_NAMES[mode]}`)
+  
+  const setPlayMode = ctx.rootProps.setPlayMode
+  if (setPlayMode) {
+    setPlayMode(mode)
+    console.log(`✅ 模式已切换为: ${PLAY_MODE_NAMES[mode]}`)
+    
+    // 等待响应式更新
+    setTimeout(() => {
+      console.log(`🔍 更新后模式: ${PLAY_MODE_NAMES[currentMode.value]}`)
+      console.log(`🎯 应显示图标: ${PLAY_MODE_ICONS[currentMode.value]}`)
+    }, 100)
+    
+    menuVisible.value = false
+  } else {
+    console.error('设置播放模式回调函数未提供')
   }
 }
 

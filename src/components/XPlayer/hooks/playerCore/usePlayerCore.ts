@@ -27,9 +27,8 @@ export function usePlayerCoreDecorator(usePlayerCore:
   // 播放结束处理
   const { handlePlayEnd } = usePlayEndHandler(ctx)
   player.on('ended', () => {
-    // 获取当前播放模式（需要从外部获取）
-    const getCurrentPlayMode = ctx.rootProps.getCurrentPlayMode
-    const playMode = getCurrentPlayMode ? getCurrentPlayMode() : PlayMode.STOP
+    // 获取当前播放模式
+    const playMode = ctx.rootProps.currentPlayMode ?? PlayMode.STOP
     handlePlayEnd(playMode)
   })
 

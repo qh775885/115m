@@ -50,7 +50,7 @@
               :get-current-playlist="getCurrentPlaylist"
               :get-current-pick-code="getCurrentPickCode"
               :on-change-video="onChangeVideo"
-              :get-current-play-mode="getCurrentPlayMode"
+              :current-play-mode="preferences.playMode"
               :set-play-mode="setPlayMode"
             >
               <template #headerLeft>
@@ -389,11 +389,6 @@ async function onChangeVideo(pickCode: string) {
   }
   
   await handleChangeVideo(item)
-}
-
-/** 获取当前播放模式 */
-function getCurrentPlayMode() {
-  return preferences.value.playMode
 }
 
 /** 设置播放模式 */

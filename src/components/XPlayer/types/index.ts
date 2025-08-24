@@ -164,8 +164,8 @@ export interface XPlayerProps {
   getCurrentPickCode?: () => string | null
   /** 切换视频 */
   onChangeVideo?: (pickCode: string) => Promise<void> | void
-  /** 获取当前播放模式 */
-  getCurrentPlayMode?: () => PlayMode
+  /** 当前播放模式 */
+  currentPlayMode?: PlayMode
   /** 设置播放模式 */
   setPlayMode?: (mode: PlayMode) => void
 }
