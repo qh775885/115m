@@ -83,13 +83,26 @@ pnpm dev
 pnpm build
 ```
 
+## 📜 版权声明
+
+> **重要声明**: 本项目是基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 的修改版本。
+> 
+> - **原作者**: cbingb666  
+> - **修改者**: qh775885  
+> - **修改内容**: 画质选择记忆功能  
+> - **详细声明**: [📜 查看完整版权声明](./ATTRIBUTION.md)
+
 ## 常见问题
 
-[Q&A](https://github.com/cbingb666/115master/discussions/categories/q-a)
+**修改版问题**: [提交 Issue](https://github.com/qh775885/115master/issues)
+
+**原作品问题**: [Q&A](https://github.com/cbingb666/115master/discussions/categories/q-a)
 
 ## 赞助
 
-[为爱发电~ 为 Master 添把柴火🔥](https://afdian.com/a/115Master)
+**原作者**: [为爱发电~ 为 Master 添把柴火🔥](https://afdian.com/a/115Master)
+
+**修改版**: 如果您觉得画质记忆功能有用，请给项目点个 Star ⭐
 
 ## 免责声明
 

@@ -9,31 +9,36 @@
         <img src="https://img.shields.io/badge/GitHub-115Master-yellow" alt="GitHub" :class="styles.badges.image">
       </a>
 
-      <!-- version v1.0.0-beta -->
-      <a :href="`https://github.com/cbingb666/115Master/releases/tag/v${info.version}`" target="_blank" :class="styles.badges.link">
-        <img :src="`https://img.shields.io/badge/Version-${info.version.replace(/-/g, '.')}-green`" alt="Version" :class="styles.badges.image">
+      <!-- version -->
+      <a :href="`https://github.com/qh775885/115master/releases/tag/v${info.version}`" target="_blank" :class="styles.badges.link">
+        <img :src="`https://img.shields.io/badge/Version-${info.version.replace(/-/g, '--')}-green`" alt="Version" :class="styles.badges.image">
       </a>
 
-      <!-- 作者 -->
+      <!-- 修改者 -->
+      <a href="https://github.com/qh775885" target="_blank" :class="styles.badges.link">
+        <img src="https://img.shields.io/badge/修改者-qh775885-red" alt="Modifier" :class="styles.badges.image">
+      </a>
+
+      <!-- 原作者 -->
       <a href="https://github.com/cbingb666" target="_blank" :class="styles.badges.link">
-        <img :src="`https://img.shields.io/badge/Author-${info.author}-red`" alt="Author" :class="styles.badges.image">
+        <img src="https://img.shields.io/badge/原作者-cbingb666-blue" alt="Original Author" :class="styles.badges.image">
       </a>
     </div>
 
     <div :class="styles.badges.container">
       <!-- license -->
-      <a href="https://github.com/cbingb666/115master/blob/main/LICENSE" target="_blank" :class="styles.badges.link">
+      <a href="https://github.com/qh775885/115master/blob/main/LICENSE" target="_blank" :class="styles.badges.link">
         <img src="https://img.shields.io/badge/License-MIT-green" alt="License" :class="styles.badges.image">
       </a>
 
       <!-- issues -->
-      <a href="https://github.com/cbingb666/115master/issues" target="_blank" :class="styles.badges.link">
+      <a href="https://github.com/qh775885/115master/issues" target="_blank" :class="styles.badges.link">
         <img src="https://img.shields.io/badge/Issues-red" alt="Issues" :class="styles.badges.image">
       </a>
 
-      <!-- 常见问题 -->
-      <a href="https://github.com/cbingb666/115master/discussions/categories/q-a" target="_blank" :class="styles.badges.link">
-        <img src="https://img.shields.io/badge/Q&A-blue" alt="Issues" :class="styles.badges.image">
+      <!-- 原作品 -->
+      <a href="https://github.com/cbingb666/115master" target="_blank" :class="styles.badges.link">
+        <img src="https://img.shields.io/badge/原作品-cbingb666/115master-orange" alt="Original" :class="styles.badges.image">
       </a>
     </div>
   </footer>
