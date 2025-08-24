@@ -1,19 +1,19 @@
 {
-  "name": "115master",
+  "name": "115master-mod",
   "type": "module",
-  "version": "1.6.1",
+  "version": "1.6.1-mod.0.0.1",
   "private": true,
   "packageManager": "pnpm@9.15.9",
-  "description": "115网盘魔法优化: 画质增强 | 视频缩略图 | 在线字幕",
-  "author": "cbingb666",
+  "description": "115网盘魔法优化修改版: 画质增强 | 视频缩略图 | 在线字幕 | 画质选择记忆功能 (基于 cbingb666 原作品修改)",
+  "author": "原作者: cbingb666, 修改者: qh775885",
   "license": "MIT",
-  "homepage": "https://github.com/cbingb666/115master",
+  "homepage": "https://github.com/qh775885/115master",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cbingb666/115master.git"
+    "url": "https://github.com/qh775885/115master.git"
   },
   "bugs": {
-    "url": "https://github.com/cbingb666/115master/issues"
+    "url": "https://github.com/qh775885/115master/issues"
   },
   "engines": {
     "node": ">=20.12"

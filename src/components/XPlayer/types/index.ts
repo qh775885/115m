@@ -112,6 +112,8 @@ export interface Subtitle {
 export interface XPlayerProps {
   /** 视频源 */
   sources: Ref<VideoSource[]>
+  /** 视频标识符 (用于画质记忆等功能) */
+  videoId?: string
   /** 显示播放列表 */
   showPlaylist: boolean
   /** 音量 */

@@ -2,6 +2,7 @@ import type { VideoSource } from '../types'
 import type { PlayerContext } from './usePlayerProvide'
 import { useDebounceFn } from '@vueuse/core'
 import { ref, shallowRef, toValue, watch } from 'vue'
+import { qualityPreferenceCache } from '../../../utils/cache'
 import { VideoSourceExtension } from '../types'
 import { PlayerCoreType } from './playerCore/types'
 
@@ -24,6 +25,43 @@ export function useSources(ctx: PlayerContext) {
   /** 获取 hls 视频源 */
   const getHlsSource = () => {
     return list.value.find(item => item.type === 'hls')
+  }
+
+  /** 根据画质偏好选择默认视频源 */
+  const getPreferredVideoSource = async (): Promise<VideoSource | null> => {
+    if (list.value.length === 0) {
+      return null
+    }
+
+    /** 如果没有 videoId，使用默认第一个源（最高画质） */
+    const videoId = ctx.rootProps.videoId
+    if (!videoId) {
+      return list.value[0]
+    }
+
+    try {
+      /** 尝试获取保存的画质偏好 */
+      const preference = await qualityPreferenceCache.getPreference(videoId)
+      if (!preference) {
+        // 没有保存的偏好，使用默认第一个源（最高画质）
+        return list.value[0]
+      }
+
+      /** 根据保存的画质偏好查找对应的视频源 */
+      const preferredSource = list.value.find(source => source.quality === preference.quality)
+      if (preferredSource) {
+        console.log(`🎞️ 使用保存的画质偏好: ${preference.quality}P (${preference.displayQuality || preference.quality})`)
+        return preferredSource
+      }
+      else {
+        console.warn(`⚠️ 保存的画质偏好 ${preference.quality}P 不存在，使用默认最高画质`)
+        return list.value[0]
+      }
+    }
+    catch (error) {
+      console.error('获取画质偏好失败，使用默认最高画质:', error)
+      return list.value[0]
+    }
   }
 
   const getDefaultPlayerCore = (source: VideoSource) => {
@@ -93,6 +131,22 @@ export function useSources(ctx: PlayerContext) {
     }
     /** 记住当前播放时间和播放状态 */
     const currentTime = playerCore.value.currentTime || 0
+
+    /** 保存画质偏好 */
+    const videoId = ctx.rootProps.videoId
+    if (videoId) {
+      try {
+        await qualityPreferenceCache.setPreference(
+          videoId,
+          source.quality,
+          source.displayQuality,
+        )
+        console.log(`💾 画质偏好已保存: ${source.quality}P (${source.displayQuality || source.quality})`)
+      }
+      catch (error) {
+        console.error('保存画质偏好失败:', error)
+      }
+    }
 
     // 初始化新视频驱动
     await initializeVideo(source)
@@ -166,11 +220,16 @@ export function useSources(ctx: PlayerContext) {
         await ctx.playerCore.value?.destroy()
         return
       }
-      await initializeVideo(
-        list.value[0],
-        undefined,
-        toValue(ctx.rootProps.lastTime),
-      )
+
+      /** 根据画质偏好选择初始视频源 */
+      const preferredSource = await getPreferredVideoSource()
+      if (preferredSource) {
+        await initializeVideo(
+          preferredSource,
+          undefined,
+          toValue(ctx.rootProps.lastTime),
+        )
+      }
     },
     { immediate: true, deep: true },
   )

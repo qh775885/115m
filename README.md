@@ -1,10 +1,14 @@
-# 115Master
+# 115Master 修改版
 
 [![Tampermonkey](https://img.shields.io/badge/Tampermonkey-v5.3.3%2B-blue?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/cbingb666/115master)
+[![原作者](https://img.shields.io/badge/原作者-cbingb666-green)](https://github.com/cbingb666/115master)
+[![修改版本](https://img.shields.io/badge/修改版本-1.6.1--mod.0.0.1-orange)](https://github.com/qh775885/115master)
 
-115Master 是一个 115 网盘的 Tampermonkey 脚本，旨在提升 `115网盘` 的浏览体验。
+> **基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 修改**  
+> 修改者：qh775885
+
+115Master 修改版是基于原作者 cbingb666 的 115Master 项目开发的增强版本，新增了画质选择记忆功能，旨在提升 `115网盘` 的浏览体验。
 
 ## 功能
 
@@ -18,6 +22,7 @@
 - ⌚ 播放列表展示
 - ⌨️ 快捷键
 - 🎨 视频调色
+- 🆕 **画质选择记忆功能** - 自动记忆每个视频的画质偏好
 
 ### 文件列表
 
@@ -84,7 +89,7 @@ pnpm build
 
 ## 赞助
 
-[为爱发电~ 为 Master 添把柴火🔥](https://afdian.com/a/115Master) 
+[为爱发电~ 为 Master 添把柴火🔥](https://afdian.com/a/115Master)
 
 ## 免责声明
 

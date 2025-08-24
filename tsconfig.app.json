@@ -76,9 +76,6 @@
       "node_modules/@libmedia/avfilter/dist/esm/*"
     ]
   },
-  "files": [
-    "node_modules/@libmedia/cheap/dist/esm/cheapdef.d.ts"
-  ],
   "include": [
     "package.json",
     "src/**/*.ts",

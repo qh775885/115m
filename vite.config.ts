@@ -56,9 +56,9 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        'name': '115Master',
+        'name': '115Master 修改版',
         'icon': isProd ? icons.prod : icons.dev,
-        'namespace': '115Master',
+        'namespace': '115Master-Modified',
         'homepage': PKG.homepage,
         'author': PKG.author,
         'description': PKG.description,
@@ -97,9 +97,9 @@ export default defineConfig({
           icon: 'https://115.com/favicon.ico',
         },
         'downloadURL':
-          'https://github.com/cbingb666/115master/releases/latest/download/115master.user.js',
+          'https://github.com/qh775885/115master/releases/latest/download/115master.user.js',
         'updateURL':
-          'https://github.com/cbingb666/115master/releases/latest/download/115master.meta.js',
+          'https://github.com/qh775885/115master/releases/latest/download/115master.meta.js',
       },
       build: {
         fileName: '115master.user.js',

@@ -35,6 +35,7 @@
               :style="{
                 aspectRatio,
               }"
+              :video-id="params.pickCode.value"
               :sources="DataVideoSources.list"
               :subtitles="DataSubtitles.state"
               :last-time="DataHistory.lastTime.value"

@@ -95,6 +95,7 @@ import { usePortalProvider } from './hooks/usePortal'
 
 /** 属性 */
 const props = withDefaults(defineProps<XPlayerProps>(), {
+  videoId: undefined,
   onThumbnailRequest: undefined,
   onSubtitleChange: undefined,
   hlsConfig: () => ({}),
