@@ -1,29 +1,76 @@
-# Logs
-logs
+# 构建产物
+dist/
+node_modules/
+
+# 构建缓存
+.rollup.cache/
+
+# 备份文件
+backup/
+complete-backup/
+*.backup
+*.bak
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE配置
+.idea/
+*.swp
+*.swo
+*~
+
+# VS Code - 保留共享配置文件
+# settings.json, extensions.json, tailwind.json 会被保留
+# 忽略个人调试和任务配置
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.log
+
+# 日志文件
 *.log
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Editor directories and files
-.idea
+# 依赖相关
+.pnpm-debug.log*
+
+# 操作系统文件
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# cache
-.rollup.cache
+# 测试覆盖率
+coverage/
+*.lcov
 
-# yalc
-.yalc/
-yalc.lock
+# 打包分析
+bundle-analyzer-report.html
+stats.html
+
+# 缓存
+.cache/
+.parcel-cache/
+
+# 编辑器
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
