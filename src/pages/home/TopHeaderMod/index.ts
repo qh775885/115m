@@ -14,6 +14,7 @@ import 'iconify-icon'
  * 2. 删除官方的云下载按钮
  * 3. 云下载按钮免除刷新重定向
  * 4. 添加预览切换开关
+ * 5. 替换新建按钮为直接新建文件夹功能
  */
 export class TopHeaderMod extends BaseMod {
   constructor() {
@@ -41,8 +42,10 @@ export class TopHeaderMod extends BaseMod {
       return
     }
     this.deleteOfficialDownloadButton()
+    this.deleteOriginalCreateNewButton()
     this.addMasterOfflineTaskButton()
     this.addPreviewSwitchButton()
+    this.replaceUploadButtonWithCreateFolder()
     this.fixContextMenuPosition('upload_btn_add_dir')
     this.fixContextMenuPosition('create_new_add_dir')
   }
@@ -57,6 +60,24 @@ export class TopHeaderMod extends BaseMod {
     }
   }
 
+  /** 删除原来的新建按钮 */
+  private deleteOriginalCreateNewButton() {
+    const createNewButton = this.topHeaderNode?.querySelector(
+      '.button[data-dropdown-tab="create_new_add_dir"]',
+    )
+    if (createNewButton) {
+      createNewButton.remove()
+    }
+
+    /** 同时删除对应的下拉菜单 */
+    const dropdownContent = document.querySelector(
+      '[data-dropdown-content="create_new_add_dir"]',
+    )
+    if (dropdownContent) {
+      dropdownContent.remove()
+    }
+  }
+
   /** 添加 Master 离线任务按钮 */
   private addMasterOfflineTaskButton() {
     const button = this.createMasterOfflineTaskButton()
@@ -68,12 +89,23 @@ export class TopHeaderMod extends BaseMod {
     const button = document.createElement('a')
     button.classList.add('button', 'master-offline-task-btn')
     button.href = 'javascript:void(0)'
-    button.innerHTML = `
-            <i class="icon-operate ifo-linktask"></i>
-            <span>云下载</span>
-        `
-    button.style.background = '#3a4783'
-    button.style.borderColor = '#3a4783'
+    
+    // 使用带颜色的云朵符号，确保显示
+    button.innerHTML = `<span style="margin-right: 4px;">☁️</span><span>云下载</span>`
+    
+    // 设置按钮样式，但保持更多原有样式
+    button.style.background = 'white'
+    button.style.borderColor = '#ddd'
+    button.style.borderRadius = '3px'
+    button.style.height = '32px'
+    button.style.padding = '4px 8px'
+    button.style.boxSizing = 'border-box'
+    button.style.display = 'inline-flex'
+    button.style.alignItems = 'center'
+    
+    // 设置文字颜色
+    button.style.color = '#333'
+    
     button.onclick = () => {
       openOfflineTask()
     }
@@ -106,6 +138,132 @@ export class TopHeaderMod extends BaseMod {
       button.classList.toggle('active')
     }
     return button
+  }
+
+  /** 替换上传按钮为新建文件夹功能 */
+  private replaceUploadButtonWithCreateFolder() {
+    const uploadButton = this.topHeaderNode?.querySelector<HTMLElement>(
+      '[data-dropdown-tab="upload_btn_add_dir"]',
+    )
+
+    if (!uploadButton) {
+      return
+    }
+
+    // 移除所有上传相关的属性和类
+    uploadButton.removeAttribute('data-dropdown-tab')
+    uploadButton.removeAttribute('menu')
+    uploadButton.removeAttribute('hide_status')
+
+    // 移除可能导致样式问题的类
+    uploadButton.classList.remove('btn-line')
+
+    // 确保按钮有正确的基础类
+    if (!uploadButton.classList.contains('button')) {
+      uploadButton.classList.add('button')
+    }
+
+    /** 使用Unicode文件夹符号，确保显示 */
+    const newButtonHTML = `
+      <span style="margin-right: 4px;">📂</span>
+      <span>新建文件夹</span>
+    `
+
+    // 重新设置按钮内容
+    uploadButton.innerHTML = newButtonHTML
+
+    // 设置按钮样式，与筛选按钮大小保持一致
+    uploadButton.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      text-decoration: none;
+      vertical-align: middle;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-family: inherit;
+      cursor: pointer;
+      height: 32px;
+      line-height: 1;
+      box-sizing: border-box;
+      color: #333;
+    `
+
+    /** 添加新的点击事件 */
+    uploadButton.onclick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.createNewFolder()
+    }
+
+    // 更新提示文本
+    uploadButton.setAttribute('title', '新建文件夹')
+    uploadButton.setAttribute('href', 'javascript:void(0)')
+
+    /** 隐藏对应的下拉菜单 */
+    const dropdownContent = document.querySelector<HTMLElement>(
+      '[data-dropdown-content="upload_btn_add_dir"]',
+    )
+    if (dropdownContent) {
+      dropdownContent.style.display = 'none'
+    }
+  }
+
+  /** 创建新文件夹 */
+  private createNewFolder() {
+    try {
+      /** 方法1: 查找下拉菜单中的新建文件夹选项 */
+      const addDirMenuItem = document.querySelector<HTMLElement>(
+        '[data-dropdown-content="create_new_add_dir"] a[menu="add_dir"]',
+      )
+
+      if (addDirMenuItem) {
+        addDirMenuItem.click()
+        return
+      }
+
+      /** 方法2: 尝试查找任何新建文件夹菜单项 */
+      const anyAddDirMenuItem = document.querySelector<HTMLElement>('a[menu="add_dir"]')
+      if (anyAddDirMenuItem) {
+        anyAddDirMenuItem.click()
+        return
+      }
+
+      // 方法3: 使用115的内置API
+      if ((unsafeWindow as any).Core && typeof (unsafeWindow as any).Core.add_dir === 'function') {
+        (unsafeWindow as any).Core.add_dir()
+        return
+      }
+
+      /** 方法4: 尝试触发原始按钮的下拉菜单，然后点击文件夹选项 */
+      const originalButton = document.querySelector<HTMLElement>(
+        '.button[data-dropdown-tab="create_new_add_dir"]',
+      )
+      if (originalButton) {
+        /** 临时显示下拉菜单 */
+        const dropdownContent = document.querySelector<HTMLElement>(
+          '[data-dropdown-content="create_new_add_dir"]',
+        )
+        if (dropdownContent) {
+          dropdownContent.style.display = 'block'
+          const folderOption = dropdownContent.querySelector<HTMLElement>('a[menu="add_dir"]')
+          if (folderOption) {
+            folderOption.click()
+            dropdownContent.style.display = 'none'
+            return
+          }
+          dropdownContent.style.display = 'none'
+        }
+      }
+
+      // 如果所有方法都失败，显示提示
+      alert('无法找到新建文件夹功能，请刷新页面后重试')
+    }
+    catch (error) {
+      console.error('创建文件夹失败:', error)
+      alert('新建文件夹功能暂时不可用')
+    }
   }
 
   /** 修正右键菜单位置 */
