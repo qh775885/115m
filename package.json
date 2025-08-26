@@ -1,7 +1,7 @@
 {
   "name": "115master-mod",
   "type": "module",
-  "version": "1.6.1-mod.0.3.0",
+  "version": "1.6.1-mod.0.3.1",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "115网盘魔法优化修改版: 画质增强 | 视频缩略图 | 在线字幕 | 画质选择记忆功能 (基于 cbingb666 原作品修改)",
@@ -20,9 +20,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
     "dev:plus": "cross-env VITE_PLUS_VERSION=true vite",
-    "build:plus": "cross-env VITE_PLUS_VERSION=true vite build",
+    "build:plus": "cross-env VITE_PLUS_VERSION=true vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
     "type-check": "vue-tsc -b --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",

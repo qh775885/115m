@@ -120,33 +120,40 @@ export function useDataThumbnails(
       return undefined
     }
 
-    /** 获取缩略图尺寸 */
-    const resize = getImageResize(
-      result.videoFrame.displayWidth,
-      result.videoFrame.displayHeight,
-      CLIPPER_OPTIONS.maxWidth,
-      CLIPPER_OPTIONS.maxHeight,
-    )
+    try {
+      /** 获取缩略图尺寸 */
+      const resize = getImageResize(
+        result.videoFrame.displayWidth,
+        result.videoFrame.displayHeight,
+        CLIPPER_OPTIONS.maxWidth,
+        CLIPPER_OPTIONS.maxHeight,
+      )
 
-    /** 创建缩略图 */
-    const imageBitmap = await createImageBitmap(result.videoFrame, {
-      resizeQuality: 'pixelated',
-      resizeWidth: resize.width,
-      resizeHeight: resize.height,
-    })
-    const thumbnail: ThumbnailFrame = {
-      img: imageBitmap,
-      seekTime,
-      seekBlurTime,
-      frameTime: result.frameTime,
-      consumedTime: result.consumedTime,
+      /** 创建缩略图 */
+      const imageBitmap = await createImageBitmap(result.videoFrame, {
+        resizeQuality: 'pixelated',
+        resizeWidth: resize.width,
+        resizeHeight: resize.height,
+      })
+
+      const thumbnail: ThumbnailFrame = {
+        img: imageBitmap,
+        seekTime,
+        seekBlurTime,
+        frameTime: result.frameTime,
+        consumedTime: result.consumedTime,
+      }
+
+      // 缓存缩略图
+      cahceThumbnails.set(seekBlurTime, thumbnail)
+
+      // 返回缩略图
+      return thumbnail
     }
-
-    // 缓存缩略图
-    cahceThumbnails.set(seekBlurTime, thumbnail)
-
-    // 返回缩略图
-    return thumbnail
+    finally {
+      // 确保 VideoFrame 被正确关闭
+      result.videoFrame.close()
+    }
   }
 
   /** 获取指定时间点的缩略图 */

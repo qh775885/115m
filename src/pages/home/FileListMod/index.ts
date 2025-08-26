@@ -3,18 +3,16 @@ import { isReload } from '../../../utils/route'
 import { BaseMod } from '../BaseMod'
 import { FileListType } from '../types'
 import { FileItemModLoader } from './FileItemLoader'
-import { FileItemModActressInfo } from './FileItemMod/actressInfo'
+
 import { FileItemModClickPlay } from './FileItemMod/clickPlay'
 import { FileItemModDownload } from './FileItemMod/download'
-import { FileItemModExtInfo } from './FileItemMod/extInfo'
+
 import { FileItemModExtMenu } from './FileItemMod/extMenu'
 import { FileItemModVideoCover } from './FileItemMod/videoCover'
 import { FileListScrollHistory } from './scrollHistory'
 import './index.css'
 
 const itemMods = [
-  FileItemModExtInfo,
-  FileItemModActressInfo,
   FileItemModVideoCover,
   FileItemModExtMenu,
   FileItemModClickPlay,

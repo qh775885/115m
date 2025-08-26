@@ -6,16 +6,12 @@
       { [styles.fullscreen]: fullscreen.isFullscreen },
     ]"
   >
-    <!-- SVG滤镜定义，使用v-html渲染 -->
-    <div v-html="videoEnhance.renderFilter.value" />
-
     <!-- 视频容器 -->
     <div
       ref="playerElementRef"
       :class="styles.videoPlayer"
       :style="[
         transform.transformStyle.value,
-        videoEnhance.getFilterStyle.value,
       ]"
     />
 
@@ -149,7 +145,7 @@ const context = usePlayerProvide(
   emit,
 )
 
-const { fullscreen, source, transform, videoEnhance, playerCore, controls }
+const { fullscreen, source, transform, playerCore, controls }
   = context
 
 // 监听控制栏可见性，直接设置光标样式

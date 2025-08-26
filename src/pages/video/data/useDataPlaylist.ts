@@ -20,7 +20,7 @@ export function useDataPlaylist() {
 
   /** 更新播放列表项 */
   const updateItem = (pickCode: string, data: Partial<PlaylistItem>) => {
-    if (!playlist.state.value)
+    if (!playlist.state.value || !playlist.state.value.data)
       return
     const index = playlist.state.value.data.findIndex(i => i.pc === pickCode)
     if (index !== -1) {

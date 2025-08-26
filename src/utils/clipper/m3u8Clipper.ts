@@ -128,7 +128,22 @@ export class M3U8ClipperNew {
     const destroy = () => {
       loop = false
       demuxer.destroy()
-      videoDecoder.state !== 'closed' && videoDecoder.close()
+
+      // 如果还有未处理的 VideoFrame，关闭它
+      if (frame) {
+        try {
+          frame.close()
+        }
+        catch (error) {
+          // VideoFrame 已经被关闭或其他错误，忽略
+        }
+        frame = undefined
+      }
+
+      // 关闭视频解码器
+      if (videoDecoder.state !== 'closed') {
+        videoDecoder.close()
+      }
     }
 
     if (stream) {
@@ -161,7 +176,11 @@ export class M3U8ClipperNew {
       // 如果已经找到关键帧，则停止读取
       if (frame) {
         loop = false
-        destroy()
+        // 清理资源，但不关闭返回的VideoFrame
+        demuxer.destroy()
+        if (videoDecoder.state !== 'closed') {
+          videoDecoder.close()
+        }
         return {
           videoFrame: frame,
           frameTime: this._getFrameRealTime(frame.timestamp),

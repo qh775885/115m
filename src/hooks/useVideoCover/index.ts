@@ -131,52 +131,64 @@ async function generateVideoCoverRaw(clipper: M3U8ClipperNew, time: number): Pro
     throw new Error('no clipper result')
   }
 
-  /** 缩放 */
-  const resize = getImageResize(
-    result.videoFrame.displayWidth,
-    result.videoFrame.displayHeight,
-    MAX_WIDTH,
-    MAX_HEIGHT,
-  )
+  try {
+    /** 缩放 */
+    const resize = getImageResize(
+      result.videoFrame.displayWidth,
+      result.videoFrame.displayHeight,
+      MAX_WIDTH,
+      MAX_HEIGHT,
+    )
 
-  /** 使用 OffscreenCanvas */
-  const canvas = new OffscreenCanvas(resize.width, resize.height)
-  const ctx = canvas.getContext('2d')
-  if (!ctx) {
-    throw new Error('no canvas context')
-  }
+    /** 使用 OffscreenCanvas */
+    const canvas = new OffscreenCanvas(resize.width, resize.height)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('no canvas context')
+    }
 
-  // 绘制
-  ctx.drawImage(
-    await createImageBitmap(result.videoFrame, {
+    /** 创建 ImageBitmap */
+    const imageBitmap = await createImageBitmap(result.videoFrame, {
       resizeQuality: 'pixelated',
       resizeWidth: resize.width,
       resizeHeight: resize.height,
-    }),
-    0,
-    0,
-    resize.width,
-    resize.height,
-  )
+    })
 
-  /** 转换成 blob */
-  const blob = await canvas.convertToBlob({
-    type: 'image/webp',
-    quality: 0.85,
-  })
+    try {
+      // 绘制
+      ctx.drawImage(
+        imageBitmap,
+        0,
+        0,
+        resize.width,
+        resize.height,
+      )
 
-  // 关闭
-  result.videoFrame.close()
+      /** 转换成 blob */
+      const blob = await canvas.convertToBlob({
+        type: 'image/webp',
+        quality: 0.85,
+      })
 
-  /** 缓存 blob 数据 */
-  const raw: VideoCoverRaw = {
-    blob,
-    width: resize.width,
-    height: resize.height,
-    frameTime: result.frameTime,
-    seekTime: time,
+      /** 缓存 blob 数据 */
+      const raw: VideoCoverRaw = {
+        blob,
+        width: resize.width,
+        height: resize.height,
+        frameTime: result.frameTime,
+        seekTime: time,
+      }
+      return raw
+    }
+    finally {
+      // 关闭 ImageBitmap
+      imageBitmap.close()
+    }
   }
-  return raw
+  finally {
+    // 关闭 VideoFrame
+    result.videoFrame.close()
+  }
 }
 
 /**

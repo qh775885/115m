@@ -76,7 +76,7 @@
 
                 <!-- 上一集按钮 -->
                 <button
-                  v-if="DataPlaylist.state.data && canGoPrevious"
+                  v-if="DataPlaylist.state?.data && canGoPrevious"
                   :class="[styles.controls.btn.root]"
                   data-tip="上一集 (←)"
                   @click="goToPreviousVideo"
@@ -86,26 +86,12 @@
 
                 <!-- 下一集按钮 -->
                 <button
-                  v-if="DataPlaylist.state.data && canGoNext"
+                  v-if="DataPlaylist.state?.data && canGoNext"
                   :class="[styles.controls.btn.root]"
                   data-tip="下一集 (→)"
                   @click="goToNextVideo"
                 >
                   <Icon :icon="ICON_SKIP_NEXT" :class="[styles.controls.btn.icon]" />
-                </button>
-
-                <!-- IINA 播放按钮 -->
-                <button
-                  v-if="isMac && DataFileInfo.isReady"
-                  :class="styles.controls.btn.root"
-                  data-tip="IINA"
-                  @click="handleLocalPlay('iina')"
-                >
-                  <img
-                    :class="styles.controls.iinaIcon"
-                    :src="iinaIcon"
-                    alt="IINA"
-                  >
                 </button>
               </template>
               <template #aboutContent>
@@ -116,12 +102,7 @@
         </div>
 
         <!-- 页面下方内容 -->
-        <div v-if="PLUS_VERSION" :class="styles.container.pageFlow">
-          <!-- 电影信息 -->
-          <MovieInfo
-            :movie-infos="DataMovieInfo"
-          />
-        </div>
+        <div v-if="PLUS_VERSION" :class="styles.container.pageFlow" />
       </div>
 
       <!-- Drawer side (播放列表侧边栏) -->
@@ -155,26 +136,24 @@ import type { Entity } from '../../utils/drive115'
 import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
-import iinaIcon from '../../assets/icons/iina-icon.png'
+
 import XPlayer from '../../components/XPlayer/index.vue'
 import { controlRightStyles } from '../../components/XPlayer/styles/common'
 import { PLUS_VERSION } from '../../constants'
 import { useParamsVideoPage } from '../../hooks/useParams'
 import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
 import { subtitlePreference } from '../../utils/cache/subtitlePreference'
-import { drive115 } from '../../utils/drive115'
 import { getAvNumber } from '../../utils/getNumber'
-import { isMac } from '../../utils/platform'
+
 import { goToPlayer } from '../../utils/route'
-import { webLinkIINA, webLinkShortcutsMpv } from '../../utils/weblink'
+
 import About from './components/About/index.vue'
 import HeaderInfo from './components/HeaderInfo/index.vue'
-import MovieInfo from './components/MovieInfo/index.vue'
+
 import Playlist from './components/Playlist/index.vue'
 import { useDataFileInfo } from './data/useDataFileInfo'
 import { useDataHistory } from './data/useDataHistory'
 
-import { useDataMovieInfo } from './data/useDataMovieInfo'
 import { useDataPlaylist } from './data/useDataPlaylist'
 import { usePreferences } from './data/usePreferences'
 import { useDataSubtitles } from './data/useSubtitlesData'
@@ -217,7 +196,6 @@ const styles = {
   // 控制样式
   controls: {
     btn: controlRightStyles.btn,
-    iinaIcon: 'size-8 grayscale invert contrast-200',
   },
 }
 
@@ -233,8 +211,7 @@ const DataVideoSources = useDataVideoSources()
 const DataThumbnails = useDataThumbnails(preferences)
 /** 字幕 */
 const DataSubtitles = useDataSubtitles()
-/** 番号信息 */
-const DataMovieInfo = useDataMovieInfo()
+
 /** 文件信息 */
 const DataFileInfo = useDataFileInfo()
 /** 播放列表 */
@@ -277,25 +254,6 @@ async function handleSubtitleChange(subtitle: Subtitle | null) {
   )
 }
 
-/** 本地播放 */
-async function handleLocalPlay(player: LocalPlayer) {
-  if (!params.pickCode.value) {
-    throw new Error('pickCode is required')
-  }
-  const download = await drive115.getFileDownloadUrl(params.pickCode.value)
-  switch (player) {
-    case 'mpv':
-      open(webLinkShortcutsMpv(download))
-      break
-    case 'iina':
-      xplayerRef.value?.interruptSource()
-      setTimeout(() => {
-        open(webLinkIINA(download))
-      }, 300)
-      break
-  }
-}
-
 /** 播放器列表切换 */
 async function handleChangeVideo(item: Entity.PlaylistItem) {
   try {
@@ -317,10 +275,7 @@ async function handleChangeVideo(item: Entity.PlaylistItem) {
       DataFileInfo.state.file_name,
       null,
     )
-    if (PLUS_VERSION) {
-      DataMovieInfo.javDBState.execute(0)
-      DataMovieInfo.javBusState.execute(0)
-    }
+
     await nextTick()
     await loadData(false)
   }
@@ -368,8 +323,8 @@ function getCurrentPlaylist() {
 }
 
 /** 获取当前播放代码 */
-function getCurrentPickCode() {
-  return params.pickCode.value
+function getCurrentPickCode(): string | null {
+  return params.pickCode.value || null
 }
 
 /** 视频切换回调 */
@@ -380,7 +335,7 @@ async function onChangeVideo(pickCode: string) {
     return
   }
 
-  const item = playlist.data.find(item => item.pc === pickCode)
+  const item = playlist.data.find((item: any) => item.pc === pickCode)
   if (!item) {
     console.error(`找不到播放项: ${pickCode}`)
     return
@@ -423,11 +378,7 @@ async function loadData(isFirst = true) {
     const avNumber = getAvNumber(res.file_name)
     // 设置标题
     useTitle(DataFileInfo.state.file_name || '')
-    // 加载番号信息
-    if (avNumber) {
-      DataMovieInfo.javDBState.execute(0, avNumber)
-      DataMovieInfo.javBusState.execute(0, avNumber)
-    }
+
     // 加载字幕
     DataSubtitles.execute(0, params.pickCode.value, res.file_name, avNumber)
   })
@@ -443,29 +394,31 @@ onMounted(async () => {
 
 /** 上一集 */
 const canGoPrevious = computed(() => {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code)
+  if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
     return false
-  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  }
+  const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
   return currentIndex > 0
 })
 
 /** 下一集 */
 const canGoNext = computed(() => {
-  if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code)
+  if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
     return false
-  const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+  }
+  const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
   return currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1
 })
 
 /** 跳转上一集 */
 async function goToPreviousVideo() {
   try {
-    if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) {
+    if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
       console.warn('播放列表或当前视频信息不存在')
       return
     }
 
-    const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+    const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex > 0) {
       const previousItem = DataPlaylist.state.data[currentIndex - 1]
       console.log('📺 跳转上一集:', previousItem.n)
@@ -483,12 +436,12 @@ async function goToPreviousVideo() {
 /** 跳转下一集 */
 async function goToNextVideo() {
   try {
-    if (!DataPlaylist.state.data || !DataFileInfo.state.pick_code) {
+    if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
       console.warn('播放列表或当前视频信息不存在')
       return
     }
 
-    const currentIndex = DataPlaylist.state.data.findIndex(item => item.pc === DataFileInfo.state.pick_code)
+    const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
       const nextItem = DataPlaylist.state.data[currentIndex + 1]
       console.log('📺 跳转下一集:', nextItem.n)

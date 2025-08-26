@@ -5,9 +5,9 @@
         <Icon :icon="ICON_PLAYLIST" class="size-8" />
         播放列表
         <span
-          v-if="playlist.state?.data?.length && playlist.state?.data?.length > 0"
+          v-if="playlist.state?.data?.length && playlist.state.data.length > 0"
           :class="styles.playlist.header.count"
-        >({{ playlist.state?.data.length }})</span>
+        >({{ playlist.state.data.length }})</span>
       </div>
       <button :class="styles.playlist.header.close">
         <Icon :icon="ICON_CLOSE" :class="styles.playlist.header.closeIcon" @click="emit('close')" />
@@ -26,7 +26,7 @@
       class="custom-scrollbar" :class="[styles.playlist.content]"
     >
       <PlaylistItem
-        v-for="item in playlist.state?.data"
+        v-for="item in playlist.state?.data || []"
         ref="playlistItemRefs"
         :key="item.pc"
         :item="item"

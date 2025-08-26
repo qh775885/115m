@@ -1,10 +1,6 @@
 import { GM_openInTab } from '$'
-import iinaIcon from '../../../../assets/icons/iina-icon.png'
 import { VOD_URL_115 } from '../../../../constants/115'
-import { drive115 } from '../../../../utils/drive115'
-import { isMac } from '../../../../utils/platform'
 import { goToPlayer } from '../../../../utils/route'
-import { webLinkIINA } from '../../../../utils/weblink'
 import { FileListType, IvType } from '../../types'
 import { FileItemModBase } from './base'
 
@@ -48,28 +44,6 @@ export class FileItemModExtMenu extends FileItemModBase {
           )
         },
       },
-      ...(isMac
-        ? [
-            {
-              class: 'iina-player',
-              title: '使用【iina】',
-              text: 'IINA',
-              icon: iinaIcon,
-              visible: this.itemInfo.attributes.iv === IvType.Yes,
-              click: async () => {
-                try {
-                  const download = await drive115.getFileDownloadUrl(
-                    this.itemInfo.attributes.pick_code,
-                  )
-                  open(webLinkIINA(download))
-                }
-                catch {
-                  alert('打开iina失败')
-                }
-              },
-            },
-          ]
-        : []),
       {
         class: 'master-player',
         title: '使用【Master播放器】',

@@ -1,4 +1,3 @@
-export * from './actressFaceCache'
 export * from './core'
 export * from './core/metaStore'
 export * from './core/quotaManager'

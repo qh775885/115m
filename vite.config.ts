@@ -2,7 +2,6 @@ import transformer from '@libmedia/cheap/build/transformer'
 import typescript from '@rollup/plugin-typescript'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
-import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
 import monkey, { cdn, util } from 'vite-plugin-monkey'
 import svgLoader from 'vite-svg-loader'
@@ -16,13 +15,14 @@ const icons = {
   dev: 'https://vitejs.dev/logo.svg',
 }
 const isProd = env.NODE_ENV === 'production'
-const isAnalyze = env.ANALYZE === 'true'
 const _cdn = cdn.jsdelivrFastly
 
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
     minify: true,
+    // 不清理输出目录，保留以前的版本
+    emptyOutDir: false,
   },
   optimizeDeps: {
     exclude: ['@libmedia/avplayer'],
@@ -47,12 +47,6 @@ export default defineConfig({
     vue(),
     tailwindcss(),
     svgLoader(),
-    visualizer({
-      filename: 'dist/stats.html',
-      open: isAnalyze,
-      gzipSize: true,
-      brotliSize: true,
-    }),
     monkey({
       entry: 'src/main.ts',
       userscript: {
@@ -67,7 +61,7 @@ export default defineConfig({
         'include': [
           'https://115.com/?ct*',
           'https://115.com/web/lixian/master/video/*',
-          'https://115.com/web/lixian/master/magnet/*',
+
           'https://115.com/?aid*',
           'https://dl.115cdn.net/video/token',
         ],
@@ -102,8 +96,7 @@ export default defineConfig({
           'https://github.com/qh775885/115master/releases/latest/download/115master.meta.js',
       },
       build: {
-        fileName: '115master.user.js',
-        metaFileName: '115master.meta.js',
+        fileName: `115master-v${PKG.version}.user.js`,
         externalGlobals: {
           'vue': _cdn('Vue', 'dist/vue.global.prod.js'),
           'localforage': _cdn('localforage', 'dist/localforage.min.js'),

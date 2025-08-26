@@ -70,7 +70,11 @@ const styles = {
 }
 
 const path = computed(() => {
-  return (props.playlist.state?.path ?? []).filter(
+  // 确保 playlist.state 和 path 都存在
+  if (!props.playlist.state?.path) {
+    return []
+  }
+  return props.playlist.state.path.filter(
     item => Number(item.cid) !== 0,
   )
 })

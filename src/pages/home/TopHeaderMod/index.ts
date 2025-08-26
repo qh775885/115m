@@ -89,10 +89,10 @@ export class TopHeaderMod extends BaseMod {
     const button = document.createElement('a')
     button.classList.add('button', 'master-offline-task-btn')
     button.href = 'javascript:void(0)'
-    
+
     // 使用带颜色的云朵符号，确保显示
     button.innerHTML = `<span style="margin-right: 4px;">☁️</span><span>云下载</span>`
-    
+
     // 设置按钮样式，但保持更多原有样式
     button.style.background = 'white'
     button.style.borderColor = '#ddd'
@@ -102,10 +102,10 @@ export class TopHeaderMod extends BaseMod {
     button.style.boxSizing = 'border-box'
     button.style.display = 'inline-flex'
     button.style.alignItems = 'center'
-    
+
     // 设置文字颜色
     button.style.color = '#333'
-    
+
     button.onclick = () => {
       openOfflineTask()
     }

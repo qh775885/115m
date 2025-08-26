@@ -28,7 +28,6 @@ import { useStatistics } from './useStatistics'
 import { useSubtitles } from './useSubtitles'
 import { useThumbnailSettings } from './useThumbnailSettings'
 import { useTransform } from './useTransform'
-import { useVideoEnhance } from './useVideoEnhance'
 
 /**
  * 播放器引用
@@ -78,8 +77,7 @@ export interface PlayerContext {
   hud: ReturnType<typeof useHud>
   /** 变量 */
   cssVar: ReturnType<typeof useCssVar>
-  /** 视频增强 */
-  videoEnhance: ReturnType<typeof useVideoEnhance>
+
   /** 调试面板 */
   statistics: ReturnType<typeof useStatistics>
   /** Popup管理器 */
@@ -172,10 +170,6 @@ export function usePlayerProvide(
   /** 变量 */
   const cssVar = useCssVar(context)
   context.cssVar = cssVar
-
-  /** 视频增强 */
-  const videoEnhance = useVideoEnhance(context)
-  context.videoEnhance = videoEnhance
 
   /** 调试面板 */
   const debugPanel = useStatistics()
