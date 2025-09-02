@@ -1,7 +1,7 @@
 {
   "name": "115master-mod",
   "type": "module",
-  "version": "1.6.1-mod.0.3.2",
+  "version": "1.6.1-mod.0.3.3",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "115网盘魔法优化修改版: 画质增强 | 视频缩略图 | 在线字幕 | 画质选择记忆功能 (基于 cbingb666 原作品修改)",

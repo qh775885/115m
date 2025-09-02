@@ -52,12 +52,7 @@
     <!-- 调试面板 -->
     <Statistics />
 
-    <!-- 右键菜单 -->
-    <ContextMenu>
-      <template #aboutContent>
-        <slot name="aboutContent" />
-      </template>
-    </ContextMenu>
+
 
     <!-- 恢复容器 -->
     <div
@@ -75,7 +70,7 @@
 import type { XPlayerEmit, XPlayerProps } from './types'
 import { shallowRef, watch, watchEffect } from 'vue'
 import LoadingError from '../../components/LoadingError/index.vue'
-import ContextMenu from './components/ContextMenu/index.vue'
+
 import ControlsBar from './components/Controls/ControlBar.vue'
 import ControlsHeader from './components/Controls/ControlHeader.vue'
 import ControlsMask from './components/Controls/ControlMask.vue'
@@ -107,8 +102,6 @@ defineSlots<{
   headerLeft: () => void
   /** 控制栏右侧插槽 */
   controlsRight: () => void
-  /** 关于内容插槽 */
-  aboutContent: () => void
 }>()
 
 const styles = {

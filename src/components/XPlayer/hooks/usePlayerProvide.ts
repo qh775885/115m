@@ -12,7 +12,7 @@ import {
 
   useSwitchPlayerCore,
 } from './playerCore/usePlayerCore'
-import { useContextMenu } from './useContextMenu'
+
 import { useControls } from './useControls'
 import { useCssVar } from './useCssVar'
 import { useFullscreen } from './useFullscreen'
@@ -82,8 +82,7 @@ export interface PlayerContext {
   statistics: ReturnType<typeof useStatistics>
   /** Popup管理器 */
   popupManager: ReturnType<typeof usePopupManager>
-  /** 右键菜单 */
-  contextMenu: ReturnType<typeof useContextMenu>
+
   /** 播放器核心 */
   playerCore: Ref<ReturnType<typeof usePlayerCoreDecorator> | undefined>
   /** 播放设置 */
@@ -175,9 +174,7 @@ export function usePlayerProvide(
   const debugPanel = useStatistics()
   context.statistics = debugPanel
 
-  /** 右键菜单 */
-  const contextMenu = useContextMenu(context)
-  context.contextMenu = contextMenu
+
 
   /** 播放设置 */
   const playSettings = usePlaySettings(context)

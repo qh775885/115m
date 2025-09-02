@@ -4,7 +4,6 @@
     :class="styles.mask"
     @click.self="handleClick"
     @dblclick.self="handleDoubleClick"
-    @contextmenu.prevent="contextMenu.handleContextMenu"
   >
     <slot />
   </div>
@@ -22,7 +21,6 @@ const {
   fullscreen,
   playerCore: player,
   popupManager,
-  contextMenu,
 } = usePlayerContext()
 
 const maskRef = shallowRef<HTMLDivElement>()
