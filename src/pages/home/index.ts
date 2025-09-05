@@ -1,7 +1,6 @@
 import { ModManager } from './BaseMod'
 import FileListMod from './FileListMod'
 import { TopFilePathMod } from './TopFilePathMod'
-import { TopHeaderMod } from './TopHeaderMod'
 import './index.css'
 
 /**
@@ -32,7 +31,6 @@ class HomePage {
     this.modManager = new ModManager([
       new FileListMod(),
       new TopFilePathMod(),
-      new TopHeaderMod(),
     ])
   }
 }

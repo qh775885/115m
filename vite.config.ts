@@ -50,9 +50,9 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        'name': '115Master 修改版',
+        'name': '115大师精简版',
         'icon': isProd ? icons.prod : icons.dev,
-        'namespace': '115Master-Modified',
+        'namespace': '115Master-Lite',
         'homepage': PKG.homepage,
         'author': PKG.author,
         'description': PKG.description,

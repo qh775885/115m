@@ -1,51 +1,36 @@
-# 115Master 修改版
+# 115大师精简版 (115Master Lite)
 
-[![Tampermonkey](https://img.shields.io/badge/Tampermonkey-v5.3.3%2B-blue?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![GitHub release](https://img.shields.io/github/v/release/qh775885/115master?display_name=tag&logo=github)](https://github.com/qh775885/115master/releases/latest)
 
-> **基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 精简修改**
+本项目是基于 [cbingb666/115](https://github.com/cbingb666/115) 的 `115Master` 项目进行修改与精简的版本，专注于提升核心的视频播放与文件浏览体验。
 
-115Master 精简版，移除了不常用功能，优化界面体验。
+## ✨ 核心功能
 
-## 功能
+- **📺 视频封面增强**: 在文件列表页直接预览视频的缩略图，告别单调的文件图标。
+- **🚀 高级视频播放**: 内置强大的播放器，支持：
+  - **在线字幕**：自动匹配并加载在线字幕。
+  - **画质选择**：根据需要选择不同的视频画质。
+  - **播放记忆**：自动记录上次的播放速度和音量。
+- **🕒 播放历史**: 快速找到并继续上一次观看的视频。
+- **📂 简洁的文件管理**:
+  - 精简了顶部的功能按钮，回归官方原生操作，减少干扰。
+  - 移除了自定义右键菜单，避免与浏览器原生功能冲突，提升稳定性。
 
-### 播放器
+## 🎯 精简之处
 
-- Ultra 画质播放
-- 视频缩略图
-- 在线外挂字幕
-- 画中画模式
-- 播放列表
-- 快捷键支持
+为了打造一个更轻量、更稳定的版本，本项目精简了以下功能：
 
-### 文件列表
+- 移除了自定义的“云下载”、“新建文件夹”等顶部按钮。
+- 移除了自定义的右键菜单。
+- 去除了视频色彩增强、收藏等不常用的播放器功能。
 
-- 视频封面显示
-- 中键新标签打开文件夹
-- 文件下载支持
-- 云下载功能
-- 滚动位置记忆
+## 📥 安装
 
-## 安装使用
+1.  确保您的浏览器已经安装了 [Tampermonkey](https://www.tampermonkey.net/) 或类似的油猴脚本管理器。
+2.  点击下方的链接进行安装：
+    - **[GreasyFork 安装](https://greasyfork.org/zh-CN/scripts/your-script-id)** (链接待定)
+    - **[GitHub Release 安装](https://github.com/qh775885/115master/releases/latest/download/115master.user.js)**
 
-1. 安装 [Tampermonkey](https://www.tampermonkey.net/)
-2. 开启浏览器扩展开发者模式
-3. 安装脚本并刷新 115 主页即可使用
+##致谢
 
-## 开发
-
-```bash
-pnpm install  # 安装依赖
-pnpm dev      # 开发模式
-pnpm build    # 构建脚本
-```
-
-## 版权声明
-
-基于 [cbingb666/115master](https://github.com/cbingb666/115master) v1.6.1 精简修改，遵循 MIT 许可证。
-
-详细信息见 [版权声明](./ATTRIBUTION.md)
-
-## 免责声明
-
-本软件仅供学习研究使用，请合法合规使用。
+- 感谢 [cbingb666](https://github.com/cbingb666) 创建了优秀的 `115Master` 原始项目。
