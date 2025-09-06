@@ -19,8 +19,8 @@ export class QualityPreferenceCache extends CacheCore<QualityPreferenceItem> {
   private logger = new AppLogger('Utils QualityPreferenceCache')
   /** 缓存前缀 */
   private readonly CACHE_PREFIX = '115master_quality_preference_'
-  /** 默认缓存时间 (ms) - 30天 */
-  private readonly DEFAULT_EXPIRES_IN = 30 * 24 * 60 * 60 * 1000
+  /** 默认缓存时间：永久不过期 */
+  private readonly DEFAULT_EXPIRES_IN = Number.POSITIVE_INFINITY
 
   constructor() {
     super({

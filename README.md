@@ -24,12 +24,6 @@
 - 移除了自定义的右键菜单。
 - 去除了视频色彩增强、收藏等不常用的播放器功能。
 
-## 📥 安装
-
-1.  确保您的浏览器已经安装了 [Tampermonkey](https://www.tampermonkey.net/) 或类似的油猴脚本管理器。
-2.  点击下方的链接进行安装：
-    - **[GreasyFork 安装](https://greasyfork.org/zh-CN/scripts/your-script-id)** (链接待定)
-    - **[GitHub Release 安装](https://github.com/qh775885/115master/releases/latest/download/115master.user.js)**
 
 ##致谢
 
