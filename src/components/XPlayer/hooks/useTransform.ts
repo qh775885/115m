@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'vue'
 import type { PlayerContext } from './usePlayerProvide'
 import { useElementSize } from '@vueuse/core'
-import { computed, shallowRef } from 'vue'
+import { computed, shallowRef, watch, watchEffect } from 'vue'
+import { transformPreferenceCache } from '../../../utils/cache'
 
 /**
  * 计算旋转视频后的缩放比例，使视频在容器中保持原始比例且不超出容器
@@ -78,6 +79,44 @@ export function useTransform(_ctx: PlayerContext) {
     return rotate.value === MAX_ROTATE_ANGLE
   })
 
+  /** 保存偏好设置 */
+  const savePreference = async () => {
+    const videoId = _ctx.rootProps.videoId
+    if (videoId) {
+      try {
+        await transformPreferenceCache.setPreference(
+          videoId,
+          rotate.value,
+          flipX.value,
+          flipY.value,
+        )
+        console.log(`💾 旋转翻转偏好已保存: 旋转 ${rotate.value}°，水平翻转 ${flipX.value}，垂直翻转 ${flipY.value}`)
+      }
+      catch (error) {
+        console.error('保存旋转翻转偏好失败:', error)
+      }
+    }
+  }
+
+  /** 加载偏好设置 */
+  const loadPreference = async () => {
+    const videoId = _ctx.rootProps.videoId
+    if (videoId) {
+      try {
+        const preference = await transformPreferenceCache.getPreference(videoId)
+        if (preference) {
+          rotate.value = preference.rotate
+          flipX.value = preference.flipX
+          flipY.value = preference.flipY
+          console.log(`🎞️ 使用保存的旋转翻转偏好: 旋转 ${preference.rotate}°，水平翻转 ${preference.flipX}，垂直翻转 ${preference.flipY}`)
+        }
+      }
+      catch (error) {
+        console.error('加载旋转翻转偏好失败:', error)
+      }
+    }
+  }
+
   /** 左旋转 */
   const left = () => {
     // 如果已经达到最小角度，不执行操作
@@ -85,7 +124,7 @@ export function useTransform(_ctx: PlayerContext) {
       return
     /** 计算新角度 */
     const newAngle = rotate.value - ROTATE_ANGLE
-    // 确保不超过最小角度
+    // 确保不超过最大角度
     rotate.value = Math.max(newAngle, -MAX_ROTATE_ANGLE)
   }
 
@@ -116,6 +155,22 @@ export function useTransform(_ctx: PlayerContext) {
   const toggleFlipY = () => {
     flipY.value = !flipY.value
   }
+
+  /** 监听视频ID变化，加载对应的偏好设置 */
+  watchEffect(() => {
+    const videoId = _ctx.rootProps.videoId
+    if (videoId) {
+      loadPreference()
+    }
+  })
+
+  /** 监听设置变化，自动保存偏好 */
+  watch([rotate, flipX, flipY], () => {
+    // 延迟保存，避免频繁写入
+    setTimeout(() => {
+      savePreference()
+    }, 100)
+  })
 
   return {
     rotate,
