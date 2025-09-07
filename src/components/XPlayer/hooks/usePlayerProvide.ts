@@ -20,7 +20,6 @@ import { useHotKey } from './useHotKey'
 import { useHud } from './useHud'
 import { usePictureInPicture } from './usePictureInPicture'
 import { usePlaybackRate } from './usePlaybackRate'
-import { usePlaySettings } from './usePlaySettings'
 import { usePopupManager } from './usePopupManager'
 import { useProgressBar } from './useProgressBar'
 import { useSources } from './useSources'
@@ -85,8 +84,6 @@ export interface PlayerContext {
 
   /** 播放器核心 */
   playerCore: Ref<ReturnType<typeof usePlayerCoreDecorator> | undefined>
-  /** 播放设置 */
-  playSettings: ReturnType<typeof usePlaySettings>
 }
 
 /**
@@ -173,12 +170,6 @@ export function usePlayerProvide(
   /** 调试面板 */
   const debugPanel = useStatistics()
   context.statistics = debugPanel
-
-
-
-  /** 播放设置 */
-  const playSettings = usePlaySettings(context)
-  context.playSettings = playSettings
 
   provide(PlayerSymbol, context)
   return context

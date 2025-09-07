@@ -22,7 +22,6 @@
     :class="[styles.popup]"
   >
     <div :class="[styles.panel.root]">
-      <PlaySettings />
       <ThumbnailSettings />
       <TransformSettings />
     </div>
@@ -35,14 +34,13 @@ import { shallowRef } from 'vue'
 import { controlStyles } from '../../styles/common'
 import { ICON_SETTINGS } from '../../utils/icon'
 import Popup from '../Popup/index.vue'
-import PlaySettings from './PlaySettings.vue'
 import ThumbnailSettings from './ThumbnailSettings.vue'
 import TransformSettings from './TransformSettings.vue'
 
 const styles = {
   ...controlStyles,
   panel: {
-    root: 'grid grid-cols-3 gap-3 p-1 w-full max-w-2xl',
+    root: 'grid grid-cols-2 gap-3 p-1 w-full max-w-xl',
   },
   popup: 'select-none',
 }

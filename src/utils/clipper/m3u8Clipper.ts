@@ -134,7 +134,7 @@ export class M3U8ClipperNew {
         try {
           frame.close()
         }
-        catch (error) {
+        catch {
           // VideoFrame 已经被关闭或其他错误，忽略
         }
         frame = undefined
@@ -149,7 +149,7 @@ export class M3U8ClipperNew {
     if (stream) {
       io.streamChunks(segment.url, async (buffer) => {
         if (demuxer.demux) {
-          demuxer.push(new Uint8Array(buffer))
+          demuxer.push(buffer)
         }
         else {
           return false

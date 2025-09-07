@@ -114,9 +114,7 @@ export class HlsIO {
       headers: this.info.headers,
     })
     const m3u8Text = await response.text()
-    const parser = new Parser({
-      url: this.info.url,
-    })
+    const parser = new Parser()
     parser.push(m3u8Text)
     parser.end()
     let start = 0

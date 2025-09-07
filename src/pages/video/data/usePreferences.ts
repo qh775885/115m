@@ -22,7 +22,7 @@ export function usePreferences() {
       disabledHDR: false,
       // 缩略图采样间隔
       thumbnailsSamplingInterval: 60,
-      // 自动播放
+      // 自动播放（固定开启，无用户设置选项）
       autoPlay: true,
       // 播放模式
       playMode: PlayMode.STOP,

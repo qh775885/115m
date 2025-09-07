@@ -15,6 +15,10 @@ import { CDN_BASE_URL } from '../../../../constants'
 import { loadESM } from '../../../../utils/loadESM'
 import { PlayerCoreType } from './types'
 import { usePlayerCoreState } from './usePlayerCoreState'
+// 类型定义
+type pointer<T> = T
+type int64 = number
+type int32 = number
 
 /** 获取 wasm 参数 */
 type GetWasmArgs = Parameters<NonNullable<AVPlayerOptions['getWasm']>>
