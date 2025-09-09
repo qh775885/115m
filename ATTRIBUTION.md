@@ -19,5 +19,3 @@
 ## 相关链接
 
 - [原作品](https://github.com/cbingb666/115master)
-- [修改版](https://github.com/qh775885/115master)
-- [问题反馈](https://github.com/qh775885/115master/issues)

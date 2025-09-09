@@ -53,10 +53,8 @@ export default defineConfig({
         'name': '115大师精简版',
         'icon': isProd ? icons.prod : icons.dev,
         'namespace': '115Master-Lite',
-        'homepage': PKG.homepage,
         'author': PKG.author,
         'description': PKG.description,
-        'supportURL': PKG.bugs.url,
         'run-at': 'document-start',
         'include': [
           'https://115.com/?ct*',
@@ -90,10 +88,6 @@ export default defineConfig({
         'resource': {
           icon: 'https://115.com/favicon.ico',
         },
-        'downloadURL':
-          'https://github.com/qh775885/115master/releases/latest/download/115master.user.js',
-        'updateURL':
-          'https://github.com/qh775885/115master/releases/latest/download/115master.meta.js',
       },
       build: {
         fileName: `115master-v${PKG.version}.user.js`,

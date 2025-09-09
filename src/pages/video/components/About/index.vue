@@ -4,15 +4,10 @@
       {{ info.name }}
     </h1>
     <div :class="styles.badges.container">
-      <!-- github -->
-      <a :href="info.homepage" target="_blank" :class="styles.badges.link">
-        <img src="https://img.shields.io/badge/GitHub-115Master-yellow" alt="GitHub" :class="styles.badges.image">
-      </a>
-
       <!-- version -->
-      <a :href="`https://github.com/qh775885/115master/releases/tag/v${info.version}`" target="_blank" :class="styles.badges.link">
+      <span :class="styles.badges.link">
         <img :src="`https://img.shields.io/badge/Version-${info.version.replace(/-/g, '--')}-green`" alt="Version" :class="styles.badges.image">
-      </a>
+      </span>
 
       <!-- 修改者 -->
       <a href="https://github.com/qh775885" target="_blank" :class="styles.badges.link">
@@ -27,14 +22,9 @@
 
     <div :class="styles.badges.container">
       <!-- license -->
-      <a href="https://github.com/qh775885/115master/blob/main/LICENSE" target="_blank" :class="styles.badges.link">
+      <span :class="styles.badges.link">
         <img src="https://img.shields.io/badge/License-MIT-green" alt="License" :class="styles.badges.image">
-      </a>
-
-      <!-- issues -->
-      <a href="https://github.com/qh775885/115master/issues" target="_blank" :class="styles.badges.link">
-        <img src="https://img.shields.io/badge/Issues-red" alt="Issues" :class="styles.badges.image">
-      </a>
+      </span>
 
       <!-- 原作品 -->
       <a href="https://github.com/cbingb666/115master" target="_blank" :class="styles.badges.link">

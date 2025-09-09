@@ -1,7 +1,5 @@
 # 115大师精简版 (115Master Lite)
 
-[![GitHub release](https://img.shields.io/github/v/release/qh775885/115master?display_name=tag&logo=github)](https://github.com/qh775885/115master/releases/latest)
-
 本项目是基于 [cbingb666/115](https://github.com/cbingb666/115) 的 `115Master` 项目进行修改与精简的版本，专注于提升核心的视频播放与文件浏览体验。
 
 ## ✨ 核心功能
@@ -23,7 +21,6 @@
 - 移除了自定义的“云下载”、“新建文件夹”等顶部按钮。
 - 移除了自定义的右键菜单。
 - 去除了视频色彩增强、收藏等不常用的播放器功能。
-
 
 ##致谢
 
