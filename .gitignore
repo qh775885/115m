@@ -74,3 +74,7 @@ stats.html
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# TypeScript 自动生成的声明文件
+*.d.ts
+!src/**/*.d.ts
