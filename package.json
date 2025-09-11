@@ -4,7 +4,7 @@
   "version": "1.6.1-mod.0.3.8",
   "private": true,
   "packageManager": "pnpm@9.15.9",
-  "description": "115大师精简版: 专注核心体验，优化视频播放与文件浏览。精简了部分冗余功能，提升性能与稳定性。(基于 cbingb666 的 115Master 原作品修改)",
+  "description": "115大师精简版: 精简了部分功能，增加了一些功能。(基于 cbingb666 的 115Master 原作品修改)",
   "author": "原作者: cbingb666, 修改者: qh775885",
   "license": "MIT",
   "engines": {
@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
+    "build:debug": "vite build --minify false && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
     "dev:plus": "cross-env VITE_PLUS_VERSION=true vite",
     "build:plus": "cross-env VITE_PLUS_VERSION=true vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
     "type-check": "vue-tsc -b --noEmit",
@@ -73,6 +74,7 @@
     "lint-staged": "^16.1.2",
     "rollup-plugin-visualizer": "^5.14.0",
     "simple-git-hooks": "^2.13.0",
+    "terser": "^5.44.0",
     "ts-jest": "^29.2.5",
     "tslib": "^2.8.1",
     "typescript": "^5.7.3",

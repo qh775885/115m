@@ -20,9 +20,33 @@ const _cdn = cdn.jsdelivrFastly
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    minify: true,
+    minify: 'terser',
     // 不清理输出目录，保留以前的版本
     emptyOutDir: false,
+    terserOptions: {
+      format: {
+        // 保持合理的代码格式，避免单行过长
+        max_line_len: 120,
+        beautify: false,
+        // 保持一定的换行，方便调试
+        semicolons: true,
+      },
+      compress: {
+        // 保持函数名，方便调试
+        keep_fnames: true,
+        // 保持类名
+        keep_classnames: true,
+        // 移除console.log但保留console.error/warn
+        drop_console: false,
+        drop_debugger: true,
+      },
+      mangle: {
+        // 不要过度混淆变量名
+        reserved: ['exports', 'require', 'module'],
+        keep_fnames: true,
+        keep_classnames: true,
+      },
+    },
   },
   optimizeDeps: {
     exclude: ['@libmedia/avplayer'],
