@@ -78,7 +78,7 @@
     ]
   },
   "include": [
-    "package.json",
+    "./package.json",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",

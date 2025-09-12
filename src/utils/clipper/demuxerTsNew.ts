@@ -2,9 +2,14 @@ import type { AVCFrame } from '@cbingbing/demuxer'
 import {
   Events,
   getAVCConfig,
-  NaluTypes,
   TSDemux,
 } from '@cbingbing/demuxer'
+
+// NaluTypes 在运行时构建中不可用，手动定义常量
+/** 参考 ISO/IEC 14496-10 Table 7-1 – NAL unit type codes */
+const NALU_TYPES = {
+  SPS: 7, // Sequence Parameter Set
+} as const
 
 // DemuxerTs 类的构造函数选项
 interface DemuxerTsOptions {
@@ -117,7 +122,7 @@ export class DemuxerTsNew {
         if (!nalu || !nalu.rawData || nalu.rawData.byteLength === 0)
           continue
 
-        if (nalu.unit_type === NaluTypes.SPS) {
+        if (nalu.unit_type === NALU_TYPES.SPS) {
           const config = getAVCConfig(nalu.sps)
           this._onConfig({
             codec: config.codec,

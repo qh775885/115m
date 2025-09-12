@@ -6,7 +6,7 @@ import type { Rational } from '@libmedia/avutil/struct/rational'
 import type { Data } from '@libmedia/common/types/type'
 import type { PlayerContext } from '../usePlayerProvide'
 import type { PlayerCoreMethods } from './types'
-import { AVCodecID } from '@libmedia/avutil/codec'
+import { AVCodecID } from '@libmedia/avutil/enum'
 import { useDebounceFn, useElementSize, useIntervalFn } from '@vueuse/core'
 import ee from 'event-emitter'
 import { get } from 'lodash'
@@ -138,11 +138,20 @@ function getWasmUrl(...args: GetWasmArgs) {
 
   switch (type) {
     case 'decoder':
+      // 确保 codecId 存在
+      if (!codecId) {
+        return new Error(`Missing codecId for decoder`)
+      }
+
       // PCM
-      if (codecId && codecId >= 65536 && codecId <= 65572) {
+      if (codecId >= 65536 && codecId <= 65572) {
         return `${DECODE_BASE_URL}/pcm-simd.wasm`
       }
-      switch (codecId) {
+
+      /**
+       * 使用类型断言避免 TypeScript 类型比较警告
+       */
+      switch (codecId as unknown as AVCodecID) {
         // -- 视频解码器 --
         // H264
         case AVCodecID.AV_CODEC_ID_H264:

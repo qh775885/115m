@@ -12,10 +12,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
-    "build:debug": "vite build --minify false && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
+    "build": "vite build",
+    "build:debug": "vite build --minify false",
     "dev:plus": "cross-env VITE_PLUS_VERSION=true vite",
-    "build:plus": "cross-env VITE_PLUS_VERSION=true vite build && node -e \"const fs=require('fs');const pkg=require('./package.json');try{fs.unlinkSync(`dist/115master-v${pkg.version}.meta.js`);console.log('✅ 已删除meta文件');}catch(e){console.log('⚠️ 删除meta文件失败:',e.message);}try{fs.unlinkSync('dist/stats.html');console.log('✅ 已删除stats.html');}catch(e){console.log('⚠️ 删除stats.html失败:',e.message);}\"",
+    "build:plus": "cross-env VITE_PLUS_VERSION=true vite build",
     "type-check": "vue-tsc -b --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",

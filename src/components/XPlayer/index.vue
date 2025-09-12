@@ -52,8 +52,6 @@
     <!-- 调试面板 -->
     <Statistics />
 
-
-
     <!-- 恢复容器 -->
     <div
       v-if="source.isInterrupt.value"
