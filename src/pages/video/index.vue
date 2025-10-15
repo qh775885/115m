@@ -107,13 +107,6 @@
 
       <!-- Drawer side (播放列表侧边栏) -->
       <div :class="styles.drawer.side">
-        <!-- Drawer overlay -->
-        <label
-          for="playlist-drawer"
-          aria-label="close sidebar"
-          :class="styles.drawer.overlay"
-        />
-
         <!-- 播放列表内容 -->
         <Playlist
           :class="styles.playlist"
