@@ -1,122 +1,110 @@
 <template>
   <div :class="styles.container.main">
-    <!-- Drawer 容器 -->
-    <div :class="styles.drawer.main">
-      <!-- Drawer toggle checkbox -->
-      <input
-        id="playlist-drawer"
-        type="checkbox"
-        :class="styles.drawer.toggle"
-        :checked="preferences.showPlaylist"
-        @change="togglePlaylist"
+    <!-- 主内容区域 -->
+    <div :class="styles.container.pageMain">
+      <div
+        :class="[
+          styles.player.container,
+          preferences.showPlaylist && styles.player.containerFold,
+        ]"
       >
-
-      <!-- Drawer content (主内容区域) -->
-      <div :class="styles.drawer.content">
-        <div :class="styles.container.pageMain">
-          <div
-            :class="[
-              styles.player.container,
-              preferences.showPlaylist && styles.player.containerFold,
-            ]"
-          >
-            <!-- 视频播放器 -->
-            <XPlayer
-              ref="xplayerRef"
-              v-model:show-playlist="preferences.showPlaylist"
-              v-model:volume="preferences.volume"
-              v-model:muted="preferences.muted"
-              v-model:playback-rate="preferences.playbackRate"
-              v-model:auto-load-thumbnails="preferences.autoLoadThumbnails"
-              v-model:disabled-h-d-r="preferences.disabledHDR"
-              v-model:thumbnails-sampling-interval="preferences.thumbnailsSamplingInterval"
-              v-model:auto-play="preferences.autoPlay"
-              :class="[styles.player.video]"
-              :style="{
-                aspectRatio,
-              }"
-              :video-id="params.pickCode.value"
-              :sources="DataVideoSources.list"
-              :subtitles="DataSubtitles.state"
-              :last-time="DataHistory.lastTime.value"
-              :subtitles-loading="DataSubtitles.isLoading"
-              :subtitles-ready="DataSubtitles.isReady"
-              :on-thumbnail-request="DataThumbnails.onThumbnailRequest"
-              :on-subtitle-change="handleSubtitleChange"
-              :on-timeupdate="handleTimeupdate"
-              :on-seeking="DataHistory.handleSeek"
-              :on-seeked="DataHistory.handleSeek"
-              :on-canplay="handleStartAutoBuffer"
-              :get-current-playlist="getCurrentPlaylist"
-              :get-current-pick-code="getCurrentPickCode"
-              :on-change-video="onChangeVideo"
-              :current-play-mode="preferences.playMode"
-              :set-play-mode="setPlayMode"
-              :on-previous-video="goToPreviousVideo"
-              :on-next-video="goToNextVideo"
+        <!-- 视频播放器 -->
+        <XPlayer
+          ref="xplayerRef"
+          v-model:show-playlist="preferences.showPlaylist"
+          v-model:volume="preferences.volume"
+          v-model:muted="preferences.muted"
+          v-model:playback-rate="preferences.playbackRate"
+          v-model:auto-load-thumbnails="preferences.autoLoadThumbnails"
+          v-model:disabled-h-d-r="preferences.disabledHDR"
+          v-model:thumbnails-sampling-interval="preferences.thumbnailsSamplingInterval"
+          v-model:auto-play="preferences.autoPlay"
+          :class="[styles.player.video]"
+          :style="{
+            aspectRatio,
+          }"
+          :video-id="params.pickCode.value"
+          :sources="DataVideoSources.list"
+          :subtitles="DataSubtitles.state"
+          :last-time="DataHistory.lastTime.value"
+          :subtitles-loading="DataSubtitles.isLoading"
+          :subtitles-ready="DataSubtitles.isReady"
+          :on-thumbnail-request="DataThumbnails.onThumbnailRequest"
+          :on-subtitle-change="handleSubtitleChange"
+          :on-timeupdate="handleTimeupdate"
+          :on-seeking="DataHistory.handleSeek"
+          :on-seeked="DataHistory.handleSeek"
+          :on-canplay="handleStartAutoBuffer"
+          :get-current-playlist="getCurrentPlaylist"
+          :get-current-pick-code="getCurrentPickCode"
+          :on-change-video="onChangeVideo"
+          :current-play-mode="preferences.playMode"
+          :set-play-mode="setPlayMode"
+          :on-previous-video="goToPreviousVideo"
+          :on-next-video="goToNextVideo"
+        >
+          <template #headerLeft>
+            <HeaderInfo
+              :file-info="DataFileInfo"
+              :playlist="DataPlaylist"
+            />
+          </template>
+          <template #controlsRight>
+            <!-- 播放列表切换按钮 -->
+            <button
+              :class="[
+                styles.controls.btn.root,
+                preferences.showPlaylist && 'btn-active btn-primary',
+              ]"
+              data-tip="播放列表(B)"
+              @click="togglePlaylist"
             >
-              <template #headerLeft>
-                <HeaderInfo
-                  :file-info="DataFileInfo"
-                  :playlist="DataPlaylist"
-                />
-              </template>
-              <template #controlsRight>
-                <!-- 播放列表切换按钮 -->
-                <label
-                  for="playlist-drawer"
-                  :class="[
-                    styles.controls.btn.root,
-                    preferences.showPlaylist && 'btn-active btn-primary',
-                  ]"
-                  data-tip="播放列表(B)"
-                >
-                  <Icon :icon="ICON_PLAYLIST" :class="[styles.controls.btn.icon]" />
-                </label>
+              <Icon :icon="ICON_PLAYLIST" :class="[styles.controls.btn.icon]" />
+            </button>
 
-                <!-- 上一集按钮 -->
-                <button
-                  v-if="DataPlaylist.state?.data && canGoPrevious"
-                  :class="[styles.controls.btn.root]"
-                  data-tip="上一集 (←)"
-                  @click="goToPreviousVideo"
-                >
-                  <Icon :icon="ICON_SKIP_PREVIOUS" :class="[styles.controls.btn.icon]" />
-                </button>
+            <!-- 上一集按钮 -->
+            <button
+              v-if="DataPlaylist.state?.data && canGoPrevious"
+              :class="[styles.controls.btn.root]"
+              data-tip="上一集 (←)"
+              @click="goToPreviousVideo"
+            >
+              <Icon :icon="ICON_SKIP_PREVIOUS" :class="[styles.controls.btn.icon]" />
+            </button>
 
-                <!-- 下一集按钮 -->
-                <button
-                  v-if="DataPlaylist.state?.data && canGoNext"
-                  :class="[styles.controls.btn.root]"
-                  data-tip="下一集 (→)"
-                  @click="goToNextVideo"
-                >
-                  <Icon :icon="ICON_SKIP_NEXT" :class="[styles.controls.btn.icon]" />
-                </button>
-              </template>
-              <template #aboutContent>
-                <About />
-              </template>
-            </XPlayer>
-          </div>
-        </div>
-
-        <!-- 页面下方内容 -->
-        <div v-if="PLUS_VERSION" :class="styles.container.pageFlow" />
+            <!-- 下一集按钮 -->
+            <button
+              v-if="DataPlaylist.state?.data && canGoNext"
+              :class="[styles.controls.btn.root]"
+              data-tip="下一集 (→)"
+              @click="goToNextVideo"
+            >
+              <Icon :icon="ICON_SKIP_NEXT" :class="[styles.controls.btn.icon]" />
+            </button>
+          </template>
+          <template #aboutContent>
+            <About />
+          </template>
+        </XPlayer>
       </div>
+    </div>
 
-      <!-- Drawer side (播放列表侧边栏) -->
-      <div :class="styles.drawer.side">
-        <!-- 播放列表内容 -->
-        <Playlist
-          :class="styles.playlist"
-          :pick-code="params.pickCode.value"
-          :playlist="DataPlaylist"
-          :visible="preferences.showPlaylist"
-          @play="handleChangeVideo"
-          @close="handleClosePlaylist"
-        />
-      </div>
+    <!-- 页面下方内容 -->
+    <div v-if="PLUS_VERSION" :class="styles.container.pageFlow" />
+
+    <!-- 播放列表侧边栏 (固定定位) -->
+    <div
+      v-if="preferences.showPlaylist"
+      :class="styles.playlist.container"
+    >
+      <Playlist
+        :class="styles.playlist.content"
+        :pick-code="params.pickCode.value"
+        :playlist="DataPlaylist"
+        :visible="preferences.showPlaylist"
+        @play="handleChangeVideo"
+        @close="handleClosePlaylist"
+      />
     </div>
   </div>
 </template>
@@ -160,32 +148,24 @@ const styles = {
       'flex flex-col items-center',
       'min-h-screen gap-5',
       'bg-base-100 text-gray-100',
-      'sm:[--app-xplayer-ratio:0.3] md:[--app-xplayer-ratio:0.518] lg:[--app-xplayer-ratio:0.618] 2xl:[--app-xplayer-ratio:0.718]',
-      '[--app-playlist-ratio:calc(1-var(--app-xplayer-ratio))]',
-      '[--app-xplayer-width:calc(100%*var(--app-xplayer-ratio))]',
-      '[--app-playlist-width:calc(100%*var(--app-playlist-ratio))]',
+      '[--app-playlist-width:min(400px,30vw)]',
     ],
     showPlaylist: 'show-playlist',
     pageMain: ['relative w-full h-screen overflow-hidden'],
     pageFlow: 'flex flex-col gap-8 px-6 xl:px-36 py-8 w-full',
   },
-  // 抽屉样式
-  drawer: {
-    main: 'drawer drawer-end',
-    content: 'drawer-content',
-    side: 'drawer-side',
-    overlay: 'drawer-overlay',
-    toggle: 'drawer-toggle',
-  },
   // 播放器样式
   player: {
     container:
       'relative w-full h-screen flex items-center justify-center transition-all duration-200 ease-in-out transform-gpu',
-    containerFold: 'w-(--app-xplayer-width)!',
+    containerFold: 'w-[calc(100%-var(--app-playlist-width))]!',
     video: 'absolute m-auto w-full h-full overflow-hidden',
   },
   // 播放列表样式
-  playlist: 'w-(--app-playlist-width)!',
+  playlist: {
+    container: 'fixed top-0 right-0 h-screen z-50 w-(--app-playlist-width)! bg-base-200',
+    content: 'h-full',
+  },
   // 控制样式
   controls: {
     btn: controlRightStyles.btn,

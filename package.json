@@ -1,7 +1,7 @@
 {
   "name": "115master-lite",
   "type": "module",
-  "version": "1.6.1-mod.0.3.10",
+  "version": "1.6.1-mod.0.3.11",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "115大师精简版: 精简了部分功能，增加了一些功能。(基于 cbingb666 的 115Master 原作品修改)",
