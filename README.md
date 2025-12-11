@@ -1,6 +1,6 @@
-# 115大师精简版 (115Master Lite)
+# 115Master 野生版
 
-本项目是基于 [cbingb666/115master](https://github.com/cbingb666/115master) 的 `115Master` 项目进行修改与精简的版本
+本项目是基于 [cbingb666/115master](https://github.com/cbingb666/115master) 的 `115Master` 项目进行修改的版本
 
 本项目修改了以下功能：
 
