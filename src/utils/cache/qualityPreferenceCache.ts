@@ -113,7 +113,11 @@ export class QualityPreferenceCache extends CacheCore<QualityPreferenceItem> {
 
       for (const key of allKeys) {
         if (key.startsWith(this.CACHE_PREFIX)) {
-          const cached = await this.storage.getItem(key) as any
+          const cached = await this.storage.getItem<{
+            value: QualityPreferenceItem
+            createdAt: number
+            updatedAt: number
+          }>(key)
           if (cached && cached.createdAt && now - cached.createdAt > this.DEFAULT_EXPIRES_IN) {
             await this.remove(key)
             this.logger.log('cleanExpired', `已清理过期画质偏好: ${key}`)

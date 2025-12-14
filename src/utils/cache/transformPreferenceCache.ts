@@ -117,7 +117,11 @@ export class TransformPreferenceCache extends CacheCore<TransformPreferenceItem>
 
       for (const key of allKeys) {
         if (key.startsWith(this.CACHE_PREFIX)) {
-          const cached = await this.storage.getItem(key) as any
+          const cached = await this.storage.getItem<{
+            value: TransformPreferenceItem
+            createdAt: number
+            updatedAt: number
+          }>(key)
           if (cached && cached.createdAt && now - cached.createdAt > this.DEFAULT_EXPIRES_IN) {
             await this.remove(key)
             this.logger.log('cleanExpired', `已清理过期旋转翻转偏好: ${key}`)

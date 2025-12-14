@@ -52,9 +52,7 @@ const ctx = usePlayerContext()
 
 /** 当前播放模式 */
 const currentMode = computed(() => {
-  const mode = ctx.rootProps.currentPlayMode ?? PlayMode.STOP
-  console.log('🔄 currentMode computed:', PLAY_MODE_NAMES[mode], '图标:', PLAY_MODE_ICONS[mode])
-  return mode
+  return ctx.rootProps.currentPlayMode ?? PlayMode.STOP
 })
 
 /** 所有播放模式 */
@@ -71,19 +69,9 @@ function toggleMenu() {
 
 /** 处理播放模式切换 */
 function handleModeChange(mode: PlayMode) {
-  console.log(`🎮 尝试切换: ${PLAY_MODE_NAMES[currentMode.value]} -> ${PLAY_MODE_NAMES[mode]}`)
-
   const setPlayMode = ctx.rootProps.setPlayMode
   if (setPlayMode) {
     setPlayMode(mode)
-    console.log(`✅ 模式已切换为: ${PLAY_MODE_NAMES[mode]}`)
-
-    // 等待响应式更新
-    setTimeout(() => {
-      console.log(`🔍 更新后模式: ${PLAY_MODE_NAMES[currentMode.value]}`)
-      console.log(`🎯 应显示图标: ${PLAY_MODE_ICONS[currentMode.value]}`)
-    }, 100)
-
     menuVisible.value = false
   }
   else {

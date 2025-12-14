@@ -114,6 +114,7 @@ import type XPlayerInstance from '../../components/XPlayer/index.vue'
 import type { Subtitle } from '../../components/XPlayer/types'
 import type { PlayMode } from '../../constants/playMode'
 import type { Entity } from '../../utils/drive115'
+import type { PlaylistItem } from '../../utils/drive115/api/entity'
 import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
@@ -308,7 +309,7 @@ async function onChangeVideo(pickCode: string) {
     return
   }
 
-  const item = playlist.data.find((item: any) => item.pc === pickCode)
+  const item = playlist.data.find((item: PlaylistItem) => item.pc === pickCode)
   if (!item) {
     console.error(`找不到播放项: ${pickCode}`)
     return
@@ -370,7 +371,7 @@ const canGoPrevious = computed(() => {
   if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
     return false
   }
-  const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
+  const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
   return currentIndex > 0
 })
 
@@ -379,7 +380,7 @@ const canGoNext = computed(() => {
   if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
     return false
   }
-  const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
+  const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
   return currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1
 })
 
@@ -391,7 +392,7 @@ async function goToPreviousVideo() {
       return
     }
 
-    const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
+    const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex > 0) {
       const previousItem = DataPlaylist.state.data[currentIndex - 1]
       console.log('📺 跳转上一集:', previousItem.n)
@@ -414,7 +415,7 @@ async function goToNextVideo() {
       return
     }
 
-    const currentIndex = DataPlaylist.state.data.findIndex((item: any) => item.pc === DataFileInfo.state.pick_code)
+    const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
       const nextItem = DataPlaylist.state.data[currentIndex + 1]
       console.log('📺 跳转下一集:', nextItem.n)
