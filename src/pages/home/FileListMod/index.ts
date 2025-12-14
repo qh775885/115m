@@ -1,5 +1,4 @@
 import { unsafeWindow } from '$'
-import { isReload } from '../../../utils/route'
 import { BaseMod } from '../BaseMod'
 import { FileListType } from '../types'
 import { FileItemModLoader } from './FileItemLoader'
@@ -102,7 +101,8 @@ class FileListMod extends BaseMod {
   private async init() {
     this.updateItems()
     this.scrollHistory = new FileListScrollHistory()
-    isReload() && this.scrollHistory.clearAll()
+    // 移除自动清除滚动历史，以支持移动文件后恢复滚动位置
+    // isReload() && this.scrollHistory.clearAll()
     if (this.listScrollBoxNode) {
       this.scrollHistory?.setScrollBox(this.listScrollBoxNode)
     }

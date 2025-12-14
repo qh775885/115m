@@ -66,11 +66,22 @@ export class FileListScrollHistory {
    * 恢复滚动位置
    */
   private restore(settings: FileMainReInstanceSetting, scrollBox: Element) {
-    const position = this.storage.get(
+    /** 先尝试精确匹配 */
+    let position = this.storage.get(
       settings.cid.toString(),
       Number(settings.offset),
       Number(settings.limit),
     )
+
+    /** 如果精确匹配失败，尝试使用相同 cid 下的其他 offset 值 */
+    if (!position || position <= 0) {
+      position = this.storage.getNearestPosition(
+        settings.cid.toString(),
+        Number(settings.offset),
+        Number(settings.limit),
+      )
+    }
+
     if (position && position > 0) {
       scrollBox.scrollTo({
         top: position,
@@ -114,6 +125,49 @@ export class FileListScrollHistoryStorage {
   get(cid: string, offset: number, limit: number) {
     const storeData = this.storeData
     return storeData[this.getDataKey(cid, offset, limit)] ?? 0
+  }
+
+  /**
+   * 获取最接近的滚动位置（用于移动文件后 offset 可能变化的情况）
+   * @param cid 目录id
+   * @param currentOffset 当前页偏移量
+   * @param limit 页大小
+   * @returns 最接近的滚动位置
+   */
+  getNearestPosition(cid: string, currentOffset: number, limit: number) {
+    const storeData = this.storeData
+    const prefix = `${cid}-`
+    let nearestPosition = 0
+    let minDiff = Infinity
+
+    /** 遍历所有存储的位置，找到相同 cid 下的最接近的 offset */
+    for (const [key, position] of Object.entries(storeData)) {
+      if (key.startsWith(prefix)) {
+        /** 解析 key 格式: cid-offset-limit */
+        const parts = key.split('-')
+        if (parts.length >= 3) {
+          const storedOffset = Number.parseInt(parts[1])
+          const storedLimit = Number.parseInt(parts[2])
+
+          /** 只匹配相同 limit 的记录 */
+          if (storedLimit === limit && typeof position === 'number' && position > 0) {
+            const diff = Math.abs(storedOffset - currentOffset)
+            /** 找到 offset 差值最小的记录 */
+            if (diff < minDiff) {
+              minDiff = diff
+              nearestPosition = position
+            }
+          }
+        }
+      }
+    }
+
+    /** 如果找到了接近的位置（差值不超过 2 页），则返回它，这样可以处理移动文件后 offset 变化不大的情况 */
+    if (nearestPosition > 0 && minDiff <= limit * 2) {
+      return nearestPosition
+    }
+
+    return 0
   }
 
   /**
