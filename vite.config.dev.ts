@@ -9,14 +9,10 @@ import monkey, { cdn, util } from 'vite-plugin-monkey'
 import svgLoader from 'vite-svg-loader'
 import PKG from './package.json'
 
-// eslint-disable-next-line node/prefer-global/process
-const env = process.env
-
 const icons = {
   prod: 'https://115.com/favicon.ico',
   dev: 'https://vitejs.dev/logo.svg',
 }
-const isProd = env.NODE_ENV === 'production'
 const _cdn = cdn.jsdelivrFastly
 
 // https://vitejs.dev/config/
@@ -24,45 +20,15 @@ export default defineConfig({
   // 配置 Vite 缓存目录到 dist 下
   cacheDir: 'dist/.vite',
   build: {
-    minify: 'terser',
+    minify: false, // 开发模式不压缩
     // 不清理输出目录，保留以前的版本
     emptyOutDir: false,
-    terserOptions: {
-      format: {
-        // 保持合理的代码格式，避免单行过长
-        max_line_len: 120,
-        beautify: false,
-        // 保持一定的换行，方便调试
-        semicolons: true,
-      },
-      compress: {
-        // 保持函数名，方便调试
-        keep_fnames: true,
-        // 保持类名
-        keep_classnames: true,
-        // 正式版：移除所有console（生产模式优化）
-        drop_console: true,
-        drop_debugger: true,
-        // 其他压缩优化
-        unused: true,
-        dead_code: true,
-      },
-      mangle: {
-        // 不要过度混淆变量名
-        reserved: ['exports', 'require', 'module'],
-        keep_fnames: true,
-        keep_classnames: true,
-      },
-    },
   },
   optimizeDeps: {
     exclude: ['@libmedia/avplayer'],
   },
   plugins: [
     typescript({
-      // ref: https://zhaohappy.github.io/libmedia/docs/guide/quick-start#%E7%BC%96%E8%AF%91%E9%85%8D%E7%BD%AE
-      // 配置使用的 tsconfig.json 配置文件
-      // include 中需要包含要处理的文件
       tsconfig: './tsconfig.app.json',
       transformers: {
         before: [
@@ -82,7 +48,7 @@ export default defineConfig({
       entry: 'src/main.ts',
       userscript: {
         'name': '115大师精简版',
-        'icon': isProd ? icons.prod : icons.dev,
+        'icon': icons.dev,
         'namespace': '115Master-Lite',
         'author': PKG.author,
         'description': PKG.description,
@@ -90,7 +56,6 @@ export default defineConfig({
         'include': [
           'https://115.com/?ct*',
           'https://115.com/web/lixian/master/video/*',
-
           'https://115.com/?aid*',
           'https://dl.115cdn.net/video/token',
         ],
@@ -99,7 +64,6 @@ export default defineConfig({
           'https://*.115.com/static*',
           'https://q.115.com/*',
         ],
-        // 自动允许脚本跨域访问的域名
         'connect': [
           '115.com',
           '115vod.com',
@@ -121,7 +85,8 @@ export default defineConfig({
         },
       },
       build: {
-        fileName: `115master-v${PKG.version}.user.js`,
+        // 开发版：生成完整的脚本（包含头部），后续会提取并修改
+        fileName: 'script.user.js',
         externalGlobals: {
           'vue': _cdn('Vue', 'dist/vue.global.prod.js'),
           'localforage': _cdn('localforage', 'dist/localforage.min.js'),
@@ -197,6 +162,99 @@ export default defineConfig({
             }
           }
         })
+      },
+    },
+    // 开发模式构建后：提取脚本头，添加 file:/// 引用，生成开发版脚本头文件
+    {
+      name: 'dev-userscript-header',
+      closeBundle() {
+        const pkgInfo = PKG
+        const fullScriptPath = path.resolve('dist', 'script.user.js')
+
+        if (!fs.existsSync(fullScriptPath)) {
+          console.warn('⚠️  警告: script.user.js 不存在，可能构建失败')
+          return
+        }
+
+        /** 读取 vite-plugin-monkey 生成的完整脚本（包含完整脚本头） */
+        const fullScript = fs.readFileSync(fullScriptPath, 'utf8')
+
+        /** 提取脚本头和主体代码 */
+        const headerEndMarker = '// ==/UserScript=='
+        const headerEndIndex = fullScript.indexOf(headerEndMarker)
+
+        if (headerEndIndex === -1) {
+          console.warn('⚠️  警告: 未找到脚本头结束标记')
+          return
+        }
+
+        /** 提取完整的脚本头（包含结束标记） */
+        const originalHeader = fullScript.substring(0, headerEndIndex + headerEndMarker.length)
+
+        /** 提取主体代码 */
+        let scriptBody = fullScript.substring(headerEndIndex + headerEndMarker.length)
+        scriptBody = scriptBody.replace(/^\s*\n/, '') // 去掉开头的换行符
+
+        // 保存主体代码到 script.user.js（只保留代码，不包含头部）
+        fs.writeFileSync(fullScriptPath, scriptBody, 'utf8')
+
+        /** 修改脚本头：将版本号改为 dev，名称加上 [开发版]，图标改为开发图标 */
+        let devHeader = originalHeader
+          .replace(/\/\/ @version\s+[^\n]+/i, `// @version      dev`)
+          .replace(/\/\/ @name\s+([^\n]+)/i, (match, name) => {
+            // 如果已经有 [开发版]，不重复添加
+            if (name.includes('[开发版]')) {
+              return match
+            }
+            return `// @name         ${name.trim()} [开发版]`
+          })
+          .replace(/\/\/ @icon\s+[^\n]+/i, `// @icon         ${icons.dev}`)
+          .replace(/\/\/ @description\s+([^\n]+)/i, (match, desc) => {
+            /** 添加开发版说明（如果还没有） */
+            const trimmedDesc = desc.trim()
+            if (!trimmedDesc.includes('开发版')) {
+              return `// @description  ${trimmedDesc} [开发版 - 修改代码后重新运行 'pnpm dev:build' 即可热更新]`
+            }
+            return match
+          })
+
+        /** 在 @grant 之前添加 @require file:/// 引用本地文件 */
+        const scriptPath = fullScriptPath.replace(/\\/g, '/')
+        const fileUrl = `file:///${scriptPath}`
+
+        /** 查找 @grant 的位置，在它之前插入 @require file:/// */
+        const grantMatch = devHeader.match(/(\/\/ @grant\s+)/i)
+        if (grantMatch) {
+          const grantIndex = grantMatch.index!
+          devHeader = `${devHeader.substring(0, grantIndex)}// @require      ${fileUrl}\n${devHeader.substring(grantIndex)}`
+        }
+        else {
+          /** 如果没有 @grant，在 @run-at 之前添加 */
+          const runAtMatch = devHeader.match(/(\/\/ @run-at\s+)/i)
+          if (runAtMatch) {
+            const runAtIndex = runAtMatch.index!
+            devHeader = `${devHeader.substring(0, runAtIndex)}// @require      ${fileUrl}\n${devHeader.substring(runAtIndex)}`
+          }
+          else {
+            // 如果都没有，在脚本头结束之前添加
+            devHeader = devHeader.replace(
+              /(\/\/ ==\/UserScript==)/,
+              `// @require      ${fileUrl}\n$1`,
+            )
+          }
+        }
+
+        // 添加开发版说明注释
+        devHeader += '\n\n// 开发版 - 实际代码将从本地文件加载\n'
+        devHeader += `// 文件路径: ${scriptPath}\n`
+
+        /** 写入开发版脚本头文件（只包含脚本头，不包含主体代码） */
+        const devScriptPath = path.resolve('dist', `${pkgInfo.name}-dev.user.js`)
+        fs.writeFileSync(devScriptPath, devHeader, 'utf8')
+
+        console.log(`✅ 开发版脚本头已生成: ${pkgInfo.name}-dev.user.js`)
+        console.log(`✅ 主体代码已提取到: script.user.js`)
+        console.log(`🚀 请安装脚本头到油猴，修改代码后重新运行 'pnpm dev:build' 即可热更新`)
       },
     },
   ],
