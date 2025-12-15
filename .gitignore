@@ -1,7 +1,7 @@
 # 构建产物
 
 node_modules/
-
+dist/
 # 构建缓存
 .rollup.cache/
 
