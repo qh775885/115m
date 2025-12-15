@@ -1,8 +1,8 @@
 import type { VideoSource } from '../../components/XPlayer/types'
 import type { PlayerContext } from './usePlayerProvide'
 import { ref, shallowRef, toValue, watch } from 'vue'
-import { VideoSourceExtension } from '../../components/XPlayer/types'
-import { qualityPreferenceCache } from '../../utils/cache'
+
+import { playerCorePreferenceCache, qualityPreferenceCache } from '../../utils/cache'
 import { error, log, warn } from '../../utils/logger'
 import { PlayerCoreType } from './playerCore/types'
 
@@ -63,13 +63,11 @@ export function useSources(ctx: PlayerContext) {
   }
 
   const getDefaultPlayerCore = (source: VideoSource) => {
+    /** HLS 格式使用 Hls 核心 */
     if (source.type === 'hls') {
       return PlayerCoreType.Hls
     }
-    /** 仅 MP4 格式默认使用 AvPlayer */
-    if (source.extension === VideoSourceExtension.mp4) {
-      return PlayerCoreType.AvPlayer
-    }
+    /** 其他格式默认使用 Native 核心 */
     return PlayerCoreType.Native
   }
 
@@ -182,9 +180,25 @@ export function useSources(ctx: PlayerContext) {
       /** 根据画质偏好选择初始视频源 */
       const preferredSource = await getPreferredVideoSource()
       if (preferredSource) {
+        /** 尝试获取保存的核心偏好 */
+        let preferredCore: PlayerCoreType | undefined
+        const videoId = ctx.rootProps.videoId
+        if (videoId) {
+          try {
+            const corePreference = await playerCorePreferenceCache.getPreference(videoId)
+            if (corePreference) {
+              preferredCore = corePreference.coreType
+              log(`使用播放器核心偏好: ${preferredCore}`)
+            }
+          }
+          catch (err) {
+            error('获取播放器核心偏好失败:', err)
+          }
+        }
+
         await initializeVideo(
           preferredSource,
-          undefined,
+          preferredCore,
           toValue(ctx.rootProps.lastTime),
         )
       }
@@ -203,6 +217,18 @@ export function useSources(ctx: PlayerContext) {
     const currentTime = playerCore.value?.currentTime || 0
 
     log(`手动切换播放器核心: ${playerCore.value?.type} -> ${playerCoreType}`)
+
+    /** 保存核心偏好 */
+    const videoId = ctx.rootProps.videoId
+    if (videoId) {
+      try {
+        await playerCorePreferenceCache.setPreference(videoId, playerCoreType)
+        log(`播放器核心偏好已保存: ${playerCoreType}`)
+      }
+      catch (err) {
+        error('保存播放器核心偏好失败:', err)
+      }
+    }
 
     /** 初始化视频并使用指定的播放器核心 */
     await initializeVideo(current.value, playerCoreType, currentTime)

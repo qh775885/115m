@@ -51,11 +51,10 @@ const { playerCore, source } = usePlayerContext()
 const menuVisible = shallowRef(false)
 const buttonRef = shallowRef<HTMLElement>()
 
-/** 播放器核心类型列表 */
+/** 播放器核心类型列表（不含 HLS，HLS 由系统自动选择） */
 const coreTypes = [
   { value: PlayerCoreType.Native, label: 'Native', desc: '原生播放器' },
   { value: PlayerCoreType.AvPlayer, label: 'AvPlayer', desc: '高兼容性' },
-  { value: PlayerCoreType.Hls, label: 'HLS', desc: 'HLS流' },
 ]
 
 function toggleVisible() {
