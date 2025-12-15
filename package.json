@@ -1,7 +1,7 @@
 {
   "name": "115master-野生版",
   "type": "module",
-  "version": "1.6.1-mod.0.3.12",
+  "version": "0.3.12",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "(基于 cbingb666 的 115Master 原作品修改)",
