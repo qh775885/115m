@@ -47,9 +47,9 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        'name': '115大师精简版',
+        'name': PKG.name,
         'icon': icons.dev,
-        'namespace': '115Master-Lite',
+        'namespace': PKG.name,
         'author': PKG.author,
         'description': PKG.description,
         'run-at': 'document-start',
@@ -113,41 +113,15 @@ export default defineConfig({
         },
       },
     }),
-    // 构建完成后：移动缓存到 dist 并清理
+    // 构建完成后：清理缓存
     {
       name: 'manage-cache',
       closeBundle() {
-        /** 构建完成后：如果根目录有 .rollup.cache，移到 dist 目录后清理 */
-        const rootCache = path.resolve('.rollup.cache')
-        const distCache = path.resolve('dist', '.rollup.cache')
-
-        // 移动根目录的缓存到 dist（如果存在）
-        if (fs.existsSync(rootCache)) {
-          try {
-            /** 确保 dist 目录存在 */
-            const distDir = path.dirname(distCache)
-            if (!fs.existsSync(distDir)) {
-              fs.mkdirSync(distDir, { recursive: true })
-            }
-            // 如果 dist 中已有缓存，先删除
-            if (fs.existsSync(distCache)) {
-              fs.rmSync(distCache, { recursive: true, force: true })
-            }
-            // 移动缓存到 dist
-            fs.renameSync(rootCache, distCache)
-            // eslint-disable-next-line node/prefer-global/process
-            console.log(`📦 缓存已移至: ${path.relative(process.cwd(), distCache)}`)
-          }
-          catch (error) {
-            console.warn(`⚠️  移动缓存失败:`, error)
-          }
-        }
-
-        /** 清理所有缓存（包括 dist 中的） */
+        /** 清理所有缓存 */
         const cachePaths = [
           path.resolve('dist', '.rollup.cache'),
           path.resolve('dist', '.vite'),
-          path.resolve('.rollup.cache'), // 根目录的缓存（如果还有残留）
+          path.resolve('.rollup.cache'),
         ]
 
         cachePaths.forEach((cachePath) => {
