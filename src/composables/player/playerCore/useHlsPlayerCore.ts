@@ -65,6 +65,8 @@ export function useHlsPlayerCore(ctx: PlayerContext) {
       return new Promise<void>((resolve, reject) => {
         useEventListener(videoElement, 'loadedmetadata', () => {
           videoNative.duration.value = videoElement.duration
+          videoNative.videoWidth.value = videoElement.videoWidth
+          videoNative.videoHeight.value = videoElement.videoHeight
           resolve()
 
           if (videoNative.autoPlay.value) {

@@ -15,20 +15,52 @@ import { error, log } from '../../utils/logger'
  * @returns 缩放比例
  */
 function calculateScale(videoWidth: number, videoHeight: number, containerWidth: number, containerHeight: number, angle: number) {
-  const ratio = videoWidth / videoHeight
+  /** 如果视频尺寸或容器尺寸无效，返回默认缩放 */
+  if (!videoWidth || !videoHeight || !containerWidth || !containerHeight) {
+    console.error('计算旋转视频缩放比例时，视频尺寸或容器尺寸无效，返回默认缩放1')
+    return 1
+  }
+
+  /** 当角度为 0 或 180 的倍数时，不需要额外缩放，objectFit: contain 会自动处理 */
+  const normalizedAngle = Math.abs(angle) % 180
+  if (normalizedAngle === 0) {
+    return 1
+  }
+
   /** 角度转弧度 */
   const radians = (angle * Math.PI) / 180
   /** 绝对值处理镜像情况 */
   const cos = Math.abs(Math.cos(radians))
   const sin = Math.abs(Math.sin(radians))
 
-  /** 计算旋转后的逻辑包围盒尺寸 */
-  const rotatedWidth = containerWidth * cos + containerHeight * sin
-  const rotatedHeight = containerWidth * sin + containerHeight * cos
+  /** 计算视频在容器中 contain 模式下的实际显示尺寸 */
+  const videoRatio = videoWidth / videoHeight
+  const containerRatio = containerWidth / containerHeight
 
+  let actualVideoWidth: number
+  let actualVideoHeight: number
+
+  if (videoRatio > containerRatio) {
+    // 视频更宽，以容器宽度为准
+    actualVideoWidth = containerWidth
+    actualVideoHeight = containerWidth / videoRatio
+  }
+  else {
+    // 视频更高，以容器高度为准
+    actualVideoHeight = containerHeight
+    actualVideoWidth = containerHeight * videoRatio
+  }
+
+  /** 计算旋转后视频的包围盒尺寸 */
+  const rotatedWidth = actualVideoWidth * cos + actualVideoHeight * sin
+  const rotatedHeight = actualVideoWidth * sin + actualVideoHeight * cos
+
+  /** 计算缩放比例，确保旋转后的视频完整显示在容器内 */
   const scaleW = containerWidth / rotatedWidth
   const scaleH = containerHeight / rotatedHeight
-  return ratio > 1 ? Math.min(scaleW, scaleH) : Math.max(scaleW, scaleH)
+  const scale = Math.min(scaleW, scaleH)
+
+  return scale
 }
 
 /** 画面转换 */
