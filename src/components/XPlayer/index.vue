@@ -63,16 +63,16 @@ import type { XPlayerEmit, XPlayerProps } from './types'
 import { shallowRef, watch, watchEffect } from 'vue'
 import LoadingError from '../../components/LoadingError/index.vue'
 
-import ControlsBar from './components/Controls/ControlBar.vue'
-import ControlsHeader from './components/Controls/ControlHeader.vue'
-import ControlsMask from './components/Controls/ControlMask.vue'
-import ControlsRight from './components/Controls/ControlsRight.vue'
-import Controls from './components/Controls/index.vue'
+import { usePlayerProvide } from '../../composables/player/usePlayerProvide'
+import { usePortalProvider } from '../../composables/player/usePortal'
 import HUD from './components/HUD/index.vue'
 import Loading from './components/Loading/index.vue'
 import PlayAnimation from './components/PlayAnimation/index.vue'
-import { usePlayerProvide } from './hooks/usePlayerProvide'
-import { usePortalProvider } from './hooks/usePortal'
+import ControlsBar from './controls/ControlBar.vue'
+import ControlsHeader from './controls/ControlHeader.vue'
+import ControlsMask from './controls/ControlMask.vue'
+import ControlsRight from './controls/ControlsRight.vue'
+import Controls from './controls/index.vue'
 
 /** 属性 */
 const props = withDefaults(defineProps<XPlayerProps>(), {

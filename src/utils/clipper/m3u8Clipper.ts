@@ -1,7 +1,7 @@
 import { promiseDelay } from '../promise'
+import { FetchIO } from './clipperFetchIO'
+import { HlsIO } from './clipperHlsIO'
 import { DemuxerTsNew } from './demuxerTsNew'
-import { FetchIO } from './io/FetchIO'
-import { HlsIO } from './io/HlsIO'
 import { microsecTimebase, secTimebase, timebaseConvert } from './timebase'
 
 /** 超时时间 */

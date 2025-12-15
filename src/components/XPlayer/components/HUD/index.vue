@@ -53,7 +53,7 @@
 import type { HudMessage } from './types'
 import { Icon } from '@iconify/vue'
 import { computed, ref, watch } from 'vue'
-import { usePlayerContext } from '../../hooks/usePlayerProvide'
+import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
 import Popup from '../Popup/index.vue'
 
 const styles = {

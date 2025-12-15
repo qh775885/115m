@@ -116,7 +116,7 @@ import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
 
-import StarButton from '../../components/XPlayer/components/Controls/StarButton.vue'
+import StarButton from '../../components/XPlayer/controls/StarButton.vue'
 import XPlayer from '../../components/XPlayer/index.vue'
 import { controlRightStyles } from '../../components/XPlayer/styles/common'
 import { useParamsVideoPage } from '../../composables/global/useParams'

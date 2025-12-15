@@ -65,9 +65,9 @@
 import type { ThumbnailFrame } from '../../types'
 import { computed, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import LoadingError from '../../../../components/LoadingError/index.vue'
+import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
 import { getImageResize } from '../../../../utils/image'
 import { boundary } from '../../../../utils/number'
-import { usePlayerContext } from '../../hooks/usePlayerProvide'
 import { formatTime } from '../../utils/time'
 
 /** props */

@@ -1,5 +1,5 @@
 import type { FileItemAttributes, FileListType, ItemInfo } from '../types'
-import type { FileItemModBase, FileListMod } from './FileItemMod/base'
+import type { FileItemModBase, FileListMod } from './FileItemModBase'
 import { PLUS_VERSION } from '../../../constants'
 import { getDuration } from '../../../utils/time'
 

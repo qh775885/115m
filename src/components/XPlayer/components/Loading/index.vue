@@ -16,8 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { PlayerCoreType } from '../../hooks/playerCore/types'
-import { usePlayerContext } from '../../hooks/usePlayerProvide'
+import { PlayerCoreType } from '../../../../composables/player/playerCore/types'
+import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
 
 /** 样式抽象 */
 const styles = {

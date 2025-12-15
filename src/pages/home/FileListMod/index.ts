@@ -3,11 +3,10 @@ import { BaseMod } from '../BaseMod'
 import { FileListType } from '../types'
 import { FileItemModLoader } from './FileItemLoader'
 
-import { FileItemModClickPlay } from './FileItemMod/clickPlay'
-import { FileItemModDownload } from './FileItemMod/download'
-
-import { FileItemModExtMenu } from './FileItemMod/extMenu'
-import { FileItemModVideoCover } from './FileItemMod/videoCover'
+import { FileItemModClickPlay } from './FileItemModClickPlay'
+import { FileItemModDownload } from './FileItemModDownload'
+import { FileItemModExtMenu } from './FileItemModExtMenu'
+import { FileItemModVideoCover } from './FileItemModVideoCover'
 import { FileListScrollHistory } from './scrollHistory'
 import './index.css'
 

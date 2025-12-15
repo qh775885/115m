@@ -32,8 +32,8 @@ import {
   shallowRef,
   watch,
 } from 'vue'
-import { usePlayerContext } from '../../hooks/usePlayerProvide'
-import { usePortal } from '../../hooks/usePortal'
+import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
+import { usePortal } from '../../../../composables/player/usePortal'
 import { isInContainsTrigger, triggerSet } from './utils'
 
 defineOptions({

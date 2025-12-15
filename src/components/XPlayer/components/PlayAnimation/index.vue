@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { computed, shallowRef, watch } from 'vue'
-import { usePlayerContext } from '../../hooks/usePlayerProvide'
+import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
 import { ICON_PASUE, ICON_PLAY } from '../../utils/icon'
 
 /** 样式抽象 */
