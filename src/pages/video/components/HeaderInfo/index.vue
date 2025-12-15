@@ -34,16 +34,16 @@
 </template>
 
 <script setup lang="ts">
-import type { useDataFileInfo } from '../../data/useDataFileInfo'
-import type { useDataPlaylist } from '../../data/useDataPlaylist'
+import type { useFileInfo } from '../../composables/useFileInfo'
+import type { usePlaylist } from '../../composables/usePlaylist'
 import { computed } from 'vue'
 import { formatFileSize } from '../../../../utils/format'
 
 const props = defineProps<{
   /** 文件信息 */
-  fileInfo: ReturnType<typeof useDataFileInfo>
+  fileInfo: ReturnType<typeof useFileInfo>
   /** 播放列表 */
-  playlist: ReturnType<typeof useDataPlaylist>
+  playlist: ReturnType<typeof usePlaylist>
 }>()
 
 const styles = {
@@ -75,7 +75,7 @@ const path = computed(() => {
     return []
   }
   return props.playlist.state.path.filter(
-    item => Number(item.cid) !== 0,
+    (item: { cid: string }) => Number(item.cid) !== 0,
   )
 })
 

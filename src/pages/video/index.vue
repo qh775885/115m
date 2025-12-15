@@ -119,8 +119,8 @@ import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
 import StarButton from '../../components/XPlayer/components/Controls/StarButton.vue'
 import XPlayer from '../../components/XPlayer/index.vue'
 import { controlRightStyles } from '../../components/XPlayer/styles/common'
+import { useParamsVideoPage } from '../../composables/global/useParams'
 import { PLUS_VERSION } from '../../constants'
-import { useParamsVideoPage } from '../../hooks/useParams'
 import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
 
 import { goToPlayer } from '../../utils/route'
@@ -128,14 +128,14 @@ import { goToPlayer } from '../../utils/route'
 import HeaderInfo from './components/HeaderInfo/index.vue'
 
 import Playlist from './components/Playlist/index.vue'
-import { useDataFileInfo } from './data/useDataFileInfo'
-import { useDataHistory } from './data/useDataHistory'
+import { useFileInfo } from './composables/useFileInfo'
+import { useHistory } from './composables/useHistory'
 
-import { useDataMark } from './data/useDataMark'
-import { useDataPlaylist } from './data/useDataPlaylist'
-import { usePreferences } from './data/usePreferences'
-import { useDataThumbnails } from './data/useThumbnails'
-import { useDataVideoSources } from './data/useVideoSource'
+import { useMark } from './composables/useMark'
+import { usePlaylist } from './composables/usePlaylist'
+import { usePreferences } from './composables/usePreferences'
+import { useThumbnails } from './composables/useThumbnails'
+import { useVideoSource } from './composables/useVideoSource'
 
 const styles = {
   // 容器样式
@@ -175,18 +175,18 @@ const preferences = usePreferences()
 /** 参数 */
 const params = useParamsVideoPage()
 /** 视频源 */
-const DataVideoSources = useDataVideoSources()
+const DataVideoSources = useVideoSource()
 /** 缩略图 */
-const DataThumbnails = useDataThumbnails(preferences)
+const DataThumbnails = useThumbnails(preferences)
 
 /** 文件信息 */
-const DataFileInfo = useDataFileInfo()
+const DataFileInfo = useFileInfo()
 /** 播放列表 */
-const DataPlaylist = useDataPlaylist()
+const DataPlaylist = usePlaylist()
 /** 历史记录 */
-const DataHistory = useDataHistory()
+const DataHistory = useHistory()
 /** 收藏 */
-const DataMark = useDataMark(DataFileInfo)
+const DataMark = useMark(DataFileInfo)
 
 /** 是否正在切换视频 */
 const changeing = shallowRef(false)

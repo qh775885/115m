@@ -6,7 +6,7 @@ import { drive115 } from '../../../utils/drive115'
 /**
  * 播放列表
  */
-export function useDataPlaylist() {
+export function usePlaylist() {
   const playlist = useAsyncState(
     async (cid: string) => {
       const res = await drive115.getPlaylist(cid)
@@ -22,7 +22,7 @@ export function useDataPlaylist() {
   const updateItem = (pickCode: string, data: Partial<PlaylistItem>) => {
     if (!playlist.state.value || !playlist.state.value.data)
       return
-    const index = playlist.state.value.data.findIndex(i => i.pc === pickCode)
+    const index = playlist.state.value.data.findIndex((i: PlaylistItem) => i.pc === pickCode)
     if (index !== -1) {
       playlist.state.value.data[index] = {
         ...playlist.state.value.data[index],

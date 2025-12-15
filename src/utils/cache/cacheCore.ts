@@ -1,5 +1,5 @@
 import localforage from 'localforage'
-import { STORE_NAME } from './const'
+import { STORE_NAME } from './cacheConst'
 import { QuotaManager } from './quotaManager'
 
 /** 缓存项接口 */

@@ -1,5 +1,5 @@
-import type { CacheCore } from './index'
-import { CLEANUP_BATCH_SIZE, STORAGE_QUOTA_THRESHOLD } from './const'
+import type { CacheCore } from './cacheCore'
+import { CLEANUP_BATCH_SIZE, STORAGE_QUOTA_THRESHOLD } from './cacheConst'
 import { MetaStore } from './metaStore'
 
 /**

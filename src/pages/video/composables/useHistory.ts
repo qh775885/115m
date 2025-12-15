@@ -5,7 +5,7 @@ import { drive115 } from '../../../utils/drive115'
 /**
  * 历史记录
  */
-export function useDataHistory() {
+export function useHistory() {
   /** 是否初始化 */
   const isinit = shallowRef(false)
   /** 文件提取码 */

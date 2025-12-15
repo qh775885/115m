@@ -1,5 +1,5 @@
 import { AppLogger } from '../logger'
-import { CacheCore } from './core'
+import { CacheCore } from './cacheCore'
 
 /** 旋转翻转偏好项 */
 interface TransformPreferenceItem {

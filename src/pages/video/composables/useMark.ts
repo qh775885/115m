@@ -1,10 +1,10 @@
-import type { useDataFileInfo } from './useDataFileInfo'
+import type { useFileInfo } from './useFileInfo'
 import { shallowRef, watch } from 'vue'
 import { drive115 } from '../../../utils/drive115'
-import { MarkStatus } from '../../../utils/drive115/api/webApi/req'
+import { MarkStatus } from '../../../utils/drive115/api/web'
 
 /** 收藏 */
-export function useDataMark(DataFileInfo: ReturnType<typeof useDataFileInfo>) {
+export function useMark(DataFileInfo: ReturnType<typeof useFileInfo>) {
   const isMark = shallowRef<boolean | null>(null)
 
   /** 切换收藏状态 */

@@ -1,5 +1,5 @@
-import type { VideoCoverRaw } from '../../hooks/useVideoCover'
-import { CacheCore } from './core/index'
+import type { VideoCoverRaw } from '../../composables/global/useVideoCover'
+import { CacheCore } from './cacheCore'
 
 type VideoCoverCacheValue = VideoCoverRaw
 

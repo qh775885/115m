@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import type { Entity } from '../../../../utils/drive115'
-import type { useDataPlaylist } from '../../data/useDataPlaylist'
+import type { usePlaylist } from '../../composables/usePlaylist'
 import type PlaylistItemVue from './item.vue'
 import { Icon } from '@iconify/vue'
 import { nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
@@ -51,7 +51,7 @@ import { ICON_CLOSE, ICON_PLAYLIST } from '../../../../icons'
 import PlaylistItem from './item.vue'
 
 const props = defineProps<{
-  playlist: ReturnType<typeof useDataPlaylist>
+  playlist: ReturnType<typeof usePlaylist>
   pickCode?: string
 }>()
 

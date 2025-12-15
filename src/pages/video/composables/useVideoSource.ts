@@ -7,7 +7,7 @@ import { drive115 } from '../../../utils/drive115'
 import { getFileExtensionByUrl } from '../../../utils/file'
 
 /** 视频源 */
-export function useDataVideoSources() {
+export function useVideoSource() {
   const list = ref<VideoSource[]>([])
 
   const fetch = async (pickCode: string) => {

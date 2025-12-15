@@ -12,7 +12,6 @@ import { intervalArray } from '../../../utils/array'
 import { M3U8ClipperNew } from '../../../utils/clipper/m3u8Clipper'
 import { getImageResize } from '../../../utils/image'
 import {
-
   Scheduler,
   SchedulerError,
 } from '../../../utils/scheduler'
@@ -47,7 +46,7 @@ const SCHEDULER_OPTIONS = {
 /** 默认采样间隔 */
 const DEFAULT_SAMPLING_INTERVAL = 30
 
-export function useDataThumbnails(
+export function useThumbnails(
   preferences: ReturnType<typeof usePreferences>,
 ) {
   /** 缩略图生成器 */

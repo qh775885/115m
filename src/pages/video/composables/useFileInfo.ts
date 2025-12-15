@@ -4,7 +4,7 @@ import { reactive } from 'vue'
 import { drive115 } from '../../../utils/drive115'
 
 /** 文件信息 */
-export function useDataFileInfo() {
+export function useFileInfo() {
   const fileInfo = useAsyncState(
     async (pickCode: string) => {
       const response = await drive115.webApiGetFilesVideo({

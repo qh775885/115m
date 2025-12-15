@@ -1,5 +1,5 @@
 import { AppLogger } from '../logger'
-import { CacheCore } from './core'
+import { CacheCore } from './cacheCore'
 
 interface QualityPreferenceItem {
   /** 画质值 */

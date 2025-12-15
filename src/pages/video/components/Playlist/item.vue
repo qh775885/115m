@@ -49,7 +49,7 @@ import type { Entity } from '../../../../utils/drive115'
 import { computed, shallowRef } from 'vue'
 import LoadingError from '../../../../components/LoadingError/index.vue'
 import { formatTime } from '../../../../components/XPlayer/utils/time'
-import { useSmartVideoCover } from '../../../../hooks/useVideoCover'
+import { useSmartVideoCover } from '../../../../composables/global/useVideoCover'
 
 import { formatFileSize } from '../../../../utils/format'
 

@@ -39,7 +39,7 @@
 import PhotoSwipeLightbox from 'photoswipe/lightbox'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import LoadingError from '../../../../components/LoadingError/index.vue'
-import { useSmartVideoCover } from '../../../../hooks/useVideoCover'
+import { useSmartVideoCover } from '../../../../composables/global/useVideoCover'
 import 'photoswipe/style.css'
 
 const props = defineProps<{
