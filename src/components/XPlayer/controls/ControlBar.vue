@@ -48,8 +48,7 @@
             <AudioTrackButton />
             <!-- 播放模式 -->
             <PlayModeButton />
-            <!-- 播放器核心 -->
-            <PlayerCoreButton />
+
             <!-- 设置 -->
             <SettingsButton />
             <!-- 全屏控制 -->
@@ -69,7 +68,6 @@ import AudioTrackButton from './AudioTrackButton.vue'
 import FullscreenButton from './FullscreenButton.vue'
 import PlaybackRateButton from './PlaybackRateButton.vue'
 import PlayButton from './PlayButton.vue'
-import PlayerCoreButton from './PlayerCoreButton.vue'
 import PlayModeButton from './PlayModeButton.vue'
 import ProgressBar from './ProgressBar.vue'
 import QualityButton from './QualityButton.vue'
