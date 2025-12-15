@@ -66,7 +66,8 @@ export function useSources(ctx: PlayerContext) {
     if (source.type === 'hls') {
       return PlayerCoreType.Hls
     }
-    if ([VideoSourceExtension.mkv].includes(source.extension)) {
+    /** 仅 MP4 格式默认使用 AvPlayer */
+    if (source.extension === VideoSourceExtension.mp4) {
       return PlayerCoreType.AvPlayer
     }
     return PlayerCoreType.Native
@@ -82,7 +83,7 @@ export function useSources(ctx: PlayerContext) {
       throw new Error('videoDriver is not found')
     }
 
-    // 更新当前源
+    /** 更新当前源 */
     current.value = source
 
     try {
@@ -98,17 +99,17 @@ export function useSources(ctx: PlayerContext) {
         throw new Error('playerElementRef is not found')
       }
 
-      // 初始化播放器
+      /** 初始化播放器 */
       await playerCore.value.init(playerElementRef.value)
 
-      // 加载视频源
+      /** 加载视频源 */
       await playerCore.value.load(source.url, lastTime ?? 0)
     }
-    catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
+    catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
         return
       }
-      if (error instanceof Error) {
+      if (err instanceof Error) {
         const hlsSource = getHlsSource()
 
         if (hlsSource && playerCore?.value?.type !== PlayerCoreType.Hls) {
@@ -118,7 +119,7 @@ export function useSources(ctx: PlayerContext) {
         return
       }
 
-      throw error
+      throw err
     }
   }
 
@@ -191,6 +192,25 @@ export function useSources(ctx: PlayerContext) {
     { immediate: true, deep: true },
   )
 
+  /** 手动切换播放器核心 */
+  const switchPlayerCore = async (playerCoreType: PlayerCoreType) => {
+    if (!current.value) {
+      warn('无法切换播放器核心：当前没有视频源')
+      return
+    }
+
+    /** 记住当前播放时间 */
+    const currentTime = playerCore.value?.currentTime || 0
+
+    log(`手动切换播放器核心: ${playerCore.value?.type} -> ${playerCoreType}`)
+
+    /** 初始化视频并使用指定的播放器核心 */
+    await initializeVideo(current.value, playerCoreType, currentTime)
+
+    /** 恢复播放时间 */
+    playerCore.value?.seek(currentTime)
+  }
+
   return {
     list,
     current,
@@ -198,5 +218,6 @@ export function useSources(ctx: PlayerContext) {
     interruptSource,
     resumeSource,
     isInterrupt,
+    switchPlayerCore,
   }
 }

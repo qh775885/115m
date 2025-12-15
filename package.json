@@ -1,7 +1,7 @@
 {
   "name": "115m",
   "type": "module",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "(基于 cbingb666 的 115Master 原作品修改)",
