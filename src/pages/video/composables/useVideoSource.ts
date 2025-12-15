@@ -5,6 +5,7 @@ import { VideoSourceExtension } from '../../../components/XPlayer/types'
 import { qualityNumMap } from '../../../constants/quality'
 import { drive115 } from '../../../utils/drive115'
 import { getFileExtensionByUrl } from '../../../utils/file'
+import { error } from '../../../utils/logger'
 
 /** 视频源 */
 export function useVideoSource() {
@@ -18,7 +19,6 @@ export function useVideoSource() {
 
     if (download.status === 'fulfilled') {
       if (download.value.url.auth_cookie) {
-        console.warn('设置cookie', download.value.url.auth_cookie)
         try {
           await setVideoCookie({
             name: download.value.url.auth_cookie.name,
@@ -30,9 +30,9 @@ export function useVideoSource() {
             sameSite: 'no_restriction',
           })
         }
-        catch (error) {
-          alert('设置cookie失败，请升级浏览器和油猴版本')
-          throw error
+        catch (err) {
+          error('设置cookie失败，请升级浏览器和油猴版本', err)
+          throw err
         }
       }
 
@@ -64,7 +64,7 @@ export function useVideoSource() {
       )
     }
     else {
-      console.error('m3u8', m3u8List.reason)
+      error('获取m3u8失败:', m3u8List.reason)
     }
   }
 

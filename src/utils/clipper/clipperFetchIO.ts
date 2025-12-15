@@ -41,29 +41,22 @@ export class FetchIO {
     let currentPosition = 0
     let shouldContinue = true
 
-    // 读取初始块
-    try {
-      // 继续读取后续数据块，直到达到最大步数或回调返回false
-      while (shouldContinue) {
-        const response = await this.fetchBufferRange(
-          url,
-          currentPosition,
-          currentPosition + stepChunkSize - 1,
-        )
-        if (response.status !== 206) {
-          shouldContinue = false
-          break
-        }
-        shouldContinue = await callback(
-          await response.arrayBuffer(),
-          currentPosition,
-        )
-        currentPosition += stepChunkSize
+    // 继续读取后续数据块，直到达到最大步数或回调返回false
+    while (shouldContinue) {
+      const response = await this.fetchBufferRange(
+        url,
+        currentPosition,
+        currentPosition + stepChunkSize - 1,
+      )
+      if (response.status !== 206) {
+        shouldContinue = false
+        break
       }
-    }
-    catch (error) {
-      console.error('流式读取数据出错:', error)
-      throw error
+      shouldContinue = await callback(
+        await response.arrayBuffer(),
+        currentPosition,
+      )
+      currentPosition += stepChunkSize
     }
   }
 }

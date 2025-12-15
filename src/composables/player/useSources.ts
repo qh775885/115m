@@ -4,6 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { ref, shallowRef, toValue, watch } from 'vue'
 import { VideoSourceExtension } from '../../components/XPlayer/types'
 import { qualityPreferenceCache } from '../../utils/cache'
+import { error, log, warn } from '../../utils/logger'
 import { PlayerCoreType } from './playerCore/types'
 
 /**
@@ -50,16 +51,16 @@ export function useSources(ctx: PlayerContext) {
       /** 根据保存的画质偏好查找对应的视频源 */
       const preferredSource = list.value.find((source: VideoSource) => source.quality === preference.quality)
       if (preferredSource) {
-        console.log(`🎞️ 使用保存的画质偏好: ${preference.quality}P (${preference.displayQuality || preference.quality})`)
+        log(`使用画质偏好: ${preference.quality}P`)
         return preferredSource
       }
       else {
-        console.warn(`⚠️ 保存的画质偏好 ${preference.quality}P 不存在，使用默认最高画质`)
+        warn(`画质偏好 ${preference.quality}P 不存在，使用默认最高画质`)
         return list.value[0]
       }
     }
-    catch (error) {
-      console.error('获取画质偏好失败，使用默认最高画质:', error)
+    catch (err) {
+      error('获取画质偏好失败:', err)
       return list.value[0]
     }
   }
@@ -141,10 +142,10 @@ export function useSources(ctx: PlayerContext) {
           source.quality,
           source.displayQuality,
         )
-        console.log(`💾 画质偏好已保存: ${source.quality}P (${source.displayQuality || source.quality})`)
+        log(`画质偏好已保存: ${source.quality}P`)
       }
-      catch (error) {
-        console.error('保存画质偏好失败:', error)
+      catch (err) {
+        error('保存画质偏好失败:', err)
       }
     }
 
@@ -161,7 +162,7 @@ export function useSources(ctx: PlayerContext) {
     if (playerCore.value) {
       playerCore.value
         .destroy()
-        .catch((e: Error) => console.error('销毁播放器失败:', e))
+        .catch((e: Error) => error('销毁播放器失败:', e))
     }
   }
 
@@ -174,7 +175,7 @@ export function useSources(ctx: PlayerContext) {
   /** 切换播放器核心的实际实现 */
   const switchPlayerCoreImpl = async (type: PlayerCoreType) => {
     if (isSwitching.value) {
-      console.warn('正在切换播放器核心，忽略此次操作')
+      warn('正在切换播放器核心，忽略此次操作')
       return
     }
 

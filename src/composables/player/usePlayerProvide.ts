@@ -2,16 +2,8 @@ import type { EmitFn, InjectionKey, Ref, ShallowRef, ToRefs } from 'vue'
 import type { XPlayerEmit, XPlayerProps } from '../../components/XPlayer/types'
 import type { usePlayerCoreDecorator } from './playerCore/usePlayerCore'
 import { useVModels } from '@vueuse/core'
-import {
-
-  inject,
-  provide,
-  ref,
-} from 'vue'
-import {
-
-  useSwitchPlayerCore,
-} from './playerCore/usePlayerCore'
+import { inject, provide, ref } from 'vue'
+import { useSwitchPlayerCore } from './playerCore/usePlayerCore'
 
 import { useControls } from './useControls'
 import { useCssVar } from './useCssVar'
@@ -105,49 +97,18 @@ export function usePlayerProvide(
 
   context.driver = useSwitchPlayerCore(context)
 
-  /** Popup管理器 */
-  const popupManager = usePopupManager(context)
-  context.popupManager = popupManager
-
-  /** 播放速度 */
-  const playbackRate = usePlaybackRate(context)
-  context.playbackRate = playbackRate
-
-  /** 全屏 */
-  const fullscreen = useFullscreen(context)
-  context.fullscreen = fullscreen
-
-  /** 进度条 */
-  const progressBar = useProgressBar(context)
-  context.progressBar = progressBar
-
-  /** 控制栏 */
-  const controls = useControls(context)
-  context.controls = controls
-
-  /** 源 */
-  const source = useSources(context)
-  context.source = source
-
-  /** 热键 */
-  const hotKey = useHotKey(context)
-  context.hotKey = hotKey
-
-  /** 画面转换 */
-  const transform = useTransform(context)
-  context.transform = transform
-
-  /** 预览图设置 */
-  const thumbnailSettings = useThumbnailSettings(context)
-  context.thumbnailSettings = thumbnailSettings
-
-  /** HUD显示 */
-  const hud = useHud(context)
-  context.hud = hud
-
-  /** 变量 */
-  const cssVar = useCssVar(context)
-  context.cssVar = cssVar
+  // 初始化所有 composables
+  context.popupManager = usePopupManager(context)
+  context.playbackRate = usePlaybackRate(context)
+  context.fullscreen = useFullscreen(context)
+  context.progressBar = useProgressBar(context)
+  context.controls = useControls(context)
+  context.source = useSources(context)
+  context.hotKey = useHotKey(context)
+  context.transform = useTransform(context)
+  context.thumbnailSettings = useThumbnailSettings(context)
+  context.hud = useHud(context)
+  context.cssVar = useCssVar(context)
 
   provide(PlayerSymbol, context)
   return context

@@ -129,7 +129,7 @@ class FileListMod extends BaseMod {
     })
 
     if (!this.dataListBoxNode) {
-      console.error('文件列表容器节点不存在, 无法监听文件列表变化')
+      // 文件列表容器节点不存在，无法监听文件列表变化
       return
     }
 

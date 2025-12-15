@@ -76,3 +76,22 @@ export class AppLogger extends Logger {
     super('115Master', moduleName)
   }
 }
+
+/**
+ * 简化的日志函数
+ */
+const isDev = import.meta.env.DEV
+
+export function log(...args: unknown[]) {
+  if (isDev)
+    console.log(...args)
+}
+
+export function warn(...args: unknown[]) {
+  if (isDev)
+    console.warn(...args)
+}
+
+export function error(...args: unknown[]) {
+  console.error(...args)
+}

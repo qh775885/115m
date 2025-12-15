@@ -95,9 +95,8 @@ export class M3U8ClipperNew {
         }
         videoFrame.close()
       },
-      error: (error) => {
-        console.error(error.message)
-        console.error('解码器错误', this.hlsIo.segmentUrl)
+      error: () => {
+        // 解码器错误，销毁实例
         // eslint-disable-next-line ts/no-use-before-define
         destroy()
       },
@@ -190,7 +189,6 @@ export class M3U8ClipperNew {
       }
       // 如果超过超时时间，则销毁
       if (Date.now() - now > TIMEOUT_MS) {
-        console.error(`m3u8Clipper seek timeout, time: ${time}`)
         loop = false
         destroy()
         return undefined

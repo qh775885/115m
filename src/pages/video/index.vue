@@ -123,14 +123,15 @@ import { useParamsVideoPage } from '../../composables/global/useParams'
 import { PLUS_VERSION } from '../../constants'
 import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
 
+import { error, warn } from '../../utils/logger'
+
 import { goToPlayer } from '../../utils/route'
 
 import HeaderInfo from './components/HeaderInfo/index.vue'
-
 import Playlist from './components/Playlist/index.vue'
 import { useFileInfo } from './composables/useFileInfo'
-import { useHistory } from './composables/useHistory'
 
+import { useHistory } from './composables/useHistory'
 import { useMark } from './composables/useMark'
 import { usePlaylist } from './composables/usePlaylist'
 import { usePreferences } from './composables/usePreferences'
@@ -285,13 +286,13 @@ function getCurrentPickCode(): string | null {
 async function onChangeVideo(pickCode: string) {
   const playlist = DataPlaylist.state
   if (!playlist?.data) {
-    console.error('播放列表不存在')
+    error('播放列表不存在')
     return
   }
 
   const item = playlist.data.find((item: PlaylistItem) => item.pc === pickCode)
   if (!item) {
-    console.error(`找不到播放项: ${pickCode}`)
+    error(`找不到播放项: ${pickCode}`)
     return
   }
 
@@ -301,7 +302,6 @@ async function onChangeVideo(pickCode: string) {
 /** 设置播放模式 */
 function setPlayMode(mode: PlayMode) {
   preferences.value.playMode = mode
-  console.log(`🎮 播放模式已设置为: ${mode}`)
 }
 
 /** 加载数据 */
@@ -315,8 +315,8 @@ async function loadData(isFirst = true) {
   try {
     await DataHistory.fetch(params.pickCode.value)
   }
-  catch (error) {
-    console.error(error)
+  catch (err) {
+    error('加载播放历史失败:', err)
   }
   // 加载视频源
   DataVideoSources.fetch(params.pickCode.value).then(() => {
@@ -364,22 +364,18 @@ const canGoNext = computed(() => {
 async function goToPreviousVideo() {
   try {
     if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
-      console.warn('播放列表或当前视频信息不存在')
+      warn('播放列表或当前视频信息不存在')
       return
     }
 
     const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex > 0) {
       const previousItem = DataPlaylist.state.data[currentIndex - 1]
-      console.log('📺 跳转上一集:', previousItem.n)
       await onChangeVideo(previousItem.pc)
     }
-    else {
-      console.log('🙅 已经是第一集了')
-    }
   }
-  catch (error) {
-    console.error('跳转上一集失败:', error)
+  catch (err) {
+    error('跳转上一集失败:', err)
   }
 }
 
@@ -387,22 +383,18 @@ async function goToPreviousVideo() {
 async function goToNextVideo() {
   try {
     if (!DataPlaylist.state?.data || !DataFileInfo.state.pick_code) {
-      console.warn('播放列表或当前视频信息不存在')
+      warn('播放列表或当前视频信息不存在')
       return
     }
 
     const currentIndex = DataPlaylist.state.data.findIndex((item: PlaylistItem) => item.pc === DataFileInfo.state.pick_code)
     if (currentIndex >= 0 && currentIndex < DataPlaylist.state.data.length - 1) {
       const nextItem = DataPlaylist.state.data[currentIndex + 1]
-      console.log('📺 跳转下一集:', nextItem.n)
       await onChangeVideo(nextItem.pc)
     }
-    else {
-      console.log('🙅 已经是最后一集了')
-    }
   }
-  catch (error) {
-    console.error('跳转下一集失败:', error)
+  catch (err) {
+    error('跳转下一集失败:', err)
   }
 }
 </script>

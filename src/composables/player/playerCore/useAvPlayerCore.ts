@@ -390,7 +390,7 @@ export function useAvPlayerCore(ctx: PlayerContext) {
           state.isLoading.value = false
         })
         playerRef.value?.on('timeout', () => {
-          console.warn('avplayer timeout')
+          // AVPlayer 超时，已通过状态管理处理
         })
         playerRef.value?.on('time', (pts) => {
           if (seeking) {
@@ -400,7 +400,6 @@ export function useAvPlayerCore(ctx: PlayerContext) {
         })
       }
       catch (error) {
-        console.error('初始化 AVPlayer 失败:', error)
         state.loadError.value = error as Error
       }
     },
@@ -416,8 +415,6 @@ export function useAvPlayerCore(ctx: PlayerContext) {
         })
         .then(async () => {
           streams.value = await player.getStreams()
-
-          console.log(videoStreams.value)
 
           /** 设置首选音频流 */
           const preferredAudioStream = getPreferredAudioStream(streams.value)
@@ -450,7 +447,6 @@ export function useAvPlayerCore(ctx: PlayerContext) {
                   = !state.muted.value && player.isSuspended()
               })
               .catch((error) => {
-                console.error('播放失败', error)
                 state.loadError.value = error
               })
           }

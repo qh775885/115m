@@ -3,6 +3,7 @@ import type { PlayerContext } from './usePlayerProvide'
 import { useElementSize } from '@vueuse/core'
 import { computed, shallowRef, watch, watchEffect } from 'vue'
 import { transformPreferenceCache } from '../../utils/cache'
+import { error, log } from '../../utils/logger'
 
 /**
  * 计算旋转视频后的缩放比例，使视频在容器中保持原始比例且不超出容器
@@ -90,10 +91,10 @@ export function useTransform(_ctx: PlayerContext) {
           flipX.value,
           flipY.value,
         )
-        console.log(`💾 旋转翻转偏好已保存: 旋转 ${rotate.value}°，水平翻转 ${flipX.value}，垂直翻转 ${flipY.value}`)
+        log('旋转翻转偏好已保存')
       }
-      catch (error) {
-        console.error('保存旋转翻转偏好失败:', error)
+      catch (err) {
+        error('保存旋转翻转偏好失败:', err)
       }
     }
   }
@@ -108,11 +109,10 @@ export function useTransform(_ctx: PlayerContext) {
           rotate.value = preference.rotate
           flipX.value = preference.flipX
           flipY.value = preference.flipY
-          console.log(`🎞️ 使用保存的旋转翻转偏好: 旋转 ${preference.rotate}°，水平翻转 ${preference.flipX}，垂直翻转 ${preference.flipY}`)
         }
       }
-      catch (error) {
-        console.error('加载旋转翻转偏好失败:', error)
+      catch (err) {
+        error('加载旋转翻转偏好失败:', err)
       }
     }
   }

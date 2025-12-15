@@ -44,6 +44,7 @@ import { Icon } from '@iconify/vue'
 import { computed, shallowRef } from 'vue'
 import { usePlayerContext } from '../../../composables/player/usePlayerProvide'
 import { PLAY_MODE_DESCRIPTIONS, PLAY_MODE_ICONS, PLAY_MODE_NAMES, PlayMode } from '../../../constants/playMode'
+import { error } from '../../../utils/logger'
 import Popup from '../components/Popup/index.vue'
 import { controlStyles } from '../styles/common'
 
@@ -75,7 +76,7 @@ function handleModeChange(mode: PlayMode) {
     menuVisible.value = false
   }
   else {
-    console.error('设置播放模式回调函数未提供')
+    error('设置播放模式回调函数未提供')
   }
 }
 
