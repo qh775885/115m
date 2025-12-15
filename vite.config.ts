@@ -125,7 +125,7 @@ export default defineConfig({
         externalGlobals: {
           'vue': _cdn('Vue', 'dist/vue.global.prod.js'),
           'localforage': _cdn('localforage', 'dist/localforage.min.js'),
-          'lodash': _cdn('_', 'lodash.min.js'),
+          'lodash-es': _cdn('_', 'lodash.min.js'),
           'big-integer': _cdn('bigInt', 'BigInteger.min.js').concat(
             util.dataUrl(';window.bigInt=bigInt;'),
           ),

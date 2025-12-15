@@ -1,6 +1,6 @@
 import type { RequestOptions, ResponseType } from './types'
 import { GM_info, GM_xmlhttpRequest } from '$'
-import { merge } from 'lodash'
+import { merge } from 'lodash-es'
 import { GMRequestCache } from '../cache/gmRequestCache'
 import { IRequest } from './types'
 

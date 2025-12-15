@@ -5,7 +5,7 @@ import type {
 import type { LaneConfig } from '../../../utils/scheduler'
 import type { usePreferences } from './usePreferences'
 import { tryOnUnmounted } from '@vueuse/core'
-import { shuffle } from 'lodash'
+import { shuffle } from 'lodash-es'
 import { shallowRef } from 'vue'
 import { FRIENDLY_ERROR_MESSAGE } from '../../../constants'
 import { intervalArray } from '../../../utils/array'
@@ -217,7 +217,7 @@ export function useThumbnails(
       = shuffle(
         // 生成缩略图时间点
         intervalArray(0, clipper.hlsIo.duration, samplingInterval.value)
-        // 过滤已缓存的缩略图
+          // 过滤已缓存的缩略图
           .filter(time => !cahceThumbnails.has(time)),
       )
 

@@ -1,4 +1,4 @@
-import { defer } from 'lodash'
+import { defer } from 'lodash-es'
 import { BaseMod } from '../BaseMod'
 import './index.css'
 import 'iconify-icon'

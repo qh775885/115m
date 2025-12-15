@@ -1,6 +1,6 @@
 import type { FileMainReInstanceSetting } from '../global'
 import { unsafeWindow } from '$'
-import { throttle } from 'lodash'
+import { throttle } from 'lodash-es'
 
 /**
  * 文件列表滚动位置记录

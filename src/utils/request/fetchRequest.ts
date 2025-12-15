@@ -1,5 +1,5 @@
 import type { RequestOptions, ResponseType } from './types'
-import { merge } from 'lodash'
+import { merge } from 'lodash-es'
 import { IRequest } from './types'
 
 /** 默认请求选项 */

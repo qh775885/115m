@@ -9,7 +9,7 @@ import type { PlayerCoreMethods } from './types'
 import { AVCodecID } from '@libmedia/avutil/enum'
 import { useDebounceFn, useElementSize, useIntervalFn } from '@vueuse/core'
 import ee from 'event-emitter'
-import { get } from 'lodash'
+import { get } from 'lodash-es'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import { CDN_BASE_URL } from '../../../constants'
 import { loadESM } from '../../../utils/loadESM'
@@ -156,57 +156,57 @@ function getWasmUrl(...args: GetWasmArgs) {
         // H264
         case AVCodecID.AV_CODEC_ID_H264:
           return `${DECODE_BASE_URL}/h264-simd.wasm`
-          // HEVC
+        // HEVC
         case AVCodecID.AV_CODEC_ID_HEVC:
           return `${DECODE_BASE_URL}/hevc-simd.wasm`
-          // MPEG4
+        // MPEG4
         case AVCodecID.AV_CODEC_ID_MPEG4:
           return `${DECODE_BASE_URL}/mpeg4-simd.wasm`
-          // VVC
+        // VVC
         case AVCodecID.AV_CODEC_ID_VVC:
           return `${DECODE_BASE_URL}/vvc-simd.wasm`
-          // AV1
+        // AV1
         case AVCodecID.AV_CODEC_ID_AV1:
           return `${DECODE_BASE_URL}/av1-simd.wasm`
-          // VP8
+        // VP8
         case AVCodecID.AV_CODEC_ID_VP8:
           return `${DECODE_BASE_URL}/vp8-simd.wasm`
-          // VP9
+        // VP9
         case AVCodecID.AV_CODEC_ID_VP9:
           return `${DECODE_BASE_URL}/vp9-simd.wasm`
-          // THEORA
+        // THEORA
         case AVCodecID.AV_CODEC_ID_THEORA:
           return `${DECODE_BASE_URL}/theora-simd.wasm`
-          // MPEG1/2
+        // MPEG1/2
         case AVCodecID.AV_CODEC_ID_MPEG2VIDEO:
           return `${DECODE_BASE_URL}/mpeg2video-simd.wasm`
 
-          // -- 音频解码器 --
-          // AAC
+        // -- 音频解码器 --
+        // AAC
         case AVCodecID.AV_CODEC_ID_AAC:
           return `${DECODE_BASE_URL}/aac-simd.wasm`
-          // MP3
+        // MP3
         case AVCodecID.AV_CODEC_ID_MP3:
           return `${DECODE_BASE_URL}/mp3-simd.wasm`
-          // OPUS
+        // OPUS
         case AVCodecID.AV_CODEC_ID_OPUS:
           return `${DECODE_BASE_URL}/opus-simd.wasm`
-          // FLAC
+        // FLAC
         case AVCodecID.AV_CODEC_ID_FLAC:
           return `${DECODE_BASE_URL}/flac-simd.wasm`
-          // SPEEX
+        // SPEEX
         case AVCodecID.AV_CODEC_ID_SPEEX:
           return `${DECODE_BASE_URL}/speex-simd.wasm`
-          // VORBIS
+        // VORBIS
         case AVCodecID.AV_CODEC_ID_VORBIS:
           return `${DECODE_BASE_URL}/vorbis-simd.wasm`
-          // AC3
+        // AC3
         case AVCodecID.AV_CODEC_ID_AC3:
           return `${DECODE_BASE_URL}/ac3-simd.wasm`
-          // EAC3
+        // EAC3
         case AVCodecID.AV_CODEC_ID_EAC3:
           return `${DECODE_BASE_URL}/eac3-simd.wasm`
-          // DTS (很多会出现部分声音缺失)
+        // DTS (很多会出现部分声音缺失)
         case AVCodecID.AV_CODEC_ID_DTS:
           return `${DECODE_BASE_URL}/dca-simd.wasm`
         default:
