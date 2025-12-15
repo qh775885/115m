@@ -46,9 +46,6 @@ importers:
       '@types/event-emitter':
         specifier: ^0.3.5
         version: 0.3.5
-      '@types/eventemitter3':
-        specifier: ^2.0.4
-        version: 2.0.4
       '@vueuse/core':
         specifier: ^12.7.0
         version: 12.8.2(typescript@5.9.2)
@@ -64,9 +61,6 @@ importers:
       event-emitter:
         specifier: ^0.3.5
         version: 0.3.5
-      eventemitter3:
-        specifier: ^5.0.1
-        version: 5.0.1
       glob-to-regexp:
         specifier: ^0.4.1
         version: 0.4.1
@@ -1107,10 +1101,6 @@ packages:
 
   '@types/event-emitter@0.3.5':
     resolution: {integrity: sha512-zx2/Gg0Eg7gwEiOIIh5w9TrhKKTeQh7CPCOPNc0el4pLSwzebA8SmnHwZs2dWlLONvyulykSwGSQxQHLhjGLvQ==}
-
-  '@types/eventemitter3@2.0.4':
-    resolution: {integrity: sha512-em+O0kpbHLUB4TAu49b674ERppsDT/PFghJYZ5ISP/BwehjNn2Brqs4jO3xb5FM5Tosmz6TUd2Yy2pRxTwTRmw==}
-    deprecated: This is a stub types definition. eventemitter3 provides its own type definitions, so you do not need this installed.
 
   '@types/glob-to-regexp@0.4.4':
     resolution: {integrity: sha512-nDKoaKJYbnn1MZxUY0cA1bPmmgZbg0cTq7Rh13d0KWYNOiKbqoR+2d89SnRPszGh7ROzSwZ/GOjZ4jPbmmZ6Eg==}
@@ -4583,10 +4573,6 @@ snapshots:
   '@types/estree@1.0.8': {}
 
   '@types/event-emitter@0.3.5': {}
-
-  '@types/eventemitter3@2.0.4':
-    dependencies:
-      eventemitter3: 5.0.1
 
   '@types/glob-to-regexp@0.4.4': {}
 
