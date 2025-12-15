@@ -1,7 +1,7 @@
 // 收藏
-export const ICON_STAR_FILL = 'streamline-emojis:star-struck-2'
+export const ICON_STAR_FILL = 'material-symbols:star'
 // 未收藏
-export const ICON_STAR = 'game-icons:star-swirl'
+export const ICON_STAR = 'material-symbols:star-outline'
 // 复制
 export const ICON_COPY = 'solar:copy-bold-duotone'
 // error

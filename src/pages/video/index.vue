@@ -46,6 +46,11 @@
             />
           </template>
           <template #controlsRight>
+            <!-- 收藏按钮 -->
+            <StarButton
+              :is-mark="DataMark.isMark.value"
+              :on-toggle-mark="DataMark.toggleMark"
+            />
             <!-- 播放列表切换按钮 -->
             <button
               :class="[
@@ -77,9 +82,6 @@
             >
               <Icon :icon="ICON_SKIP_NEXT" :class="[styles.controls.btn.icon]" />
             </button>
-          </template>
-          <template #aboutContent>
-            <About />
           </template>
         </XPlayer>
       </div>
@@ -114,6 +116,7 @@ import { Icon } from '@iconify/vue'
 import { useTitle } from '@vueuse/core'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
 
+import StarButton from '../../components/XPlayer/components/Controls/StarButton.vue'
 import XPlayer from '../../components/XPlayer/index.vue'
 import { controlRightStyles } from '../../components/XPlayer/styles/common'
 import { PLUS_VERSION } from '../../constants'
@@ -122,13 +125,13 @@ import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
 
 import { goToPlayer } from '../../utils/route'
 
-import About from './components/About/index.vue'
 import HeaderInfo from './components/HeaderInfo/index.vue'
 
 import Playlist from './components/Playlist/index.vue'
 import { useDataFileInfo } from './data/useDataFileInfo'
 import { useDataHistory } from './data/useDataHistory'
 
+import { useDataMark } from './data/useDataMark'
 import { useDataPlaylist } from './data/useDataPlaylist'
 import { usePreferences } from './data/usePreferences'
 import { useDataThumbnails } from './data/useThumbnails'
@@ -182,6 +185,8 @@ const DataFileInfo = useDataFileInfo()
 const DataPlaylist = useDataPlaylist()
 /** 历史记录 */
 const DataHistory = useDataHistory()
+/** 收藏 */
+const DataMark = useDataMark(DataFileInfo)
 
 /** 是否正在切换视频 */
 const changeing = shallowRef(false)

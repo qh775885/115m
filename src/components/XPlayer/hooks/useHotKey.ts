@@ -291,17 +291,6 @@ const HOT_KEYS_CONFIG: Record<string, HotKeyConfig> = {
   },
 
   /**
-   * 按下 p 切换画中画
-   */
-  togglePictureInPicture: {
-    keys: [KEYS.p, KEYS.P],
-    name: '切换画中画',
-    keydown: (ctx) => {
-      ctx.pictureInPicture?.toggle()
-    },
-  },
-
-  /**
    * 按下 [ 向左旋转
    */
   rotateLeft: {

@@ -1,7 +1,6 @@
 import type { FileItemAttributes, FileListType, ItemInfo } from '../types'
 import type { FileItemModBase, FileListMod } from './FileItemMod/base'
 import { PLUS_VERSION } from '../../../constants'
-import { getAvNumber } from '../../../utils/getNumber'
 import { getDuration } from '../../../utils/time'
 
 /**
@@ -32,11 +31,6 @@ export class FileItemModLoader {
     ) as unknown as FileItemAttributes
   }
 
-  /** 获取番号 */
-  private get avNumber(): ItemInfo['avNumber'] {
-    return getAvNumber(this.attributes.title)
-  }
-
   /** 获取视频时长节点 */
   private get durationNode(): HTMLElement | null {
     return this.itemNode.querySelector('.duration') ?? null
@@ -50,7 +44,6 @@ export class FileItemModLoader {
   /** itemInfo */
   private get itemInfo(): ItemInfo {
     return {
-      avNumber: this.avNumber,
       attributes: this.attributes,
       fileListType: this.fileListType,
       duration: this.duration,

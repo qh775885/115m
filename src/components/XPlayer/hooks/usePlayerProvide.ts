@@ -18,12 +18,10 @@ import { useCssVar } from './useCssVar'
 import { useFullscreen } from './useFullscreen'
 import { useHotKey } from './useHotKey'
 import { useHud } from './useHud'
-import { usePictureInPicture } from './usePictureInPicture'
 import { usePlaybackRate } from './usePlaybackRate'
 import { usePopupManager } from './usePopupManager'
 import { useProgressBar } from './useProgressBar'
 import { useSources } from './useSources'
-import { useStatistics } from './useStatistics'
 import { useThumbnailSettings } from './useThumbnailSettings'
 import { useTransform } from './useTransform'
 
@@ -53,8 +51,6 @@ export interface PlayerContext {
   driver: ReturnType<typeof useSwitchPlayerCore>
   /** 全屏 */
   fullscreen: ReturnType<typeof useFullscreen>
-  /** 画中画 */
-  pictureInPicture: ReturnType<typeof usePictureInPicture>
   /** 播放速度 */
   playbackRate: ReturnType<typeof usePlaybackRate>
   /** 进度条 */
@@ -73,9 +69,6 @@ export interface PlayerContext {
   hud: ReturnType<typeof useHud>
   /** 变量 */
   cssVar: ReturnType<typeof useCssVar>
-
-  /** 调试面板 */
-  statistics: ReturnType<typeof useStatistics>
   /** Popup管理器 */
   popupManager: ReturnType<typeof usePopupManager>
 
@@ -140,10 +133,6 @@ export function usePlayerProvide(
   const hotKey = useHotKey(context)
   context.hotKey = hotKey
 
-  /** 画中画 */
-  const pictureInPicture = usePictureInPicture(context)
-  context.pictureInPicture = pictureInPicture
-
   /** 画面转换 */
   const transform = useTransform(context)
   context.transform = transform
@@ -159,10 +148,6 @@ export function usePlayerProvide(
   /** 变量 */
   const cssVar = useCssVar(context)
   context.cssVar = cssVar
-
-  /** 调试面板 */
-  const debugPanel = useStatistics()
-  context.statistics = debugPanel
 
   provide(PlayerSymbol, context)
   return context

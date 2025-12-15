@@ -1,6 +1,5 @@
 import type { App } from 'vue'
 import { createApp } from 'vue'
-import { PLUS_VERSION } from '../../../../constants'
 import mainStyles from '../../../../styles/main.css?inline'
 import ExtVideoCover from '../../components/ExtVideoCover/index.vue'
 import { FileListType, IvType } from '../../types'
@@ -17,11 +16,6 @@ export class FileItemModVideoCover extends FileItemModBase {
   onLoad() {
     // 如果文件列表类型为网格，则不加载
     if (this.itemInfo.fileListType === FileListType.grid) {
-      return
-    }
-
-    // 如果有番号并且是Plus版本，则不加载
-    if (this.itemInfo.avNumber && PLUS_VERSION) {
       return
     }
 

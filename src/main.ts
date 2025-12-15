@@ -2,14 +2,10 @@ import globToRegex from 'glob-to-regexp'
 import ROUTE_MATCH from './constants/route.match'
 import HomePage from './pages/home/index'
 import { videoPage, videoTokenPage } from './pages/video'
-import { checkUserAgent } from './utils/checkUserAgent'
 import { debugInfo } from './utils/debugInfo'
 
 /** 调试信息 */
 debugInfo.bootstrapInfo()
-
-/** 检查用户代理 */
-checkUserAgent()
 
 /** 路由匹配 */
 const routeMatch = [

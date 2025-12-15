@@ -2,10 +2,6 @@
 export const ICON_RESTART = 'material-symbols:restart-alt-rounded'
 // 自动缓冲
 export const ICON_AUTO_LOAD = 'material-symbols:autorenew-rounded'
-// 画中画
-export const ICON_PIP = 'material-symbols:pip-rounded'
-// 画中画退出
-export const ICON_PIP_EXIT = 'material-symbols:pip-exit-rounded'
 // 设置
 export const ICON_SETTINGS = 'material-symbols:settings-rounded'
 // 暂停
@@ -52,12 +48,8 @@ export const ICON_VOLUME_MUTE = 'material-symbols:volume-mute-rounded'
 export const ICON_VOLUME_DOWN = 'material-symbols:volume-down-rounded'
 // 音量升高
 export const ICON_VOLUME_UP = 'material-symbols:volume-up-rounded'
-// 统计信息
-export const ICON_STATISTICS_INFO = 'material-symbols:analytics-outline'
 // 快捷键
 export const ICON_SHORTCUTS = 'material-symbols:keyboard-outline'
-// 关于
-export const ICON_ABOUT = 'material-symbols:info-outline'
 // 颜色调整
 export const ICON_COLOR_ADJUST = 'mdi:color'
 // 错误

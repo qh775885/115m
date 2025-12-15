@@ -4,7 +4,7 @@ import { drive115 } from '../../../utils/drive115'
 import { MarkStatus } from '../../../utils/drive115/api/webApi/req'
 
 /** 收藏 */
-export function useMark(DataFileInfo: ReturnType<typeof useDataFileInfo>) {
+export function useDataMark(DataFileInfo: ReturnType<typeof useDataFileInfo>) {
   const isMark = shallowRef<boolean | null>(null)
 
   /** 切换收藏状态 */

@@ -52,8 +52,6 @@
             <PlayerCoreButton />
             <!-- 设置 -->
             <SettingsButton />
-            <!-- 画中画 -->
-            <PipButton />
             <!-- 全屏控制 -->
             <FullscreenButton />
           </div>
@@ -69,7 +67,6 @@ import { useControlsMouseDetection } from '../../hooks/useControlsMouseDetection
 import { usePlayerContext } from '../../hooks/usePlayerProvide'
 import AudioTrackButton from './AudioTrackButton.vue'
 import FullscreenButton from './FullscreenButton.vue'
-import PipButton from './PipButton.vue'
 import PlaybackRateButton from './PlaybackRateButton.vue'
 import PlayButton from './PlayButton.vue'
 import PlayerCoreButton from './PlayerCoreButton.vue'

@@ -46,9 +46,6 @@
     <!-- 状态HUD显示 -->
     <HUD />
 
-    <!-- 调试面板 -->
-    <Statistics />
-
     <!-- 恢复容器 -->
     <div
       v-if="source.isInterrupt.value"
@@ -74,7 +71,6 @@ import Controls from './components/Controls/index.vue'
 import HUD from './components/HUD/index.vue'
 import Loading from './components/Loading/index.vue'
 import PlayAnimation from './components/PlayAnimation/index.vue'
-import Statistics from './components/Statistics/index.vue'
 import { usePlayerProvide } from './hooks/usePlayerProvide'
 import { usePortalProvider } from './hooks/usePortal'
 

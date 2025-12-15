@@ -55,7 +55,6 @@ export interface FileItemAttributes {
 }
 
 export interface ItemInfo {
-  avNumber: string | null
   attributes: FileItemAttributes
   fileListType: FileListType
   duration: number
