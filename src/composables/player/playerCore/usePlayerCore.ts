@@ -7,6 +7,7 @@ import { PlayerCoreType } from './types'
 import { useAvPlayerCore } from './useAvPlayerCore'
 import { useHlsPlayerCore } from './useHlsPlayerCore'
 import { useNativePlayerCore } from './useNativePlayerCore'
+import { useXgPlayerCore } from './useXgPlayerCore'
 
 /**
  * 视频核心混合封装
@@ -14,10 +15,11 @@ import { useNativePlayerCore } from './useNativePlayerCore'
 export function usePlayerCoreDecorator(usePlayerCore:
   | typeof useHlsPlayerCore
   | typeof useNativePlayerCore
-  | typeof useAvPlayerCore, ctx: PlayerContext) {
+  | typeof useAvPlayerCore
+  | typeof useXgPlayerCore, ctx: PlayerContext) {
   const player = usePlayerCore(ctx)
 
-  const noop = () => {}
+  const noop = () => { }
 
   // 事件监听
   player.on('canplay', ctx.rootProps.onCanplay ?? noop)
@@ -109,6 +111,9 @@ export function useSwitchPlayerCore(ctx: PlayerContext) {
           break
         case PlayerCoreType.AvPlayer:
           ctx.playerCore.value = usePlayerCoreDecorator(useAvPlayerCore, ctx)
+          break
+        case PlayerCoreType.XgPlayer:
+          ctx.playerCore.value = usePlayerCoreDecorator(useXgPlayerCore, ctx)
           break
         default:
           throw new Error(`Unsupported video type: ${videoType}`)

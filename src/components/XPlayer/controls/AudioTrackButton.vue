@@ -10,22 +10,22 @@
   </button>
 
   <Popup
-    v-if="playerCore?.type === PlayerCoreType.AvPlayer"
+    v-if="avPlayerCore"
     v-model:visible="menuVisible"
     :trigger="buttonRef"
     placement="top"
   >
     <ul :class="[styles.menu.root]">
       <li
-        v-for="(stream) in playerCore.audioStreams"
+        v-for="(stream) in avPlayerCore.audioStreams"
         :key="stream.id"
       >
         <a
           :class="[styles.menu.a, {
-            [styles.menu.active]: playerCore.audioStreamId === stream.id,
+            [styles.menu.active]: avPlayerCore.audioStreamId === stream.id,
           }]"
-          :disabled="!playerCore.isSupportStream(stream)"
-          @click="playerCore.setAudioStream(stream.id)"
+          :disabled="!avPlayerCore.isSupportStream(stream)"
+          @click="avPlayerCore.setAudioStream(stream.id)"
         >
           <span :class="[styles.menu.label]">
             {{ stream.id }}. {{ stream.metadata.title ?? 'Untitled' }}
@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { shallowRef } from 'vue'
+import { computed, shallowRef } from 'vue'
 import { PlayerCoreType } from '../../../composables/player/playerCore/types'
 import { usePlayerContext } from '../../../composables/player/usePlayerProvide'
 import Popup from '../components/Popup/index.vue'
@@ -53,6 +53,12 @@ const styles = {
 }
 
 const { playerCore } = usePlayerContext()
+const avPlayerCore = computed(() => {
+  return playerCore.value?.type === PlayerCoreType.AvPlayer
+    ? (playerCore.value as any)
+    : null
+})
+
 const menuVisible = shallowRef(false)
 const buttonRef = shallowRef<HTMLElement>()
 

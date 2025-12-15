@@ -8,6 +8,8 @@ export enum PlayerCoreType {
   AvPlayer = 'AvPlayer',
   // hls.js
   Hls = 'HLS.js',
+  // XgPlayer
+  XgPlayer = 'XgPlayer',
 }
 
 /**
@@ -34,9 +36,9 @@ export interface PlayerCoreMethods {
   init: (container: HTMLDivElement) => Promise<void>
   /** 加载 */
   load: (
-  // 视频源
+    // 视频源
     url: string,
-  // 上次播放时间
+    // 上次播放时间
     lastTime?: number,
   ) => Promise<void>
   /** 播放 */

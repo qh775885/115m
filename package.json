@@ -1,7 +1,7 @@
 {
   "name": "115m",
   "type": "module",
-  "version": "0.4.6",
+  "version": "0.5.0",
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "description": "(基于 cbingb666 的 115Master 原作品修改)",
@@ -51,7 +51,9 @@
     "m3u8-parser": "^7.2.0",
     "photoswipe": "^5.4.4",
     "tailwindcss": "^4.1.7",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "xgplayer": "^3.0.23",
+    "xgplayer-mp4": "^3.0.23"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.16.1",

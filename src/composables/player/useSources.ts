@@ -3,8 +3,10 @@ import type { PlayerContext } from './usePlayerProvide'
 import { ref, shallowRef, toValue, watch } from 'vue'
 
 import { playerCorePreferenceCache, qualityPreferenceCache } from '../../utils/cache'
+
 import { error, log, warn } from '../../utils/logger'
 import { PlayerCoreType } from './playerCore/types'
+import { useVideoHealthDetector } from './useVideoHealthDetector'
 
 /**
  * 视频源
@@ -67,8 +69,9 @@ export function useSources(ctx: PlayerContext) {
     if (source.type === 'hls') {
       return PlayerCoreType.Hls
     }
-    /** 其他格式默认使用 Native 核心 */
-    return PlayerCoreType.Native
+
+    // 默认使用 XgPlayer (替代 Native)
+    return PlayerCoreType.XgPlayer
   }
 
   /** 初始化视频 */
@@ -236,6 +239,9 @@ export function useSources(ctx: PlayerContext) {
     /** 恢复播放时间 */
     playerCore.value?.seek(currentTime)
   }
+
+  // 初始化检测器
+  useVideoHealthDetector(ctx, switchPlayerCore)
 
   return {
     list,

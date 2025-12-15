@@ -7,15 +7,16 @@
     </div>
 
     <div
-      v-if="playerCore?.type === PlayerCoreType.AvPlayer && (playerCore.stats?.bandwidth ?? 0) > 0"
+      v-if="avPlayerStats && (avPlayerStats.bandwidth ?? 0) > 0"
       :class="styles.speed"
     >
-      {{ Math.round((playerCore.stats?.bandwidth ?? 0) / 1024 / 1024 * 100) / 100 }} Mbps/s
+      {{ Math.round((avPlayerStats.bandwidth ?? 0) / 1024 / 1024 * 100) / 100 }} Mbps/s
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { PlayerCoreType } from '../../../../composables/player/playerCore/types'
 import { usePlayerContext } from '../../../../composables/player/usePlayerProvide'
 
@@ -34,6 +35,9 @@ const styles = {
 }
 
 const { playerCore } = usePlayerContext()
+const avPlayerStats = computed(() => {
+  return playerCore.value?.type === PlayerCoreType.AvPlayer ? (playerCore.value as any).stats : null
+})
 </script>
 
 <style scoped>
