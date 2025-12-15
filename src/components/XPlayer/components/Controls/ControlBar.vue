@@ -44,8 +44,6 @@
             <QualityButton />
             <!-- 倍速控制 -->
             <PlaybackRateButton />
-            <!-- 字幕控制 -->
-            <SubtitleButton />
             <!-- 音频 Track -->
             <AudioTrackButton />
             <!-- 播放模式 -->
@@ -79,7 +77,6 @@ import PlayModeButton from './PlayModeButton.vue'
 import ProgressBar from './ProgressBar.vue'
 import QualityButton from './QualityButton.vue'
 import SettingsButton from './SettingsButton.vue'
-import SubtitleButton from './SubtitleButton.vue'
 import TimeDisplay from './TimeDisplay.vue'
 import VolumeControl from './VolumeControl.vue'
 

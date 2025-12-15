@@ -18,9 +18,6 @@
     <!-- 播放/暂停动画 -->
     <PlayAnimation />
 
-    <!-- 字幕 -->
-    <Subtitle />
-
     <!-- 错误提示 -->
     <LoadingError
       v-if="playerCore?.loadError"
@@ -78,7 +75,6 @@ import HUD from './components/HUD/index.vue'
 import Loading from './components/Loading/index.vue'
 import PlayAnimation from './components/PlayAnimation/index.vue'
 import Statistics from './components/Statistics/index.vue'
-import Subtitle from './components/Subtitle/index.vue'
 import { usePlayerProvide } from './hooks/usePlayerProvide'
 import { usePortalProvider } from './hooks/usePortal'
 
@@ -86,7 +82,6 @@ import { usePortalProvider } from './hooks/usePortal'
 const props = withDefaults(defineProps<XPlayerProps>(), {
   videoId: undefined,
   onThumbnailRequest: undefined,
-  onSubtitleChange: undefined,
   hlsConfig: () => ({}),
   avPlayerConfig: () => ({}),
 })

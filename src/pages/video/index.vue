@@ -25,12 +25,8 @@
           }"
           :video-id="params.pickCode.value"
           :sources="DataVideoSources.list"
-          :subtitles="DataSubtitles.state"
           :last-time="DataHistory.lastTime.value"
-          :subtitles-loading="DataSubtitles.isLoading"
-          :subtitles-ready="DataSubtitles.isReady"
           :on-thumbnail-request="DataThumbnails.onThumbnailRequest"
-          :on-subtitle-change="handleSubtitleChange"
           :on-timeupdate="handleTimeupdate"
           :on-seeking="DataHistory.handleSeek"
           :on-seeked="DataHistory.handleSeek"
@@ -111,7 +107,6 @@
 
 <script setup lang="ts">
 import type XPlayerInstance from '../../components/XPlayer/index.vue'
-import type { Subtitle } from '../../components/XPlayer/types'
 import type { PlayMode } from '../../constants/playMode'
 import type { Entity } from '../../utils/drive115'
 import type { PlaylistItem } from '../../utils/drive115/api/entity'
@@ -124,8 +119,6 @@ import { controlRightStyles } from '../../components/XPlayer/styles/common'
 import { PLUS_VERSION } from '../../constants'
 import { useParamsVideoPage } from '../../hooks/useParams'
 import { ICON_PLAYLIST, ICON_SKIP_NEXT, ICON_SKIP_PREVIOUS } from '../../icons'
-import { subtitlePreference } from '../../utils/cache/subtitlePreference'
-import { getAvNumber } from '../../utils/getNumber'
 
 import { goToPlayer } from '../../utils/route'
 
@@ -138,7 +131,6 @@ import { useDataHistory } from './data/useDataHistory'
 
 import { useDataPlaylist } from './data/useDataPlaylist'
 import { usePreferences } from './data/usePreferences'
-import { useDataSubtitles } from './data/useSubtitlesData'
 import { useDataThumbnails } from './data/useThumbnails'
 import { useDataVideoSources } from './data/useVideoSource'
 
@@ -183,8 +175,6 @@ const params = useParamsVideoPage()
 const DataVideoSources = useDataVideoSources()
 /** 缩略图 */
 const DataThumbnails = useDataThumbnails(preferences)
-/** 字幕 */
-const DataSubtitles = useDataSubtitles()
 
 /** 文件信息 */
 const DataFileInfo = useDataFileInfo()
@@ -219,15 +209,6 @@ const aspectRatio = computed(() => {
   return `${videoSize.value.width} / ${videoSize.value.height}`
 })
 
-/** 处理字幕变化 */
-async function handleSubtitleChange(subtitle: Subtitle | null) {
-  // 保存字幕选择
-  await subtitlePreference.savePreference(
-    params.pickCode.value ?? '',
-    subtitle || null,
-  )
-}
-
 /** 播放器列表切换 */
 async function handleChangeVideo(item: Entity.PlaylistItem) {
   try {
@@ -243,12 +224,6 @@ async function handleChangeVideo(item: Entity.PlaylistItem) {
     DataVideoSources.clear()
     DataThumbnails.clear()
     DataHistory.clear()
-    DataSubtitles.execute(
-      0,
-      params.pickCode.value,
-      DataFileInfo.state.file_name,
-      null,
-    )
 
     await nextTick()
     await loadData(false)
@@ -348,13 +323,9 @@ async function loadData(isFirst = true) {
   })
 
   // 加载文件信息
-  DataFileInfo.execute(0, params.pickCode.value).then((res) => {
-    const avNumber = getAvNumber(res.file_name)
+  DataFileInfo.execute(0, params.pickCode.value).then(() => {
     // 设置标题
     useTitle(DataFileInfo.state.file_name || '')
-
-    // 加载字幕
-    DataSubtitles.execute(0, params.pickCode.value, res.file_name, avNumber)
   })
 
   // 加载播放列表

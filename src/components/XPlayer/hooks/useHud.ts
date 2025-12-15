@@ -10,8 +10,6 @@ import {
   ICON_LOCATION_ON,
   ICON_ROCKET_LAUNCH,
   ICON_ROTATE,
-  ICON_SUBTITLES,
-  ICON_SUBTITLES_OFF,
   ICON_TIMER,
 } from '../utils/icon'
 import { formatTime } from '../utils/time'
@@ -162,20 +160,6 @@ export function useHud(ctx: PlayerContext) {
       title: '播放速度',
       icon: ICON_TIMER,
       value: playbackRate,
-    })
-  }
-
-  // 监听字幕变化
-  if (ctx.subtitles) {
-    const { current } = ctx.subtitles
-    watch(current, (newSubtitle) => {
-      const value = newSubtitle ? newSubtitle.label : '关闭'
-      const icon = newSubtitle ? ICON_SUBTITLES : ICON_SUBTITLES_OFF
-      show({
-        title: '字幕',
-        icon,
-        value,
-      })
     })
   }
 

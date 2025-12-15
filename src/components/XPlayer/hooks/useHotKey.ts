@@ -269,20 +269,6 @@ const HOT_KEYS_CONFIG: Record<string, HotKeyConfig> = {
   },
 
   /**
-   * 按下 c 切换字幕
-   */
-  toggleSubtitle: {
-    keys: [KEYS.c, KEYS.C],
-    name: '切换字幕',
-    keydown: (ctx) => {
-      if (ctx.subtitles?.loading.value || !ctx.subtitles?.ready.value) {
-        return
-      }
-      ctx.subtitles?.toggleEnabled()
-    },
-  },
-
-  /**
    * 按下 f 切换全屏
    */
   toggleFullscreen: {

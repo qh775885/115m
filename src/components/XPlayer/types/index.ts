@@ -90,24 +90,6 @@ export interface VideoSource {
   }
 }
 
-// 字幕
-export interface Subtitle {
-  /** 字幕 id */
-  id: string
-  /** 字幕 url */
-  url: string
-  /** 字幕名称 */
-  label: string
-  /** 字幕语言 */
-  srclang: string
-  /** 字幕类型 */
-  kind: 'subtitles' | 'captions'
-  /** 字幕默认 */
-  default?: boolean
-  /** 字幕来源 */
-  source?: string
-}
-
 /**
  * 播放器属性
  */
@@ -124,12 +106,6 @@ export interface XPlayerProps {
   muted: boolean
   /** 播放速率 (0.1-15) */
   playbackRate: number
-  /** 字幕 */
-  subtitles: Ref<Subtitle[] | null>
-  /** 字幕准备就绪 */
-  subtitlesReady: Ref<boolean>
-  /** 字幕加载中 */
-  subtitlesLoading: Ref<boolean>
   /** 上次播放时间 */
   lastTime?: number
   /** 自动缓冲缩略图 */
@@ -146,8 +122,6 @@ export interface XPlayerProps {
   avPlayerConfig?: Partial<AVPlayerOptions>
   /** 缩略图请求 */
   onThumbnailRequest?: ThumbnailRequest
-  /** 字幕改变 */
-  onSubtitleChange?: (subtitle: Subtitle | null) => void
   /** 播放器可播放 */
   onCanplay?: () => void
   /** 更新当前时间 */

@@ -24,7 +24,6 @@ import { usePopupManager } from './usePopupManager'
 import { useProgressBar } from './useProgressBar'
 import { useSources } from './useSources'
 import { useStatistics } from './useStatistics'
-import { useSubtitles } from './useSubtitles'
 import { useThumbnailSettings } from './useThumbnailSettings'
 import { useTransform } from './useTransform'
 
@@ -62,8 +61,6 @@ export interface PlayerContext {
   progressBar: ReturnType<typeof useProgressBar>
   /** 控制栏 */
   controls: ReturnType<typeof useControls>
-  /** 字幕 */
-  subtitles: ReturnType<typeof useSubtitles>
   /** 视频源 */
   source: ReturnType<typeof useSources>
   /** 热键 */
@@ -134,10 +131,6 @@ export function usePlayerProvide(
   /** 控制栏 */
   const controls = useControls(context)
   context.controls = controls
-
-  /** 字幕 */
-  const subtitles = useSubtitles(context)
-  context.subtitles = subtitles
 
   /** 源 */
   const source = useSources(context)
