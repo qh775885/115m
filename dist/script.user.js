@@ -1,18 +1,18 @@
-(o=>{if(typeof GM_addStyle=="function"){GM_addStyle(o);return}const t=document.createElement("style");t.textContent=o,document.head.append(t)})(" /*! PhotoSwipe main CSS by Dmytro Semenov | photoswipe.com */.pswp{--pswp-bg: #000;--pswp-placeholder-bg: #222;--pswp-root-z-index: 100000;--pswp-preloader-color: rgba(79, 79, 79, .4);--pswp-preloader-color-secondary: rgba(255, 255, 255, .9);--pswp-icon-color: #fff;--pswp-icon-color-secondary: #4f4f4f;--pswp-icon-stroke-color: #4f4f4f;--pswp-icon-stroke-width: 2px;--pswp-error-text-color: var(--pswp-icon-color)}.pswp{position:fixed;top:0;left:0;width:100%;height:100%;z-index:var(--pswp-root-z-index);display:none;touch-action:none;outline:0;opacity:.003;contain:layout style size;-webkit-tap-highlight-color:rgba(0,0,0,0)}.pswp:focus{outline:0}.pswp *{box-sizing:border-box}.pswp img{max-width:none}.pswp--open{display:block}.pswp,.pswp__bg{transform:translateZ(0);will-change:opacity}.pswp__bg{opacity:.005;background:var(--pswp-bg)}.pswp,.pswp__scroll-wrap{overflow:hidden}.pswp__scroll-wrap,.pswp__bg,.pswp__container,.pswp__item,.pswp__content,.pswp__img,.pswp__zoom-wrap{position:absolute;top:0;left:0;width:100%;height:100%}.pswp__img,.pswp__zoom-wrap{width:auto;height:auto}.pswp--click-to-zoom.pswp--zoom-allowed .pswp__img{cursor:-webkit-zoom-in;cursor:-moz-zoom-in;cursor:zoom-in}.pswp--click-to-zoom.pswp--zoomed-in .pswp__img{cursor:move;cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.pswp--click-to-zoom.pswp--zoomed-in .pswp__img:active{cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.pswp--no-mouse-drag.pswp--zoomed-in .pswp__img,.pswp--no-mouse-drag.pswp--zoomed-in .pswp__img:active,.pswp__img{cursor:-webkit-zoom-out;cursor:-moz-zoom-out;cursor:zoom-out}.pswp__container,.pswp__img,.pswp__button,.pswp__counter{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.pswp__item{z-index:1;overflow:hidden}.pswp__hidden{display:none!important}.pswp__content{pointer-events:none}.pswp__content>*{pointer-events:auto}.pswp__error-msg-container{display:grid}.pswp__error-msg{margin:auto;font-size:1em;line-height:1;color:var(--pswp-error-text-color)}.pswp .pswp__hide-on-close{opacity:.005;will-change:opacity;transition:opacity var(--pswp-transition-duration) cubic-bezier(.4,0,.22,1);z-index:10;pointer-events:none}.pswp--ui-visible .pswp__hide-on-close{opacity:1;pointer-events:auto}.pswp__button{position:relative;display:block;width:50px;height:60px;padding:0;margin:0;overflow:hidden;cursor:pointer;background:none;border:0;box-shadow:none;opacity:.85;-webkit-appearance:none;-webkit-touch-callout:none}.pswp__button:hover,.pswp__button:active,.pswp__button:focus{transition:none;padding:0;background:none;border:0;box-shadow:none;opacity:1}.pswp__button:disabled{opacity:.3;cursor:auto}.pswp__icn{fill:var(--pswp-icon-color);color:var(--pswp-icon-color-secondary)}.pswp__icn{position:absolute;top:14px;left:9px;width:32px;height:32px;overflow:hidden;pointer-events:none}.pswp__icn-shadow{stroke:var(--pswp-icon-stroke-color);stroke-width:var(--pswp-icon-stroke-width);fill:none}.pswp__icn:focus{outline:0}div.pswp__img--placeholder,.pswp__img--with-bg{background:var(--pswp-placeholder-bg)}.pswp__top-bar{position:absolute;left:0;top:0;width:100%;height:60px;display:flex;flex-direction:row;justify-content:flex-end;z-index:10;pointer-events:none!important}.pswp__top-bar>*{pointer-events:auto;will-change:opacity}.pswp__button--close{margin-right:6px}.pswp__button--arrow{position:absolute;width:75px;height:100px;top:50%;margin-top:-50px}.pswp__button--arrow:disabled{display:none;cursor:default}.pswp__button--arrow .pswp__icn{top:50%;margin-top:-30px;width:60px;height:60px;background:none;border-radius:0}.pswp--one-slide .pswp__button--arrow{display:none}.pswp--touch .pswp__button--arrow{visibility:hidden}.pswp--has_mouse .pswp__button--arrow{visibility:visible}.pswp__button--arrow--prev{right:auto;left:0}.pswp__button--arrow--next{right:0}.pswp__button--arrow--next .pswp__icn{left:auto;right:14px;transform:scaleX(-1)}.pswp__button--zoom{display:none}.pswp--zoom-allowed .pswp__button--zoom{display:block}.pswp--zoomed-in .pswp__zoom-icn-bar-v{display:none}.pswp__preloader{position:relative;overflow:hidden;width:50px;height:60px;margin-right:auto}.pswp__preloader .pswp__icn{opacity:0;transition:opacity .2s linear;animation:pswp-clockwise .6s linear infinite}.pswp__preloader--active .pswp__icn{opacity:.85}@keyframes pswp-clockwise{0%{transform:rotate(0)}to{transform:rotate(360deg)}}.pswp__counter{height:30px;margin-top:15px;margin-inline-start:20px;font-size:14px;line-height:30px;color:var(--pswp-icon-color);text-shadow:1px 1px 3px var(--pswp-icon-color-secondary);opacity:.85}.pswp--one-slide .pswp__counter{display:none}.list-contents li.with-ext-info{height:auto!important;padding-bottom:12px;flex-wrap:wrap;align-content:flex-start}.list-contents li.with-ext-info .ext-info-root{width:100%;position:relative;display:flex}.list-contents li.with-actress-info{height:auto!important}.list-contents li.with-actress-info .file-type{top:50%;transform:translateY(-50%);transition:none}.list-contents li.with-actress-info .file-name-wrap{display:flex;align-items:center;flex-direction:row;justify-content:flex-start;height:auto!important;padding-top:12px;padding-bottom:12px}.list-contents li.with-actress-info .file-name-wrap .actress-info-img{width:50px;height:50px;border-radius:50%;object-fit:cover;margin-right:12px;border:3px solid #f1f1f1;box-shadow:0 0 5px #0000001a;background-color:#f1f1f1}.list-contents li.with-ext-video-cover{height:auto!important;flex-wrap:wrap;align-content:flex-start;padding-top:0;padding-bottom:12px}.list-contents li.with-ext-video-cover:first-child{padding-top:16px}.list-contents li.with-ext-video-cover .file-name-wrap{margin-bottom:0}.list-contents li.with-ext-video-cover .ext-video-cover-root{width:100%;height:100%;position:relative;display:flex;padding-left:83px}.master-back-button{display:inline-flex;align-items:center;text-align:center;padding:4px 13px;font-size:12px;border-radius:4px;margin:auto 9px auto -6px;background-color:#f2f4f8;color:#666;vertical-align:middle;flex-shrink:0}.master-back-button:hover{background-color:color-mix(in srgb,var(--official-theme) 10%,transparent 0%);color:var(--office-theme)}.master-back-button:active{background-color:color-mix(in srgb,var(--official-theme) 15%,transparent 0%)}.master-back-button iconify-icon{margin-right:4px;font-size:14px}:root{--official-theme: #2777f8}.x-popup[data-v-99798271]>*{position:relative;z-index:1}@keyframes loading-bounce-b1053826{0%,80%,to{transform:scale(0);opacity:.3}40%{transform:scale(1);opacity:1}}.loading-dot-bounce[data-v-b1053826]{animation:loading-bounce-b1053826 1.4s infinite ease-in-out both}.loading-dot-delay-1[data-v-b1053826]{animation-delay:-.32s}.loading-dot-delay-2[data-v-b1053826]{animation-delay:-.16s}.loading-dot-delay-3[data-v-b1053826]{animation-delay:0s}@keyframes fadeOut{0%{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.4)}} ");
+(o=>{if(typeof GM_addStyle=="function"){GM_addStyle(o);return}const t=document.createElement("style");t.textContent=o,document.head.append(t)})(" /*! PhotoSwipe main CSS by Dmytro Semenov | photoswipe.com */.pswp{--pswp-bg: #000;--pswp-placeholder-bg: #222;--pswp-root-z-index: 100000;--pswp-preloader-color: rgba(79, 79, 79, .4);--pswp-preloader-color-secondary: rgba(255, 255, 255, .9);--pswp-icon-color: #fff;--pswp-icon-color-secondary: #4f4f4f;--pswp-icon-stroke-color: #4f4f4f;--pswp-icon-stroke-width: 2px;--pswp-error-text-color: var(--pswp-icon-color)}.pswp{position:fixed;top:0;left:0;width:100%;height:100%;z-index:var(--pswp-root-z-index);display:none;touch-action:none;outline:0;opacity:.003;contain:layout style size;-webkit-tap-highlight-color:rgba(0,0,0,0)}.pswp:focus{outline:0}.pswp *{box-sizing:border-box}.pswp img{max-width:none}.pswp--open{display:block}.pswp,.pswp__bg{transform:translateZ(0);will-change:opacity}.pswp__bg{opacity:.005;background:var(--pswp-bg)}.pswp,.pswp__scroll-wrap{overflow:hidden}.pswp__scroll-wrap,.pswp__bg,.pswp__container,.pswp__item,.pswp__content,.pswp__img,.pswp__zoom-wrap{position:absolute;top:0;left:0;width:100%;height:100%}.pswp__img,.pswp__zoom-wrap{width:auto;height:auto}.pswp--click-to-zoom.pswp--zoom-allowed .pswp__img{cursor:-webkit-zoom-in;cursor:-moz-zoom-in;cursor:zoom-in}.pswp--click-to-zoom.pswp--zoomed-in .pswp__img{cursor:move;cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.pswp--click-to-zoom.pswp--zoomed-in .pswp__img:active{cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.pswp--no-mouse-drag.pswp--zoomed-in .pswp__img,.pswp--no-mouse-drag.pswp--zoomed-in .pswp__img:active,.pswp__img{cursor:-webkit-zoom-out;cursor:-moz-zoom-out;cursor:zoom-out}.pswp__container,.pswp__img,.pswp__button,.pswp__counter{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.pswp__item{z-index:1;overflow:hidden}.pswp__hidden{display:none!important}.pswp__content{pointer-events:none}.pswp__content>*{pointer-events:auto}.pswp__error-msg-container{display:grid}.pswp__error-msg{margin:auto;font-size:1em;line-height:1;color:var(--pswp-error-text-color)}.pswp .pswp__hide-on-close{opacity:.005;will-change:opacity;transition:opacity var(--pswp-transition-duration) cubic-bezier(.4,0,.22,1);z-index:10;pointer-events:none}.pswp--ui-visible .pswp__hide-on-close{opacity:1;pointer-events:auto}.pswp__button{position:relative;display:block;width:50px;height:60px;padding:0;margin:0;overflow:hidden;cursor:pointer;background:none;border:0;box-shadow:none;opacity:.85;-webkit-appearance:none;-webkit-touch-callout:none}.pswp__button:hover,.pswp__button:active,.pswp__button:focus{transition:none;padding:0;background:none;border:0;box-shadow:none;opacity:1}.pswp__button:disabled{opacity:.3;cursor:auto}.pswp__icn{fill:var(--pswp-icon-color);color:var(--pswp-icon-color-secondary)}.pswp__icn{position:absolute;top:14px;left:9px;width:32px;height:32px;overflow:hidden;pointer-events:none}.pswp__icn-shadow{stroke:var(--pswp-icon-stroke-color);stroke-width:var(--pswp-icon-stroke-width);fill:none}.pswp__icn:focus{outline:0}div.pswp__img--placeholder,.pswp__img--with-bg{background:var(--pswp-placeholder-bg)}.pswp__top-bar{position:absolute;left:0;top:0;width:100%;height:60px;display:flex;flex-direction:row;justify-content:flex-end;z-index:10;pointer-events:none!important}.pswp__top-bar>*{pointer-events:auto;will-change:opacity}.pswp__button--close{margin-right:6px}.pswp__button--arrow{position:absolute;width:75px;height:100px;top:50%;margin-top:-50px}.pswp__button--arrow:disabled{display:none;cursor:default}.pswp__button--arrow .pswp__icn{top:50%;margin-top:-30px;width:60px;height:60px;background:none;border-radius:0}.pswp--one-slide .pswp__button--arrow{display:none}.pswp--touch .pswp__button--arrow{visibility:hidden}.pswp--has_mouse .pswp__button--arrow{visibility:visible}.pswp__button--arrow--prev{right:auto;left:0}.pswp__button--arrow--next{right:0}.pswp__button--arrow--next .pswp__icn{left:auto;right:14px;transform:scaleX(-1)}.pswp__button--zoom{display:none}.pswp--zoom-allowed .pswp__button--zoom{display:block}.pswp--zoomed-in .pswp__zoom-icn-bar-v{display:none}.pswp__preloader{position:relative;overflow:hidden;width:50px;height:60px;margin-right:auto}.pswp__preloader .pswp__icn{opacity:0;transition:opacity .2s linear;animation:pswp-clockwise .6s linear infinite}.pswp__preloader--active .pswp__icn{opacity:.85}@keyframes pswp-clockwise{0%{transform:rotate(0)}to{transform:rotate(360deg)}}.pswp__counter{height:30px;margin-top:15px;margin-inline-start:20px;font-size:14px;line-height:30px;color:var(--pswp-icon-color);text-shadow:1px 1px 3px var(--pswp-icon-color-secondary);opacity:.85}.pswp--one-slide .pswp__counter{display:none}.list-contents li.with-ext-info{height:auto!important;padding-bottom:12px;flex-wrap:wrap;align-content:flex-start}.list-contents li.with-ext-info .ext-info-root{width:100%;position:relative;display:flex}.list-contents li.with-actress-info{height:auto!important}.list-contents li.with-actress-info .file-type{top:50%;transform:translateY(-50%);transition:none}.list-contents li.with-actress-info .file-name-wrap{display:flex;align-items:center;flex-direction:row;justify-content:flex-start;height:auto!important;padding-top:12px;padding-bottom:12px}.list-contents li.with-actress-info .file-name-wrap .actress-info-img{width:50px;height:50px;border-radius:50%;object-fit:cover;margin-right:12px;border:3px solid #f1f1f1;box-shadow:0 0 5px #0000001a;background-color:#f1f1f1}.list-contents li.with-ext-video-cover{height:auto!important;flex-wrap:wrap;align-content:flex-start;padding-top:0;padding-bottom:12px}.list-contents li.with-ext-video-cover:first-child{padding-top:16px}.list-contents li.with-ext-video-cover .file-name-wrap{margin-bottom:0}.list-contents li.with-ext-video-cover .ext-video-cover-root{width:100%;height:100%;position:relative;display:flex;padding-left:83px}.master-back-button{display:inline-flex;align-items:center;text-align:center;padding:4px 13px;font-size:12px;border-radius:4px;margin:auto 9px auto -6px;background-color:#f2f4f8;color:#666;vertical-align:middle;flex-shrink:0}.master-back-button:hover{background-color:color-mix(in srgb,var(--official-theme) 10%,transparent 0%);color:var(--office-theme)}.master-back-button:active{background-color:color-mix(in srgb,var(--official-theme) 15%,transparent 0%)}.master-back-button iconify-icon{margin-right:4px;font-size:14px}:root{--official-theme: #2777f8}.x-popup[data-v-935c5311]>*{position:relative;z-index:1}@keyframes loading-bounce-c8313f62{0%,80%,to{transform:scale(0);opacity:.3}40%{transform:scale(1);opacity:1}}.loading-dot-bounce[data-v-c8313f62]{animation:loading-bounce-c8313f62 1.4s infinite ease-in-out both}.loading-dot-delay-1[data-v-c8313f62]{animation-delay:-.32s}.loading-dot-delay-2[data-v-c8313f62]{animation-delay:-.16s}.loading-dot-delay-3[data-v-c8313f62]{animation-delay:0s}@keyframes fadeOut{0%{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.4)}} ");
 
-System.addImportMap({ imports: {"vue":"user:vue","lodash":"user:lodash","blueimp-md5":"user:blueimp-md5","photoswipe/lightbox":"user:photoswipe/lightbox","photoswipe":"user:photoswipe","big-integer":"user:big-integer","localforage":"user:localforage","m3u8-parser":"user:m3u8-parser","dayjs":"user:dayjs","hls.js":"user:hls.js"} });
+System.addImportMap({ imports: {"vue":"user:vue","lodash":"user:lodash","blueimp-md5":"user:blueimp-md5","big-integer":"user:big-integer","photoswipe/lightbox":"user:photoswipe/lightbox","photoswipe":"user:photoswipe","localforage":"user:localforage","m3u8-parser":"user:m3u8-parser","dayjs":"user:dayjs","hls.js":"user:hls.js"} });
 System.set("user:vue", (()=>{const _=Vue;('default' in _)||(_.default=_);return _})());
 System.set("user:lodash", (()=>{const _1=_;('default' in _1)||(_1.default=_1);return _1})());
 System.set("user:blueimp-md5", (()=>{const _=md5;('default' in _)||(_.default=_);return _})());
+System.set("user:big-integer", (()=>{const _=bigInt;('default' in _)||(_.default=_);return _})());
 System.set("user:photoswipe/lightbox", (()=>{const _=PhotoSwipeLightbox;('default' in _)||(_.default=_);return _})());
 System.set("user:photoswipe", (()=>{const _=photoswipe;('default' in _)||(_.default=_);return _})());
-System.set("user:big-integer", (()=>{const _=bigInt;('default' in _)||(_.default=_);return _})());
 System.set("user:localforage", (()=>{const _=localforage;('default' in _)||(_.default=_);return _})());
 System.set("user:m3u8-parser", (()=>{const _=m3u8Parser;('default' in _)||(_.default=_);return _})());
 System.set("user:dayjs", (()=>{const _=dayjs;('default' in _)||(_.default=_);return _})());
 System.set("user:hls.js", (()=>{const _=Hls;('default' in _)||(_.default=_);return _})());
 
-System.register("./__entry.js", ['./__monkey.entry-BHT4dv06.js'], (function (exports, module) {
+System.register("./__entry.js", ['./__monkey.entry-BzBceu9h.js'], (function (exports, module) {
 	'use strict';
 	return {
 		setters: [null],
@@ -24,7 +24,7 @@ System.register("./__entry.js", ['./__monkey.entry-BHT4dv06.js'], (function (exp
 	};
 }));
 
-System.register("./__monkey.entry-BHT4dv06.js", ['lodash', 'localforage', 'blueimp-md5', 'big-integer', 'vue', 'photoswipe/lightbox', 'm3u8-parser'], (function (exports, module) {
+System.register("./__monkey.entry-BzBceu9h.js", ['lodash', 'localforage', 'blueimp-md5', 'big-integer', 'vue', 'photoswipe/lightbox', 'm3u8-parser'], (function (exports, module) {
   'use strict';
   var merge, defer, throttle, localforage, md5, bigInt, defineComponent, ref, shallowRef, onMounted, watch, onUnmounted, h, nextTick, createApp, defineAsyncComponent, computed, onBeforeUnmount, createElementBlock, openBlock, normalizeClass, createElementVNode, createCommentVNode, unref, createVNode, Fragment, renderList, withModifiers, toValue, renderSlot, createTextVNode, toDisplayString, reactive, getCurrentInstance, isRef, toRef$1, readonly, customRef, getCurrentScope, onScopeDispose, toRaw, PhotoSwipeLightbox, Parser;
   return {
@@ -6178,6 +6178,158 @@ System.register("./__monkey.entry-BHT4dv06.js", ['lodash', 'localforage', 'bluei
       function promiseDelay(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
       }
+      class FetchIO {
+        /**
+         * 从URL获取指定范围的ArrayBuffer
+         * @param url 目标URL
+         * @param start 起始字节
+         * @param end 结束字节
+         * @returns 获取到的ArrayBuffer
+         */
+        async fetchBufferRange(url, start, end) {
+          const response = fetch(url, {
+            method: "GET",
+            headers: {
+              Range: `bytes=${start}-${end}`
+            },
+            priority: "low"
+          });
+          return response;
+        }
+        /**
+         * 流式读取视频块
+         */
+        async streamChunks(url, callback, options = {}) {
+          const stepChunkSize = options.stepChunkSize || 385024;
+          let currentPosition = 0;
+          let shouldContinue = true;
+          try {
+            while (shouldContinue) {
+              const response = await this.fetchBufferRange(url, currentPosition, currentPosition + stepChunkSize - 1);
+              if (response.status !== 206) {
+                shouldContinue = false;
+                break;
+              }
+              shouldContinue = await callback(await response.arrayBuffer(), currentPosition);
+              currentPosition += stepChunkSize;
+            }
+          } catch (error) {
+            console.error("流式读取数据出错:", error);
+            throw error;
+          }
+        }
+      }
+      class HlsIO {
+        constructor() {
+          Object.defineProperty(this, "info", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+          });
+          Object.defineProperty(this, "segmentIndex", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+          });
+          Object.defineProperty(this, "segments", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: []
+          });
+          Object.defineProperty(this, "duration", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 0
+          });
+        }
+        /** 当前分片 */
+        get segment() {
+          return this.segments[this.segmentIndex];
+        }
+        /** 当前分片URL */
+        get segmentUrl() {
+          if (!this.info) {
+            throw new Error("info is undefined");
+          }
+          return new URL(this.segment.uri, this.info.url).href;
+        }
+        /**
+         * 打开
+         * @param info 请求信息
+         */
+        async open(info) {
+          this.info = info;
+          await this.fetchMasterPlaylist();
+        }
+        /**
+         * 读取
+         * @param range 范围
+         * @returns 获取到的ArrayBuffer
+         */
+        async read(range) {
+          var _a;
+          const response = await fetch(this.segments[this.segmentIndex].uri, {
+            headers: {
+              Range: `bytes=${range.start}-${range.end}`
+            },
+            ...((_a = this.info) == null ? void 0 : _a.fetchOptions) ?? {}
+          });
+          return await response.arrayBuffer();
+        }
+        /**
+         * 跳转
+         * @param time 时间
+         * @returns 跳转到的分片
+         */
+        async seek(time) {
+          this.segmentIndex = this.segments.findIndex((i) => i.timestamp <= time && time <= i.timestamp + i.duration);
+          if (this.segmentIndex === -1) {
+            throw new Error("时间超出范围");
+          }
+          return this.segment;
+        }
+        /**
+         * 销毁
+         */
+        destroy() {
+          this.segments = [];
+          this.segmentIndex = 0;
+          this.duration = 0;
+          this.info = void 0;
+        }
+        /**
+         * 获取主播放列表
+         */
+        async fetchMasterPlaylist() {
+          if (!this.info) {
+            throw new Error("info is undefined");
+          }
+          const response = await fetch(this.info.url, {
+            headers: this.info.headers
+          });
+          const m3u8Text = await response.text();
+          const parser = new Parser();
+          parser.push(m3u8Text);
+          parser.end();
+          let start = 0;
+          this.segments = parser.manifest.segments.map((segment) => {
+            var _a;
+            const timestamp = start;
+            start += segment.duration;
+            return {
+              ...segment,
+              duration: segment.duration,
+              timestamp,
+              url: new URL(segment.uri, (_a = this.info) == null ? void 0 : _a.url).href
+            };
+          });
+          this.duration = start;
+        }
+      }
       var Events;
       (function(Events2) {
         Events2["ERROR"] = "ERROR";
@@ -8942,158 +9094,6 @@ System.register("./__monkey.entry-BHT4dv06.js", ['lodash', 'localforage', 'bluei
           const endTime = performance.now();
           const duration = endTime - this.firstOnDataTime;
           console.log(`解复用完成，耗时: ${duration} 毫秒`);
-        }
-      }
-      class FetchIO {
-        /**
-         * 从URL获取指定范围的ArrayBuffer
-         * @param url 目标URL
-         * @param start 起始字节
-         * @param end 结束字节
-         * @returns 获取到的ArrayBuffer
-         */
-        async fetchBufferRange(url, start, end) {
-          const response = fetch(url, {
-            method: "GET",
-            headers: {
-              Range: `bytes=${start}-${end}`
-            },
-            priority: "low"
-          });
-          return response;
-        }
-        /**
-         * 流式读取视频块
-         */
-        async streamChunks(url, callback, options = {}) {
-          const stepChunkSize = options.stepChunkSize || 385024;
-          let currentPosition = 0;
-          let shouldContinue = true;
-          try {
-            while (shouldContinue) {
-              const response = await this.fetchBufferRange(url, currentPosition, currentPosition + stepChunkSize - 1);
-              if (response.status !== 206) {
-                shouldContinue = false;
-                break;
-              }
-              shouldContinue = await callback(await response.arrayBuffer(), currentPosition);
-              currentPosition += stepChunkSize;
-            }
-          } catch (error) {
-            console.error("流式读取数据出错:", error);
-            throw error;
-          }
-        }
-      }
-      class HlsIO {
-        constructor() {
-          Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-          });
-          Object.defineProperty(this, "segmentIndex", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-          });
-          Object.defineProperty(this, "segments", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-          });
-          Object.defineProperty(this, "duration", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-          });
-        }
-        /** 当前分片 */
-        get segment() {
-          return this.segments[this.segmentIndex];
-        }
-        /** 当前分片URL */
-        get segmentUrl() {
-          if (!this.info) {
-            throw new Error("info is undefined");
-          }
-          return new URL(this.segment.uri, this.info.url).href;
-        }
-        /**
-         * 打开
-         * @param info 请求信息
-         */
-        async open(info) {
-          this.info = info;
-          await this.fetchMasterPlaylist();
-        }
-        /**
-         * 读取
-         * @param range 范围
-         * @returns 获取到的ArrayBuffer
-         */
-        async read(range) {
-          var _a;
-          const response = await fetch(this.segments[this.segmentIndex].uri, {
-            headers: {
-              Range: `bytes=${range.start}-${range.end}`
-            },
-            ...((_a = this.info) == null ? void 0 : _a.fetchOptions) ?? {}
-          });
-          return await response.arrayBuffer();
-        }
-        /**
-         * 跳转
-         * @param time 时间
-         * @returns 跳转到的分片
-         */
-        async seek(time) {
-          this.segmentIndex = this.segments.findIndex((i) => i.timestamp <= time && time <= i.timestamp + i.duration);
-          if (this.segmentIndex === -1) {
-            throw new Error("时间超出范围");
-          }
-          return this.segment;
-        }
-        /**
-         * 销毁
-         */
-        destroy() {
-          this.segments = [];
-          this.segmentIndex = 0;
-          this.duration = 0;
-          this.info = void 0;
-        }
-        /**
-         * 获取主播放列表
-         */
-        async fetchMasterPlaylist() {
-          if (!this.info) {
-            throw new Error("info is undefined");
-          }
-          const response = await fetch(this.info.url, {
-            headers: this.info.headers
-          });
-          const m3u8Text = await response.text();
-          const parser = new Parser();
-          parser.push(m3u8Text);
-          parser.end();
-          let start = 0;
-          this.segments = parser.manifest.segments.map((segment) => {
-            var _a;
-            const timestamp = start;
-            start += segment.duration;
-            return {
-              ...segment,
-              duration: segment.duration,
-              timestamp,
-              url: new URL(segment.uri, (_a = this.info) == null ? void 0 : _a.url).href
-            };
-          });
-          this.duration = start;
         }
       }
       const microsecTimebase = {
@@ -12837,7 +12837,7 @@ System.register("./__monkey.entry-BHT4dv06.js", ['lodash', 'localforage', 'bluei
         style.dataset.v = "style_css";
         document.head.append(style);
         createApp(defineAsyncComponent({
-          loader: () => __vitePreload(() => module.import('./index-BOXNQfwu-DzNDAMmn.js'), void 0 )
+          loader: () => __vitePreload(() => module.import('./index-DyGkyIRh-BVJmzfFR.js'), void 0 )
         })).mount("#my-app");
       }
       class DebugInfo {
@@ -12890,7 +12890,7 @@ System.register("./__monkey.entry-BHT4dv06.js", ['lodash', 'localforage', 'bluei
   };
 }));
 
-System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv06.js', 'lodash', 'hls.js', 'localforage', 'dayjs', 'blueimp-md5', 'big-integer', 'photoswipe/lightbox', 'm3u8-parser'], (function (exports, module) {
+System.register("./index-DyGkyIRh-BVJmzfFR.js", ['vue', './__monkey.entry-BzBceu9h.js', 'lodash', 'hls.js', 'localforage', 'dayjs', 'blueimp-md5', 'big-integer', 'photoswipe/lightbox', 'm3u8-parser'], (function (exports, module) {
   'use strict';
   var defineComponent, ref, shallowRef, computed, onMounted, createElementBlock, openBlock, normalizeClass, createElementVNode, createCommentVNode, unref, createVNode, normalizeStyle, withCtx, reactive, onUnmounted, watch, watchEffect, createBlock, renderSlot, toDisplayString, Fragment, renderList, useTemplateRef, createTextVNode, nextTick, provide, Transition, withModifiers, toValue, inject, withDirectives, vShow, Teleport, mergeProps, Icon, ICON_PLAYLIST, ICON_SKIP_PREVIOUS, ICON_SKIP_NEXT, PLUS_VERSION, useStorage, Scheduler, tryOnUnmounted, useAsyncState, useThrottleFn, useDebounceFn, useTitle, _sfc_main$1$1, ICON_STAR_FILL, ICON_STAR, ICON_CLOSE, goToPlayer, drive115, setVideoCookie, qualityNumMap, blurTime, SchedulerError, FRIENDLY_ERROR_MESSAGE, M3U8ClipperNew, useVModels, useSmartVideoCover, getImageResize, useEventListener, useElementSize, useCssVar$1, useMouseInElement, qualityPreferenceCache, transformPreferenceCache, useVModel, useElementBounding, onClickOutside, getDefaultExportFromCjs, syncRef, toReactive, useIntervalFn, CDN_BASE_URL, _unsafeWindow, shuffle, get, Hls, dayjs;
   return {
@@ -15909,41 +15909,6 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
         }
         return context;
       }
-      function useControlsMouseDetection(elementRef) {
-        const { controls } = usePlayerContext();
-        const { isOutside } = useMouseInElement(elementRef);
-        const hasAddedDisabled = shallowRef(false);
-        const stop = watchEffect(() => {
-          if (!isOutside.value) {
-            if (!hasAddedDisabled.value) {
-              controls.addDisabledAutoHide();
-              hasAddedDisabled.value = true;
-            }
-            return () => {
-              if (hasAddedDisabled.value) {
-                controls.removeDisabledAutoHide();
-                hasAddedDisabled.value = false;
-              }
-            };
-          }
-          if (hasAddedDisabled.value) {
-            controls.removeDisabledAutoHide();
-            hasAddedDisabled.value = false;
-          }
-          return () => {
-          };
-        });
-        onUnmounted(() => {
-          stop();
-          if (hasAddedDisabled.value) {
-            controls.removeDisabledAutoHide();
-            hasAddedDisabled.value = false;
-          }
-        });
-        return {
-          isOutside
-        };
-      }
       const PortalSymbol = Symbol("XPlayerPortal");
       function usePortalProvider() {
         const container = ref();
@@ -16141,10 +16106,243 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
         }
         return target;
       };
-      const Popup = /* @__PURE__ */ _export_sfc(_sfc_main$r, [["__scopeId", "data-v-99798271"]]);
-      const _hoisted_1$c = ["disabled"];
-      const _hoisted_2$8 = ["disabled", "onClick"];
+      const Popup = /* @__PURE__ */ _export_sfc(_sfc_main$r, [["__scopeId", "data-v-935c5311"]]);
+      const _hoisted_1$c = ["value", "min", "max"];
       const _sfc_main$q = /* @__PURE__ */ defineComponent({
+        __name: "index",
+        setup(__props) {
+          const styles = {
+            popup: "left-4! top-4! shadow-xs/90",
+            wrap: "flex items-center gap-2 px-2",
+            content: "flex flex-col gap-1 flex-1 px-1",
+            icon: "size-6",
+            title: "text-sm font-semibold",
+            progress: "progress progress-primary h-1 w-35",
+            value: "text-sm font-semibold text-base-content/70"
+          };
+          const { hud } = usePlayerContext();
+          const showMessage = ref(false);
+          const displayMessage = ref(null);
+          const message = computed(() => {
+            return (hud == null ? void 0 : hud.messages.value[0]) || null;
+          });
+          watch(message, (newMessage) => {
+            if (newMessage) {
+              displayMessage.value = newMessage;
+              showMessage.value = true;
+            } else {
+              showMessage.value = false;
+            }
+          });
+          function onPopupAfterLeave() {
+            displayMessage.value = null;
+          }
+          return (_ctx, _cache) => {
+            return openBlock(), createBlock(Popup, {
+              class: normalizeClass(styles.popup),
+              visible: showMessage.value,
+              x: 0,
+              y: 0,
+              "allow-prevent-controls-close": false,
+              onAfterLeave: onPopupAfterLeave
+            }, {
+              default: withCtx(() => [
+                displayMessage.value ? (openBlock(), createElementBlock("div", {
+                  key: 0,
+                  class: normalizeClass(styles.wrap)
+                }, [
+                  displayMessage.value.icon ? (openBlock(), createBlock(unref(Icon), {
+                    key: 0,
+                    class: normalizeClass([styles.icon, displayMessage.value.iconClass]),
+                    icon: displayMessage.value.icon
+                  }, null, 8, ["class", "icon"])) : createCommentVNode("", true),
+                  createElementVNode("div", {
+                    class: normalizeClass(styles.content)
+                  }, [
+                    displayMessage.value.title ? (openBlock(), createElementBlock("div", {
+                      key: 0,
+                      class: normalizeClass(styles.title)
+                    }, toDisplayString(displayMessage.value.title ?? ""), 3)) : createCommentVNode("", true),
+                    displayMessage.value && displayMessage.value.progress ? (openBlock(), createElementBlock("progress", {
+                      key: 1,
+                      class: normalizeClass(styles.progress),
+                      value: displayMessage.value.progress.value,
+                      min: displayMessage.value.progress.min,
+                      max: displayMessage.value.progress.max
+                    }, null, 10, _hoisted_1$c)) : createCommentVNode("", true),
+                    displayMessage.value.value ? (openBlock(), createElementBlock("div", {
+                      key: 2,
+                      class: normalizeClass(styles.value)
+                    }, toDisplayString(displayMessage.value.value), 3)) : createCommentVNode("", true)
+                  ], 2)
+                ], 2)) : createCommentVNode("", true)
+              ]),
+              _: 1
+            }, 8, ["class", "visible"]);
+          };
+        }
+      });
+      const _sfc_main$p = /* @__PURE__ */ defineComponent({
+        __name: "index",
+        setup(__props) {
+          const styles = {
+            container: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 drop-shadow-xl/30",
+            animation: {
+              wrapper: "inline-flex items-center justify-between gap-2.5",
+              dot: ["w-2.5 h-2.5 bg-white rounded-full", "loading-dot-bounce"],
+              dot1: "loading-dot-delay-1",
+              dot2: "loading-dot-delay-2",
+              dot3: "loading-dot-delay-3"
+            },
+            speed: "text-sm font-semibold text-base-content"
+          };
+          const { playerCore } = usePlayerContext();
+          return (_ctx, _cache) => {
+            var _a, _b, _c;
+            return openBlock(), createElementBlock("div", {
+              class: normalizeClass(styles.container)
+            }, [
+              createElementVNode("div", {
+                class: normalizeClass(styles.animation.wrapper)
+              }, [
+                createElementVNode("span", {
+                  class: normalizeClass([styles.animation.dot, styles.animation.dot1])
+                }, null, 2),
+                createElementVNode("span", {
+                  class: normalizeClass([styles.animation.dot, styles.animation.dot2])
+                }, null, 2),
+                createElementVNode("span", {
+                  class: normalizeClass([styles.animation.dot, styles.animation.dot3])
+                }, null, 2)
+              ], 2),
+              ((_a = unref(playerCore)) == null ? void 0 : _a.type) === unref(PlayerCoreType).AvPlayer && (((_b = unref(playerCore).stats) == null ? void 0 : _b.bandwidth) ?? 0) > 0 ? (openBlock(), createElementBlock("div", {
+                key: 0,
+                class: normalizeClass(styles.speed)
+              }, toDisplayString(Math.round((((_c = unref(playerCore).stats) == null ? void 0 : _c.bandwidth) ?? 0) / 1024 / 1024 * 100) / 100) + " Mbps/s ", 3)) : createCommentVNode("", true)
+            ], 2);
+          };
+        }
+      });
+      const Loading = /* @__PURE__ */ _export_sfc(_sfc_main$p, [["__scopeId", "data-v-c8313f62"]]);
+      const _sfc_main$o = /* @__PURE__ */ defineComponent({
+        __name: "index",
+        setup(__props) {
+          const styles = {
+            container: [
+              "absolute inset-0 m-auto",
+              "flex items-center justify-center",
+              "size-20 bg-black/30 rounded-full drop-shadow-xs/60"
+            ],
+            icon: "size-[61.8%]"
+          };
+          const { playerCore } = usePlayerContext();
+          const visible = shallowRef(false);
+          const isShowPause = shallowRef(false);
+          const shouldAnimate = shallowRef(false);
+          const animationClass = computed(() => {
+            if (shouldAnimate.value) {
+              return "animate-[fadeOut_350ms_linear_forwards]";
+            }
+            return "";
+          });
+          function showPlayButton() {
+            visible.value = true;
+            isShowPause.value = false;
+            shouldAnimate.value = false;
+          }
+          function showAnimationButton(paused) {
+            visible.value = true;
+            isShowPause.value = paused;
+            shouldAnimate.value = true;
+            setTimeout(() => {
+              visible.value = false;
+              shouldAnimate.value = false;
+            }, 300);
+          }
+          function hideButton() {
+            visible.value = false;
+            shouldAnimate.value = false;
+          }
+          watch(
+            () => {
+              var _a;
+              return (_a = playerCore.value) == null ? void 0 : _a.canplay;
+            },
+            (value) => {
+              var _a;
+              if (value) {
+                if ((_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.paused) {
+                  showPlayButton();
+                }
+              } else {
+                hideButton();
+              }
+            }
+          );
+          watch(
+            () => {
+              var _a;
+              return (_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.paused;
+            },
+            (value) => {
+              var _a;
+              if (!((_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.canplay)) {
+                return;
+              }
+              showAnimationButton(!!value);
+            }
+          );
+          return (_ctx, _cache) => {
+            return visible.value ? (openBlock(), createElementBlock("div", {
+              key: 0,
+              class: normalizeClass([styles.container, animationClass.value])
+            }, [
+              createVNode(unref(Icon), {
+                icon: isShowPause.value ? unref(ICON_PASUE) : unref(ICON_PLAY),
+                class: normalizeClass(styles.icon)
+              }, null, 8, ["icon", "class"])
+            ], 2)) : createCommentVNode("", true);
+          };
+        }
+      });
+      function useControlsMouseDetection(elementRef) {
+        const { controls } = usePlayerContext();
+        const { isOutside } = useMouseInElement(elementRef);
+        const hasAddedDisabled = shallowRef(false);
+        const stop = watchEffect(() => {
+          if (!isOutside.value) {
+            if (!hasAddedDisabled.value) {
+              controls.addDisabledAutoHide();
+              hasAddedDisabled.value = true;
+            }
+            return () => {
+              if (hasAddedDisabled.value) {
+                controls.removeDisabledAutoHide();
+                hasAddedDisabled.value = false;
+              }
+            };
+          }
+          if (hasAddedDisabled.value) {
+            controls.removeDisabledAutoHide();
+            hasAddedDisabled.value = false;
+          }
+          return () => {
+          };
+        });
+        onUnmounted(() => {
+          stop();
+          if (hasAddedDisabled.value) {
+            controls.removeDisabledAutoHide();
+            hasAddedDisabled.value = false;
+          }
+        });
+        return {
+          isOutside
+        };
+      }
+      const _hoisted_1$b = ["disabled"];
+      const _hoisted_2$8 = ["disabled", "onClick"];
+      const _sfc_main$n = /* @__PURE__ */ defineComponent({
         __name: "AudioTrackButton",
         setup(__props) {
           const styles = {
@@ -16171,7 +16369,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   class: normalizeClass([styles.btn.icon]),
                   icon: unref(ICON_AUDIO_TRACK)
                 }, null, 8, ["class", "icon"])
-              ], 10, _hoisted_1$c),
+              ], 10, _hoisted_1$b),
               ((_c = unref(playerCore)) == null ? void 0 : _c.type) === unref(PlayerCoreType).AvPlayer ? (openBlock(), createBlock(Popup, {
                 key: 0,
                 visible: menuVisible.value,
@@ -16211,7 +16409,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$p = /* @__PURE__ */ defineComponent({
+      const _sfc_main$m = /* @__PURE__ */ defineComponent({
         __name: "FullscreenButton",
         setup(__props) {
           const { fullscreen } = usePlayerContext();
@@ -16233,9 +16431,9 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$b = ["disabled"];
+      const _hoisted_1$a = ["disabled"];
       const _hoisted_2$7 = ["onClick"];
-      const _sfc_main$o = /* @__PURE__ */ defineComponent({
+      const _sfc_main$l = /* @__PURE__ */ defineComponent({
         __name: "PlaybackRateButton",
         setup(__props) {
           const styles = {
@@ -16267,7 +16465,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                 disabled: !((_a = unref(playerCore)) == null ? void 0 : _a.canplay),
                 "data-tip": "倍速 (ArrowUp/ArrowDown)",
                 onClick: toggleSpeedMenu
-              }, toDisplayString(buttonText.value), 11, _hoisted_1$b),
+              }, toDisplayString(buttonText.value), 11, _hoisted_1$a),
               createVNode(Popup, {
                 visible: menuVisible.value,
                 "onUpdate:visible": _cache[0] || (_cache[0] = ($event) => menuVisible.value = $event),
@@ -16298,8 +16496,8 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$a = ["disabled"];
-      const _sfc_main$n = /* @__PURE__ */ defineComponent({
+      const _hoisted_1$9 = ["disabled"];
+      const _sfc_main$k = /* @__PURE__ */ defineComponent({
         __name: "PlayButton",
         setup(__props) {
           const styles = {
@@ -16338,13 +16536,13 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   styles.btn.icon
                 ]])
               }, null, 8, ["icon", "class"])
-            ], 10, _hoisted_1$a);
+            ], 10, _hoisted_1$9);
           };
         }
       });
-      const _hoisted_1$9 = ["disabled"];
+      const _hoisted_1$8 = ["disabled"];
       const _hoisted_2$6 = ["onClick"];
-      const _sfc_main$m = /* @__PURE__ */ defineComponent({
+      const _sfc_main$j = /* @__PURE__ */ defineComponent({
         __name: "PlayerCoreButton",
         setup(__props) {
           const styles = {
@@ -16378,7 +16576,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   }]]),
                   icon: unref(ICON_PLAYER_CORE)
                 }, null, 8, ["class", "icon"])
-              ], 10, _hoisted_1$9),
+              ], 10, _hoisted_1$8),
               createVNode(Popup, {
                 visible: menuVisible.value,
                 "onUpdate:visible": _cache[0] || (_cache[0] = ($event) => menuVisible.value = $event),
@@ -16411,10 +16609,10 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$8 = ["data-tip"];
+      const _hoisted_1$7 = ["data-tip"];
       const _hoisted_2$5 = ["onClick"];
       const _hoisted_3$3 = { class: "flex flex-col" };
-      const _sfc_main$l = /* @__PURE__ */ defineComponent({
+      const _sfc_main$i = /* @__PURE__ */ defineComponent({
         __name: "PlayModeButton",
         setup(__props) {
           const ctx = usePlayerContext();
@@ -16452,7 +16650,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   icon: unref(PLAY_MODE_ICONS)[currentMode.value] || "material-symbols:pause-rounded",
                   class: normalizeClass(styles.btn.icon)
                 }, null, 8, ["icon", "class"])
-              ], 10, _hoisted_1$8),
+              ], 10, _hoisted_1$7),
               createVNode(Popup, {
                 visible: menuVisible.value,
                 "onUpdate:visible": _cache[0] || (_cache[0] = ($event) => menuVisible.value = $event),
@@ -16506,11 +16704,11 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
         }
         return value;
       }
-      const _hoisted_1$7 = ["height"];
+      const _hoisted_1$6 = ["height"];
       const _hoisted_2$4 = { key: 0 };
       const _hoisted_3$2 = { key: 1 };
       const DEFAULT_WIDTH = 250;
-      const _sfc_main$k = /* @__PURE__ */ defineComponent({
+      const _sfc_main$h = /* @__PURE__ */ defineComponent({
         __name: "index",
         props: {
           visible: { type: Boolean },
@@ -16743,7 +16941,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   ref: thumbnailCanvas,
                   width: DEFAULT_WIDTH,
                   height: unref(DEFAULT_HEIGHT)
-                }, null, 8, _hoisted_1$7),
+                }, null, 8, _hoisted_1$6),
                 createVNode(Transition, {
                   "enter-active-class": "transition-opacity duration-150 ease-out delay-60",
                   "leave-active-class": "transition-opacity duration-150 ease-out delay-60",
@@ -16779,7 +16977,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$j = /* @__PURE__ */ defineComponent({
+      const _sfc_main$g = /* @__PURE__ */ defineComponent({
         __name: "ProgressBar",
         setup(__props) {
           const styles = {
@@ -16982,7 +17180,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   ], 6)
                 ], 2)
               ], 34),
-              createVNode(_sfc_main$k, {
+              createVNode(_sfc_main$h, {
                 visible: isPreviewVisible.value || unref(isDragging),
                 position: unref(isDragging) ? dragProgress.value : previewProgress.value,
                 time: previewTime.value,
@@ -16993,8 +17191,8 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$6 = ["onClick"];
-      const _sfc_main$i = /* @__PURE__ */ defineComponent({
+      const _hoisted_1$5 = ["onClick"];
+      const _sfc_main$f = /* @__PURE__ */ defineComponent({
         __name: "QualityButton",
         setup(__props) {
           const styles = {
@@ -17054,7 +17252,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                             }
                           ]),
                           onClick: ($event) => handleQualityChange(item)
-                        }, toDisplayString(getDisplayQuality(item)), 11, _hoisted_1$6)
+                        }, toDisplayString(getDisplayQuality(item)), 11, _hoisted_1$5)
                       ]);
                     }), 128))
                   ], 2)
@@ -17065,20 +17263,20 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$5 = { class: "card card-sm bg-neutral-800" };
+      const _hoisted_1$4 = { class: "card card-sm bg-neutral-800" };
       const _hoisted_2$3 = { class: "card-body" };
       const _hoisted_3$1 = { class: "fieldset" };
       const _hoisted_4$1 = { class: "flex gap-2" };
       const _hoisted_5$1 = ["onClick"];
       const _hoisted_6$1 = { class: "fieldset" };
       const _hoisted_7$1 = ["checked"];
-      const _sfc_main$h = /* @__PURE__ */ defineComponent({
+      const _sfc_main$e = /* @__PURE__ */ defineComponent({
         __name: "ThumbnailSettings",
         setup(__props) {
           const { thumbnailSettings } = usePlayerContext();
           const samplingIntervals = [30, 60, 120];
           return (_ctx, _cache) => {
-            return openBlock(), createElementBlock("div", _hoisted_1$5, [
+            return openBlock(), createElementBlock("div", _hoisted_1$4, [
               createElementVNode("div", _hoisted_2$3, [
                 _cache[3] || (_cache[3] = createElementVNode("h3", { class: "card-title flex justify-between" }, [
                   createTextVNode(" 预览图 "),
@@ -17113,7 +17311,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$4 = { class: "card card-sm bg-neutral-800" };
+      const _hoisted_1$3 = { class: "card card-sm bg-neutral-800" };
       const _hoisted_2$2 = { class: "card-body" };
       const _hoisted_3 = { class: "fieldset" };
       const _hoisted_4 = { class: "fieldset-legend w-full" };
@@ -17124,12 +17322,12 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
       const _hoisted_9 = { class: "fieldset" };
       const _hoisted_10 = { class: "flex gap-2" };
       const _hoisted_11 = { class: "transform rotate-90" };
-      const _sfc_main$g = /* @__PURE__ */ defineComponent({
+      const _sfc_main$d = /* @__PURE__ */ defineComponent({
         __name: "TransformSettings",
         setup(__props) {
           const { transform } = usePlayerContext();
           return (_ctx, _cache) => {
-            return openBlock(), createElementBlock("div", _hoisted_1$4, [
+            return openBlock(), createElementBlock("div", _hoisted_1$3, [
               createElementVNode("div", _hoisted_2$2, [
                 _cache[9] || (_cache[9] = createElementVNode("h3", { class: "card-title" }, " 旋转与翻转 ", -1)),
                 createElementVNode("div", null, [
@@ -17208,7 +17406,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$f = /* @__PURE__ */ defineComponent({
+      const _sfc_main$c = /* @__PURE__ */ defineComponent({
         __name: "SettingsButton",
         setup(__props) {
           const styles = {
@@ -17253,8 +17451,8 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   createElementVNode("div", {
                     class: normalizeClass([styles.panel.root])
                   }, [
-                    createVNode(_sfc_main$h),
-                    createVNode(_sfc_main$g)
+                    createVNode(_sfc_main$e),
+                    createVNode(_sfc_main$d)
                   ], 2)
                 ]),
                 _: 1
@@ -17263,7 +17461,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$e = /* @__PURE__ */ defineComponent({
+      const _sfc_main$b = /* @__PURE__ */ defineComponent({
         __name: "TimeDisplay",
         setup(__props) {
           const { playerCore } = usePlayerContext();
@@ -17291,9 +17489,9 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _hoisted_1$3 = ["disabled"];
+      const _hoisted_1$2 = ["disabled"];
       const _hoisted_2$1 = ["value", "disabled"];
-      const _sfc_main$d = /* @__PURE__ */ defineComponent({
+      const _sfc_main$a = /* @__PURE__ */ defineComponent({
         __name: "VolumeControl",
         setup(__props) {
           const { playerCore, hud } = usePlayerContext();
@@ -17368,7 +17566,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                     class: normalizeClass(["swap-on", [styles.value.btn.icon]]),
                     icon: VolumeIcon.value
                   }, null, 8, ["class", "icon"])
-                ], 10, _hoisted_1$3),
+                ], 10, _hoisted_1$2),
                 createElementVNode("input", {
                   type: "range",
                   class: normalizeClass([styles.value.range]),
@@ -17383,7 +17581,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$c = /* @__PURE__ */ defineComponent({
+      const _sfc_main$9 = /* @__PURE__ */ defineComponent({
         __name: "ControlBar",
         setup(__props) {
           const styles = {
@@ -17435,7 +17633,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                       ref: unref(controls).mainRef,
                       class: normalizeClass([styles.controlBar.mainContent])
                     }, [
-                      createVNode(_sfc_main$j, {
+                      createVNode(_sfc_main$g, {
                         class: normalizeClass({
                           "opacity-0 pointer-events-none": !canplay.value,
                           "opacity-100 pointer-events-auto": canplay.value
@@ -17449,20 +17647,20 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                         createElementVNode("div", {
                           class: normalizeClass(styles.controlBar.left)
                         }, [
-                          createVNode(_sfc_main$n),
-                          createVNode(_sfc_main$d),
-                          createVNode(_sfc_main$e)
+                          createVNode(_sfc_main$k),
+                          createVNode(_sfc_main$a),
+                          createVNode(_sfc_main$b)
                         ], 2),
                         createElementVNode("div", {
                           class: normalizeClass(styles.controlBar.right)
                         }, [
-                          createVNode(_sfc_main$i),
-                          createVNode(_sfc_main$o),
-                          createVNode(_sfc_main$q),
-                          createVNode(_sfc_main$l),
-                          createVNode(_sfc_main$m),
                           createVNode(_sfc_main$f),
-                          createVNode(_sfc_main$p)
+                          createVNode(_sfc_main$l),
+                          createVNode(_sfc_main$n),
+                          createVNode(_sfc_main$i),
+                          createVNode(_sfc_main$j),
+                          createVNode(_sfc_main$c),
+                          createVNode(_sfc_main$m)
                         ], 2)
                       ], 2)
                     ], 2)
@@ -17474,7 +17672,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$b = /* @__PURE__ */ defineComponent({
+      const _sfc_main$8 = /* @__PURE__ */ defineComponent({
         __name: "ControlHeader",
         props: {
           title: {}
@@ -17531,7 +17729,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$a = /* @__PURE__ */ defineComponent({
+      const _sfc_main$7 = /* @__PURE__ */ defineComponent({
         __name: "ControlMask",
         setup(__props) {
           const styles = {
@@ -17569,7 +17767,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$9 = /* @__PURE__ */ defineComponent({
+      const _sfc_main$6 = /* @__PURE__ */ defineComponent({
         __name: "ControlsRight",
         setup(__props) {
           const styles = {
@@ -17607,7 +17805,7 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
           };
         }
       });
-      const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+      const _sfc_main$5 = /* @__PURE__ */ defineComponent({
         __name: "index",
         setup(__props) {
           const styles = {
@@ -17619,204 +17817,6 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
             }, [
               renderSlot(_ctx.$slots, "default")
             ], 2);
-          };
-        }
-      });
-      const _hoisted_1$2 = ["value", "min", "max"];
-      const _sfc_main$7 = /* @__PURE__ */ defineComponent({
-        __name: "index",
-        setup(__props) {
-          const styles = {
-            popup: "left-4! top-4! shadow-xs/90",
-            wrap: "flex items-center gap-2 px-2",
-            content: "flex flex-col gap-1 flex-1 px-1",
-            icon: "size-6",
-            title: "text-sm font-semibold",
-            progress: "progress progress-primary h-1 w-35",
-            value: "text-sm font-semibold text-base-content/70"
-          };
-          const { hud } = usePlayerContext();
-          const showMessage = ref(false);
-          const displayMessage = ref(null);
-          const message = computed(() => {
-            return (hud == null ? void 0 : hud.messages.value[0]) || null;
-          });
-          watch(message, (newMessage) => {
-            if (newMessage) {
-              displayMessage.value = newMessage;
-              showMessage.value = true;
-            } else {
-              showMessage.value = false;
-            }
-          });
-          function onPopupAfterLeave() {
-            displayMessage.value = null;
-          }
-          return (_ctx, _cache) => {
-            return openBlock(), createBlock(Popup, {
-              class: normalizeClass(styles.popup),
-              visible: showMessage.value,
-              x: 0,
-              y: 0,
-              "allow-prevent-controls-close": false,
-              onAfterLeave: onPopupAfterLeave
-            }, {
-              default: withCtx(() => [
-                displayMessage.value ? (openBlock(), createElementBlock("div", {
-                  key: 0,
-                  class: normalizeClass(styles.wrap)
-                }, [
-                  displayMessage.value.icon ? (openBlock(), createBlock(unref(Icon), {
-                    key: 0,
-                    class: normalizeClass([styles.icon, displayMessage.value.iconClass]),
-                    icon: displayMessage.value.icon
-                  }, null, 8, ["class", "icon"])) : createCommentVNode("", true),
-                  createElementVNode("div", {
-                    class: normalizeClass(styles.content)
-                  }, [
-                    displayMessage.value.title ? (openBlock(), createElementBlock("div", {
-                      key: 0,
-                      class: normalizeClass(styles.title)
-                    }, toDisplayString(displayMessage.value.title ?? ""), 3)) : createCommentVNode("", true),
-                    displayMessage.value && displayMessage.value.progress ? (openBlock(), createElementBlock("progress", {
-                      key: 1,
-                      class: normalizeClass(styles.progress),
-                      value: displayMessage.value.progress.value,
-                      min: displayMessage.value.progress.min,
-                      max: displayMessage.value.progress.max
-                    }, null, 10, _hoisted_1$2)) : createCommentVNode("", true),
-                    displayMessage.value.value ? (openBlock(), createElementBlock("div", {
-                      key: 2,
-                      class: normalizeClass(styles.value)
-                    }, toDisplayString(displayMessage.value.value), 3)) : createCommentVNode("", true)
-                  ], 2)
-                ], 2)) : createCommentVNode("", true)
-              ]),
-              _: 1
-            }, 8, ["class", "visible"]);
-          };
-        }
-      });
-      const _sfc_main$6 = /* @__PURE__ */ defineComponent({
-        __name: "index",
-        setup(__props) {
-          const styles = {
-            container: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 drop-shadow-xl/30",
-            animation: {
-              wrapper: "inline-flex items-center justify-between gap-2.5",
-              dot: ["w-2.5 h-2.5 bg-white rounded-full", "loading-dot-bounce"],
-              dot1: "loading-dot-delay-1",
-              dot2: "loading-dot-delay-2",
-              dot3: "loading-dot-delay-3"
-            },
-            speed: "text-sm font-semibold text-base-content"
-          };
-          const { playerCore } = usePlayerContext();
-          return (_ctx, _cache) => {
-            var _a, _b, _c;
-            return openBlock(), createElementBlock("div", {
-              class: normalizeClass(styles.container)
-            }, [
-              createElementVNode("div", {
-                class: normalizeClass(styles.animation.wrapper)
-              }, [
-                createElementVNode("span", {
-                  class: normalizeClass([styles.animation.dot, styles.animation.dot1])
-                }, null, 2),
-                createElementVNode("span", {
-                  class: normalizeClass([styles.animation.dot, styles.animation.dot2])
-                }, null, 2),
-                createElementVNode("span", {
-                  class: normalizeClass([styles.animation.dot, styles.animation.dot3])
-                }, null, 2)
-              ], 2),
-              ((_a = unref(playerCore)) == null ? void 0 : _a.type) === unref(PlayerCoreType).AvPlayer && (((_b = unref(playerCore).stats) == null ? void 0 : _b.bandwidth) ?? 0) > 0 ? (openBlock(), createElementBlock("div", {
-                key: 0,
-                class: normalizeClass(styles.speed)
-              }, toDisplayString(Math.round((((_c = unref(playerCore).stats) == null ? void 0 : _c.bandwidth) ?? 0) / 1024 / 1024 * 100) / 100) + " Mbps/s ", 3)) : createCommentVNode("", true)
-            ], 2);
-          };
-        }
-      });
-      const Loading = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-b1053826"]]);
-      const _sfc_main$5 = /* @__PURE__ */ defineComponent({
-        __name: "index",
-        setup(__props) {
-          const styles = {
-            container: [
-              "absolute inset-0 m-auto",
-              "flex items-center justify-center",
-              "size-20 bg-black/30 rounded-full drop-shadow-xs/60"
-            ],
-            icon: "size-[61.8%]"
-          };
-          const { playerCore } = usePlayerContext();
-          const visible = shallowRef(false);
-          const isShowPause = shallowRef(false);
-          const shouldAnimate = shallowRef(false);
-          const animationClass = computed(() => {
-            if (shouldAnimate.value) {
-              return "animate-[fadeOut_350ms_linear_forwards]";
-            }
-            return "";
-          });
-          function showPlayButton() {
-            visible.value = true;
-            isShowPause.value = false;
-            shouldAnimate.value = false;
-          }
-          function showAnimationButton(paused) {
-            visible.value = true;
-            isShowPause.value = paused;
-            shouldAnimate.value = true;
-            setTimeout(() => {
-              visible.value = false;
-              shouldAnimate.value = false;
-            }, 300);
-          }
-          function hideButton() {
-            visible.value = false;
-            shouldAnimate.value = false;
-          }
-          watch(
-            () => {
-              var _a;
-              return (_a = playerCore.value) == null ? void 0 : _a.canplay;
-            },
-            (value) => {
-              var _a;
-              if (value) {
-                if ((_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.paused) {
-                  showPlayButton();
-                }
-              } else {
-                hideButton();
-              }
-            }
-          );
-          watch(
-            () => {
-              var _a;
-              return (_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.paused;
-            },
-            (value) => {
-              var _a;
-              if (!((_a = playerCore == null ? void 0 : playerCore.value) == null ? void 0 : _a.canplay)) {
-                return;
-              }
-              showAnimationButton(!!value);
-            }
-          );
-          return (_ctx, _cache) => {
-            return visible.value ? (openBlock(), createElementBlock("div", {
-              key: 0,
-              class: normalizeClass([styles.container, animationClass.value])
-            }, [
-              createVNode(unref(Icon), {
-                icon: isShowPause.value ? unref(ICON_PASUE) : unref(ICON_PLAY),
-                class: normalizeClass(styles.icon)
-              }, null, 8, ["icon", "class"])
-            ], 2)) : createCommentVNode("", true);
           };
         }
       });
@@ -17910,23 +17910,23 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                   unref(transform).transformStyle.value
                 ])
               }, null, 6),
-              createVNode(_sfc_main$5),
+              createVNode(_sfc_main$o),
               ((_a2 = unref(playerCore)) == null ? void 0 : _a2.loadError) ? (openBlock(), createBlock(_sfc_main$1$1, {
                 key: 0,
                 class: normalizeClass(styles.error),
                 message: (_b2 = unref(playerCore)) == null ? void 0 : _b2.loadError
               }, null, 8, ["class", "message"])) : ((_c = unref(playerCore)) == null ? void 0 : _c.isLoading) ? (openBlock(), createBlock(Loading, { key: 1 })) : createCommentVNode("", true),
-              createVNode(_sfc_main$8, null, {
+              createVNode(_sfc_main$5, null, {
                 default: withCtx(() => [
-                  createVNode(_sfc_main$b, null, {
+                  createVNode(_sfc_main$8, null, {
                     left: withCtx(() => [
                       renderSlot(_ctx.$slots, "headerLeft")
                     ]),
                     _: 3
                   }),
-                  createVNode(_sfc_main$a, null, {
+                  createVNode(_sfc_main$7, null, {
                     default: withCtx(() => [
-                      createVNode(_sfc_main$9, null, {
+                      createVNode(_sfc_main$6, null, {
                         default: withCtx(() => [
                           renderSlot(_ctx.$slots, "controlsRight")
                         ]),
@@ -17935,11 +17935,11 @@ System.register("./index-BOXNQfwu-DzNDAMmn.js", ['vue', './__monkey.entry-BHT4dv
                     ]),
                     _: 3
                   }),
-                  createVNode(_sfc_main$c)
+                  createVNode(_sfc_main$9)
                 ]),
                 _: 3
               }),
-              createVNode(_sfc_main$7),
+              createVNode(_sfc_main$q),
               unref(source).isInterrupt.value ? (openBlock(), createElementBlock("div", {
                 key: 2,
                 class: normalizeClass(styles.resumeContainer)
