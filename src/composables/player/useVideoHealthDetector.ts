@@ -9,13 +9,10 @@ export function useVideoHealthDetector(
   const { playerCore } = ctx
 
   /** 状态监测 */
-  let loadTimeoutTimer: any = null
   let checkPixelsTimer: any = null
 
   /** 重置检测器 */
   const reset = () => {
-    if (loadTimeoutTimer)
-      clearTimeout(loadTimeoutTimer)
     if (checkPixelsTimer)
       clearInterval(checkPixelsTimer)
   }
@@ -31,24 +28,10 @@ export function useVideoHealthDetector(
 
     const player = playerCore.value
 
-    // 1. 加载超时检测 (10秒)
-    // 如果 10 秒后 readyState 还是 0 (HAVE_NOTHING)，说明解码器挂了或者源甚至都没拉下来
-    loadTimeoutTimer = setTimeout(() => {
-      const video = player.getRenderElement() as HTMLVideoElement
-      if (!video)
-        return
-
-      if (video.readyState < 2) { // 还没准备好数据
-        console.warn('【115Master】XgPlayer 加载超时(10s)，自动切换到 AvPlayer 兜底')
-        switchCoreFn(PlayerCoreType.AvPlayer)
-      }
-    }, 10000)
-
-    // 2. 也是最关键的：错误监听
-    // 我们通过 watch state.loadError 来做（已经在 useSources 处理了？如果没有，这里加）
-
-    // 3. 尺寸检测 (针对 DivX 等可能无法解析尺寸的情况)
-    /** 每秒检查一次，检查 5 次 */
+    // 尺寸检测 (针对 DivX 等可能无法解析尺寸的情况，即黑屏问题)
+    // 只有当 readyState >= 1 (已有元数据) 但尺寸为 0 时才判定为格式不支持
+    // 网络慢时 readyState 为 0，不会误判
+    /** 每秒检查一次，检查 10 次 */
     let checkCount = 0
     checkPixelsTimer = setInterval(() => {
       checkCount++
@@ -61,13 +44,12 @@ export function useVideoHealthDetector(
       if (!video)
         return
 
-      // 如果已经有元数据了 (readyState >= 1)
+      // 如果已经有元数据了 (readyState >= 1)，说明网络已经加载成功
       if (video.readyState >= 1) {
-        // 如果宽高异常
+        // 如果宽高异常，说明是格式问题（黑屏）
         if (video.videoWidth === 0 || video.videoHeight === 0) {
-          console.warn('【115Master】检测到视频尺寸为 0 (不支持的格式)，自动切换到 AvPlayer')
+          console.warn('【115Master】检测到视频尺寸为 0 (不支持的格式/黑屏)，自动切换到 AvPlayer')
           clearInterval(checkPixelsTimer)
-          clearTimeout(loadTimeoutTimer) // 取消超时检测，直接切
           switchCoreFn(PlayerCoreType.AvPlayer)
         }
       }
