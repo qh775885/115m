@@ -36,22 +36,46 @@ export default defineConfig({
         semicolons: true,
       },
       compress: {
-        // 保持函数名，方便调试
-        keep_fnames: true,
-        // 保持类名
-        keep_classnames: true,
-        // 正式版：移除所有console（生产模式优化）
+        // 生产版：移除所有console（生产模式优化）
         drop_console: true,
         drop_debugger: true,
         // 其他压缩优化
         unused: true,
         dead_code: true,
+        // 新增压缩选项
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        passes: 2, // 多次压缩以获得更好的效果
+        arrows: true, // 优化箭头函数
+        arguments: true, // 优化 arguments
+        booleans: true, // 优化布尔值
+        collapse_vars: true, // 折叠变量
+        comparisons: true, // 优化比较运算
+        computed_props: true, // 优化计算属性
+        conditionals: true, // 优化条件语句
+        evaluate: true, // 求值常量表达式
+        hoist_funs: true, // 提升函数声明
+        hoist_vars: false, // 不提升变量声明（避免潜在问题）
+        if_return: true, // 优化 if return
+        join_vars: true, // 合并变量声明
+        loops: true, // 优化循环
+        negate_iife: true, // 优化立即执行函数
+        properties: true, // 优化属性访问
+        reduce_vars: true, // 减少变量引用
+        sequences: true, // 使用逗号运算符合并语句
+        side_effects: true, // 移除无副作用代码
+        switches: true, // 优化 switch
+        typeofs: true, // 优化 typeof
+        unsafe: false, // 不使用不安全的优化
+        unsafe_arrows: false, // 不使用不安全的箭头函数优化
+        unsafe_comps: false, // 不使用不安全的比较优化
+        unsafe_math: false, // 不使用不安全的数学优化
+        unsafe_proto: false, // 不使用不安全的原型优化
       },
       mangle: {
-        // 不要过度混淆变量名
+        // 混淆变量名以减小体积
+        safari10: true, // 修复 Safari 10 的 bug
+        // 保留必要的导出
         reserved: ['exports', 'require', 'module'],
-        keep_fnames: true,
-        keep_classnames: true,
       },
     },
   },

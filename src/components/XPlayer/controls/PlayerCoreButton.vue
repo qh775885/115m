@@ -1,74 +1,68 @@
 <template>
-  <button
-    ref="buttonRef"
+  <div
     :class="[styles.btnText.root]"
-    data-tip="切换核心"
-    @click="toggleVisible"
+    class="pointer-events-none"
+    :data-tip="`核心: ${playerCore?.type || 'N/A'} | ${frameInfo}`"
   >
-    {{ playerCore?.type || 'N/A' }}
-  </button>
-
-  <Popup
-    v-model:visible="menuVisible"
-    :trigger="buttonRef"
-    placement="top"
-  >
-    <ul :class="[styles.menu.root]">
-      <li
-        v-for="coreType in coreTypes"
-        :key="coreType.value"
-      >
-        <a
-          :class="[styles.menu.a, {
-            [styles.menu.active]: playerCore?.type === coreType.value,
-          }]"
-          @click="switchCore(coreType.value)"
-        >
-          <span :class="[styles.menu.label]">
-            {{ coreType.label }}
-          </span>
-          <span :class="[styles.menu.desc]">
-            {{ coreType.desc }}
-          </span>
-        </a>
-      </li>
-    </ul>
-  </Popup>
+    <span class="text-xs opacity-80">
+      {{ playerCore?.type || 'N/A' }}
+    </span>
+    <span class="text-xs opacity-60 ml-2">
+      {{ frameInfo }}
+    </span>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { shallowRef } from 'vue'
-import { PlayerCoreType } from '../../../composables/player/playerCore/types'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePlayerContext } from '../../../composables/player/usePlayerProvide'
-import Popup from '../components/Popup/index.vue'
 import { controlStyles } from '../styles/common'
 
 const styles = {
   ...controlStyles,
 }
 
-const { playerCore, source } = usePlayerContext()
-const menuVisible = shallowRef(false)
-const buttonRef = shallowRef<HTMLElement>()
+const { playerCore } = usePlayerContext()
+const frameInfo = ref('--')
+let lastFrameCount = 0
+let lastCheckTime = 0
+let updateTimer: number | null = null
 
-const coreTypes = [
-  { value: PlayerCoreType.Native, label: 'Native', desc: '原生(默认)' },
-  { value: PlayerCoreType.AvPlayer, label: 'AvPlayer', desc: '软解兜底' },
-  { value: PlayerCoreType.Hls, label: 'HLS', desc: '流媒体' },
-]
+/** 获取视频播放质量信息 */
+function updateFrameInfo() {
+  const videoEl = playerCore.value?.getRenderElement()
 
-function toggleVisible() {
-  menuVisible.value = !menuVisible.value
-}
+  if (videoEl instanceof HTMLVideoElement && videoEl.getVideoPlaybackQuality) {
+    const quality = videoEl.getVideoPlaybackQuality()
+    const currentFrames = quality.totalVideoFrames
+    const currentTime = performance.now()
 
-/** 切换播放器核心 */
-async function switchCore(coreType: PlayerCoreType) {
-  menuVisible.value = false
+    // 计算实时帧率（FPS）
+    if (lastCheckTime > 0 && currentFrames > lastFrameCount) {
+      /** 转换为秒 */
+      const timeDiff = (currentTime - lastCheckTime) / 1000
+      const frameDiff = currentFrames - lastFrameCount
+      const fps = Math.round(frameDiff / timeDiff)
 
-  if (playerCore.value?.type === coreType) {
-    return
+      frameInfo.value = `${fps}fps`
+    }
+
+    lastFrameCount = currentFrames
+    lastCheckTime = currentTime
   }
 
-  await source.switchPlayerCore(coreType)
+  // 每2秒更新一次（降低频率，避免影响性能）
+  updateTimer = window.setTimeout(updateFrameInfo, 2000)
 }
+
+onMounted(() => {
+  // 延迟启动，等视频开始播放
+  updateTimer = window.setTimeout(updateFrameInfo, 2000)
+})
+
+onBeforeUnmount(() => {
+  if (updateTimer !== null) {
+    clearTimeout(updateTimer)
+  }
+})
 </script>
