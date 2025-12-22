@@ -40,8 +40,6 @@
             <TimeDisplay />
           </div>
           <div :class="styles.controlBar.right">
-            <!-- 播放器核心切换 -->
-            <PlayerCoreButton />
             <!-- 画质控制 -->
             <QualityButton />
             <!-- 倍速控制 -->
@@ -70,7 +68,7 @@ import AudioTrackButton from './AudioTrackButton.vue'
 import FullscreenButton from './FullscreenButton.vue'
 import PlaybackRateButton from './PlaybackRateButton.vue'
 import PlayButton from './PlayButton.vue'
-import PlayerCoreButton from './PlayerCoreButton.vue'
+
 import PlayModeButton from './PlayModeButton.vue'
 import ProgressBar from './ProgressBar.vue'
 import QualityButton from './QualityButton.vue'

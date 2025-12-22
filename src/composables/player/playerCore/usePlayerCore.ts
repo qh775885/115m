@@ -7,7 +7,6 @@ import { PlayerCoreType } from './types'
 import { useAvPlayerCore } from './useAvPlayerCore'
 import { useHlsPlayerCore } from './useHlsPlayerCore'
 import { useNativePlayerCore } from './useNativePlayerCore'
-// import { useXgPlayerCore } from './useXgPlayerCore' // 已移除
 
 /**
  * 视频核心混合封装

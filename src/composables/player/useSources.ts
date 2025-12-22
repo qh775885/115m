@@ -6,7 +6,6 @@ import { playerCorePreferenceCache, qualityPreferenceCache } from '../../utils/c
 
 import { error, log, warn } from '../../utils/logger'
 import { PlayerCoreType } from './playerCore/types'
-// import { useVideoHealthDetector } from './useVideoHealthDetector' // 已禁用：用户手动切换
 
 /**
  * 视频源
@@ -239,9 +238,6 @@ export function useSources(ctx: PlayerContext) {
     /** 恢复播放时间 */
     playerCore.value?.seek(currentTime)
   }
-
-  // 健康检测已禁用：用户手动切换播放器核心
-  // useVideoHealthDetector(ctx, switchPlayerCore)
 
   return {
     list,

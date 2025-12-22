@@ -88,12 +88,6 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.21(typescript@5.9.2)
-      xgplayer:
-        specifier: ^3.0.23
-        version: 3.0.23(core-js@3.47.0)
-      xgplayer-mp4:
-        specifier: ^3.0.23
-        version: 3.0.23(core-js@3.47.0)(xgplayer@3.0.23(core-js@3.47.0))
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^4.16.1
@@ -1556,11 +1550,6 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
-  concat-typed-array@1.0.2:
-    resolution: {integrity: sha512-aC878bxeWSlrY6h60cCDwBUXpKwovZrB7+C4+VHNO1CIXW2gBLxbQ757jWtOXUscLGgYI8R84N6uy9fTJPe+0g==}
-    engines: {node: '>=0.10.0'}
-    deprecated: 'WARNING: This package has been renamed to typed-array-concat.'
-
   confbox@0.1.8:
     resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
 
@@ -1572,9 +1561,6 @@ packages:
 
   core-js-compat@3.45.1:
     resolution: {integrity: sha512-tqTt5T4PzsMIZ430XGviK4vzYSoeNJ6CXODi6c/voxOT6IZqBht5/EKaSNnYiEjjRYxjVz7DQIsOsY0XNi8PIA==}
-
-  core-js@3.47.0:
-    resolution: {integrity: sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==}
 
   create-jest@29.7.0:
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
@@ -1589,9 +1575,6 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
-
-  crypto-es@1.2.7:
-    resolution: {integrity: sha512-UUqiVJ2gUuZFmbFsKmud3uuLcNP2+Opt+5ysmljycFCyhA0+T16XJmo1ev/t5kMChMqWh7IEvURNCqsg+SjZGQ==}
 
   css-select@5.2.2:
     resolution: {integrity: sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw==}
@@ -1630,9 +1613,6 @@ packages:
   daisyui@5.1.5:
     resolution: {integrity: sha512-QgD/vtjjDX+HvacQ8okfPVCSQ2p4jjCKoer81FvphPx40gzSLxvCJP2TQDB04p/9cN9PzXPP53cS5c8cXyNUhA==}
 
-  danmu.js@1.2.1:
-    resolution: {integrity: sha512-evDEImUBo94c846fC92K//Dzll8jXnZ3zKmYlQHwMzmvw6IW2IyjWL3Ew2SqEAzuqauFnDkwJEgZauu3uW/p1Q==}
-
   dayjs@1.11.18:
     resolution: {integrity: sha512-zFBQ7WFRvVRhKcWoUh+ZA1g2HVgUbsZm9sbddh8EC5iv93sui8DVVz1Npvz+r6meo9VKfa8NyLWBsQK1VvIKPA==}
 
@@ -1662,10 +1642,6 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  deepmerge@2.2.1:
-    resolution: {integrity: sha512-R9hc1Xa/NOBi9WRVUWg19rl1UB7Tt4kuPd+thNJgFZoxXsTz7ncaPaeIm+40oSGuP33DfMb4sZt1QIGiJzC4EA==}
-    engines: {node: '>=0.10.0'}
-
   deepmerge@4.3.1:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
@@ -1685,9 +1661,6 @@ packages:
   define-lazy-prop@3.0.0:
     resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
     engines: {node: '>=12'}
-
-  delegate@3.2.0:
-    resolution: {integrity: sha512-IofjkYBZaZivn0V8nnsMJGBr4jVLxHDheKSW88PyxS5QC4Vo9ZbZVvhzlSxY87fVq3STR6r+4cGepyHkcWOQSw==}
 
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -1723,9 +1696,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  downloadjs@1.4.7:
-    resolution: {integrity: sha512-LN1gO7+u9xjU5oEScGFKvXhYf7Y/empUIIEAGBs1LzUq/rg5duiDrkuH5A2lQGd5jfMOb9X9usDa2oVXwJ0U/Q==}
 
   electron-to-chromium@1.5.212:
     resolution: {integrity: sha512-gE7ErIzSW+d8jALWMcOIgf+IB6lpfsg6NwOhPVwKzDtN2qcBix47vlin4yzSregYDxTCXOUqAZjVY/Z3naS7ww==}
@@ -2012,9 +1982,6 @@ packages:
 
   event-emitter@0.3.5:
     resolution: {integrity: sha512-D9rRn9y7kLPnJ+hMq7S/nhvoKwwvVJahBi2BPmx3bvbsEdK3W9ii8cBSGjP+72/LnM4n6fo3+dkCX5FeTQruXA==}
-
-  eventemitter3@4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
@@ -3601,37 +3568,6 @@ packages:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
     engines: {node: '>=18'}
 
-  xgplayer-mp4-loader@3.0.23:
-    resolution: {integrity: sha512-RAidVoURsu4FD/cdJY2e9sVX61jeZ+e5F48tJyoU+TufDm+gDWpJTkrBIaYRVxJdPlh1P0Z4oGVnQctAYja7iQ==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-
-  xgplayer-mp4@3.0.23:
-    resolution: {integrity: sha512-1ThVgvdVYlov9aHKSZxFUjXLiQ4NPy/bEAmEbm0bapfCHIVVqh3265AFdTaYBM1iBU5A93RiZbXvfyIqEZJJPQ==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-      xgplayer: '>=3.0.0'
-
-  xgplayer-streaming-shared@3.0.23:
-    resolution: {integrity: sha512-j14MKqjSpEisd97hAV8ykg+txSkECZ3Z6AtCxZnRT4Jj0G5QRZAObAA1IIHv7wPN4tjNdtGm9odHiQOpsYYXuw==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-
-  xgplayer-subtitles@3.0.23:
-    resolution: {integrity: sha512-deGdV75giVzfTTdG9XATmji39NHwKTpEelWt2rRx/RyXGgU2bQFp0Ft7yWaK2Uu8A/WVrP5fpxEAj4MstREMkQ==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-
-  xgplayer-transmuxer@3.0.23:
-    resolution: {integrity: sha512-BVI0FT96nWUwJ7cYyT2bK7CSp6PWdztgb9kO0dIcCoJUBU5yxelqoKd43luHFFAM73GyYZ0hCm/Yw/GSjQrPJA==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-
-  xgplayer@3.0.23:
-    resolution: {integrity: sha512-Bn3zQfMMAZimlVG9EeIDybMcklc+6FH8Sv47KpTq4K6ofCzyhPG/KenxailDedlHmxjb5B2o+240TpJtMQ3oJA==}
-    peerDependencies:
-      core-js: '>=3.12.1'
-
   xml-name-validator@4.0.0:
     resolution: {integrity: sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw==}
     engines: {node: '>=12'}
@@ -5153,8 +5089,6 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  concat-typed-array@1.0.2: {}
-
   confbox@0.1.8: {}
 
   confbox@0.2.2: {}
@@ -5164,8 +5098,6 @@ snapshots:
   core-js-compat@3.45.1:
     dependencies:
       browserslist: 4.25.4
-
-  core-js@3.47.0: {}
 
   create-jest@29.7.0(@types/node@24.3.0):
     dependencies:
@@ -5191,8 +5123,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  crypto-es@1.2.7: {}
 
   css-select@5.2.2:
     dependencies:
@@ -5231,10 +5161,6 @@ snapshots:
 
   daisyui@5.1.5: {}
 
-  danmu.js@1.2.1:
-    dependencies:
-      event-emitter: 0.3.5
-
   dayjs@1.11.18: {}
 
   de-indent@1.0.2: {}
@@ -5251,8 +5177,6 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  deepmerge@2.2.1: {}
-
   deepmerge@4.3.1: {}
 
   default-browser-id@5.0.1: {}
@@ -5265,8 +5189,6 @@ snapshots:
   define-lazy-prop@2.0.0: {}
 
   define-lazy-prop@3.0.0: {}
-
-  delegate@3.2.0: {}
 
   dequal@2.0.3: {}
 
@@ -5299,8 +5221,6 @@ snapshots:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
-
-  downloadjs@1.4.7: {}
 
   electron-to-chromium@1.5.212: {}
 
@@ -5688,8 +5608,6 @@ snapshots:
     dependencies:
       d: 1.0.2
       es5-ext: 0.10.64
-
-  eventemitter3@4.0.7: {}
 
   eventemitter3@5.0.1: {}
 
@@ -7538,50 +7456,6 @@ snapshots:
   wsl-utils@0.1.0:
     dependencies:
       is-wsl: 3.1.0
-
-  xgplayer-mp4-loader@3.0.23(core-js@3.47.0):
-    dependencies:
-      core-js: 3.47.0
-      eventemitter3: 4.0.7
-      xgplayer-streaming-shared: 3.0.23(core-js@3.47.0)
-      xgplayer-transmuxer: 3.0.23(core-js@3.47.0)
-
-  xgplayer-mp4@3.0.23(core-js@3.47.0)(xgplayer@3.0.23(core-js@3.47.0)):
-    dependencies:
-      concat-typed-array: 1.0.2
-      core-js: 3.47.0
-      deepmerge: 2.2.1
-      eventemitter3: 4.0.7
-      xgplayer: 3.0.23(core-js@3.47.0)
-      xgplayer-mp4-loader: 3.0.23(core-js@3.47.0)
-      xgplayer-streaming-shared: 3.0.23(core-js@3.47.0)
-      xgplayer-transmuxer: 3.0.23(core-js@3.47.0)
-
-  xgplayer-streaming-shared@3.0.23(core-js@3.47.0):
-    dependencies:
-      core-js: 3.47.0
-      eventemitter3: 4.0.7
-
-  xgplayer-subtitles@3.0.23(core-js@3.47.0):
-    dependencies:
-      core-js: 3.47.0
-      eventemitter3: 4.0.7
-
-  xgplayer-transmuxer@3.0.23(core-js@3.47.0):
-    dependencies:
-      '@babel/runtime': 7.28.3
-      concat-typed-array: 1.0.2
-      core-js: 3.47.0
-      crypto-es: 1.2.7
-
-  xgplayer@3.0.23(core-js@3.47.0):
-    dependencies:
-      core-js: 3.47.0
-      danmu.js: 1.2.1
-      delegate: 3.2.0
-      downloadjs: 1.4.7
-      eventemitter3: 4.0.7
-      xgplayer-subtitles: 3.0.23(core-js@3.47.0)
 
   xml-name-validator@4.0.0: {}
 
