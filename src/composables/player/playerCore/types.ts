@@ -8,8 +8,6 @@ export enum PlayerCoreType {
   AvPlayer = 'AvPlayer',
   // hls.js
   Hls = 'HLS.js',
-  // XgPlayer
-  XgPlayer = 'XgPlayer',
 }
 
 /**

@@ -6,7 +6,7 @@ import { playerCorePreferenceCache, qualityPreferenceCache } from '../../utils/c
 
 import { error, log, warn } from '../../utils/logger'
 import { PlayerCoreType } from './playerCore/types'
-import { useVideoHealthDetector } from './useVideoHealthDetector'
+// import { useVideoHealthDetector } from './useVideoHealthDetector' // 已禁用：用户手动切换
 
 /**
  * 视频源
@@ -70,8 +70,8 @@ export function useSources(ctx: PlayerContext) {
       return PlayerCoreType.Hls
     }
 
-    // 默认使用 XgPlayer (替代 Native)
-    return PlayerCoreType.XgPlayer
+    // 默认使用 Native 核心
+    return PlayerCoreType.Native
   }
 
   /** 初始化视频 */
@@ -240,8 +240,8 @@ export function useSources(ctx: PlayerContext) {
     playerCore.value?.seek(currentTime)
   }
 
-  // 初始化检测器
-  useVideoHealthDetector(ctx, switchPlayerCore)
+  // 健康检测已禁用：用户手动切换播放器核心
+  // useVideoHealthDetector(ctx, switchPlayerCore)
 
   return {
     list,
