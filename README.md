@@ -9,7 +9,6 @@
 - ✅ 偏好记忆：画质、旋转
 - ❌ 已精简：调色、字幕、云下载等
 
-<img width="1152" height="911" alt="image" src="https://github.com/user-attachments/assets/187ab0f4-483a-4ec6-a632-02870db52da3" />
 
 
 
