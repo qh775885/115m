@@ -47,7 +47,7 @@ import {
 import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './core/player-api'
 import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from './core/playlist-navigation'
 import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
-import { canUseNativeUltraSource, isConservativeNativeUltraExtension, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './core/native-playback'
+import { canUseNativeUltraSource, isConservativeNativeUltraExtension, shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './core/native-playback'
 import { applyRotationToVideo, buildRotateControlItem, getNextRotationDegrees } from './core/player-rotation'
 import { bindClickSelectorBehavior } from './core/player-selector'
 import { SubtitleManager } from './core/subtitle-manager'
@@ -166,6 +166,7 @@ class PlayerManager {
   private lastPlaylistProgressSyncSec = -1
   private nativePlaybackRetryCount = 0
   private nativeAudioProbeTimer: number | null = null
+  private nativeVideoProbeTimer: number | null = null
   private nativeStallCheckTimer: number | null = null
   private nativeStallStartedAt = 0
   private nativeStallLastTime = 0
@@ -621,6 +622,7 @@ class PlayerManager {
           this.reportFirstFrameSummary()
           if (this.isNativeVideo) {
             this.scheduleNativeAudioProbe()
+            this.scheduleNativeVideoProbe()
           }
         },
         onVolumeChange: () => {
@@ -1322,6 +1324,7 @@ class PlayerManager {
   private async fallbackToHls(reason = '播放失败', rememberOriginal = false) {
     this.resetNativeStallState()
     this.clearNativeAudioProbe()
+    this.clearNativeVideoProbe()
     playerDebug('[115m] fallbackToHls triggered', { m3u8Count: this.m3u8List.length, reason })
     
     if (!this.artplayer) {
@@ -1377,6 +1380,13 @@ class PlayerManager {
     }
   }
 
+  private clearNativeVideoProbe() {
+    if (this.nativeVideoProbeTimer != null) {
+      window.clearTimeout(this.nativeVideoProbeTimer)
+      this.nativeVideoProbeTimer = null
+    }
+  }
+
   private clearNativeStallCheck() {
     if (this.nativeStallCheckTimer != null) {
       window.clearTimeout(this.nativeStallCheckTimer)
@@ -1397,6 +1407,7 @@ class PlayerManager {
 
   private clearTransientPlaybackWatchers() {
     this.clearNativeAudioProbe()
+    this.clearNativeVideoProbe()
     this.resetNativeStallState()
     this.clearAudioTrackSyncTimers()
   }
@@ -1495,6 +1506,48 @@ class PlayerManager {
       this.nativeAudioProbeTimer = null
       void this.checkNativeAudioDecode()
     }, PlayerManager.NATIVE_AUDIO_PROBE_DELAY_MS)
+  }
+
+  private scheduleNativeVideoProbe() {
+    this.clearNativeVideoProbe()
+    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
+    this.nativeVideoProbeTimer = window.setTimeout(() => {
+      this.nativeVideoProbeTimer = null
+      void this.checkNativeVideoDecode()
+    }, PlayerManager.NATIVE_AUDIO_PROBE_DELAY_MS)
+  }
+
+  private async checkNativeVideoDecode() {
+    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
+    if (this.nativeStallFallbackInFlight) return
+
+    const video = this.artplayer.video as HTMLVideoElement
+    if (video.paused || video.ended || video.seeking || video.currentTime < 1) {
+      this.scheduleNativeVideoProbe()
+      return
+    }
+
+    const totalFrames = this.getTotalVideoFrames(video)
+    if (!shouldFallbackNativeBlackVideo({
+      currentTime: video.currentTime || 0,
+      readyState: video.readyState,
+      videoWidth: video.videoWidth || 0,
+      videoHeight: video.videoHeight || 0,
+      totalVideoFrames: totalFrames,
+    })) {
+      return
+    }
+
+    this.nativeStallFallbackInFlight = true
+    playerDebug('[115m][native] black video detected, fallback to HLS', {
+      currentTime: video.currentTime,
+      readyState: video.readyState,
+      networkState: video.networkState,
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      totalFrames,
+    })
+    await this.fallbackToHls('无损视频编码不兼容，已改用 115原画', true)
   }
 
   private async checkNativeAudioDecode() {

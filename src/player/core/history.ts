@@ -420,15 +420,12 @@ async function persistPlayHistory(params: {
   quality: string
 }) {
   await sendRuntimeMessageSafe({
-    type: 'SAVE_HISTORY',
+    type: 'SET_NATIVE_HISTORY',
     data: {
       pickCode: params.pickCode,
       shareId: '0',
       currentTime: Math.max(0, params.currentTime),
-      duration: Math.max(0, params.duration),
-      quality: params.quality,
-      fileName: params.fileName,
-      watchEnd: false,
+      definition: 0,
     },
   })
 }
@@ -439,6 +436,7 @@ export function savePlayHistory(params: {
   currentTime: number
   duration: number
   quality: string
+  immediate?: boolean
 }) {
   if (!NATIVE_PLAY_HISTORY_ENABLED || !params.pickCode || !params.fileName) return
   if (!Number.isFinite(params.currentTime) || params.currentTime <= 0) return
@@ -447,6 +445,16 @@ export function savePlayHistory(params: {
   const current = pendingPlayHistoryWrites.get(identity)
   if (current?.timer) {
     window.clearTimeout(current.timer)
+  }
+
+  if (params.immediate) {
+    pendingPlayHistoryWrites.delete(identity)
+    void persistPlayHistory(params).then(() => {
+      lastPlayHistoryWriteAt.set(identity, Date.now())
+    }).catch(() => {
+      // ignore save errors
+    })
+    return
   }
 
   const next: PendingPlayHistoryWrite = {
@@ -507,15 +515,12 @@ export function resetPlayHistory(params: {
   pendingPlayHistoryWrites.delete(identity)
 
   void sendRuntimeMessageSafe({
-    type: 'SAVE_HISTORY',
+    type: 'SET_NATIVE_HISTORY',
     data: {
       pickCode: params.pickCode,
       shareId: '0',
       currentTime: 0,
-      duration: Math.max(0, params.duration),
-      quality: params.quality,
-      fileName: params.fileName,
-      watchEnd: true,
+      definition: 0,
     },
   }).catch(() => {
     // ignore reset errors

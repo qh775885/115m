@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { buildPlaylistProgressSnapshot, isCompletedPlayback, loadAudioTrackPreference, loadPlayHistoryWhenReady, loadSubtitlePreference, loadVideoRotation, saveAudioTrackPreference, saveSubtitlePreference, saveVideoRotation, shouldRestorePlayHistory } from './history'
+import { buildPlaylistProgressSnapshot, isCompletedPlayback, loadAudioTrackPreference, loadPlayHistoryWhenReady, resetPlayHistory, saveAudioTrackPreference, savePlayHistory, saveSubtitlePreference, saveVideoRotation, loadSubtitlePreference, loadVideoRotation, shouldRestorePlayHistory } from './history'
 
 describe('play history restore guard', () => {
   it('skips restoring progress near the end of playback', () => {
@@ -28,6 +28,62 @@ describe('play history restore guard', () => {
     })
     expect(buildPlaylistProgressSnapshot({ currentTime: 118, duration: 120 })).toBeNull()
     expect(buildPlaylistProgressSnapshot({ currentTime: 0, duration: 120 })).toBeNull()
+  })
+})
+
+describe('native play history write', () => {
+  it('writes immediate progress to 115 native history', async () => {
+    const sendMessage = vi.fn().mockResolvedValue({ success: true })
+    vi.stubGlobal('chrome', { runtime: { sendMessage } })
+
+    savePlayHistory({
+      pickCode: 'pick-a',
+      fileName: 'pick-a',
+      currentTime: 60.8,
+      duration: 120,
+      quality: '115原画',
+      immediate: true,
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'SET_NATIVE_HISTORY',
+      data: {
+        pickCode: 'pick-a',
+        shareId: '0',
+        currentTime: 60.8,
+        definition: 0,
+      },
+    })
+
+    vi.unstubAllGlobals()
+  })
+
+  it('resets progress through 115 native history', async () => {
+    const sendMessage = vi.fn().mockResolvedValue({ success: true })
+    vi.stubGlobal('chrome', { runtime: { sendMessage } })
+
+    resetPlayHistory({
+      pickCode: 'pick-a',
+      fileName: 'pick-a',
+      duration: 120,
+      quality: '115原画',
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'SET_NATIVE_HISTORY',
+      data: {
+        pickCode: 'pick-a',
+        shareId: '0',
+        currentTime: 0,
+        definition: 0,
+      },
+    })
+
+    vi.unstubAllGlobals()
   })
 })
 

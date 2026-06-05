@@ -47,14 +47,27 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
     onReady()
   })
 
-  art.on('video:timeupdate', () => {
+  const saveCurrentPlayHistory = (immediate = false) => {
     savePlayHistory({
       pickCode: getPickCode(),
       fileName: getPickCode(),
       currentTime: art.currentTime || 0,
       duration: art.duration || 0,
       quality: getQualityLabel(),
+      immediate,
     })
+  }
+
+  art.on('video:timeupdate', () => {
+    saveCurrentPlayHistory()
+  })
+
+  art.on('video:seeked', () => {
+    saveCurrentPlayHistory(true)
+  })
+
+  art.on('video:pause', () => {
+    saveCurrentPlayHistory(true)
   })
 
   art.on('video:loadedmetadata', () => {
