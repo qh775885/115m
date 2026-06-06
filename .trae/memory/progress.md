@@ -35,6 +35,7 @@
 - 2026-05-29：收窄 `web_accessible_resources`，移除全量 `*` 暴露，仅保留播放器入口、`.vite/manifest.json`、`assets/*.js/css` 等必要资源；`dist/manifest.json` 已确认包含 video-page、player、hls 等构建产物；已通过 `pnpm build`、`pnpm test`，构建仍仅有既有 chunk 体积警告
 - 2026-05-29：清理生产环境直出调试日志，保留错误/警告与本地开关控制的播放器 debug；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 - 2026-05-29：播放列表快速切视频稳定性补强：切换前统一清理旧视频无损探测/卡死检测/音轨同步计时器，切换后播放进度恢复改为等待 metadata/canplay 并保留 1.2s 兜底；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
+- 2026-06-05：MCP 复现无损黑屏有声：Chrome 原生 video `currentTime` 正常推进、音频字节已解码，但 `videoWidth/videoHeight` 与视频帧数均为 0；已新增 native 视频帧探测，命中后自动降级并记住 `115原画`；黑屏探测日志改为 debug 开关控制，避免生产环境 console warn 弹浏览器告警。已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 
 ## 待测事项
 

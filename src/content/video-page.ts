@@ -18,6 +18,7 @@ function clearNativeVideoRequests() {
 async function init() {
   if (window.top !== window) return
   if (!/\/web\/lixian\/master\/video\//.test(window.location.pathname)) return
+  if (window.location.search.includes('m115_transcode_fallback=1')) return
 
   clearNativeVideoRequests()
 
