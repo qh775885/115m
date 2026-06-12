@@ -13,6 +13,35 @@ import {
 const coverScheduler = new Scheduler(3)
 const TRANSCODE_STATUS_POLL_MS = 15000
 
+/**
+ * 通过 background FETCH_M3U8 判断视频是否真正需要转码
+ * background 有 cookie 和扩展上下文，比 content script 直连可靠
+ * 返回 true 表示视频确实需要转码（M3U8 流不存在）
+ */
+async function checkNeedsTranscode(pickCode: string): Promise<boolean> {
+  const res = await sendRuntimeMessageSafe<{ list?: Array<{ quality: number }>, error?: string }>({
+    type: 'FETCH_M3U8',
+    data: { pickCode },
+  })
+  if (isRuntimeContextInvalidatedResult(res)) return false
+  if (!res) return false
+  if (res.error) return true
+  return !res.list || res.list.length === 0
+}
+
+/**
+ * 封面失败统一分流：通过 background 检查是否需要转码
+ * 需要转码 → showTranscodeButton；正常视频 → showCoverUnavailableFallback
+ */
+async function handleCoverFailure(container: HTMLElement, pickCode: string) {
+  const needsTranscode = await checkNeedsTranscode(pickCode)
+  if (needsTranscode) {
+    showTranscodeButton(container, pickCode)
+  } else {
+    showCoverUnavailableFallback(container, pickCode)
+  }
+}
+
 function showPreviewUnavailable(container: HTMLElement) {
   container.innerHTML = ''
 }
@@ -256,14 +285,14 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
     const { promise, cancel } = coverScheduler.add(async () => {
       try {
         if (file.duration === 0) {
-          showCoverUnavailableFallback(container, file.pickCode)
+          await handleCoverFailure(container, file.pickCode)
           state.isLoaded = true
           return
         }
 
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (!covers.length) {
-          showCoverUnavailableFallback(container, file.pickCode)
+          await handleCoverFailure(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -301,7 +330,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        showCoverUnavailableFallback(container, file.pickCode)
+        await handleCoverFailure(container, file.pickCode)
         state.error = true
       } finally {
         state.isLoading = false

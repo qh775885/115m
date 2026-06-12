@@ -37,6 +37,7 @@
 - 2026-05-29：播放列表快速切视频稳定性补强：切换前统一清理旧视频无损探测/卡死检测/音轨同步计时器，切换后播放进度恢复改为等待 metadata/canplay 并保留 1.2s 兜底；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 - 2026-06-05：MCP 复现无损黑屏有声：Chrome 原生 video `currentTime` 正常推进、音频字节已解码，但 `videoWidth/videoHeight` 与视频帧数均为 0；已新增 native 视频帧探测，命中后自动降级并记住 `115原画`；黑屏探测日志改为 debug 开关控制，避免生产环境 console warn 弹浏览器告警。已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 - 2026-06-12：修复预览图失败误触发自动加速：`preview.ts` 中封面生成为空或异常时不再自动触发 VIP 加速转码，改为显示"预览图不可用"和手动加速按钮；仅 `duration === 0` 保留自动触发。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
+- 2026-06-12：新增 `M3u8UnavailableError` 精确区分转码需求：`videoThumbnail.ts` 中 M3U8 获取失败时抛出专用错误类型，`preview.ts` 按错误类型分流——M3U8 不可用自动触发加速，其他封面失败只显示手动按钮。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 
 ## 待测事项
 

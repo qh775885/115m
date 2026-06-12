@@ -34,7 +34,7 @@
 ## 加速与转码链路
 
 - `m115_transcode_fallback=1` 作为兜底原生播放页加速参数，必须在 `video-page-early.js` 和 `video-page.ts` 中豁免接管。如果这里也覆盖原生 DOM，会导致兜底页无法执行原生播放逻辑，也就无法成功触发转码。
-- 预览图生成失败（封面为空或异常）不等于视频需要转码。封面走 content script 直连 M3U8 + clipper 抽帧，播放走 background 代理或无损直链，两条链路独立。只有 `duration === 0` 是需要转码的可靠信号；封面失败只应展示手动按钮，不自动触发加速。
+- 预览图生成失败（封面为空或异常）不等于视频需要转码。封面走 content script 直连 M3U8 + clipper 抽帧，播放走 background 代理或无损直链，两条链路独立。`duration === 0` 和 `M3u8UnavailableError` 都不可靠，正常视频也会命中。当前策略：列表预览所有失败场景只显示手动按钮，不自动触发加速。
 
 ## 文件写入风险
 
