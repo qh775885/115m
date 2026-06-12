@@ -263,7 +263,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
 
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (!covers.length) {
-          showTranscodeButton(container, file.pickCode)
+          showCoverUnavailableFallback(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -301,7 +301,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        showTranscodeButton(container, file.pickCode)
+        showCoverUnavailableFallback(container, file.pickCode)
         state.error = true
       } finally {
         state.isLoading = false
@@ -392,6 +392,48 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
   if (item.parentElement) {
     mutationObserver.observe(item.parentElement, { childList: true, subtree: true })
   }
+}
+
+/**
+ * 预览图生成失败时的手动兜底（不自动触发加速）
+ * 仅当用户主动点击时才进入完整转码流程，避免误判正常视频需要加速
+ */
+function showCoverUnavailableFallback(container: HTMLElement, pickCode: string) {
+  container.classList.add('is-transcode-tip')
+  container.innerHTML = ''
+
+  const wrapper = document.createElement('div')
+  wrapper.className = 'm115-transcode-area'
+
+  const label = document.createElement('span')
+  label.className = 'm115-transcode-label'
+  label.textContent = '预览图不可用'
+  label.style.color = '#8c8c8c'
+
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'm115-transcode-btn'
+  button.textContent = 'VIP加速转码'
+  button.style.cssText = [
+    'margin-top:10px',
+    'padding:8px 14px',
+    'border:none',
+    'border-radius:6px',
+    'background:#ff6a00',
+    'color:#fff',
+    'font-size:12px',
+    'cursor:pointer',
+  ].join(';')
+
+  wrapper.appendChild(label)
+  wrapper.appendChild(button)
+  container.appendChild(wrapper)
+
+  button.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    showTranscodeButton(container, pickCode)
+  })
 }
 
 /**
