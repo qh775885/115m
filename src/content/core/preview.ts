@@ -1,4 +1,4 @@
-import { getVideoCovers } from '../../lib/videoThumbnail'
+import { getVideoCovers, M3u8UnavailableError } from '../../lib/videoThumbnail'
 import type { VideoThumbnail } from '../../lib/videoThumbnail'
 import type { FileInfo } from './types'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
@@ -301,7 +301,11 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        showCoverUnavailableFallback(container, file.pickCode)
+        if (e instanceof M3u8UnavailableError) {
+          showTranscodeButton(container, file.pickCode)
+        } else {
+          showCoverUnavailableFallback(container, file.pickCode)
+        }
         state.error = true
       } finally {
         state.isLoading = false

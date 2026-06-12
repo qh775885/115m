@@ -3,6 +3,16 @@ import { drive115 } from './drive115'
 import { M3U8ClipperNew } from './clipper/m3u8Clipper'
 import { getImageResize } from './image'
 
+/**
+ * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
+ */
+export class M3u8UnavailableError extends Error {
+  constructor(message = 'M3U8 source unavailable') {
+    super(message)
+    this.name = 'M3u8UnavailableError'
+  }
+}
+
 const MAX_WIDTH = 720
 const MAX_HEIGHT = 720
 const CACHE_VERSION = 'v4'
@@ -92,11 +102,16 @@ async function getThumbnailSourceUrl(pickCode: string): Promise<string> {
   let cached = sourceUrlCache.get(pickCode)
   if (!cached) {
     cached = (async () => {
-      const m3u8List = await drive115.getM3u8(pickCode)
+      let m3u8List
+      try {
+        m3u8List = await drive115.getM3u8(pickCode)
+      } catch (error) {
+        throw new M3u8UnavailableError(error instanceof Error ? error.message : String(error))
+      }
 
       const source = m3u8List.sort((a, b) => a.quality - b.quality)[0]
       if (!source) {
-        throw new Error('No m3u8 source found')
+        throw new M3u8UnavailableError('No m3u8 source found')
       }
 
       return source.url
