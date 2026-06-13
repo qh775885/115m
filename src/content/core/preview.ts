@@ -1,4 +1,4 @@
-import { getVideoCovers } from '../../lib/videoThumbnail'
+import { getVideoCovers, primeThumbnailSourceUrl } from '../../lib/videoThumbnail'
 import type { VideoThumbnail } from '../../lib/videoThumbnail'
 import type { FileInfo } from './types'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
@@ -13,33 +13,25 @@ import {
 const coverScheduler = new Scheduler(3)
 const TRANSCODE_STATUS_POLL_MS = 15000
 
+
+
 /**
- * 通过 background FETCH_M3U8 判断视频是否真正需要转码
+ * 通过 background FETCH_M3U8 获取可靠的 M3U8 源 URL
  * background 有 cookie 和扩展上下文，比 content script 直连可靠
- * 返回 true 表示视频确实需要转码（M3U8 流不存在）
+ * 返回 { ok: false } 表示视频确实需要转码（M3U8 流不存在）
+ * 返回 { ok: true, url } 表示 M3U8 可用，url 为最低画质源地址
  */
-async function checkNeedsTranscode(pickCode: string): Promise<boolean> {
-  const res = await sendRuntimeMessageSafe<{ list?: Array<{ quality: number }>, error?: string }>({
+async function fetchM3u8ViaBackground(pickCode: string): Promise<{ ok: true, url: string } | { ok: false }> {
+  const res = await sendRuntimeMessageSafe<{ list?: Array<{ quality: number, url: string }>, error?: string }>({
     type: 'FETCH_M3U8',
     data: { pickCode },
   })
-  if (isRuntimeContextInvalidatedResult(res)) return false
-  if (!res) return false
-  if (res.error) return true
-  return !res.list || res.list.length === 0
-}
-
-/**
- * 封面失败统一分流：通过 background 检查是否需要转码
- * 需要转码 → showTranscodeButton；正常视频 → showCoverUnavailableFallback
- */
-async function handleCoverFailure(container: HTMLElement, pickCode: string) {
-  const needsTranscode = await checkNeedsTranscode(pickCode)
-  if (needsTranscode) {
-    showTranscodeButton(container, pickCode)
-  } else {
-    showCoverUnavailableFallback(container, pickCode)
+  if (isRuntimeContextInvalidatedResult(res) || !res || res.error || !res.list || res.list.length === 0) {
+    return { ok: false }
   }
+  // 取最低画质用于封面抽帧
+  const source = res.list.sort((a, b) => a.quality - b.quality)[0]
+  return { ok: true, url: source.url }
 }
 
 function showPreviewUnavailable(container: HTMLElement) {
@@ -284,15 +276,30 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
 
     const { promise, cancel } = coverScheduler.add(async () => {
       try {
-        if (file.duration === 0) {
-          await handleCoverFailure(container, file.pickCode)
+        // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
+        const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
+        if (!m3u8Result.ok) {
+          // M3U8 不可用（已重试），不显示加速按钮避免误判正常视频
+          showCoverUnavailableFallback(container, file.pickCode)
           state.isLoaded = true
           return
         }
 
+        // 2. 注入缓存，跳过 content script 不可靠的 M3U8 直连
+        primeThumbnailSourceUrl(file.pickCode, m3u8Result.url)
+
+        // 3. duration 缺失时无法抽帧，只显示预览不可用
+        if (file.duration === 0) {
+          showCoverUnavailableFallback(container, file.pickCode)
+          state.isLoaded = true
+          return
+        }
+
+        // 4. 生成封面
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (!covers.length) {
-          await handleCoverFailure(container, file.pickCode)
+          debugLog('loadCovers', { pickCode: file.pickCode, action: 'coverUnavailable', reason: 'empty covers' })
+          showCoverUnavailableFallback(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -330,7 +337,8 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        await handleCoverFailure(container, file.pickCode)
+        // M3U8 已确认可用，封面生成失败只显示"预览不可用"
+        showCoverUnavailableFallback(container, file.pickCode)
         state.error = true
       } finally {
         state.isLoading = false
@@ -427,7 +435,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
  * 预览图生成失败时的手动兜底（不自动触发加速）
  * 仅当用户主动点击时才进入完整转码流程，避免误判正常视频需要加速
  */
-function showCoverUnavailableFallback(container: HTMLElement, pickCode: string) {
+function showCoverUnavailableFallback(container: HTMLElement, _pickCode: string) {
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
@@ -439,30 +447,8 @@ function showCoverUnavailableFallback(container: HTMLElement, pickCode: string) 
   label.textContent = '预览图不可用'
   label.style.color = '#8c8c8c'
 
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = 'm115-transcode-btn'
-  button.textContent = 'VIP加速转码'
-  button.style.cssText = [
-    'margin-top:10px',
-    'padding:8px 14px',
-    'border:none',
-    'border-radius:6px',
-    'background:#ff6a00',
-    'color:#fff',
-    'font-size:12px',
-    'cursor:pointer',
-  ].join(';')
-
   wrapper.appendChild(label)
-  wrapper.appendChild(button)
   container.appendChild(wrapper)
-
-  button.addEventListener('click', (event) => {
-    event.preventDefault()
-    event.stopPropagation()
-    showTranscodeButton(container, pickCode)
-  })
 }
 
 /**

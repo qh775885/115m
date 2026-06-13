@@ -364,23 +364,44 @@ async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRAN
 }
 
 // ─── FETCH_M3U8 ───
+
 export async function handleFetchM3u8(message: MsgFetchM3u8) {
-  try {
-    const pickCode = message.data.pickCode
-    const url = `https://115.com/api/video/m3u8/${pickCode}.m3u8`
+  const pickCode = message.data.pickCode
+  const url = `https://115.com/api/video/m3u8/${pickCode}.m3u8`
+  const maxRetries = 2
 
-    const res = await fetch(url, {
-      credentials: 'include',
-      headers: { Accept: '*/*' },
-    })
-    const htmlText = await res.text()
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { Accept: '*/*' },
+      })
+      const htmlText = await res.text()
+      const m3u8List = parseM3u8Text(htmlText)
 
-    const m3u8List = parseM3u8Text(htmlText)
-    return { list: m3u8List }
+      if (m3u8List.length > 0) {
+        return { list: m3u8List }
+      }
+
+      // 响应不是有效 M3U8（可能是 JSON 错误），重试
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+        continue
+      }
+
+      // 重试用尽，返回空列表
+      return { list: [] }
+    }
+    catch (e: any) {
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+        continue
+      }
+      return { error: e?.message || String(e) }
+    }
   }
-  catch (e: any) {
-    return { error: e?.message || String(e) }
-  }
+
+  return { error: 'unreachable' }
 }
 
 export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: chrome.runtime.MessageSender) {
