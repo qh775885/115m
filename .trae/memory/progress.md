@@ -39,6 +39,7 @@
 - 2026-06-12：修复预览图失败误触发自动加速：`preview.ts` 中封面生成为空或异常时不再自动触发 VIP 加速转码，改为显示"预览图不可用"和手动加速按钮；仅 `duration === 0` 保留自动触发。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 - 2026-06-12：新增 `M3u8UnavailableError` 精确区分转码需求：`videoThumbnail.ts` 中 M3U8 获取失败时抛出专用错误类型，`preview.ts` 按错误类型分流——M3U8 不可用自动触发加速，其他封面失败只显示手动按钮。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
 - 2026-06-12：封面失败改用 background `FETCH_M3U8` 准确判断转码需求：新增 `checkNeedsTranscode` 通过 background 代理检查 M3U8 可用性，有流→只显示"预览图不可用"，无流→显示加速按钮。所有失败路径统一走 `handleCoverFailure`。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
+- 2026-06-12：修复预览图获取不可靠导致正常视频误显示加速转码（`c7d0fc0`）：改用 background FETCH_M3U8 预取源URL并注入缓存（解决 content script cookie 隔离）；background M3U8 增加最多2次重试应对偶发失败；预览失败仅显示"预览图不可用"不再显示加速按钮。100+ 视频高强度测试通过
 
 ## 待测事项
 

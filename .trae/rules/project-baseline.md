@@ -25,6 +25,7 @@ alwaysApply: true
 - 消息链路任务：优先读取 `docs/runbooks/messages.md` 和 `src/shared/messages.ts`
 - 发布任务：读取 `.trae/rules/release.md`
 - 提交信息任务：读取 `.trae/rules/git-commit-message.md`
+- 调试运行时 bug：读取 `.trae/rules/debugging.md`，用本地日志服务器收集日志
 - 任务中断、验证结果、下一步计划写入 `.trae/memory/progress.md`
 - 已确认无效方案、误判、踩坑写入 `.trae/memory/pitfalls.md`
 - 长期稳定决策、模块边界、协作约定写入 `.trae/memory/decisions.md`

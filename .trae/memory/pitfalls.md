@@ -34,7 +34,11 @@
 ## 加速与转码链路
 
 - `m115_transcode_fallback=1` 作为兜底原生播放页加速参数，必须在 `video-page-early.js` 和 `video-page.ts` 中豁免接管。如果这里也覆盖原生 DOM，会导致兜底页无法执行原生播放逻辑，也就无法成功触发转码。
-- 预览图生成失败不等于视频需要转码，两者必须独立判断。封面走 content script 直连 M3U8 + clipper 抽帧，播放走 background 代理或无损直链，两条链路独立。`duration === 0` 和 content script 的 `M3u8UnavailableError` 都不可靠，正常视频也会命中。当前方案：封面失败后统一通过 background `FETCH_M3U8` 检查 M3U8 可用性——有流则只显示"预览图不可用"，无流才显示加速转码按钮。
+- 预览图生成失败不等于视频需要转码，两者必须独立判断
+- content script 直连 115 M3U8 API 不可靠（cookie 隔离导致"必传参数少了"），必须通过 background FETCH_M3U8 预取
+- background FETCH_M3U8 也不完全可靠，部分正常视频会偶发返回"必传参数少了"（JSON 错误而非 M3U8），需要最多 2 次重试（500ms/1000ms 间隔）
+- M3U8 API 不是判断转码的可靠信号。当前方案：background M3U8 预取 + 重试 → 成功则注入缓存后生成封面 → 失败仅显示"预览图不可用"，不显示任何加速转码按钮
+- `showTranscodeButton` 当前在预览流程中无调用入口（死代码），保留供后续需要时恢复
 
 ## 文件写入风险
 
