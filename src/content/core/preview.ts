@@ -13,8 +13,6 @@ import {
 const coverScheduler = new Scheduler(3)
 const TRANSCODE_STATUS_POLL_MS = 15000
 
-
-
 /**
  * 通过 background FETCH_M3U8 获取可靠的 M3U8 源 URL
  * background 有 cookie 和扩展上下文，比 content script 直连可靠
@@ -279,8 +277,25 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (!m3u8Result.ok) {
-          // M3U8 不可用（已重试），不显示加速按钮避免误判正常视频
-          showCoverUnavailableFallback(container, file.pickCode)
+          // M3U8 不可用 → 先检查是否有正在进行的转码任务
+          const statusRes = await sendRuntimeMessageSafe<TranscodeResponse>({
+            type: 'TRANSCODE_STATUS',
+            data: { pickCode: file.pickCode },
+          })
+          if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.ok
+            && (statusRes.state === 'queued' || statusRes.state === 'pending_check')) {
+            // 正在转码中 → 直接显示转码进度面板
+            showTranscodeButton(container, file.pickCode, statusRes)
+          }
+          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.ok
+            && statusRes.state === 'completed_refresh') {
+            // 转码已完成但 M3U8 还没生效（缓存延迟）→ 提示刷新
+            showCompletedHint(container, statusRes.detail || 'VIP 加速已完成，刷新页面后可预览')
+          }
+          else {
+            // 无转码任务 → 显示"预览图不可用" + 手动转码链接
+            showCoverUnavailableWithTranscode(container, file.pickCode)
+          }
           state.isLoaded = true
           return
         }
@@ -288,9 +303,9 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 2. 注入缓存，跳过 content script 不可靠的 M3U8 直连
         primeThumbnailSourceUrl(file.pickCode, m3u8Result.url)
 
-        // 3. duration 缺失时无法抽帧，只显示预览不可用
+        // 3. duration 缺失时无法抽帧
         if (file.duration === 0) {
-          showCoverUnavailableFallback(container, file.pickCode)
+          showCoverUnavailableWithTranscode(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -298,8 +313,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 4. 生成封面
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (!covers.length) {
-          debugLog('loadCovers', { pickCode: file.pickCode, action: 'coverUnavailable', reason: 'empty covers' })
-          showCoverUnavailableFallback(container, file.pickCode)
+          showCoverUnavailableWithTranscode(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -337,8 +351,8 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        // M3U8 已确认可用，封面生成失败只显示"预览不可用"
-        showCoverUnavailableFallback(container, file.pickCode)
+        // 封面生成失败 → 显示手动转码按钮
+        showCoverUnavailableWithTranscode(container, file.pickCode)
         state.error = true
       } finally {
         state.isLoading = false
@@ -432,10 +446,29 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
 }
 
 /**
- * 预览图生成失败时的手动兜底（不自动触发加速）
- * 仅当用户主动点击时才进入完整转码流程，避免误判正常视频需要加速
+ * 转码已完成但 M3U8 还有缓存延迟时的提示
  */
-function showCoverUnavailableFallback(container: HTMLElement, _pickCode: string) {
+function showCompletedHint(container: HTMLElement, message: string) {
+  container.classList.add('is-transcode-tip')
+  container.innerHTML = ''
+
+  const wrapper = document.createElement('div')
+  wrapper.className = 'm115-transcode-area'
+
+  const label = document.createElement('span')
+  label.className = 'm115-transcode-label'
+  label.textContent = message
+  label.style.color = '#52c41a'
+
+  wrapper.appendChild(label)
+  container.appendChild(wrapper)
+}
+
+/**
+ * 封面不可用时显示"预览图不可用" + 手动转码链接
+ * 不自动触发转码，让用户自己判断是否需要
+ */
+function showCoverUnavailableWithTranscode(container: HTMLElement, pickCode: string) {
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
@@ -447,7 +480,26 @@ function showCoverUnavailableFallback(container: HTMLElement, _pickCode: string)
   label.textContent = '预览图不可用'
   label.style.color = '#8c8c8c'
 
+  const link = document.createElement('a')
+  link.href = 'javascript:;'
+  link.textContent = '尝试转码'
+  link.style.cssText = [
+    'display:inline-block',
+    'margin-top:6px',
+    'color:#ff6a00',
+    'font-size:11px',
+    'text-decoration:underline',
+    'cursor:pointer',
+  ].join(';')
+  link.addEventListener('click', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // 点击后切换到完整的转码面板
+    showTranscodeButton(container, pickCode)
+  })
+
   wrapper.appendChild(label)
+  wrapper.appendChild(link)
   container.appendChild(wrapper)
 }
 
@@ -459,7 +511,7 @@ const acceleratedSet = new Set<string>()
 /**
  * 在预览区域自动触发 VIP 加速转码并显示状态
  */
-function showTranscodeButton(container: HTMLElement, pickCode: string) {
+function showTranscodeButton(container: HTMLElement, pickCode: string, initialStatus?: TranscodeResponse) {
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
@@ -722,6 +774,12 @@ function showTranscodeButton(container: HTMLElement, pickCode: string) {
     }
     runTranscode(true)
   })
+
+  // 有初始状态（刷新恢复）→ 直接显示进度并开始轮询
+  if (initialStatus) {
+    applyStatus(initialStatus)
+    return
+  }
 
   if (acceleratedSet.has(pickCode)) {
     runStatusCheck()
