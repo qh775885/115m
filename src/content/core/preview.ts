@@ -77,7 +77,7 @@ function formatTranscodeStatus(res: TranscodeResponse): { text: string, color: s
 
   if (res.state === 'pending_check') {
     return {
-      text: `VIP 自动加速已发起，等待队列确认${batchText}`,
+      text: res.detail ? `${res.detail}${batchText}` : `VIP 自动加速已发起，等待队列确认${batchText}`,
       color: '#52c41a',
     }
   }

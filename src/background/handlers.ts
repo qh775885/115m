@@ -217,6 +217,17 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
 
     const transcoded = await checkIsTranscoded(context.pickCode)
     if (transcoded?.state === 1) {
+      // 虽然转码已完成，但可能 m3u8 还没推送到 CDN
+      // 先尝试拉取一次 m3u8，如果拉不到或者为空，则说明还未准备好
+      const m3u8List = await handleFetchM3u8({ type: 'FETCH_M3U8', data: { pickCode: context.pickCode } })
+      if (!m3u8List || !m3u8List.list || m3u8List.list.length === 0) {
+        return {
+          ok: true,
+          state: 'pending_check',
+          detail: 'VIP 加速转码完成，等待 CDN 同步...',
+        }
+      }
+
       return {
         ok: true,
         state: 'completed_refresh',
