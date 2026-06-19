@@ -7,10 +7,10 @@
 
 ## 规则与记忆边界
 
-- `.trae/rules/project-baseline.md` 是唯一始终生效规则入口，保持短规则
+- `.ai/rules/project-baseline.md` 是唯一始终生效规则入口，保持短规则
 - 任务型规则按需保留，例如发布、提交信息等，不做 alwaysApply
-- 需要记忆的项目事项统一写入 `.trae/memory/`，不使用 mem0 作为项目记忆来源
-- `.trae/memory/*.md` 只记录会影响后续工作的项目级记忆，不放硬规则
+- 需要记忆的项目事项统一写入 `.ai/memory/`，不使用 mem0 作为项目记忆来源
+- `.ai/memory/*.md` 只记录会影响后续工作的项目级记忆，不放硬规则
 - `docs/` 放项目说明、模块地图、runbook，不放强制执行规则
 - 同一条规则不要在多个地方维护不同版本
 
