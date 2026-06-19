@@ -23,42 +23,15 @@
 
 ## 最近验证
 
-- 近期播放器、播放列表、预览图、播放记忆、移动弹窗、收藏角标相关改动均通过 `pnpm test` 与 `pnpm build`
-- 构建存在既有 chunk 体积警告，当前不处理，避免重新引入扩展路径和动态 import 风险
-- 2026-05-26：无损播放排查结论已确认：当前问题主因不是网络或纯下载速度，而是浏览器原生无损直链在远距离 seek 后缓冲浅、恢复脆弱；已新增 native 卡死自动降级到 `115原画`，并细化为“远跳后恢复失败”更积极降级，普通顺播与小跳不轻易误判；已通过 `pnpm test`、`pnpm build`，项目无 `pnpm lint` 脚本，构建仍仅有既有 chunk 体积警告
-- 2026-05-15：字幕修复后 `pnpm test`、`pnpm build` 通过；构建仍仅有既有 chunk 体积警告
-- 2026-05-15：字幕控件文案与宽度调整后，`pnpm test`、`pnpm build` 继续通过
-- 2026-05-23：图片墙/文件夹墙拖选修复后，`pnpm test`、`pnpm build` 通过；构建仍仅有既有 chunk 体积警告；已提交 `e7c7b10`
-- 2026-05-23：扩展更新后旧页面 `Extension context invalidated` 不再触发或残留列表视频转码提示，只显示刷新提示；`pnpm test`、`pnpm build` 通过，构建仍仅有既有 chunk 体积警告
-- 2026-05-26：自动 VIP 加速转码新增“后台加速”最后兜底：仅在自动失败后用户手动加速也失败/异常时显示按钮；点击后用全局单例队列打开一个非激活 115 原生播放页短暂触发，随后关闭并刷新转码状态。当前缺少可复现样本，待用户后续反馈实测结果；已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-05-29：修复 `pnpm typecheck` 失败：后台加速按钮函数恢复到转码按钮闭包内，runtime context invalidated 返回值调用方已做类型收窄，`OPEN_TAB` 已补 sender 校验；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-05-29：收窄 `web_accessible_resources`，移除全量 `*` 暴露，仅保留播放器入口、`.vite/manifest.json`、`assets/*.js/css` 等必要资源；`dist/manifest.json` 已确认包含 video-page、player、hls 等构建产物；已通过 `pnpm build`、`pnpm test`，构建仍仅有既有 chunk 体积警告
-- 2026-05-29：清理生产环境直出调试日志，保留错误/警告与本地开关控制的播放器 debug；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-05-29：播放列表快速切视频稳定性补强：切换前统一清理旧视频无损探测/卡死检测/音轨同步计时器，切换后播放进度恢复改为等待 metadata/canplay 并保留 1.2s 兜底；已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-06-05：MCP 复现无损黑屏有声：Chrome 原生 video `currentTime` 正常推进、音频字节已解码，但 `videoWidth/videoHeight` 与视频帧数均为 0；已新增 native 视频帧探测，命中后自动降级并记住 `115原画`；黑屏探测日志改为 debug 开关控制，避免生产环境 console warn 弹浏览器告警。已通过 `pnpm typecheck`、`pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-06-12：修复预览图失败误触发自动加速：`preview.ts` 中封面生成为空或异常时不再自动触发 VIP 加速转码，改为显示"预览图不可用"和手动加速按钮；仅 `duration === 0` 保留自动触发。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-06-12：新增 `M3u8UnavailableError` 精确区分转码需求：`videoThumbnail.ts` 中 M3U8 获取失败时抛出专用错误类型，`preview.ts` 按错误类型分流——M3U8 不可用自动触发加速，其他封面失败只显示手动按钮。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-06-12：封面失败改用 background `FETCH_M3U8` 准确判断转码需求：新增 `checkNeedsTranscode` 通过 background 代理检查 M3U8 可用性，有流→只显示"预览图不可用"，无流→显示加速按钮。所有失败路径统一走 `handleCoverFailure`。已通过 `pnpm test`、`pnpm build`，构建仍仅有既有 chunk 体积警告
-- 2026-06-12：修复预览图获取不可靠导致正常视频误显示加速转码（`c7d0fc0`）：改用 background FETCH_M3U8 预取源URL并注入缓存（解决 content script cookie 隔离）；background M3U8 增加最多2次重试应对偶发失败；预览失败仅显示"预览图不可用"不再显示加速按钮。100+ 视频高强度测试通过
+- 2026-06-19: 彻底恢复 B类视频无痕全自动批量转码（基于 `duration === 0` 和封面失败无感触发），修复 115 CORS 拦截问题。已通过构建测试。
+- 历史核心验证：播放列表快切稳定性、原生无损防卡死/黑屏降级、MCP黑屏探测复现、字幕解析修复、CSP安全边界收紧。
 
 ## 待测事项
 
-- 后台加速兜底待测：后续遇到自动/手动都返回 `manual_required` 的视频时，点击“后台加速”观察是否只短暂出现一个非激活标签页、是否自动关闭、是否进入 VIP 加速队列或完成状态
-
-## 后续优化候选
-
-- 字幕功能优先级靠后，后续再考虑，不作为当前阶段优先事项
+- 长期观察 B 类视频全自动队列推送的稳定性及批处理极限。
+- 播放器无损直链在大文件跨区段 seek 时的偶发卡死。
 
 ## 发布记录
 
-- 2026-05-15：准备发布 `v1.6.5`
-  - 变更：修复播放器字幕列表加载与字幕显示；新增常见字幕格式兼容；优化控制栏字幕标签显示
-  - 待执行：`pnpm zip`、`pnpm release:check`、GitHub Release
-- 2026-05-08：已发布 `v1.5.0`
-  - GitHub Release：https://github.com/qh775885/115m/releases/tag/v1.5.0
-  - 发布包：`release/115m-v1.5.0.zip`
-  - 验证：`pnpm test`、`pnpm build`、`pnpm zip`、`pnpm release:check` 均通过
-- 2026-05-08：已发布 `v1.4.0`
-  - GitHub Release：https://github.com/qh775885/115m/releases/tag/v1.4.0
-  - 发布包：`release/115m-v1.4.0.zip`
-  - 验证：`pnpm build`、`pnpm test`、`pnpm zip`、`pnpm release:check` 均通过
+- 2026-06-19：已发布 `v1.7.1`（解决自动转码链路及CORS错误）
+- 历史版本：`v1.7.0`、`v1.6.5`、`v1.5.0`、`v1.4.0` 等（详情见 CHANGELOG.md）
