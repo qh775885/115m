@@ -279,6 +279,7 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
       ok: true,
       state: 'no_task',
       detail: '未检测到转码任务',
+      autoFallback: true, // 没有活跃任务且也没有转码记录（transcoded.state !== 1），大概率是原生不支持播放的刚上传视频（B类）
     }
   }
   catch (e: any) {

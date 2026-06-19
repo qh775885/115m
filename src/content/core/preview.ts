@@ -37,6 +37,7 @@ function showPreviewUnavailable(container: HTMLElement) {
 }
 
 interface TranscodeResponse {
+  autoFallback?: boolean
   ok?: boolean
   state?: 'queued' | 'manual_required' | 'pending_check' | 'completed_refresh' | 'failed'
   error?: string
@@ -312,6 +313,10 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
             // 115 登录态失效 → 提示用户刷新页面
             showCompletedHint(container, '⚠ 115 登录态已失效，请刷新 115 页面后重试')
           }
+          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'no_task' && statusRes.autoFallback) {
+            // B类视频: 支持转码但既没有任务也没有转码记录，自动触发原生兜底进行推列
+            showTranscodeButton(container, file.pickCode, Object.assign({}, statusRes, { autoStartFallback: true }))
+          }
           else {
             // 无转码任务 → 显示"预览图不可用" + 手动转码链接
             showCoverUnavailableWithTranscode(container, file.pickCode)
@@ -323,9 +328,10 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 2. 注入缓存，跳过 content script 不可靠的 M3U8 直连
         primeThumbnailSourceUrl(file.pickCode, m3u8Result.url)
 
-        // 3. duration 缺失时无法抽帧
+        // 3. duration 缺失时无法抽帧 -> 这是非常强烈的 B 类视频信号（原生未解析/无法播放）
         if (file.duration === 0) {
-          showCoverUnavailableWithTranscode(container, file.pickCode)
+          // 不管前面 m3u8 有没有，只要 duration 为 0，就强制执行自动转码 fallback 逻辑
+          showTranscodeButton(container, file.pickCode, { ok: true, state: 'no_task', autoStartFallback: true } as any)
           state.isLoaded = true
           return
         }
@@ -819,6 +825,11 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   // 有初始状态（刷新恢复）→ 直接显示进度并开始轮询
   if (initialStatus) {
     applyStatus(initialStatus)
+    // 自动触发回退策略（如果是 B 类视频）
+    if ((initialStatus as any).autoStartFallback) {
+      acceleratedSet.add(pickCode)
+      runNativeFallback()
+    }
     return
   }
 
