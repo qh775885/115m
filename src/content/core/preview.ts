@@ -284,43 +284,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (!m3u8Result.ok) {
-          // #region debug-point E:loadCovers-no-m3u8
-          // #endregion
-          // M3U8 不可用 → 先检查是否有正在进行的转码任务
-          const statusRes = await sendRuntimeMessageSafe<TranscodeResponse>({
-            type: 'TRANSCODE_STATUS',
-            data: { pickCode: file.pickCode },
-          })
-          // #region debug-point C:loadCovers-statusRes
-          // #endregion
-          if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.ok
-            && (statusRes.state === 'queued' || statusRes.state === 'pending_check')) {
-            // 正在转码中 → 直接显示转码进度面板
-            showTranscodeButton(container, file.pickCode, statusRes)
-          }
-          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.ok
-            && statusRes.state === 'completed_refresh') {
-            // 转码已完成但 M3U8 还没生效（缓存延迟）→ 提示刷新
-            showCompletedHint(container, statusRes.detail || 'VIP 加速已完成，刷新页面后可预览')
-          }
-          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'failed'
-            && statusRes.error && /验证|安全|异常|captcha|911/i.test(statusRes.error)) {
-            // 115 风控验证 → 提示用户去 115 播放器解除
-            showCompletedHint(container, '⚠ 115 风控验证中，请先用 115 原生播放器播放任意视频解除验证码')
-          }
-          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'failed'
-            && statusRes.error && /登录超时|登录过期|990001/i.test(statusRes.error)) {
-            // 115 登录态失效 → 提示用户刷新页面
-            showCompletedHint(container, '⚠ 115 登录态已失效，请刷新 115 页面后重试')
-          }
-          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'no_task' && statusRes.autoFallback) {
-            // B类视频: 支持转码但既没有任务也没有转码记录，自动触发原生兜底进行推列
-            showTranscodeButton(container, file.pickCode, Object.assign({}, statusRes, { autoStartFallback: true }))
-          }
-          else {
-            // 无转码任务 → 显示"预览图不可用" + 手动转码链接
-            showCoverUnavailableWithTranscode(container, file.pickCode)
-          }
+          showTranscodeButton(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -328,10 +292,9 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 2. 注入缓存，跳过 content script 不可靠的 M3U8 直连
         primeThumbnailSourceUrl(file.pickCode, m3u8Result.url)
 
-        // 3. duration 缺失时无法抽帧 -> 这是非常强烈的 B 类视频信号（原生未解析/无法播放）
+        // 3. duration 缺失时无法抽帧
         if (file.duration === 0) {
-          // 不管前面 m3u8 有没有，只要 duration 为 0，就强制执行自动转码 fallback 逻辑
-          showTranscodeButton(container, file.pickCode, { ok: true, state: 'no_task', autoStartFallback: true } as any)
+          showTranscodeButton(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -339,7 +302,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 4. 生成封面
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (!covers.length) {
-          showCoverUnavailableWithTranscode(container, file.pickCode)
+          showTranscodeButton(container, file.pickCode)
           state.isLoaded = true
           return
         }
@@ -378,7 +341,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
           return
         }
         // 封面生成失败 → 显示手动转码按钮
-        showCoverUnavailableWithTranscode(container, file.pickCode)
+        showTranscodeButton(container, file.pickCode)
         state.error = true
       } finally {
         state.isLoading = false
@@ -490,44 +453,7 @@ function showCompletedHint(container: HTMLElement, message: string) {
   container.appendChild(wrapper)
 }
 
-/**
- * 封面不可用时显示"预览图不可用" + 手动转码链接
- * 不自动触发转码，让用户自己判断是否需要
- */
-function showCoverUnavailableWithTranscode(container: HTMLElement, pickCode: string) {
-  container.classList.add('is-transcode-tip')
-  container.innerHTML = ''
 
-  const wrapper = document.createElement('div')
-  wrapper.className = 'm115-transcode-area'
-
-  const label = document.createElement('span')
-  label.className = 'm115-transcode-label'
-  label.textContent = '预览图不可用'
-  label.style.color = '#8c8c8c'
-
-  const link = document.createElement('a')
-  link.href = 'javascript:;'
-  link.textContent = '尝试转码'
-  link.style.cssText = [
-    'display:inline-block',
-    'margin-top:6px',
-    'color:#ff6a00',
-    'font-size:11px',
-    'text-decoration:underline',
-    'cursor:pointer',
-  ].join(';')
-  link.addEventListener('click', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    // 点击后切换到完整的转码面板
-    showTranscodeButton(container, pickCode)
-  })
-
-  wrapper.appendChild(label)
-  wrapper.appendChild(link)
-  container.appendChild(wrapper)
-}
 
 /**
  * 已触发过加速的 pickCode 集合（避免重复请求）
@@ -825,11 +751,6 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   // 有初始状态（刷新恢复）→ 直接显示进度并开始轮询
   if (initialStatus) {
     applyStatus(initialStatus)
-    // 自动触发回退策略（如果是 B 类视频）
-    if ((initialStatus as any).autoStartFallback) {
-      acceleratedSet.add(pickCode)
-      runNativeFallback()
-    }
     return
   }
 
