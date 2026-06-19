@@ -38,6 +38,7 @@
 - content script 直连 115 M3U8 API 不可靠（cookie 隔离导致"必传参数少了"），必须通过 background FETCH_M3U8 预取
 - background FETCH_M3U8 也不完全可靠，部分正常视频会偶发返回"必传参数少了"（JSON 错误而非 M3U8），需要最多 2 次重试（500ms/1000ms 间隔）
 - M3U8 API 不是判断转码的可靠信号。当前方案：background M3U8 预取 + 重试 → 成功则注入缓存后生成封面 → 失败仅显示"预览图不可用"，不显示任何加速转码按钮
+- A类与B类视频的转码判定：`duration === 0` 是原生无法解析（B类视频）的强烈信号，直接静默触发 `autoFallback` 并批量转码；`duration > 0` 且封面失败的是可能正常的视频（A类视频），不自动触发以防误伤。
 - `showTranscodeButton` 当前在预览流程中无调用入口（死代码），保留供后续需要时恢复
 
 ## 文件写入风险
