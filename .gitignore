@@ -40,3 +40,8 @@ temp/
 Thumbs.db
 Desktop.ini
 计划.md
+
+# temporary scripts
+patch*.js
+patch*.cjs
+scripts/debug-*.mjs
