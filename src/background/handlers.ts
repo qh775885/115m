@@ -14,6 +14,11 @@ import type {
 } from '../shared/messages'
 import { parseM3u8Text } from '../lib/m3u8-parser'
 
+// #region debug-point UTIL:debugLog
+function debugLog(tag: string, data: unknown) { try { fetch('http://localhost:19115/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, data: typeof data === 'string' ? data : JSON.stringify(data) }) }).catch(() => {}) } catch { /* ignore */ } }
+// #endregion
+
+
 import {
   deleteFileIn115Page,
   fetchPlaylistIn115Page,
@@ -205,6 +210,7 @@ async function getTranscodeContext(pickCode: string) {
 }
 
 export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
+  debugLog('handleTranscodeStatus', `entry pickCode=${message.data.pickCode}`)
   try {
     const context = await getTranscodeContext(message.data.pickCode)
     if ('error' in context) {
@@ -278,6 +284,7 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
   catch (e: any) {
     // #region debug-point C:status-error
     // #endregion
+    debugLog('handleTranscodeStatus', `error: ${e?.message || String(e)}`)
     console.error('[115m] transcode status error:', e)
     return { ok: false, state: 'failed', error: e?.message || String(e) }
   }
@@ -334,6 +341,7 @@ async function pushVipTranscode(sha1: string, pickCode: string): Promise<Transco
     body.toString(),
     'application/x-www-form-urlencoded; charset=UTF-8',
     pickCode,
+    'page', // Force 'page' mode to avoid CORS issues on redirection
   )
   if (!response.ok) {
     throw new Error(response.error || 'vip push request failed')
@@ -374,6 +382,7 @@ async function pushBatchTranscode(fileIds: string[], pickCode: string): Promise<
     body.toString(),
     'application/x-www-form-urlencoded; charset=UTF-8',
     pickCode,
+    'page', // Force 'page' mode
   )
   if (!response.ok) {
     throw new Error(response.error || 'batch push request failed')
@@ -385,6 +394,7 @@ async function pushBatchTranscode(fileIds: string[], pickCode: string): Promise<
 
 async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRANSCODE_COUNT) {
   const transcoded = await checkIsTranscoded(pickCode)
+  debugLog('handleTranscodeStatus', `checkIsTranscoded result: ${JSON.stringify(transcoded)}`)
   const fileIds = Array.isArray(transcoded?.data) ? transcoded.data.slice(0, limit) : []
   if (fileIds.length === 0) {
     return { batchTotal: 0, batchQueued: 0, batchSkipped: 0, batchDetail: 'no folder transcode candidates' }
@@ -698,6 +708,7 @@ async function transcodeOne(pickCodeForCooldown: string) {
   }
 
   const transcoded = await checkIsTranscoded(pickCode)
+  debugLog('handleTranscodeStatus', `checkIsTranscoded result: ${JSON.stringify(transcoded)}`)
   // #region debug-point D:isTranscoded-in-transcodeOne
   // #endregion
   if (transcoded?.state === 1 && after?.status !== 3) {
