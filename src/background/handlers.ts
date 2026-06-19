@@ -13,6 +13,7 @@ import type {
   MsgTranscodeStatus,
 } from '../shared/messages'
 import { parseM3u8Text } from '../lib/m3u8-parser'
+
 import {
   deleteFileIn115Page,
   fetchPlaylistIn115Page,
@@ -187,7 +188,7 @@ async function getTranscodeContext(pickCode: string) {
 
   const videoResult = await fetchVideoInfoByPickCode(tabId, pickCode) as any
   if (!videoResult?.state) {
-    return { error: '获取视频信息失败' }
+    return { error: videoResult?.error || '获取视频信息失败' }
   }
 
   const sha1 = videoResult.sha1
@@ -211,23 +212,23 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
     }
 
     const job = await checkTranscodeJob(context.sha1, context.pickCode)
+    // #region debug-point C:status-job
+    // #endregion
+
+    // status === 3 表示在排队中，有 count / time 进度信息
     if (job?.status === 3) {
+      // #region debug-point C:status-queued
+      // #endregion
       return buildQueuedResponse(job, 'queue status refreshed')
     }
 
-    const transcoded = await checkIsTranscoded(context.pickCode)
-    if (transcoded?.state === 1) {
-      // 虽然转码已完成，但可能 m3u8 还没推送到 CDN
-      // 先尝试拉取一次 m3u8，如果拉不到或者为空，则说明还未准备好
-      const m3u8List = await handleFetchM3u8({ type: 'FETCH_M3U8', data: { pickCode: context.pickCode } })
-      if (!m3u8List || !m3u8List.list || m3u8List.list.length === 0) {
-        return {
-          ok: true,
-          state: 'pending_check',
-          detail: 'VIP 加速转码完成，等待 CDN 同步...',
-        }
-      }
-
+    // 先尝试直接拉取 m3u8，最终判断依据是能否实际播放
+    const m3u8List = await handleFetchM3u8({ type: 'FETCH_M3U8', data: { pickCode: context.pickCode } })
+    // #region debug-point E:status-m3u8
+    // #endregion
+    if (m3u8List?.list && m3u8List.list.length > 0) {
+      // #region debug-point E:status-completed
+      // #endregion
       return {
         ok: true,
         state: 'completed_refresh',
@@ -235,13 +236,48 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
       }
     }
 
+    // m3u8 不可用 → 检查 is_transcoded 判断是否还有任务记录
+    const transcoded = await checkIsTranscoded(context.pickCode)
+    // #region debug-point D:status-isTranscoded
+    // #endregion
+
+    // is_transcoded state=1 但 m3u8 不可用
+    // 如果 job status 不是 3（排队中），说明没有活跃的转码任务
+    // state=1 只表示"该文件支持转码"，不代表正在转码
+    if (transcoded?.state === 1) {
+      // 有活跃的 job（status=3 已在上面处理），其他 status 说明没在转码
+      if (job?.status === 127 || !job || job?.status === 0) {
+        // #region debug-point D:status-transcoded-no-job
+        // #endregion
+        return {
+          ok: true,
+          state: 'no_task',
+          detail: '视频支持转码但未在队列中，可手动发起转码',
+        }
+      }
+      // #region debug-point D:status-transcoded-no-m3u8
+      // #endregion
+      return {
+        ok: true,
+        state: 'queued',
+        queueCount: job?.count,
+        etaSeconds: job?.time,
+        priority: job?.priority,
+        detail: '转码处理中，等待完成...',
+      }
+    }
+
+    // #region debug-point C:status-pending
+    // #endregion
     return {
       ok: true,
-      state: 'pending_check',
-      detail: '等待队列状态更新',
+      state: 'no_task',
+      detail: '未检测到转码任务',
     }
   }
   catch (e: any) {
+    // #region debug-point C:status-error
+    // #endregion
     console.error('[115m] transcode status error:', e)
     return { ok: false, state: 'failed', error: e?.message || String(e) }
   }
@@ -602,31 +638,49 @@ export async function handleDeleteSuccessRefresh(message: MsgDeleteSuccessRefres
 
 // ─── TRANSCODE_ACCELERATE ───
 async function transcodeOne(pickCodeForCooldown: string) {
+  // #region debug-point A:transcodeOne-entry
+  // #endregion
   const cached = getTranscodeCooldown(pickCodeForCooldown)
   if (cached) {
+    // #region debug-point A:transcodeOne-cached
+    // #endregion
     return { ...(cached as object), deduped: true }
   }
 
   const context = await getTranscodeContext(pickCodeForCooldown)
   if ('error' in context) {
+    // #region debug-point A:transcodeOne-ctx-error
+    // #endregion
     return { ok: false, state: 'failed', error: context.error }
   }
 
   const { pickCode, sha1 } = context
+  // #region debug-point A:transcodeOne-context
+  // #endregion
 
   const before = await checkTranscodeJob(sha1, pickCode)
+  // #region debug-point B:checkJob-before
+  // #endregion
   if (before?.status === 3) {
     const response = buildQueuedResponse(before, 'already queued')
     setTranscodeCooldown(pickCode, response)
+    // #region debug-point B:already-queued
+    // #endregion
     return response
   }
 
   const pushResult = await pushVipTranscode(sha1, pickCode)
+  // #region debug-point A:pushResult
+  // #endregion
   const after = await checkTranscodeJob(sha1, pickCode, 1)
+  // #region debug-point B:checkJob-after
+  // #endregion
 
   if (after?.status === 3 || (typeof before?.priority === 'number' && typeof after?.priority === 'number' && after.priority > before.priority)) {
     const response = buildQueuedResponse(after, pushResult?.msg || 'queued after vip push', !!pushResult?.state)
     setTranscodeCooldown(pickCode, response)
+    // #region debug-point B:queued-after-push
+    // #endregion
     return response
   }
 
@@ -638,10 +692,14 @@ async function transcodeOne(pickCodeForCooldown: string) {
       detail: pushResult.msg || 'vip push accepted',
     }
     setTranscodeCooldown(pickCode, response)
+    // #region debug-point A:push-accepted
+    // #endregion
     return response
   }
 
   const transcoded = await checkIsTranscoded(pickCode)
+  // #region debug-point D:isTranscoded-in-transcodeOne
+  // #endregion
   if (transcoded?.state === 1 && after?.status !== 3) {
     const response = {
       ok: true,
@@ -650,6 +708,8 @@ async function transcodeOne(pickCodeForCooldown: string) {
       detail: pushResult?.msg || 'transcode not queued automatically',
     }
     setTranscodeCooldown(pickCode, response)
+    // #region debug-point D:manual-required-transcoded
+    // #endregion
     return response
   }
 
@@ -660,6 +720,8 @@ async function transcodeOne(pickCodeForCooldown: string) {
     detail: pushResult?.msg || pushResult?.error || 'vip push rejected',
   }
   setTranscodeCooldown(pickCode, response)
+  // #region debug-point A:manual-required-rejected
+  // #endregion
   return response
 }
 
@@ -681,11 +743,13 @@ export async function handleTranscode(message: MsgTranscode) {
     return response
   }
   catch (e: any) {
+    // #region debug-point A:handleTranscode-error
+    // #endregion
     if (isTransientFrameError(e)) {
       return { ok: true, state: 'pending_check', detail: '页面切换中，稍后刷新转码状态' }
     }
     if (isPageModeDisabledError(e)) {
-      return { ok: true, state: 'manual_required', detail: '自动加速不可用，可手动重试' }
+      return { ok: false, state: 'failed', error: '115vod 登录态失效，请先用 115 原生播放器播放任意视频后重试' }
     }
     console.error('[115m] transcode error:', e)
     return { ok: false, state: 'failed', error: e?.message || String(e) }

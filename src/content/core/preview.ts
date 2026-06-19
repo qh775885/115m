@@ -69,8 +69,14 @@ function formatTranscodeStatus(res: TranscodeResponse): { text: string, color: s
     if (typeof res.etaSeconds === 'number') {
       parts.push(`预计 ${formatTranscodeEta(res.etaSeconds)}`)
     }
+    if (parts.length > 0) {
+      return {
+        text: `VIP 加速排队中: ${parts.join('，')}${batchText}`,
+        color: '#52c41a',
+      }
+    }
     return {
-      text: parts.length > 0 ? `VIP 加速排队中: ${parts.join('，')}${batchText}` : `VIP 加速排队中${batchText}`,
+      text: res.detail ? `${res.detail}${batchText}` : `VIP 加速排队中${batchText}`,
       color: '#52c41a',
     }
   }
@@ -277,11 +283,15 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (!m3u8Result.ok) {
+          // #region debug-point E:loadCovers-no-m3u8
+          // #endregion
           // M3U8 不可用 → 先检查是否有正在进行的转码任务
           const statusRes = await sendRuntimeMessageSafe<TranscodeResponse>({
             type: 'TRANSCODE_STATUS',
             data: { pickCode: file.pickCode },
           })
+          // #region debug-point C:loadCovers-statusRes
+          // #endregion
           if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.ok
             && (statusRes.state === 'queued' || statusRes.state === 'pending_check')) {
             // 正在转码中 → 直接显示转码进度面板
@@ -291,6 +301,16 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
             && statusRes.state === 'completed_refresh') {
             // 转码已完成但 M3U8 还没生效（缓存延迟）→ 提示刷新
             showCompletedHint(container, statusRes.detail || 'VIP 加速已完成，刷新页面后可预览')
+          }
+          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'failed'
+            && statusRes.error && /验证|安全|异常|captcha|911/i.test(statusRes.error)) {
+            // 115 风控验证 → 提示用户去 115 播放器解除
+            showCompletedHint(container, '⚠ 115 风控验证中，请先用 115 原生播放器播放任意视频解除验证码')
+          }
+          else if (!isRuntimeContextInvalidatedResult(statusRes) && statusRes?.state === 'failed'
+            && statusRes.error && /登录超时|登录过期|990001/i.test(statusRes.error)) {
+            // 115 登录态失效 → 提示用户刷新页面
+            showCompletedHint(container, '⚠ 115 登录态已失效，请刷新 115 页面后重试')
           }
           else {
             // 无转码任务 → 显示"预览图不可用" + 手动转码链接
@@ -645,6 +665,27 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   const enableTranscodeFrameFallback = false
 
   const applyStatus = (res: TranscodeResponse) => {
+    // #region debug-point C:applyStatus
+    // #endregion
+
+    // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
+    if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {
+      label.textContent = '⚠ 115 风控验证中，请先用 115 原生播放器播放任意视频解除验证码'
+      label.style.color = '#fa541c'
+      button.hidden = true
+      stopPolling()
+      return true
+    }
+
+    // 登录态失效
+    if (res.state === 'failed' && res.error && /登录超时|登录过期|990001/i.test(res.error)) {
+      label.textContent = '⚠ 115 登录态已失效，请刷新 115 页面后重试'
+      label.style.color = '#fa541c'
+      button.hidden = true
+      stopPolling()
+      return true
+    }
+
     if (res.ok && res.state && res.state !== 'manual_required') {
       const status = formatTranscodeStatus(res)
       label.textContent = status.text
