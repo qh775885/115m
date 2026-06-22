@@ -597,8 +597,6 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   const enableTranscodeFrameFallback = false
 
   const applyStatus = (res: TranscodeResponse) => {
-    // #region debug-point C:applyStatus
-    // #endregion
 
     // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
     if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {

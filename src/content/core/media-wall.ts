@@ -1,3 +1,4 @@
+import { isImageExtension, readAttr } from '../../shared/utils'
 import { sendRuntimeMessageSafe } from './runtime'
 import { buildFolderItem, renderFoldersSection } from './media-wall-folders'
 import { createImageModule } from './media-wall-images'
@@ -14,20 +15,6 @@ const imageModule = createImageModule(sendRuntimeMessageSafe)
 
 const HIDDEN_CLASS = 'm115-wall-hidden-item'
 const WALL_ID = 'm115-media-wall'
-
-function readAttr(item: HTMLElement, names: string[]): string {
-  for (const name of names) {
-    const value = item.getAttribute(name)
-    if (value) return value
-  }
-  return ''
-}
-
-function isImageExtension(name: string): boolean {
-  const ext = name.split('.').pop()?.toLowerCase()
-  if (!ext) return false
-  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'svg', 'tif', 'tiff', 'avif', 'heic', 'heif'].includes(ext)
-}
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')

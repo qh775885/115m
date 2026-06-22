@@ -292,6 +292,7 @@ export class HoverPreviewSession {
       this.scheduleBackgroundRefinement(duration)
     }
     catch {
+      // thumbnail loading failed, skip refinement
     }
     finally {
       this.thumbnailsLoading = false

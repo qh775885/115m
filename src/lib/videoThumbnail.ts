@@ -236,7 +236,8 @@ async function generateSingleCover(
 
       return await renderCover(result, options)
     }
-    catch (error) {
+    catch {
+      // thumbnail generation failed, fall through to return null
     }
   }
 

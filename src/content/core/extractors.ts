@@ -1,13 +1,6 @@
 import type { FileInfo } from './types'
+import { readAttr } from '../../shared/utils'
 import { parseDuration } from './utils'
-
-function readAttr(item: HTMLElement, names: string[]): string {
-  for (const name of names) {
-    const value = item.getAttribute(name)
-    if (value) return value
-  }
-  return ''
-}
 
 export function isPlayIntentTarget(target: HTMLElement): boolean {
   if (target.closest('.file-opr,[menu],.m115-cover-container')) return false

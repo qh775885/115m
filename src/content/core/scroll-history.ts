@@ -6,6 +6,8 @@
  * 数据存储在 sessionStorage 中，浏览器标签关闭时自动清除。
  */
 
+import { readAttr } from '../../shared/utils'
+
 const STORAGE_KEY = 'm115_scroll_history'
 
 interface ScrollStore {
@@ -66,14 +68,6 @@ export function extractListParams(doc: Document): { cid: string, offset: string 
   const cid = params.get('cid') ?? '0'
   const offset = params.get('offset') ?? '0'
   return { cid, offset }
-}
-
-function readAttr(item: Element, names: string[]): string {
-  for (const name of names) {
-    const value = item.getAttribute(name)
-    if (value) return value
-  }
-  return ''
 }
 
 function extractListFingerprint(doc: Document): string {

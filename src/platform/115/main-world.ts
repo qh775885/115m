@@ -1,3 +1,5 @@
+import { isTransientFrameError, wait } from '../../shared/utils'
+
 export interface MainWorldTextResponse {
   ok: boolean
   text: string
@@ -43,14 +45,6 @@ async function queryTabsByUrls(urls: string[]) {
     seen.add(tab.id)
     return true
   })
-}
-
-function isTransientFrameError(error: unknown): boolean {
-  return /Frame with ID \d+ was removed|No frame with id|The tab was closed|Cannot access contents of url/i.test(String(error))
-}
-
-function wait(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 interface RunIn115MainWorldOptions<TArgs extends unknown[], TResult> {
@@ -133,6 +127,7 @@ async function closeExtension115VodTab(tabId: number) {
     }
   }
   catch {
+    // tab may already be closed or inaccessible
   }
   finally {
     if (extensionCreated115VodTabId === tabId) {
@@ -264,6 +259,7 @@ export async function close115VodFrameSession(pickCode: string) {
     })
   }
   catch {
+    // tab may be closed or script injection may fail
   }
 }
 

@@ -9,17 +9,21 @@ import { deleteHistory, getHistory, getHistoryMap, setHistory } from './history-
 import { getNativeHistory, getNativeHistoryMap, setNativeHistory } from './native-history'
 import { register115VodFrameSession } from '../platform/115/main-world'
 import {
-  handleDeleteFile,
-  handleDeleteSuccessRefresh,
-  handleFetchM3u8,
-  handleFetchSubtitles,
-  handleFetchPlaylist,
-  handleMoveFile,
-  handleMoveSuccessRefresh,
   handleTranscode,
   handleTranscodeNativeFallback,
   handleTranscodeStatus,
-} from './handlers'
+} from './transcode'
+import {
+  handleDeleteFile,
+  handleDeleteSuccessRefresh,
+  handleMoveFile,
+  handleMoveSuccessRefresh,
+} from './file-operations'
+import {
+  handleFetchM3u8,
+  handleFetchSubtitles,
+  handleFetchPlaylist,
+} from './media-info'
 
 // 安装时初始化
 chrome.runtime.onInstalled.addListener((details) => {

@@ -1,21 +1,8 @@
 import type { MediaWallImageItem, LightboxController } from './media-wall-types'
+import { isImageExtension, readAttr } from '../../shared/utils'
 import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './media-wall-folders'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
-
-function readAttr(item: HTMLElement, names: string[]): string {
-  for (const name of names) {
-    const value = item.getAttribute(name)
-    if (value) return value
-  }
-  return ''
-}
-
-function isImageExtension(name: string): boolean {
-  const ext = name.split('.').pop()?.toLowerCase()
-  if (!ext) return false
-  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'svg', 'tif', 'tiff', 'avif', 'heic', 'heif'].includes(ext)
-}
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')

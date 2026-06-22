@@ -1,4 +1,5 @@
 import type { FileInfo } from './types'
+import { wait } from '../../shared/utils'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
 
 const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz']
@@ -44,9 +45,6 @@ function isSecondaryVolume(name: string): boolean {
   return /\.part(?!0*1\.)\d+\.rar$/.test(lower) || /\.(?!0*1$)\d{3}$/.test(lower)
 }
 
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
 
 async function requestJson<T>(url: string, body?: URLSearchParams): Promise<T> {
   const res = await sendRuntimeMessageSafe<MainWorldResponse>({
@@ -150,7 +148,7 @@ async function unlockArchiveIfNeeded(file: FileInfo, error: unknown) {
     const status = json.data?.extract_status?.unzip_status
     const progress = json.data?.extract_status?.progress || 0
     if (status === 4 || progress >= 100) return
-    await sleep(PROGRESS_DELAY_MS)
+    await wait(PROGRESS_DELAY_MS)
   }
 
   throw new Error('密码验证超时，请稍后重试')
@@ -192,7 +190,7 @@ async function waitExtractDone(extractId: string, onProgress?: (percent: number)
     const percent = json.data?.percent || 0
     onProgress?.(percent)
     if (percent >= 100) return '解压完成'
-    await sleep(PROGRESS_DELAY_MS)
+    await wait(PROGRESS_DELAY_MS)
   }
   return '任务已提交，仍在后台解压，请稍后刷新查看'
 }

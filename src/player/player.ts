@@ -10,12 +10,12 @@ import type { M3u8Item } from '../lib/types'
 import { buildArtplayerQuality, buildQualityOptions, getQualityDisplayName, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './core/player-quality'
 import { buildSpeedControlItem as buildSpeedControlConfig } from './core/player-speed'
-import { buildAudioControlItem as buildAudioControlConfig } from './core/player-audio'
+import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
-import { deletePlayHistory, loadAudioTrackPreference, loadPlayHistory, loadPlayHistoryWhenReady, loadSubtitlePreference, loadVideoRotation, loadVolumePreference, saveAudioTrackPreference, saveQualityPreference, saveSubtitlePreference, saveVideoRotation, saveVolumePreference } from './core/history'
+import { deletePlayHistory, loadPlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
 import { buildNavControlItem } from './core/player-center-controls'
-import type { AudioTrackOption, QualityOption } from './core/types'
+import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
 import { runPlayerSmokeChecks } from './core/smoke'
 import { renderPlayerError } from './core/dom'
@@ -47,11 +47,10 @@ import {
 import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './core/player-api'
 import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from './core/playlist-navigation'
 import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
-import { canUseNativeUltraSource, isConservativeNativeUltraExtension, shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './core/native-playback'
-import { applyRotationToVideo, buildRotateControlItem, getNextRotationDegrees } from './core/player-rotation'
-import { bindClickSelectorBehavior } from './core/player-selector'
-import { SubtitleManager } from './core/subtitle-manager'
-import type { SubtitleItem } from './core/subtitles'
+import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
+import { NativePlaybackMonitor } from './core/native-playback-monitor'
+import { RotationManager } from './core/rotation-manager'
+import { SubtitleController } from './core/subtitle-controller'
 
 function injectPlayerSkinStyles() {
   if (document.getElementById('m115-player-skin-style')) return
@@ -62,21 +61,6 @@ function injectPlayerSkinStyles() {
 }
 
 injectPlayerSkinStyles()
-
-function getSubtitleControlLabel(title: string, hasItems: boolean) {
-  if (!hasItems) return '无字幕'
-  if (!title) return '字幕'
-
-  const cleanedTitle = title.replace(/^\s*\[(?:内置字幕|外挂字幕)\]\s*/i, '').trim() || title.trim()
-  const normalizedTitle = cleanedTitle.toLowerCase()
-  if (normalizedTitle.includes('简') && normalizedTitle.includes('中')) return '简中'
-  if (normalizedTitle.includes('繁') && normalizedTitle.includes('中')) return '繁中'
-  if (normalizedTitle.includes('英')) return '英文'
-  if (normalizedTitle.includes('日')) return '日文'
-  if (normalizedTitle.includes('双语')) return '双语'
-
-  return cleanedTitle.length > 4 ? `${cleanedTitle.slice(0, 4)}…` : cleanedTitle
-}
 
 interface PlayerConfig {
   pickCode: string
@@ -118,18 +102,9 @@ class PlayerManager {
   private static readonly QUALITY_CONTROL_NAME = 'm115-quality-control'
   private static readonly SPEED_CONTROL_NAME = 'm115-speed-control'
   private static readonly PLAYBACK_MODE_CONTROL_NAME = 'm115-playback-mode-control'
-  private static readonly AUDIO_CONTROL_NAME = 'm115-audio-control'
-  private static readonly ROTATE_CONTROL_NAME = 'm115-rotate-control'
   private static readonly PREV_CONTROL_NAME = 'm115-prev-control'
   private static readonly NEXT_CONTROL_NAME = 'm115-next-control'
   private static readonly VIDEO_SWITCH_COOLDOWN_MS = 1200
-  private static readonly NATIVE_AUDIO_PROBE_DELAY_MS = 4500
-  private static readonly NATIVE_STALL_CHECK_INTERVAL_MS = 1500
-  private static readonly NATIVE_STALL_TIME_THRESHOLD_MS = 4500
-  private static readonly NATIVE_STALL_MIN_BUFFER_AHEAD_SEC = 6
-  private static readonly NATIVE_STALL_MAX_TIME_DRIFT_SEC = 0.12
-  private static readonly NATIVE_SEEK_LONG_JUMP_SEC = 45
-  private static readonly NATIVE_SEEK_RECOVERY_WINDOW_MS = 8000
   private artplayer: Artplayer | null = null
   private hlsInstance: HlsType | null = null
   private m3u8List: M3u8Item[] = []
@@ -160,35 +135,15 @@ class PlayerManager {
   private readonly nativeUltraConservative: boolean
   private readonly title: string
   private currentPlaybackType: 'native' | 'hls' = 'hls'
-  private cleanupResize: (() => void) | null = null
-  private cleanupRotationContainerObserver: (() => void) | null = null
-  private rotationReflowRaf = 0
+  private rotationManager: RotationManager | null = null
+  private nativeMonitor: NativePlaybackMonitor | null = null
+  private audioManager: AudioManager | null = null
   private lastPlaylistProgressSyncSec = -1
-  private nativePlaybackRetryCount = 0
-  private nativeAudioProbeTimer: number | null = null
-  private nativeVideoProbeTimer: number | null = null
-  private nativeStallCheckTimer: number | null = null
-  private nativeStallStartedAt = 0
-  private nativeStallLastTime = 0
-  private nativeStallLastFrameCount = 0
-  private nativeStallFallbackInFlight = false
-  private nativeSeekStartedAt = 0
-  private nativeSeekFromTime = 0
-  private nativeSeekRecoveryUntil = 0
-  private currentRotation = 0
   private currentPlaybackRate = 1
   private currentPlaybackMode: PlaybackMode = loadPlaybackMode()
-  private audioTrackOptions: AudioTrackOption[] = []
-  private currentAudioTrackId = -1
-  private currentAudioTrackLabel = '音轨'
-  private subtitleManager: SubtitleManager | null = null
-  private subtitleControlEl: HTMLElement | null = null
-  private audioTrackSyncTimers: number[] = []
+  private subtitleController: SubtitleController | null = null
   private currentHlsSourceUrl: string | null = null
   private currentHlsLogicalUrl: string | null = null
-  private preferredAudioTrackId: number | null = null
-  private subtitlePreferenceAppliedForPickCode = ''
-  private audioPreferenceAppliedForPickCode = ''
   private isSwitchingVideo = false
   private lastVideoSwitchStartedAt = 0
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
@@ -279,7 +234,6 @@ class PlayerManager {
 
       const playback = await this.resolvePlaybackForPickCode(this.currentPickCode)
       this.applyResolvedPlayback(playback)
-      this.currentRotation = loadVideoRotation(this.currentPickCode)
 
       this.perfMarks.ultraReady = performance.now()
       this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.m3u8List.length })
@@ -293,9 +247,9 @@ class PlayerManager {
       const currentUrl = this.artplayer?.url || ''
       this.refreshQualityState(currentUrl)
       this.renderQualityPanel()
-      this.renderSubtitleControl()
+      this.subtitleController?.renderControl()
       this.renderPlaybackNavControls()
-      this.renderRotateControl()
+      this.rotationManager?.renderControl()
       this.renderSpeedControl()
 
       const initPickCode = this.currentPickCode
@@ -329,37 +283,17 @@ class PlayerManager {
     const hls = await createHlsInstance(video, sourceUrl)
     this.hlsInstance = hls
 
-    const applyPreferredAudioTrack = () => {
-      const preferredId = this.preferredAudioTrackId
-      if (preferredId == null) return
-      const anyHls = hls as any
-      const tracks = Array.isArray(anyHls.audioTracks) ? anyHls.audioTracks : []
-      const track = tracks[preferredId]
-      if (!track) return
-      try {
-        if (typeof anyHls.setAudioOption === 'function') {
-          anyHls.setAudioOption(track)
-        }
-      }
-      catch {
-        // ignore and continue
-      }
-      anyHls.audioTrack = preferredId
-    }
-
     hls.on('hlsAudioTracksUpdated' as any, () => {
-      applyPreferredAudioTrack()
-      this.syncAudioTracksFromHls()
+      this.audioManager?.syncFromHls()
     })
     hls.on('hlsAudioTrackSwitched' as any, () => {
-      this.syncAudioTracksFromHls()
+      this.audioManager?.syncFromHls()
     })
     hls.on('hlsManifestParsed' as any, () => {
-      applyPreferredAudioTrack()
-      this.syncAudioTracksFromHls()
+      this.audioManager?.syncFromHls()
     })
-    this.scheduleAudioTrackSync()
-    void this.hydrateAudioTracksFromMasterPlaylist()
+    this.audioManager?.scheduleSync()
+    void this.audioManager?.hydrateFromMasterPlaylist()
     return hls
   }
 
@@ -409,19 +343,6 @@ class PlayerManager {
     return URL.createObjectURL(new Blob([wrapped], { type: 'application/vnd.apple.mpegurl' }))
   }
 
-  private clearAudioTrackSyncTimers() {
-    this.audioTrackSyncTimers.forEach(timer => window.clearTimeout(timer))
-    this.audioTrackSyncTimers = []
-  }
-
-  private scheduleAudioTrackSync() {
-    this.clearAudioTrackSyncTimers()
-    const delays = [0, 300, 1000, 2500]
-    this.audioTrackSyncTimers = delays.map(delay => window.setTimeout(() => {
-      this.syncAudioTracksFromHls()
-    }, delay))
-  }
-
   private createArtplayer(videoUrl: string, type: 'native' | 'hls') {
     const container = document.getElementById('artplayer-app')
     if (!container) throw new Error('找不到播放器容器')
@@ -431,6 +352,20 @@ class PlayerManager {
     this._initUrl = videoUrl
 
     this.refreshQualityState(videoUrl)
+
+    // 提前初始化管理器（控件构建依赖它们，attach 在 artplayer 创建后调用）
+    this.rotationManager?.destroy()
+    this.rotationManager = new RotationManager(
+      (msg) => this.overlay?.showToast(msg),
+      () => this.currentPickCode,
+    )
+    this.rotationManager.loadPreference(this.currentPickCode)
+
+    this.audioManager?.destroy()
+    this.audioManager = new AudioManager()
+
+    this.subtitleController?.destroy()
+    this.subtitleController = new SubtitleController()
 
     // YouTube-like idle delay: keep controls visible for a few seconds after mouse movement.
     Artplayer.CONTROL_HIDE_TIME = 6000
@@ -447,10 +382,10 @@ class PlayerManager {
       controls: [
         this.buildPrevControlItem(),
         this.buildNextControlItem(),
-        this.buildRotateControlItem(),
+        this.rotationManager.buildControl(),
         this.buildQualityControlItem(),
-        this.buildAudioControlItem(),
-        this.buildSubtitleControlItem(),
+        this.audioManager!.buildControl(),
+        this.subtitleController!.buildControl(),
         this.buildPlaybackModeControlItem(),
         this.buildSpeedControlItem(),
       ],
@@ -524,23 +459,11 @@ class PlayerManager {
     })
 
     this.artplayer.on('video:seeking', () => {
-      if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-      this.nativeSeekStartedAt = Date.now()
-      this.nativeSeekFromTime = this.nativeStallLastTime || this.artplayer.currentTime || 0
-      this.nativeStallStartedAt = 0
+      this.nativeMonitor?.onSeeking()
     })
 
     this.artplayer.on('video:seeked', () => {
-      if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-      const targetTime = this.artplayer.currentTime || 0
-      const jumpDistance = Math.abs(targetTime - this.nativeSeekFromTime)
-      this.nativeSeekRecoveryUntil = jumpDistance >= PlayerManager.NATIVE_SEEK_LONG_JUMP_SEC
-        ? Date.now() + PlayerManager.NATIVE_SEEK_RECOVERY_WINDOW_MS
-        : 0
-      this.nativeStallStartedAt = 0
-      this.nativeStallLastTime = targetTime
-      this.nativeStallLastFrameCount = this.getTotalVideoFrames(this.artplayer.video as HTMLVideoElement)
-      this.scheduleNativeStallCheck()
+      this.nativeMonitor?.onSeeked()
     })
 
     this.artplayer.on('video:play', () => {})
@@ -549,21 +472,48 @@ class PlayerManager {
       this.syncCurrentPlaylistProgress()
     })
 
-    this.bindWindowResize()
-    this.bindRotationContainerObserver()
-    this.applyVideoRotation()
+    this.rotationManager.attach(this.artplayer)
+
+    // 创建原生播放监控器
+    this.nativeMonitor?.destroy()
+    this.nativeMonitor = new NativePlaybackMonitor()
+    this.nativeMonitor.attach({
+      art: this.artplayer,
+      getIsNativeVideo: () => this.isNativeVideo,
+      getCurrentPlaybackType: () => this.currentPlaybackType,
+      getUltraUrl: () => this.ultraUrl,
+      getTitle: () => this.title,
+      getNativeUltraConservative: () => this.nativeUltraConservative,
+      getPerfMarksPlaying: () => this.perfMarks.playing,
+      onFallbackToHls: (reason, rememberOriginal) => this.fallbackToHls(reason, rememberOriginal),
+      onRetry: () => {},
+      onShowToast: (msg) => this.overlay?.showToast(msg),
+      fetchMasterPlaylistText: () => this.fetchMasterPlaylistText(),
+    })
+
+    // 绑定音频管理器
+    this.audioManager.attach({
+      art: this.artplayer,
+      getHlsInstance: () => this.hlsInstance,
+      getCurrentPickCode: () => this.currentPickCode,
+      getCurrentHlsLogicalUrl: () => this.currentHlsLogicalUrl,
+      onRebuildHls: (params) => this.rebuildHlsForAudioTrack(params),
+      onShowToast: (msg) => this.overlay?.showToast(msg),
+    })
 
     if (type === 'native') {
       this.currentQuality = 9999
       this.currentQualityLabel = '无损'
-      this.audioTrackOptions = []
-      this.currentAudioTrackId = -1
-      this.currentAudioTrackLabel = '音轨'
+      this.audioManager?.resetForNative()
     }
 
     this.setupTopNav()
     this.setupProgressHoverPreview(videoUrl, type)
-    this.setupSubtitles()
+    this.subtitleController.attach({
+      art: this.artplayer,
+      getCurrentPickCode: () => this.currentPickCode,
+      onShowToast: (msg) => this.overlay?.showToast(msg),
+    })
     void this.fetchBreadcrumbs()
 
     if (this.artplayer) {
@@ -591,22 +541,22 @@ class PlayerManager {
             mounted: ($el: HTMLElement) => { this.infoMenuEl = $el },
           })
           this.renderQualityPanel()
-          this.renderAudioControl()
-          this.renderSubtitleControl()
+          this.audioManager?.renderControl()
+          this.subtitleController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderPlaybackNavControls()
-          this.renderRotateControl()
+          this.rotationManager?.renderControl()
           this.renderSpeedControl()
         },
         onLoadedmetadata: () => {
           this.perfMarks.loadedmetadata = performance.now()
           this.updateQualityByUrl(this.artplayer?.url || '')
           this.renderQualityPanel()
-          this.renderAudioControl()
-          this.renderSubtitleControl()
+          this.audioManager?.renderControl()
+          this.subtitleController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderSpeedControl()
-          this.applyVideoRotation()
+          this.rotationManager?.apply()
           this.hoverPreview?.updateSize()
         },
         onCanplay: () => {
@@ -614,16 +564,10 @@ class PlayerManager {
         },
         onPlaying: () => {
           this.clearPlaybackEndState()
-          this.nativePlaybackRetryCount = 0
-          this.clearNativeAudioProbe()
-          this.resetNativeStallState()
-          this.scheduleNativeStallCheck()
+          this.nativeMonitor?.resetRetryCount()
+          this.nativeMonitor?.onPlaying()
           this.perfMarks.playing = performance.now()
           this.reportFirstFrameSummary()
-          if (this.isNativeVideo) {
-            this.scheduleNativeAudioProbe()
-            this.scheduleNativeVideoProbe()
-          }
         },
         onVolumeChange: () => {
           if (!this.artplayer) return
@@ -637,7 +581,7 @@ class PlayerManager {
         },
         onError: () => {
           if (this.isNativeVideo) {
-            void this.handleNativePlaybackError()
+            void this.nativeMonitor?.onError()
           }
         },
       })
@@ -703,160 +647,9 @@ class PlayerManager {
     updateArtplayerControl(this.artplayer, PlayerManager.PLAYBACK_MODE_CONTROL_NAME, this.buildPlaybackModeControlItem())
   }
 
-  private buildAudioControlItem(): any {
-    return buildAudioControlConfig({
-      controlName: PlayerManager.AUDIO_CONTROL_NAME,
-      currentAudioTrackLabel: this.currentAudioTrackLabel,
-      audioTrackOptions: this.audioTrackOptions,
-      visible: this.audioTrackOptions.length > 1,
-      onSelectAudioTrack: id => this.applyAudioTrack(id),
-    })
-  }
-
-  private renderAudioControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.AUDIO_CONTROL_NAME, this.buildAudioControlItem())
-  }
-
-  private buildSubtitleControlItem(): any {
-    const items = this.subtitleManager?.getItems() || []
-    const selectedSid = this.subtitleManager?.getSelectedSid() || ''
-    const selected = items.find(item => item.sid === selectedSid)
-    const currentSubtitleLabel = selected?.title || (items.length ? '字幕' : '无字幕')
-    const compactSubtitleLabel = getSubtitleControlLabel(selected?.title || '', items.length > 0)
-    const listHtml = [
-      `<button type="button" class="m115-subtitle-option ${selectedSid ? '' : 'is-active'}" data-sid="">关闭字幕</button>`,
-      ...items.map(item => `<button type="button" class="m115-subtitle-option ${item.sid === selectedSid ? 'is-active' : ''}" data-sid="${this.escapeAttr(item.sid)}">${this.escapeHtml(item.title)}</button>`),
-    ].join('')
-
-    return {
-      name: 'm115-subtitle-control',
-      index: 10.3,
-      position: 'right',
-      style: {
-        marginRight: 'var(--m115-control-gap)',
-        width: 'var(--m115-subtitle-width)',
-        minWidth: 'var(--m115-subtitle-width)',
-        maxWidth: 'var(--m115-subtitle-width)',
-        height: 'var(--m115-control-size)',
-        minHeight: 'var(--m115-control-size)',
-        maxHeight: 'var(--m115-control-size)',
-        textAlign: 'center' as const,
-      },
-      html: `<div class="m115-subtitle-control art-control-selector">
-        <span class="art-selector-value m115-subtitle-value" title="${this.escapeAttr(currentSubtitleLabel)}">${this.escapeHtml(compactSubtitleLabel)}</span>
-        <div class="art-selector-list">${listHtml}</div>
-      </div>`,
-      mounted: (el: HTMLElement) => {
-        el.classList.add('m115-subtitle-control')
-        bindClickSelectorBehavior(el)
-        el.style.display = items.length > 0 ? 'flex' : 'inline-flex'
-        this.subtitleControlEl = el
-        el.querySelectorAll<HTMLButtonElement>('.m115-subtitle-option').forEach((button) => {
-          button.addEventListener('click', (event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            void this.applySubtitleSelection(button.dataset.sid || '', true)
-          })
-        })
-      },
-    }
-  }
-
-  private renderSubtitleControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, 'm115-subtitle-control', this.buildSubtitleControlItem())
-  }
-
-  private setupSubtitles() {
-    if (!this.artplayer || this.subtitleManager) return
-    const container = this.artplayer.video.parentElement as HTMLElement | null
-    if (!container) return
-
-    this.subtitleManager = new SubtitleManager({
-      container,
-      getVideo: () => this.artplayer?.video || null,
-      sendMessage: sendRuntimeMessageSafe,
-      onListChange: () => this.renderSubtitleControl(),
-      onTrackChange: () => this.renderSubtitleControl(),
-      onListLoaded: () => this.restoreSubtitlePreferenceForCurrentVideo(),
-      onError: message => this.overlay?.showToast(message),
-    })
-    void this.subtitleManager.loadList(this.currentPickCode)
-  }
-
-  private resetSubtitlesForCurrentVideo() {
-    this.subtitleManager?.clearTrack()
-    void this.subtitleManager?.loadList(this.currentPickCode)
-  }
-
-  private async applySubtitleSelection(sid: string, remember = false) {
-    if (!this.subtitleManager) return
-    const items = this.subtitleManager.getItems()
-    const item = sid ? items.find(entry => entry.sid === sid) : null
-    await this.subtitleManager.select(sid)
-    if (remember) {
-      saveSubtitlePreference(this.currentPickCode, item
-        ? {
-            sid: item.sid,
-            title: item.title,
-            type: item.type,
-            language: item.language,
-          }
-        : {
-            sid: '',
-            title: '',
-            type: '',
-            disabled: true,
-          })
-    }
-  }
-
-  private restoreSubtitlePreferenceForCurrentVideo() {
-    if (!this.subtitleManager || this.subtitlePreferenceAppliedForPickCode === this.currentPickCode) return
-    const preference = loadSubtitlePreference(this.currentPickCode)
-    if (!preference) return
-    this.subtitlePreferenceAppliedForPickCode = this.currentPickCode
-    if (preference.disabled) {
-      void this.applySubtitleSelection('', false)
-      return
-    }
-    const item = this.findPreferredSubtitleItem(this.subtitleManager.getItems(), preference)
-    if (item) {
-      void this.applySubtitleSelection(item.sid, false)
-    }
-  }
-
-  private findPreferredSubtitleItem(items: SubtitleItem[], preference: { sid: string, title: string, type: string, language?: string }) {
-    return items.find(item => item.sid === preference.sid)
-      || items.find(item => item.title === preference.title && item.type === preference.type && (item.language || '') === (preference.language || ''))
-      || items.find(item => item.title === preference.title)
-  }
-
-  private escapeHtml(value: string) {
-    return value.replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char] || char)
-  }
-
-  private escapeAttr(value: string) {
-    return this.escapeHtml(value).replace(/'/g, '&#39;')
-  }
-
   private renderSpeedControl() {
     if (!this.artplayer) return
     updateArtplayerControl(this.artplayer, PlayerManager.SPEED_CONTROL_NAME, this.buildSpeedControlItem())
-  }
-
-  private buildRotateControlItem(): any {
-    return buildRotateControlItem({
-      controlName: PlayerManager.ROTATE_CONTROL_NAME,
-      rotation: this.currentRotation,
-      onRotate: () => this.rotateVideoClockwise(),
-    })
-  }
-
-  private renderRotateControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.ROTATE_CONTROL_NAME, this.buildRotateControlItem())
   }
 
   private safeRemoveContextmenuItem(name: string) {
@@ -894,65 +687,6 @@ class PlayerManager {
     })
   }
 
-  private bindWindowResize() {
-    if (this.cleanupResize) return
-    const handleResize = () => this.scheduleVideoRotationReflow()
-    window.addEventListener('resize', handleResize)
-    this.cleanupResize = () => {
-      window.removeEventListener('resize', handleResize)
-      this.cleanupResize = null
-    }
-  }
-
-  private bindRotationContainerObserver() {
-    if (this.cleanupRotationContainerObserver || !this.artplayer?.video) return
-    const container = this.artplayer.video.parentElement as HTMLElement | null
-    if (!container || typeof ResizeObserver === 'undefined') return
-
-    const observer = new ResizeObserver(() => {
-      this.scheduleVideoRotationReflow()
-    })
-    observer.observe(container)
-
-    this.cleanupRotationContainerObserver = () => {
-      observer.disconnect()
-      this.cleanupRotationContainerObserver = null
-    }
-  }
-
-  private scheduleVideoRotationReflow() {
-    if (this.rotationReflowRaf) {
-      window.cancelAnimationFrame(this.rotationReflowRaf)
-    }
-
-    const run = () => {
-      this.applyVideoRotation()
-      this.rotationReflowRaf = window.requestAnimationFrame(() => {
-        this.applyVideoRotation()
-        this.rotationReflowRaf = 0
-      })
-    }
-
-    this.rotationReflowRaf = window.requestAnimationFrame(run)
-  }
-
-  private applyVideoRotation() {
-    if (!this.artplayer) return
-    applyRotationToVideo({
-      video: this.artplayer.video,
-      container: this.artplayer.video.parentElement as HTMLElement | null,
-      rotation: this.currentRotation,
-    })
-  }
-
-  private rotateVideoClockwise() {
-    this.currentRotation = getNextRotationDegrees(this.currentRotation)
-    saveVideoRotation(this.currentPickCode, this.currentRotation)
-    this.applyVideoRotation()
-    this.renderRotateControl()
-    this.overlay?.showToast(this.currentRotation === 0 ? '画面旋转已重置' : `画面已旋转 ${this.currentRotation}°`)
-  }
-
   private applyPlaybackRate(value: number) {
     this.currentPlaybackRate = value
     if (this.artplayer) {
@@ -972,151 +706,6 @@ class PlayerManager {
     savePlaybackMode(mode)
     this.renderPlaybackModeControl()
     this.overlay?.showToast(`播放模式：${getPlaybackModeLabel(mode)}`)
-  }
-
-  private getAudioTrackLabel(track: any, index: number) {
-    const name = String(track?.name || '').trim()
-    const lang = String(track?.lang || track?.attrs?.LANGUAGE || '').trim()
-    const normalizedLang = lang.toLowerCase()
-    const languageLabel = normalizedLang === 'chi' || normalizedLang === 'zh' || normalizedLang === 'zho'
-      ? '中文'
-      : (lang || '未知语言')
-
-    if (name.toLowerCase() === 'stereo') {
-      return `${languageLabel}${index + 1}`
-    }
-
-    if (name && languageLabel) {
-      return `${name}（${languageLabel}）`
-    }
-
-    if (name) {
-      return `${name} ${index + 1}`
-    }
-
-    return `${languageLabel}${index + 1}`
-  }
-
-  private syncAudioTracksFromHls() {
-    const hls = this.hlsInstance as any
-    const tracks = Array.isArray(hls?.audioTracks) ? hls.audioTracks : []
-    if (tracks.length === 0) {
-      return
-    }
-    this.audioTrackOptions = tracks.map((track: any, index: number) => ({
-      id: index,
-      label: this.getAudioTrackLabel(track, index),
-    }))
-    this.currentAudioTrackId = typeof hls?.audioTrack === 'number' ? hls.audioTrack : -1
-    const active = this.audioTrackOptions.find(track => track.id === this.currentAudioTrackId)
-    this.currentAudioTrackLabel = active?.label || (this.audioTrackOptions.length > 0 ? this.audioTrackOptions[0].label : '音轨')
-    this.restoreAudioPreferenceForCurrentVideo()
-    this.renderAudioControl()
-    playerDebug('[115m][audio] tracks', {
-      count: this.audioTrackOptions.length,
-      currentAudioTrackId: this.currentAudioTrackId,
-      options: this.audioTrackOptions,
-      rawTracks: tracks.map((track: any, index: number) => ({
-        index,
-        id: track?.id,
-        name: track?.name,
-        lang: track?.lang,
-        groupId: track?.groupId,
-        url: track?.url,
-        default: track?.default,
-      })),
-    })
-  }
-
-  private async hydrateAudioTracksFromMasterPlaylist() {
-    try {
-      const response = await fetch(`https://115.com/api/video/m3u8/${this.currentPickCode}.m3u8`, {
-        credentials: 'include',
-      })
-      const text = await response.text()
-      const tags = text.match(/#EXT-X-MEDIA:TYPE=AUDIO[^\n]*/ig) || []
-      if (tags.length <= 1) {
-        return
-      }
-
-      const fallbackTracks: AudioTrackOption[] = tags.map((tag, index) => {
-        const name = tag.match(/NAME="([^"]+)"/i)?.[1] || ''
-        const lang = tag.match(/LANGUAGE="([^"]+)"/i)?.[1] || ''
-        const normalizedLang = lang.toLowerCase()
-        const languageLabel = normalizedLang === 'chi' || normalizedLang === 'zh' || normalizedLang === 'zho'
-          ? '中文'
-          : (lang || '未知语言')
-        const label = name.toLowerCase() === 'stereo'
-          ? `${languageLabel}${index + 1}`
-          : (name ? `${name}（${languageLabel}）` : `${languageLabel}${index + 1}`)
-        return { id: index, label }
-      })
-
-      if (this.audioTrackOptions.length === 0) {
-        this.audioTrackOptions = fallbackTracks
-        this.currentAudioTrackId = 0
-        this.currentAudioTrackLabel = fallbackTracks[0]?.label || '音轨'
-        this.renderAudioControl()
-        playerDebug('[115m][audio] fallback tracks from master playlist', fallbackTracks)
-      }
-    }
-    catch (error) {
-      console.warn('[115m][audio] hydrateAudioTracksFromMasterPlaylist failed', error)
-    }
-  }
-
-  private applyAudioTrack(id: number) {
-    const hls = this.hlsInstance as any
-    if (!hls || typeof hls.audioTrack !== 'number') {
-      this.overlay?.showToast('当前播放链路暂不支持切换音轨')
-      return
-    }
-    const currentTime = this.artplayer?.currentTime || 0
-    const shouldResume = !!this.artplayer && !this.artplayer.video.paused
-    const track = Array.isArray(hls.audioTracks) ? hls.audioTracks[id] : null
-    this.preferredAudioTrackId = id
-    this.currentAudioTrackId = id
-    const active = this.audioTrackOptions.find(track => track.id === id)
-    if (active) {
-      this.currentAudioTrackLabel = active.label
-      saveAudioTrackPreference(this.currentPickCode, active)
-    }
-    this.renderAudioControl()
-
-    void this.rebuildHlsForAudioTrack({
-      id,
-      currentTime,
-      shouldResume,
-      track,
-    })
-  }
-
-  private restoreAudioPreferenceForCurrentVideo() {
-    if (this.audioPreferenceAppliedForPickCode === this.currentPickCode) return
-    const preference = loadAudioTrackPreference(this.currentPickCode)
-    if (!preference) return
-    const option = this.audioTrackOptions.find(item => item.id === preference.id && item.label === preference.label)
-      || this.audioTrackOptions.find(item => item.label === preference.label)
-    if (!option || option.id === this.currentAudioTrackId) {
-      this.audioPreferenceAppliedForPickCode = this.currentPickCode
-      return
-    }
-    const hls = this.hlsInstance as any
-    if (!hls || typeof hls.audioTrack !== 'number') return
-    this.audioPreferenceAppliedForPickCode = this.currentPickCode
-    this.preferredAudioTrackId = option.id
-    this.currentAudioTrackId = option.id
-    this.currentAudioTrackLabel = option.label
-    try {
-      const track = Array.isArray(hls.audioTracks) ? hls.audioTracks[option.id] : null
-      if (track && typeof hls.setAudioOption === 'function') {
-        hls.setAudioOption(track)
-      }
-    }
-    catch {
-      // ignore and continue
-    }
-    hls.audioTrack = option.id
   }
 
   private async rebuildHlsForAudioTrack(params: {
@@ -1161,7 +750,7 @@ class PlayerManager {
         track: params.track,
         targetUrl,
       })
-      this.overlay?.showToast(`已切换到${this.currentAudioTrackLabel}`)
+      this.overlay?.showToast(`已切换到${this.audioManager?.currentTrackLabel || '音轨'}`)
     }
     catch (error) {
       console.warn('[115m][audio] rebuild track failed', error)
@@ -1194,7 +783,7 @@ class PlayerManager {
 
     if (this.artplayer.url === opt.url) return
 
-    this.nativePlaybackRetryCount = 0
+    this.nativeMonitor?.resetRetryCount()
     this.currentPlaybackType = !!this.ultraUrl && opt.url === this.ultraUrl ? 'native' : 'hls'
 
     this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
@@ -1322,9 +911,7 @@ class PlayerManager {
 
 
   private async fallbackToHls(reason = '播放失败', rememberOriginal = false) {
-    this.resetNativeStallState()
-    this.clearNativeAudioProbe()
-    this.clearNativeVideoProbe()
+    this.nativeMonitor?.clearAll()
     playerDebug('[115m] fallbackToHls triggered', { m3u8Count: this.m3u8List.length, reason })
     
     if (!this.artplayer) {
@@ -1373,255 +960,9 @@ class PlayerManager {
     }
   }
 
-  private clearNativeAudioProbe() {
-    if (this.nativeAudioProbeTimer != null) {
-      window.clearTimeout(this.nativeAudioProbeTimer)
-      this.nativeAudioProbeTimer = null
-    }
-  }
-
-  private clearNativeVideoProbe() {
-    if (this.nativeVideoProbeTimer != null) {
-      window.clearTimeout(this.nativeVideoProbeTimer)
-      this.nativeVideoProbeTimer = null
-    }
-  }
-
-  private clearNativeStallCheck() {
-    if (this.nativeStallCheckTimer != null) {
-      window.clearTimeout(this.nativeStallCheckTimer)
-      this.nativeStallCheckTimer = null
-    }
-  }
-
-  private resetNativeStallState() {
-    this.clearNativeStallCheck()
-    this.nativeStallStartedAt = 0
-    this.nativeStallLastTime = 0
-    this.nativeStallLastFrameCount = 0
-    this.nativeStallFallbackInFlight = false
-    this.nativeSeekStartedAt = 0
-    this.nativeSeekFromTime = 0
-    this.nativeSeekRecoveryUntil = 0
-  }
-
   private clearTransientPlaybackWatchers() {
-    this.clearNativeAudioProbe()
-    this.clearNativeVideoProbe()
-    this.resetNativeStallState()
-    this.clearAudioTrackSyncTimers()
-  }
-
-  private scheduleNativeStallCheck() {
-    this.clearNativeStallCheck()
-    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-    this.nativeStallCheckTimer = window.setTimeout(() => {
-      this.nativeStallCheckTimer = null
-      void this.checkNativePlaybackStall()
-    }, PlayerManager.NATIVE_STALL_CHECK_INTERVAL_MS)
-  }
-
-  private getBufferedAhead(video: HTMLVideoElement) {
-    const currentTime = video.currentTime || 0
-    for (let i = 0; i < video.buffered.length; i += 1) {
-      const start = video.buffered.start(i)
-      const end = video.buffered.end(i)
-      if (currentTime >= start && currentTime <= end) {
-        return Math.max(0, end - currentTime)
-      }
-    }
-    return 0
-  }
-
-  private getTotalVideoFrames(video: HTMLVideoElement) {
-    const quality = (video.getVideoPlaybackQuality?.() || {}) as VideoPlaybackQualityLike
-    const total = quality.totalVideoFrames
-    if (typeof total === 'number' && total > 0) return total
-    return (video as HTMLVideoElement & { webkitDecodedFrameCount?: number }).webkitDecodedFrameCount ?? 0
-  }
-
-  private async checkNativePlaybackStall() {
-    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-    if (this.nativeStallFallbackInFlight) return
-
-    const video = this.artplayer.video as HTMLVideoElement
-    if (video.paused || video.ended || video.seeking) {
-      this.nativeStallStartedAt = 0
-      this.nativeStallLastTime = video.currentTime || 0
-      this.nativeStallLastFrameCount = this.getTotalVideoFrames(video)
-      this.scheduleNativeStallCheck()
-      return
-    }
-
-    if (!this.perfMarks.playing || video.currentTime < 3) {
-      this.nativeStallStartedAt = 0
-      this.nativeStallLastTime = video.currentTime || 0
-      this.nativeStallLastFrameCount = this.getTotalVideoFrames(video)
-      this.scheduleNativeStallCheck()
-      return
-    }
-
-    const bufferedAhead = this.getBufferedAhead(video)
-    const currentTime = video.currentTime || 0
-    const totalFrames = this.getTotalVideoFrames(video)
-    const timeDrift = Math.abs(currentTime - this.nativeStallLastTime)
-    const frameDrift = Math.abs(totalFrames - this.nativeStallLastFrameCount)
-    const hasEnoughBuffer = bufferedAhead >= PlayerManager.NATIVE_STALL_MIN_BUFFER_AHEAD_SEC
-    const mediaLikelyStalled = video.readyState <= HTMLMediaElement.HAVE_CURRENT_DATA
-    const inSeekRecovery = this.nativeSeekRecoveryUntil > Date.now()
-    const stallThresholdMs = inSeekRecovery
-      ? Math.max(2500, PlayerManager.NATIVE_STALL_TIME_THRESHOLD_MS - 1500)
-      : PlayerManager.NATIVE_STALL_TIME_THRESHOLD_MS
-
-    if (hasEnoughBuffer && mediaLikelyStalled && timeDrift <= PlayerManager.NATIVE_STALL_MAX_TIME_DRIFT_SEC && frameDrift === 0) {
-      if (!this.nativeStallStartedAt) {
-        this.nativeStallStartedAt = Date.now()
-      }
-      else if (Date.now() - this.nativeStallStartedAt >= stallThresholdMs) {
-        this.nativeStallFallbackInFlight = true
-        console.warn('[115m][native] stall detected, fallback to HLS', {
-          currentTime,
-          bufferedAhead,
-          readyState: video.readyState,
-          networkState: video.networkState,
-          totalFrames,
-          inSeekRecovery,
-        })
-        await this.fallbackToHls(inSeekRecovery ? '无损远跳后恢复失败，已改用 115原画' : '无损播放卡死，已改用 115原画', true)
-        return
-      }
-    }
-    else {
-      this.nativeStallStartedAt = 0
-    }
-
-    this.nativeStallLastTime = currentTime
-    this.nativeStallLastFrameCount = totalFrames
-    this.scheduleNativeStallCheck()
-  }
-
-  private scheduleNativeAudioProbe() {
-    this.clearNativeAudioProbe()
-    this.nativeAudioProbeTimer = window.setTimeout(() => {
-      this.nativeAudioProbeTimer = null
-      void this.checkNativeAudioDecode()
-    }, PlayerManager.NATIVE_AUDIO_PROBE_DELAY_MS)
-  }
-
-  private scheduleNativeVideoProbe() {
-    this.clearNativeVideoProbe()
-    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-    this.nativeVideoProbeTimer = window.setTimeout(() => {
-      this.nativeVideoProbeTimer = null
-      void this.checkNativeVideoDecode()
-    }, PlayerManager.NATIVE_AUDIO_PROBE_DELAY_MS)
-  }
-
-  private async checkNativeVideoDecode() {
-    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-    if (this.nativeStallFallbackInFlight) return
-
-    const video = this.artplayer.video as HTMLVideoElement
-    if (video.paused || video.ended || video.seeking || video.currentTime < 1) {
-      this.scheduleNativeVideoProbe()
-      return
-    }
-
-    const totalFrames = this.getTotalVideoFrames(video)
-    if (!shouldFallbackNativeBlackVideo({
-      currentTime: video.currentTime || 0,
-      readyState: video.readyState,
-      videoWidth: video.videoWidth || 0,
-      videoHeight: video.videoHeight || 0,
-      totalVideoFrames: totalFrames,
-    })) {
-      return
-    }
-
-    this.nativeStallFallbackInFlight = true
-    playerDebug('[115m][native] black video detected, fallback to HLS', {
-      currentTime: video.currentTime,
-      readyState: video.readyState,
-      networkState: video.networkState,
-      videoWidth: video.videoWidth,
-      videoHeight: video.videoHeight,
-      totalFrames,
-    })
-    await this.fallbackToHls('无损视频编码不兼容，已改用 115原画', true)
-  }
-
-  private async checkNativeAudioDecode() {
-    if (!this.artplayer || !this.isNativeVideo || this.currentPlaybackType !== 'native') return
-    const video = this.artplayer.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number }
-    if (video.paused || video.currentTime < 1) {
-      this.scheduleNativeAudioProbe()
-      return
-    }
-    const decodedBytes = video.webkitAudioDecodedByteCount
-    if (typeof decodedBytes !== 'number' || decodedBytes > 0) return
-    if (video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA || video.currentTime < 3) {
-      this.scheduleNativeAudioProbe()
-      return
-    }
-    if (!shouldFallbackNativeSilentAudio({
-      title: this.title,
-      ultraUrl: this.ultraUrl,
-      nativeUltraConservative: this.nativeUltraConservative,
-    })) return
-    const hasHlsAudioTracks = await this.masterPlaylistHasAudioTracks()
-    if (!hasHlsAudioTracks) return
-    await this.fallbackToHls('无损音频不兼容，已改用 115原画', true)
-  }
-
-  private async masterPlaylistHasAudioTracks() {
-    const masterText = await this.fetchMasterPlaylistText()
-    return !!masterText && /#EXT-X-MEDIA:TYPE=AUDIO/i.test(masterText)
-  }
-
-  private async handleNativePlaybackError() {
-    if (!this.artplayer) return
-
-    const hasStartedPlaying = !!this.perfMarks.playing
-    if (shouldRetryNativePlayback({ retryCount: this.nativePlaybackRetryCount, hasStartedPlaying })) {
-      this.nativePlaybackRetryCount += 1
-      this.retryNativePlayback()
-      return
-    }
-
-    if (hasStartedPlaying) {
-      this.overlay?.showToast('无损播放出现波动，已保留当前无损源，可手动切换 115原画')
-      return
-    }
-
-    if (!this.artplayer.video.error || this.artplayer.video.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE) {
-      this.overlay?.showToast('无损播放异常，已重试保留无损源，可手动切换 115原画')
-      return
-    }
-
-    await this.fallbackToHls()
-  }
-
-  private retryNativePlayback() {
-    if (!this.artplayer) return
-
-    this.resetNativeStallState()
-    const retryUrl = this.ultraUrl || this.artplayer.url || ''
-    if (!retryUrl) return
-
-    const currentTime = this.artplayer.currentTime || 0
-    const shouldResume = !this.artplayer.video.paused || currentTime <= 0
-
-    this.artplayer.once('video:loadedmetadata', () => {
-      if (!this.artplayer) return
-      if (currentTime > 0) {
-        this.artplayer.seek = currentTime
-      }
-      if (shouldResume) {
-        safePlay(this.artplayer)
-      }
-    })
-
-    this.artplayer.url = retryUrl
+    this.nativeMonitor?.clearAll()
+    this.audioManager?.clearSyncTimers()
   }
 
   private async ensureOriginalSourceLoaded(): Promise<string | null> {
@@ -2019,10 +1360,9 @@ class PlayerManager {
       if (requestId !== this.switchVideoRequestId || !this.artplayer) return
 
       this.currentPickCode = pickCode
-      this.currentRotation = loadVideoRotation(pickCode)
-      this.subtitlePreferenceAppliedForPickCode = ''
-      this.audioPreferenceAppliedForPickCode = ''
-      this.preferredAudioTrackId = null
+      this.rotationManager?.switchVideo(pickCode)
+      this.subtitleController?.resetPreferenceFlag()
+      this.audioManager?.resetPreferenceFlag()
       this.perfMarks = { init: performance.now() }
       this.firstPlayingReported = false
       this.lastPlaylistProgressSyncSec = -1
@@ -2044,12 +1384,10 @@ class PlayerManager {
       if (requestId !== this.switchVideoRequestId || !this.artplayer) return
 
       this.setupProgressHoverPreview(playback.initialPlayback.url, playback.initialPlayback.type)
-      this.resetSubtitlesForCurrentVideo()
+      this.subtitleController?.resetForNewVideo()
       this.renderQualityPanel()
-      this.renderSubtitleControl()
+      this.subtitleController?.renderControl()
       this.renderPlaybackNavControls()
-      this.renderRotateControl()
-      this.applyVideoRotation()
 
       if (autoPlay) {
         safePlay(this.artplayer)
@@ -2093,7 +1431,7 @@ class PlayerManager {
   }
 
   private applyResolvedPlayback(playback: ResolvedPlaybackBundle) {
-    this.nativePlaybackRetryCount = 0
+    this.nativeMonitor?.resetRetryCount()
     this.ultraUrl = playback.ultraUrl
     this.m3u8List = playback.m3u8List
     this.isNativeVideo = playback.initialPlayback.isNativeVideo
@@ -2118,7 +1456,10 @@ class PlayerManager {
 
   destroy() {
     this.clearPlaybackEndState()
-    this.clearNativeAudioProbe()
+    this.nativeMonitor?.destroy()
+    this.nativeMonitor = null
+    this.audioManager?.destroy()
+    this.audioManager = null
     if (this.switchCooldownTimer != null) {
       window.clearTimeout(this.switchCooldownTimer)
       this.switchCooldownTimer = null
@@ -2134,16 +1475,14 @@ class PlayerManager {
       this.infoMenuTimer = null
     }
     this.infoMenuEl = null
-    this.subtitleManager?.destroy()
-    this.subtitleManager = null
-    this.subtitleControlEl = null
+    this.subtitleController?.destroy()
+    this.subtitleController = null
     if (this.cleanupKeyboard) {
       this.cleanupKeyboard()
       this.cleanupKeyboard = null
     }
-    if (this.cleanupResize) {
-      this.cleanupResize()
-    }
+    this.rotationManager?.destroy()
+    this.rotationManager = null
     if (this.hlsInstance) {
       this.hlsInstance.destroy()
       this.hlsInstance = null
@@ -2153,7 +1492,6 @@ class PlayerManager {
     }
     this.currentHlsSourceUrl = null
     this.currentHlsLogicalUrl = null
-    this.clearAudioTrackSyncTimers()
     if (this.artplayer) {
       this.artplayer.destroy()
       this.artplayer = null
