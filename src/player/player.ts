@@ -1310,6 +1310,7 @@ class PlayerManager {
   private navigateToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
     if (!pickCode || pickCode === this.currentPickCode) return
 
+    this.clearPlaybackEndState()
     this.pendingVideoSwitch = { pickCode, keepPlaylistOpen, autoPlay }
     this.schedulePendingVideoSwitch()
   }

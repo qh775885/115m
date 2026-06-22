@@ -59,11 +59,14 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
 
     const url = `https://webapi.115.com/movies/subtitle?pickcode=${pickCode}`
 
+    // 转义 URL 中可能破坏模板字面量的字符（反引号、${、反斜杠、双引号）
+    const safeUrl = url.replace(/[`\\$"]/g, '\\$&')
+
     // 注入简单的 fetch 逻辑，确保最纯粹的请求环境
     const script = `
       (async () => {
         try {
-          const res = await fetch("${url}", { credentials: "include" });
+          const res = await fetch("${safeUrl}", { credentials: "include" });
           const text = await res.text();
           return { ok: true, text };
         } catch (e) {

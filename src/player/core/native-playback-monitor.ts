@@ -351,7 +351,9 @@ export class NativePlaybackMonitor {
         this.art.seek = currentTime
       }
       if (shouldResume) {
-        this.art.play()
+        this.art.play().catch(() => {
+          // ignore play rejection on retry; error events handle real failures
+        })
       }
     })
 
