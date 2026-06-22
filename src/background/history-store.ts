@@ -15,8 +15,8 @@ const STORAGE_KEY = 'data'
 const MAX_HISTORY_ENTRIES = 200
 
 async function readHistoryData(): Promise<HistoryDataShape> {
-  const result = await chrome.storage.local.get(STORAGE_KEY)
   try {
+    const result = await chrome.storage.local.get(STORAGE_KEY)
     return result[STORAGE_KEY] ? JSON.parse(result[STORAGE_KEY]) : {}
   }
   catch {
@@ -25,7 +25,12 @@ async function readHistoryData(): Promise<HistoryDataShape> {
 }
 
 async function writeHistoryData(data: HistoryDataShape) {
-  await chrome.storage.local.set({ [STORAGE_KEY]: JSON.stringify(data) })
+  try {
+    await chrome.storage.local.set({ [STORAGE_KEY]: JSON.stringify(data) })
+  }
+  catch {
+    // storage write failed (quota exceeded or context invalidated)
+  }
 }
 
 export async function getHistory(pickCode: string) {

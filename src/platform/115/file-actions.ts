@@ -63,9 +63,10 @@ export async function showMoveFileDialogIn115Page(tabId: number, payload: { file
           await loadScript('https://cdnres.115.com/site/static/js/min/util-min.js?_vh=be49060_91')
           await loadScript('https://cdnres.115.com/site/static/js/wl_disk2014/min/core-min.js?_vh=d376e38_91')
 
-          await new Promise<void>((resolve) => {
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Core SDK load timeout')), 10000)
             const check = () => {
-              if (win.Core) resolve()
+              if (win.Core) { clearTimeout(timeout); resolve() }
               else setTimeout(check, 50)
             }
             check()
