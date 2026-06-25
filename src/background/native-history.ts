@@ -17,6 +17,7 @@ interface NativeHistoryApiResponse {
 }
 
 const NATIVE_HISTORY_API_URL = 'https://115vod.com/webapi/files/history'
+const VOD_COOKIE_URL = 'https://115vod.com/'
 
 function normalizeShareId(shareId?: string) {
   return shareId && shareId !== '0' ? shareId : '0'
@@ -44,15 +45,41 @@ function parseNativeRecord(data: NativeHistoryApiData | undefined, fallbackPickC
   }
 }
 
+async function buildVodCookieHeader(): Promise<string> {
+  const cookies = await chrome.cookies.getAll({ url: VOD_COOKIE_URL })
+  if (cookies.length === 0) return ''
+  return cookies.map(c => `${c.name}=${c.value}`).join('; ')
+}
+
+async function fetchVodApi(url: string, options: { method?: string, body?: string, contentType?: string } = {}): Promise<{ ok: boolean, text: string }> {
+  const cookieHeader = await buildVodCookieHeader()
+  const headers: Record<string, string> = {
+    Accept: 'application/json, text/javascript, */*; q=0.01',
+  }
+  if (cookieHeader) {
+    headers['Cookie'] = cookieHeader
+  }
+  if (options.body && options.contentType) {
+    headers['Content-Type'] = options.contentType
+  }
+
+  const response = await fetch(url, {
+    method: options.method || 'GET',
+    headers,
+    body: options.body,
+  })
+  const text = await response.text()
+  return { ok: response.ok, text }
+}
+
 export async function getNativeHistory(pickCode: string, shareId?: string): Promise<NativePlayHistoryRecord | null> {
   if (!pickCode) return null
 
-  const response = await fetch(buildHistoryUrl(pickCode, shareId), {
-    credentials: 'include',
-  })
+  const url = buildHistoryUrl(pickCode, shareId)
+  const response = await fetchVodApi(url)
   if (!response.ok) return null
 
-  const json = await response.json() as NativeHistoryApiResponse
+  const json = JSON.parse(response.text) as NativeHistoryApiResponse
   if (!json.state || Array.isArray(json.data)) return null
 
   return parseNativeRecord(json.data, pickCode)
@@ -93,16 +120,13 @@ export async function setNativeHistory(params: {
     share_id: normalizeShareId(params.shareId),
   })
 
-  const response = await fetch(NATIVE_HISTORY_API_URL, {
+  const response = await fetchVodApi(NATIVE_HISTORY_API_URL, {
     method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    },
-    body,
+    body: body.toString(),
+    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
   })
   if (!response.ok) return false
 
-  const json = await response.json() as NativeHistoryApiResponse
+  const json = JSON.parse(response.text) as NativeHistoryApiResponse
   return json.state === true
 }

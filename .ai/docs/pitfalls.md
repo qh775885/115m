@@ -21,6 +21,14 @@
 - 拖选起点可能在墙空白、标题、`.list-contents`，不一定落在卡片本身
 - 选择转发会派发合成事件；document 级监听必须过滤非真实事件
 
+## 115vod.com cookie 在 background 中丢失
+
+- background service worker 里 `fetch` 115vod.com 时，浏览器不自动带上 cookie（即使有 host_permissions）
+- 115.com 的 cookie 正常带上，115vod.com 的不带——这是 Chrome 扩展的 cookie 策略行为
+- cookie 本身未过期，在 115vod.com 标签页里 fetch 正常
+- 已修复：用 `chrome.cookies.getAll` 手动获取 115vod.com cookie，构建 `Cookie` 请求头
+- transcode.ts 也有 115vod.com 的 fetch，同样可能受影响（待确认）
+
 ## 无损播放
 
 - MKV 不应默认主动走无损；允许用户手动选择并记住，但必须保留无声检测后切回 115 原画的保护

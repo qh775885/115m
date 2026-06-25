@@ -13,7 +13,7 @@ import { buildSpeedControlItem as buildSpeedControlConfig } from './core/player-
 import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
-import { deletePlayHistory, loadPlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
+import { deletePlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
 import { buildNavControlItem } from './core/player-center-controls'
 import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
@@ -253,11 +253,11 @@ class PlayerManager {
       this.renderSpeedControl()
 
       const initPickCode = this.currentPickCode
-      void loadPlayHistory(initPickCode, (time) => {
-        if (this.artplayer && this.currentPickCode === initPickCode) {
-          this.artplayer.seek = time
-        }
-      })
+      void loadPlayHistoryWhenReady(
+        initPickCode,
+        () => this.currentPickCode === initPickCode && this.artplayer ? this.artplayer.video as HTMLVideoElement : null,
+        () => this.currentPickCode === initPickCode,
+      )
     }
     catch (error) {
       this.showError(`播放器初始化失败: ${error instanceof Error ? error.message : String(error)}`)
