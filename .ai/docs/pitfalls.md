@@ -26,7 +26,8 @@
 - background service worker 里 `fetch` 115vod.com 时，浏览器不自动带上 cookie（即使有 host_permissions）
 - 115.com 的 cookie 正常带上，115vod.com 的不带——这是 Chrome 扩展的 cookie 策略行为
 - cookie 本身未过期，在 115vod.com 标签页里 fetch 正常
-- 已修复：用 `chrome.cookies.getAll` 手动获取 115vod.com cookie，构建 `Cookie` 请求头
+- **history API 应使用 `webapi.115.com/files/history`（115.com 域名），不要用 `115vod.com/webapi/files/history`**
+- 参考项目 115Master 用的就是 `webapi.115.com`，无 cookie 问题
 - transcode.ts 也有 115vod.com 的 fetch，同样可能受影响（待确认）
 
 ## 无损播放
