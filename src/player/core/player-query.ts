@@ -67,7 +67,8 @@ export function readOverlayMetaQuery(search: string): OverlayMetaQuery {
     fileId: params.get('fileId') || '',
     cid,
     parentId: cid,
-    isMarked: params.get('marked') === '1',
+    // 不从 URL 读取 marked，由 fetchFileFavoriteStatus 异步获取真实状态
+    isMarked: false,
     path: readPathFromLocation(search),
   }
 }

@@ -854,6 +854,8 @@ class PlayerManager {
       if (requestPickCode !== this.currentPickCode) return
       if (favoriteStatus !== null) {
         this.overlay?.updateFavoriteStatus(favoriteStatus)
+        // 同步更新 URL 的 marked 参数，避免刷新后读到旧值
+        window.history.replaceState(null, '', buildUpdatedMarkedUrl(window.location.pathname, window.location.search, favoriteStatus))
       }
     } catch (error) {
       playerDebug('[115m] fetchFileFavoriteStatus failed:', error)

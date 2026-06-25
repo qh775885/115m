@@ -51,7 +51,7 @@ describe('player query helpers', () => {
       fileId: '9',
       cid: '3',
       parentId: '3',
-      isMarked: true,
+      isMarked: false,
       path: [],
     })
   })

@@ -12,7 +12,8 @@ export function buildOverlayMetaPatch(targetItem?: OverlayPlaylistItem) {
     title: targetItem.name,
     fileId: targetItem.fileId,
     fileSize: targetItem.size || '',
-    isMarked: targetItem.isMarked === true,
+    // 不使用缓存的 isMarked，切换时先重置为空心，由 fetchFileFavoriteStatus 异步获取真实状态
+    isMarked: false,
   }
 }
 
@@ -31,7 +32,8 @@ export function buildPlayerHistoryUrl(params: {
       title: params.targetItem?.name,
       fileId: params.targetItem?.fileId,
       fileSize: params.targetItem?.size,
-      isMarked: params.targetItem?.isMarked,
+      // 不使用缓存 isMarked，由 fetchFileFavoriteStatus 异步获取真实状态后更新
+      isMarked: false,
       keepPlaylistOpen: params.keepPlaylistOpen,
     },
   )
