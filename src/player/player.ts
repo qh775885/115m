@@ -1369,6 +1369,13 @@ class PlayerManager {
       this.perfMarks = { init: performance.now() }
       this.firstPlayingReported = false
       this.lastPlaylistProgressSyncSec = -1
+      
+      // 切换前强制重置进度为 0，防止复用 video 元素时继承上一集的进度
+      if (this.artplayer.video) {
+        this.artplayer.video.currentTime = 0
+      }
+      this.artplayer.seek = 0
+      
       this.applyResolvedPlayback(playback)
       const metaPatch = buildOverlayMetaPatch(targetItem)
       if (metaPatch) {
@@ -1385,6 +1392,10 @@ class PlayerManager {
       this.overlay?.updatePlaylist(this.playlistItemsCache)
       await this.artplayer.switchUrl(playback.initialPlayback.url)
       if (requestId !== this.switchVideoRequestId || !this.artplayer) return
+      
+      // 切换 URL 后再次重置，防止内部状态污染
+      this.artplayer.seek = 0
+      if (this.artplayer.video) this.artplayer.video.currentTime = 0
 
       this.setupProgressHoverPreview(playback.initialPlayback.url, playback.initialPlayback.type)
       this.subtitleController?.resetForNewVideo()
