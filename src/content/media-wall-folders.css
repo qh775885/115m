@@ -1,7 +1,7 @@
 /* ====== folder wall ====== */
 .m115-folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); /* 回归适中宽度 */
   gap: 20px 16px;
   padding: 16px;
 }
@@ -9,7 +9,7 @@
 .m115-folder-card {
   position: relative;
   display: block;
-  min-height: 154px;
+  min-height: 140px;
   width: 100%;
   padding: 0;
   overflow: visible;
@@ -57,7 +57,7 @@
   top: 4px;
   left: 8px;
   right: 8px;
-  height: 80px;
+  bottom: 0;
   border-radius: 4px;
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -68,7 +68,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 150px;
   margin-top: 8px;
   border-radius: 10px;
   background: linear-gradient(180deg, #fce094 0%, #f2c45f 6%, #e8b44b 100%);
@@ -78,13 +77,14 @@
     0 2px 4px rgba(125, 88, 18, 0.08);
   z-index: 2;
   overflow: hidden;
+  padding-bottom: 22px; /* 和 footer 高度保持一致 */
 }
 
 .m115-folder-cover-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 114px;
+  aspect-ratio: 1 / 1; /* 1:1 正方形，对横图竖图的兼容性最好，不偏袒任何一方 */
   width: calc(100% - 8px);
   margin: 4px 4px 0;
   border-radius: 7px;
@@ -115,26 +115,36 @@
 }
 
 .m115-folder-footer {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px 6px;
-  flex: 1;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: block; /* 取消 flex 布局，防止 flex 居中/撑开等副作用 */
+  padding: 0; /* 彻底清除 padding */
+  height: 22px; 
 }
 
 .m115-folder-name {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
   color: #2b3445;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 100%;
+  text-align: left; /* 强制左侧对齐 */
+  margin: 0; 
+  padding: 0 4px 0 6px; /* 左边距 6px，右边距 4px，绝对控制物理像素 */
+  line-height: 22px; /* 和高度保持一致，垂直居中 */
+  box-sizing: border-box;
+  z-index: 5;
 }
 
 .m115-folder-selection {
   position: absolute;
-  left: 2px;
-  bottom: 2px;
+  left: 6px;
+  top: 14px; /* 移到左上角，在封面内侧或边缘 */
   z-index: 13;
   padding: 0;
   border: 0;
@@ -248,23 +258,24 @@
 }
 
 .m115-folder-remark-badge {
+  position: absolute; /* 确保是绝对定位 */
   right: -1px;
   bottom: -1px;
-  width: 32px;
-  height: 18px;
-  padding: 0 0 2px 7px;
-  border-radius: 10px 0 12px 0;
-  background: linear-gradient(180deg, rgba(243, 247, 252, 0.82) 0%, rgba(230, 237, 246, 0.92) 100%);
+  width: 24px; /* 极度缩小宽度，刚好包住“备注” */
+  height: 14px; /* 降低高度 */
+  padding: 0 0 0 4px; /* 减少内边距 */
+  border-radius: 6px 0 10px 0;
+  background: linear-gradient(180deg, rgba(243, 247, 252, 0.9) 0%, rgba(230, 237, 246, 0.95) 100%);
   color: #75879f;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36), 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36), 0 1px 2px rgba(15, 23, 42, 0.05);
   border-top: 1px solid rgba(203, 213, 225, 0.56);
   border-left: 1px solid rgba(203, 213, 225, 0.56);
   border-bottom: 1px solid rgba(203, 213, 225, 0.56);
   border-right: 0;
-  font-size: 8px;
+  font-size: 8px; /* 保持字号小 */
   font-weight: 500;
   line-height: 1;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 40%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 30%);
   display: flex;
   align-items: center;
   justify-content: center;
