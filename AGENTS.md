@@ -25,6 +25,7 @@ Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
 - 涉及共享模块、消息、播放器核心链路时，先确认隔离边界
 - 疑难问题先记录事实、排除项、已试无效方案，再动手修
 - 多次试错的结论，同步到 `.ai/docs/pitfalls.md`
+- 提交代码前，必须先读取 `.ai/rules/git-commit-message.md` 并遵守格式
 
 ## Chrome 扩展边界
 
