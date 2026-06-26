@@ -1,0 +1,68 @@
+
+.m115-header-main {
+  max-width: min(74vw, 920px) !important;
+  gap: 11px !important;
+}
+
+
+.m115-header-title {
+  letter-spacing: .01em;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+
+.m115-header-stats,
+.m115-header-breadcrumbs {
+  opacity: .74;
+}
+
+
+.m115-header-title-row {
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+
+.m115-header-index {
+  height: 20px !important;
+  padding: 0 7px !important;
+  font-size: 11px !important;
+  opacity: .86;
+}
+
+
+.m115-header-stats {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em;
+}
+
+
+.m115-header-breadcrumbs {
+  margin-top: 4px !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+
+.m115-header-pill-group {
+  padding: 3px !important;
+  background: transparent !important;
+  border-color: rgba(255,255,255,.08) !important;
+  box-shadow: none;
+}
+
+
+.m115-header-action,
+.m115-header-back {
+  width: 36px !important;
+  height: 36px !important;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+
+.m115-header-action:hover,
+.m115-header-back:hover {
+  transform: translateY(-1px);
+}

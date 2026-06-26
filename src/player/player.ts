@@ -5,6 +5,16 @@
 import Artplayer from 'artplayer'
 import type HlsType from 'hls.js'
 import playerSkinCss from './core/player-skin.css?inline'
+import playerQualityCss from './core/css/player-quality.css?inline'
+import playerSpeedCss from './core/css/player-speed.css?inline'
+import playerAudioCss from './core/css/player-audio.css?inline'
+import playerSubtitleCss from './core/css/player-subtitle.css?inline'
+import playerPlaybackModeCss from './core/css/player-playback-mode.css?inline'
+import playerNavigationCss from './core/css/player-navigation.css?inline'
+import playerRotationCss from './core/css/player-rotation.css?inline'
+import playerPlaylistCss from './core/css/player-playlist.css?inline'
+import playerHeaderCss from './core/css/player-header.css?inline'
+import playerSelectorCss from './core/css/player-selector.css?inline'
 import playerVolumeCss from './core/player-volume.css?inline'
 import uiLayerCss from './core/ui-layer.css?inline'
 import type { M3u8Item } from '../lib/types'
@@ -58,7 +68,7 @@ function injectPlayerSkinStyles() {
   if (document.getElementById('m115-player-skin-style')) return
   const style = document.createElement('style')
   style.id = 'm115-player-skin-style'
-  style.textContent = `${playerSkinCss}\n${playerVolumeCss}\n${uiLayerCss}`
+  style.textContent = `${playerSkinCss}\n${playerQualityCss}\n${playerSpeedCss}\n${playerAudioCss}\n${playerSubtitleCss}\n${playerPlaybackModeCss}\n${playerNavigationCss}\n${playerRotationCss}\n${playerPlaylistCss}\n${playerHeaderCss}\n${playerSelectorCss}\n${playerVolumeCss}\n${uiLayerCss}`
   document.head.appendChild(style)
 }
 

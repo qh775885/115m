@@ -1,0 +1,72 @@
+
+.m115-rotate-control {
+  width: var(--m115-control-size);
+  min-width: var(--m115-control-size);
+  max-width: var(--m115-control-size);
+  height: var(--m115-control-size);
+  min-height: var(--m115-control-size);
+  max-height: var(--m115-control-size);
+  margin-right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.88);
+  flex: 0 0 var(--m115-control-size);
+  transition: color .15s ease;
+}
+
+
+.art-video-player .art-controls-right .m115-rotate-control {
+  width: var(--m115-control-size) !important;
+  min-width: var(--m115-control-size) !important;
+  max-width: var(--m115-control-size) !important;
+  height: var(--m115-control-size) !important;
+  min-height: var(--m115-control-size) !important;
+  max-height: var(--m115-control-size) !important;
+  flex: 0 0 var(--m115-control-size) !important;
+}
+
+
+.art-video-player .art-controls-right .m115-rotate-control .m115-control-shell {
+  width: var(--m115-control-visual) !important;
+  height: var(--m115-control-visual) !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+
+.art-video-player .art-controls-right .m115-rotate-control:hover .m115-control-shell {
+  background: rgba(255,255,255,.05) !important;
+}
+
+
+.art-video-player .art-controls-right .m115-rotate-control:active .m115-control-shell,
+.art-video-player .art-controls-right .m115-rotate-control.is-active .m115-control-shell {
+  background: rgba(255,255,255,.075) !important;
+}
+
+
+.m115-rotate-control.is-active {
+  color: #fff;
+}
+
+
+.m115-rotate-control.is-active .m115-control-shell {
+  color: #fff;
+}
+
+
+.m115-rotate-control:hover {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+
+.art-video-player .art-controls-right .m115-rotate-control,
+.art-video-player .art-controls-right .art-control-settings,
+.art-video-player .art-controls-right .art-control-fullscreen {
+  width: var(--m115-control-size) !important;
+  min-width: var(--m115-control-size) !important;
+  max-width: var(--m115-control-size) !important;
+  flex: 0 0 var(--m115-control-size) !important;
+}

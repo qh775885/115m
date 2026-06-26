@@ -1,0 +1,54 @@
+
+.art-video-player .m115-click-selector .art-selector-list,
+.art-video-player .m115-click-selector .art-control-selector .art-selector-list {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(6px) scale(.98) !important;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+
+.art-video-player .m115-click-selector:hover .art-selector-list,
+.art-video-player .m115-click-selector:hover .art-control-selector .art-selector-list {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(6px) scale(.98) !important;
+}
+
+
+.art-video-player .m115-click-selector.m115-selector-open .art-selector-list,
+.art-video-player .m115-click-selector.m115-selector-open .art-control-selector .art-selector-list,
+.art-video-player .m115-click-selector.m115-selector-open:hover .art-selector-list,
+.art-video-player .m115-click-selector.m115-selector-open:hover .art-control-selector .art-selector-list {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+
+.art-video-player .m115-click-selector.m115-selector-open[class*='hint--']::after,
+.art-video-player .m115-click-selector.m115-selector-open[class*='hint--']::before,
+.art-video-player .m115-click-selector.m115-selector-open .art-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+
+.art-video-player .m115-click-selector.m115-selector-open:hover::after,
+.art-video-player .m115-click-selector.m115-selector-open:hover::before,
+.art-video-player .m115-click-selector.m115-selector-open:hover .art-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+
+.art-video-player .art-controls-right .m115-selector-open[class*='hint--']::before,
+.art-video-player .art-controls-right .m115-selector-open[class*='hint--']::after {
+  content: none !important;
+  display: none !important;
+}
