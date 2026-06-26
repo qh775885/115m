@@ -44,14 +44,15 @@
   transition: width 0.2s ease, opacity 0.2s ease, visibility 0.2s ease, margin-left 0.2s ease;
   margin-left: 0;
   padding: 0;
+  pointer-events: none;
 }
 
-.m115-custom-volume-container:hover .m115-volume-slider-wrapper,
-.m115-custom-volume-container:focus-within .m115-volume-slider-wrapper {
+.m115-custom-volume-container:hover .m115-volume-slider-wrapper {
   width: var(--m115-volume-slider-width);
   opacity: 1;
   visibility: visible;
   margin-left: 6px;
+  pointer-events: auto;
 }
 
 .m115-volume-slider {
