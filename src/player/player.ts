@@ -5,6 +5,7 @@
 import Artplayer from 'artplayer'
 import type HlsType from 'hls.js'
 import playerSkinCss from './core/player-skin.css?inline'
+import playerVolumeCss from './core/player-volume.css?inline'
 import uiLayerCss from './core/ui-layer.css?inline'
 import type { M3u8Item } from '../lib/types'
 import { buildArtplayerQuality, buildQualityOptions, getQualityDisplayName, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
@@ -15,6 +16,7 @@ import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from '
 import { fetchM3u8WithRetry } from './core/source'
 import { deletePlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
 import { buildNavControlItem } from './core/player-center-controls'
+import { buildCustomVolumeControl } from './core/player-volume'
 import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
 import { runPlayerSmokeChecks } from './core/smoke'
@@ -56,7 +58,7 @@ function injectPlayerSkinStyles() {
   if (document.getElementById('m115-player-skin-style')) return
   const style = document.createElement('style')
   style.id = 'm115-player-skin-style'
-  style.textContent = `${playerSkinCss}\n${uiLayerCss}`
+  style.textContent = `${playerSkinCss}\n${playerVolumeCss}\n${uiLayerCss}`
   document.head.appendChild(style)
 }
 
@@ -382,6 +384,7 @@ class PlayerManager {
       controls: [
         this.buildPrevControlItem(),
         this.buildNextControlItem(),
+        buildCustomVolumeControl(),
         this.rotationManager.buildControl(),
         this.buildQualityControlItem(),
         this.audioManager!.buildControl(),

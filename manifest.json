@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "115m",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "115m | 列表预览图 + 无损播放",
   "permissions": [
     "storage",

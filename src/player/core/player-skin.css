@@ -20,6 +20,8 @@
   --m115-audio-width: 72px;
   --m115-mode-width: 58px;
   --m115-speed-width: 56px;
+  --m115-volume-expanded-width: 156px;
+  --m115-volume-slider-width: 108px;
   --art-theme: #fff;
   --art-widget-background: rgba(24, 26, 30, 0.96);
   --art-tip-background: rgba(24, 26, 30, 0.96);
@@ -430,14 +432,12 @@
 .art-video-player.art-backdrop .art-setting-body,
 .art-video-player.art-backdrop .art-setting-panel,
 .art-video-player.art-backdrop .art-selector-list,
-.art-video-player.art-backdrop .art-control-selector .art-selector-list,
-.art-video-player.art-backdrop .art-volume-panel {
+.art-video-player.art-backdrop .art-control-selector .art-selector-list {
   background: var(--m115-menu-background) !important;
 }
 
 .art-video-player .art-selector-list,
-.art-video-player .art-control-selector .art-selector-list,
-.art-video-player .art-volume-panel {
+.art-video-player .art-control-selector .art-selector-list {
   bottom: calc(var(--art-control-height) + 12px) !important;
 }
 
@@ -564,15 +564,26 @@
   box-shadow: inset 0 0 0 1px var(--m115-control-soft-border), 0 0 0 1px rgba(255, 255, 255, 0.03), var(--m115-control-shadow);
 }
 
-.art-video-player .art-control-volume .art-volume-panel {
-  padding: 8px 0 !important;
-  width: 28px !important;
-  min-width: 28px !important;
-  box-sizing: border-box;
-  border-radius: 999px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  background: var(--m115-menu-background) !important;
+.art-video-player .art-control-volume {
+  display: none !important;
+}
+
+.art-video-player .art-controls-left .m115-custom-volume-control {
+  width: var(--m115-control-size);
+  min-width: var(--m115-control-size);
+  max-width: var(--m115-volume-expanded-width);
+  flex-basis: var(--m115-control-size);
+  margin-right: 0;
+  transition: width 0.2s ease, flex-basis 0.2s ease;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.art-video-player .art-controls-left .m115-custom-volume-control:hover,
+.art-video-player .art-controls-left .m115-custom-volume-control:focus-within {
+  width: var(--m115-volume-expanded-width);
+  flex-basis: var(--m115-volume-expanded-width);
 }
 
 .art-video-player .art-control-volume .art-volume-panel .art-volume-inner {
@@ -777,7 +788,8 @@
 .m115-control-shell,
 .m115-quality-control .art-selector-value,
 .m115-audio-control .art-selector-value,
-.m115-speed-control .art-selector-value {
+.m115-speed-control .art-selector-value,
+.m115-volume-btn {
   border-radius: var(--m115-chip-radius);
   transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
@@ -787,7 +799,8 @@
 .m115-rotate-control:hover .m115-control-shell,
 .m115-quality-control:hover .art-selector-value,
 .m115-audio-control:hover .art-selector-value,
-.m115-speed-control:hover .art-selector-value {
+.m115-speed-control:hover .art-selector-value,
+.m115-volume-btn:hover {
   background: rgba(255,255,255,.05);
   box-shadow: none;
 }
@@ -797,8 +810,19 @@
 .m115-rotate-control:active .m115-control-shell,
 .m115-quality-control:active .art-selector-value,
 .m115-audio-control:active .art-selector-value,
-.m115-speed-control:active .art-selector-value {
+.m115-speed-control:active .art-selector-value,
+.m115-volume-btn:active {
   background: rgba(255,255,255,.075);
+}
+
+.art-video-player .m115-custom-volume-control .m115-volume-btn {
+  background: transparent;
+  box-shadow: none;
+}
+
+.art-video-player .m115-custom-volume-control .m115-volume-btn:hover,
+.art-video-player .m115-custom-volume-control .m115-volume-btn:focus-visible {
+  background: rgba(255,255,255,.05);
 }
 
 .m115-nav-control {

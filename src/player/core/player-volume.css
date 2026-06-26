@@ -1,0 +1,103 @@
+.m115-custom-volume-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.m115-volume-btn {
+  position: relative;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 11px;
+  line-height: 0;
+  font-size: 0;
+}
+
+.art-video-player .m115-custom-volume-control .m115-volume-btn svg {
+  display: block;
+  width: var(--m115-control-icon-size) !important;
+  height: var(--m115-control-icon-size) !important;
+  flex: none;
+  margin: 0;
+}
+
+.m115-volume-slider-wrapper {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: visible;
+  transition: width 0.2s ease, opacity 0.2s ease, visibility 0.2s ease, margin-left 0.2s ease;
+  margin-left: 0;
+  padding: 0;
+}
+
+.m115-custom-volume-container:hover .m115-volume-slider-wrapper,
+.m115-custom-volume-container:focus-within .m115-volume-slider-wrapper {
+  width: var(--m115-volume-slider-width);
+  opacity: 1;
+  visibility: visible;
+  margin-left: 6px;
+}
+
+.m115-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  outline: none;
+  margin: 0;
+  cursor: pointer;
+}
+
+.m115-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.m115-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.m115-custom-volume-container.is-muted .m115-volume-slider::-webkit-slider-thumb {
+  background: #fff;
+}
+
+.m115-custom-volume-container.is-muted .m115-volume-slider::-moz-range-thumb {
+  background: #fff;
+}
+
+.m115-volume-val {
+  display: none;
+}
