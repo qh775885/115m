@@ -411,6 +411,8 @@
 .art-video-player .art-qualitys,
 .art-video-player .art-contextmenus {
   padding: var(--m115-panel-padding) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 
@@ -531,8 +533,8 @@
 
 .art-video-player .art-selector-list,
 .art-video-player .art-control-selector .art-selector-list {
-  min-width: 112px !important;
-  padding: 6px !important;
+  min-width: 100px !important;
+  padding: 4px !important;
   overflow: hidden;
 }
 
@@ -542,7 +544,7 @@
 .art-video-player .art-settings,
 .art-video-player .art-setting-body,
 .art-video-player .art-setting-panel {
-  padding: 6px !important;
+  padding: 4px !important;
 }
 
 
@@ -566,10 +568,10 @@
 
 .art-video-player .art-selector-item,
 .art-video-player .art-control-selector .art-selector-item {
-  min-height: 34px;
+  min-height: 32px;
   padding: 0 10px !important;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.1;
 }
 
@@ -654,13 +656,13 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  min-height: 34px !important;
-  padding: 0 10px !important;
+  min-height: 32px !important;
+  padding: 0 12px 0 14px !important;
   font-size: 12px !important;
   font-weight: 500;
   line-height: 1 !important;
   white-space: nowrap;
-  margin: 1px 0;
+  margin: 2px 0;
 }
 
 
@@ -668,7 +670,8 @@
 .art-video-player .art-selector-item:hover,
 .art-video-player .art-control-selector .art-selector-item:hover,
 .art-video-player .art-contextmenu:hover {
-  background: var(--m115-menu-hover) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
 }
 
 
@@ -677,7 +680,7 @@
 .art-video-player .art-setting-item.art-current,
 .art-video-player .art-contextmenu.art-current {
   color: #fff !important;
-  background: rgba(255,255,255,.1) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 
@@ -962,8 +965,9 @@
 .art-video-player .art-qualitys,
 .art-video-player .art-contextmenus {
   border-radius: 12px !important;
-  background: rgba(24, 26, 30, 0.92) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035), 0 10px 24px rgba(0,0,0,.24) !important;
+  background: rgba(28, 28, 30, 0.85) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 12px 32px rgba(0,0,0,.36) !important;
+  border: none !important;
 }
 
 

@@ -61,16 +61,21 @@
 
 
 .m115-mode-option {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 14px 1fr;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
+  width: 100%;
+  padding-left: 2px;
+  text-align: left;
 }
 
 
 .m115-mode-option svg {
-  width: 13px;
-  height: 13px;
-  flex: 0 0 13px;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  opacity: 0.85;
 }
 
 
