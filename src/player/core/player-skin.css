@@ -438,7 +438,7 @@
 .art-video-player .art-selector-list,
 .art-video-player .art-control-selector .art-selector-list,
 .art-video-player .art-volume-panel {
-  bottom: calc(var(--art-control-height) + 6px) !important;
+  bottom: calc(var(--art-control-height) + 12px) !important;
 }
 
 .art-video-player .art-control-selector {
@@ -490,7 +490,7 @@
 
 .art-video-player .art-selector-list,
 .art-video-player .art-control-selector .art-selector-list {
-  bottom: calc(var(--art-control-height) + 2px) !important;
+  bottom: calc(var(--art-control-height) + 8px) !important;
 }
 
 .art-video-player .art-selector-list::after,
