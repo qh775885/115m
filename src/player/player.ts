@@ -396,6 +396,7 @@ class PlayerManager {
       playbackRate: false,
       aspectRatio: false,
       fullscreen: true,
+      fullscreenWeb: false,
       miniProgressBar: true,
       theme: '#1890ff',
       lang: 'zh-cn',
