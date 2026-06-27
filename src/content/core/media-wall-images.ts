@@ -172,8 +172,8 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let lastPointerX = 0
   let lastPointerY = 0
   let lastTapAt = 0
-  let lastTapX = 0
-  let lastTapY = 0
+  const lastTapX = 0
+  const lastTapY = 0
   let thumbsCollapsed = false
   let wheelGestureAccumulated = 0
   let wheelGestureTriggered = false
