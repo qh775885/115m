@@ -386,6 +386,7 @@ class PlayerManager {
       container: container as HTMLDivElement,
       url: videoUrl,
       volume: volumePreference.volume,
+      muted: volumePreference.muted, // set muted state on creation
       autoplay: true,
       pip: false,
       autoMini: true,
@@ -451,8 +452,10 @@ class PlayerManager {
       },
     })
 
+    // 强制覆盖 Artplayer 内部的 storage 音量，防止它覆盖我们的全局偏好
+    this.artplayer.video.volume = volumePreference.volume
     this.artplayer.video.muted = volumePreference.muted
-
+    
     // Don't use ArtPlayer's fullscreenWeb — it uses position:fixed + moves to body,
     // which covers #playlist-sidebar. Instead the player fills its flex container naturally.
     Artplayer.FULLSCREEN_WEB_IN_BODY = false
@@ -586,7 +589,7 @@ class PlayerManager {
         onVolumeChange: () => {
           if (!this.artplayer) return
           saveVolumePreference({
-            volume: this.artplayer.volume,
+            volume: this.artplayer.video.volume, // changed to this.artplayer.video.volume
             muted: this.artplayer.video.muted,
           })
         },

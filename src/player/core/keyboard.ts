@@ -15,10 +15,12 @@ export function bindKeyboardShortcuts(art: Artplayer): () => void {
     else if (e.code === 'ArrowUp') {
       e.preventDefault()
       art.volume = Math.min(1, art.volume + 0.1)
+      art.emit('video:volumechange')
     }
     else if (e.code === 'ArrowDown') {
       e.preventDefault()
       art.volume = Math.max(0, art.volume - 0.1)
+      art.emit('video:volumechange')
     }
     else if (e.code === 'KeyF') {
       art.fullscreen = !art.fullscreen
