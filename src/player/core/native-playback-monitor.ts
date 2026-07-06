@@ -109,17 +109,7 @@ export class NativePlaybackMonitor {
       return
     }
 
-    if (hasStartedPlaying) {
-      this.deps.onShowToast('无损播放出现波动，已保留当前无损源，可手动切换 115原画')
-      return
-    }
-
-    if (!this.art.video.error || this.art.video.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE) {
-      this.deps.onShowToast('无损播放异常，已重试保留无损源，可手动切换 115原画')
-      return
-    }
-
-    await this.deps.onFallbackToHls('播放失败', false)
+    await this.deps.onFallbackToHls('无损播放异常，已改用 115原画', true)
   }
 
   // ─── 清理方法 ───
@@ -231,7 +221,7 @@ export class NativePlaybackMonitor {
       ? Math.max(2500, STALL_TIME_THRESHOLD_MS - 1500)
       : STALL_TIME_THRESHOLD_MS
 
-    if (hasEnoughBuffer && mediaLikelyStalled && timeDrift <= STALL_MAX_TIME_DRIFT_SEC && frameDrift === 0) {
+    if (mediaLikelyStalled && timeDrift <= STALL_MAX_TIME_DRIFT_SEC && frameDrift === 0) {
       if (!this.stallStartedAt) {
         this.stallStartedAt = Date.now()
       }
