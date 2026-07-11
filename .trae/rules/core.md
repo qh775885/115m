@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+description: 115m 项目核心规则与按需阅读索引
+---
 # 115m 项目规则
 
 Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
