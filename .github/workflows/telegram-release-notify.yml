@@ -13,9 +13,8 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          RELEASE_NAME: ${{ github.event.release.name || 'Telegram 通知测试' }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || 'manual-test' }}
-          RELEASE_BODY: ${{ github.event.release.body || '这是一条 GitHub Actions 手动触发的测试通知。' }}
+          # Use toJson and jq to safely extract fields without causing parse errors when github.event.release is null
+          GH_EVENT: ${{ toJSON(github.event) }}
         run: |
           set -euo pipefail
 
@@ -23,6 +22,10 @@ jobs:
             echo "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID"
             exit 1
           fi
+
+          export RELEASE_NAME=$(echo "$GH_EVENT" | jq -r '.release.name // "Telegram 通知测试"')
+          export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // "manual-test"')
+          export RELEASE_BODY=$(echo "$GH_EVENT" | jq -r '.release.body // "这是一条 GitHub Actions 手动触发的测试通知。"')
 
           python3 <<'PY' > /tmp/telegram_payload.json
           import json
@@ -59,10 +62,17 @@ jobs:
 
       - name: Download Release Asset (ZIP)
         id: download_asset
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          GH_EVENT: ${{ toJSON(github.event) }}
         run: |
+          export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
+          if [ -z "$RELEASE_TAG" ]; then
+            echo "No release tag found. Skipping."
+            exit 0
+          fi
+          
           mkdir -p release_assets
           # 下载所有以 .zip 结尾的附件
           gh release download "$RELEASE_TAG" --pattern "*.zip" --dir release_assets --repo ${{ github.repository }} || true
@@ -81,8 +91,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          GH_EVENT: ${{ toJSON(github.event) }}
         run: |
+          export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
+          
           CAPTION="📦 115m ${RELEASE_TAG} 安装包
 
 👇 安装/更新指南：
