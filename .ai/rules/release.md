@@ -21,5 +21,6 @@ description: 发布 GitHub Release、整理发布说明或检查发布相关内�
 1. **生成与确认**：基于跨版本提交记录生成发布说明，并将其存放在 `release/` 目录下（如 `release/changelog-v1.7.0.md`）。
 2. **升版号**：更新 `package.json` 中的版本号。
 3. **构建打包**：执行打包与发布检查。`pnpm zip` 只覆盖当前版本 zip，不清空整个 `release/` 目录，避免误删发布说明。
-4. **发布**：不复用已有 tag，默认创建新版本号对应的 zip、说明和 Release，并触发机器人通知。
-5. **限制范围**：此规则只在明确讨论发布、发布说明或 Release 操作时使用，不扩展到无关开发任务。
+4. **发布**：不复用已有 tag，默认创建新版本号对应的 zip、说明和 Release。
+5. **电报通知**：使用 `curl` 调用 Telegram Bot API（读取环境中的 `TELEGRAM_BOT_TOKEN` 和 `TELEGRAM_CHAT_ID`），将发布的标题、版本号、说明文本以及生成的 zip 安装包直接推送至电报频道。
+6. **限制范围**：此规则只在明确讨论发布、发布说明或 Release 操作时使用，不扩展到无关开发任务。
