@@ -84,7 +84,7 @@ async function waitForTabComplete(tabId: number) {
       resolve()
     }, 8000)
 
-    const listener = (updatedTabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
+    const listener = (updatedTabId: number, changeInfo: any) => {
       if (updatedTabId === tabId && changeInfo.status === 'complete') {
         clearTimeout(timer)
         chrome.tabs.onUpdated.removeListener(listener)

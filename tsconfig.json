@@ -14,10 +14,9 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@lib/*": ["src/lib/*"]
+      "@/*": ["./src/*"],
+      "@lib/*": ["./src/lib/*"]
     },
     "types": ["chrome", "node"]
   },

@@ -17,24 +17,24 @@
     "@cbingbing/demuxer": "^2.4.1",
     "artplayer": "^5.4.0",
     "blueimp-md5": "^2.19.0",
-    "hls.js": "^1.6.15",
+    "hls.js": "^1.6.16",
     "m3u8-parser": "^7.2.0",
     "photoswipe": "^5.4.4"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "2.0.0-beta.33",
+    "@crxjs/vite-plugin": "2.7.1",
     "@eslint/js": "^10.0.1",
-    "@tailwindcss/vite": "^4.1.7",
+    "@tailwindcss/vite": "^4.3.2",
     "@types/blueimp-md5": "^2.18.2",
-    "@types/chrome": "^0.0.304",
+    "@types/chrome": "^0.2.2",
     "@types/m3u8-parser": "^7.2.6",
-    "@types/node": "^25.5.0",
-    "eslint": "^10.5.0",
+    "@types/node": "^26.1.1",
+    "eslint": "^10.6.0",
     "globals": "^17.7.0",
-    "tailwindcss": "^4.1.7",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.0",
-    "vite": "^5.4.21",
-    "vitest": "^2.1.9"
+    "tailwindcss": "^4.3.2",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.63.0",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }

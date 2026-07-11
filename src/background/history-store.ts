@@ -17,7 +17,7 @@ const MAX_HISTORY_ENTRIES = 200
 async function readHistoryData(): Promise<HistoryDataShape> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEY)
-    return result[STORAGE_KEY] ? JSON.parse(result[STORAGE_KEY]) : {}
+    return result[STORAGE_KEY] ? JSON.parse(result[STORAGE_KEY] as string) : {}
   }
   catch {
     return {}
