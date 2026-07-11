@@ -14,7 +14,7 @@ Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
 |------|------|
 | 播放器相关 | `.trae/docs/pitfalls.md` → `.trae/docs/architecture.md` → 对应源码 |
 | 消息链路 | `src/shared/messages.ts` → `.trae/rules/messages.md` |
-| 发布 | `.trae/rules/release.md` |
+| 版本更新说明 | `.trae/rules/release.md` |
 | 提交信息 | `.trae/rules/git-commit-message.md` |
 | 调试运行时 bug | `.trae/rules/debugging.md` |
 | 115 Open API | `.trae/docs/api.md` |
