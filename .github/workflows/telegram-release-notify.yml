@@ -4,15 +4,10 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-
 jobs:
   notify:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' }}
-
     steps:
       - name: Send Telegram message (Text)
         env:
