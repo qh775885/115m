@@ -14,7 +14,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           # Use toJson and jq to safely extract fields without causing parse errors when github.event.release is null
-          GH_EVENT: ${{ toJSON(github.event) }}
+          GH_EVENT: ${{ toJson(github.event) }}
         run: |
           set -euo pipefail
 
@@ -65,7 +65,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_EVENT: ${{ toJSON(github.event) }}
+          GH_EVENT: ${{ toJson(github.event) }}
         run: |
           export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
           if [ -z "$RELEASE_TAG" ]; then
@@ -91,7 +91,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GH_EVENT: ${{ toJSON(github.event) }}
+          GH_EVENT: ${{ toJson(github.event) }}
         run: |
           export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
           
