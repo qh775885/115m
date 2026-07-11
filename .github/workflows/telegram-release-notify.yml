@@ -64,7 +64,7 @@ jobs:
         id: download_asset
         continue-on-error: true
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_EVENT: ${{ toJSON(github.event) }}
         run: |
           export RELEASE_TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
