@@ -8,14 +8,14 @@ Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
 
 | 任务 | 读取 |
 |------|------|
-| 播放器相关 | `.ai/docs/pitfalls.md` → `.ai/docs/architecture.md` → 对应源码 |
-| 消息链路 | `src/shared/messages.ts` → `.ai/rules/messages.md` |
-| 发布 | `.ai/rules/release.md` |
-| 提交信息 | `.ai/rules/git-commit-message.md` |
-| 调试运行时 bug | `.ai/rules/debugging.md` |
-| 115 Open API | `.ai/docs/api.md` |
-| 长期偏好/约定 | `.ai/docs/preferences.md` |
-| 项目架构全貌 | `.ai/docs/architecture.md` |
+| 播放器相关 | `.trae/docs/pitfalls.md` → `.trae/docs/architecture.md` → 对应源码 |
+| 消息链路 | `src/shared/messages.ts` → `.trae/rules/messages.md` |
+| 发布 | `.trae/rules/release.md` |
+| 提交信息 | `.trae/rules/git-commit-message.md` |
+| 调试运行时 bug | `.trae/rules/debugging.md` |
+| 115 Open API | `.trae/docs/api.md` |
+| 长期偏好/约定 | `.trae/docs/preferences.md` |
+| 项目架构全貌 | `.trae/docs/architecture.md` |
 
 ## 核心规则
 
@@ -24,8 +24,8 @@ Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
 - 只改当前需求涉及的功能，不顺手重构或扩展需求
 - 涉及共享模块、消息、播放器核心链路时，先确认隔离边界
 - 疑难问题先记录事实、排除项、已试无效方案，再动手修
-- 多次试错的结论，同步到 `.ai/docs/pitfalls.md`
-- 提交代码前，必须先读取 `.ai/rules/git-commit-message.md` 并遵守格式
+- 多次试错的结论，同步到 `.trae/docs/pitfalls.md`
+- 提交代码前，必须先读取 `.trae/rules/git-commit-message.md` 并遵守格式
 
 ## Chrome 扩展边界
 
