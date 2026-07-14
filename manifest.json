@@ -92,7 +92,6 @@
         "src/player/index.html",
         "src/player/style.css",
         "src/player/player.ts",
-        ".vite/manifest.json",
         "assets/*.js",
         "assets/*.css"
       ],

@@ -5,6 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "check": "pnpm typecheck && pnpm test && pnpm lint",
     "build": "node scripts/sync-manifest-version.mjs && vite build",
     "doctor": "node scripts/doctor.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",

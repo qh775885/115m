@@ -39,10 +39,11 @@ Chrome 增强扩展。Vite + TypeScript + Manifest V3 + pnpm。
 
 ## 构建与验证
 
-- 普通改动：`pnpm typecheck` → `pnpm test` → `pnpm build`
-- 构建配置/manifest/资源路径：先 `pnpm build`，再 `pnpm test`
-- 仅文档/规则：不构建
-- 构建中的既有 chunk 体积警告可忽略
+- 普通开发改动（AI 执行规则）：在一个完整需求或 Bug 修复的**所有代码编写完成之后**，AI 必须主动运行一次 `pnpm check` 进行全局验证。不要在零散的单次文件修改后频繁运行。
+- 验证失败处理：如果 `pnpm check` 报错，AI 必须优先自行修复错误（包括 lint 格式、类型错误、测试用例），直到检查完全通过，再向用户汇报任务完成。
+- 构建配置/manifest/资源路径改动：先执行 `pnpm build`，再执行 `pnpm check`。
+- 仅文档/规则：不构建、不验证。
+- 构建中的既有 chunk 体积警告可忽略。
 
 ## release 目录
 
