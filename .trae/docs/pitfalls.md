@@ -6,7 +6,7 @@
 
 - `/assets/*` 404 的根因是页面环境运行时动态 import，导致 Vite chunk 路径按 `https://115.com/assets/*` 请求
 - 看到 `https://115.com/assets/player-*.js` 等，优先复查播放器启动链是否回归动态 import
-- `video-page-early.js` 只允许同步 `document.write` 最小壳；禁止 fetch `.vite/manifest.json` / 动态 `import` 模块（构建产物通常无该 manifest，会 Failed to fetch）
+- `video-page-early.js` 只允许同步 `document.write` 最小壳；禁止动态 `import` 模块
 - 不要把所有 404 都归因到缩略图；只禁用进度条预览图、只清缓存都已验证不治本
 - 缩略图相关方法必须保持顶层静态导入，不能恢复运行时 `import('../../lib/videoThumbnail')`
 - `blob:` URL 是生命周期问题，不是 chunk 路径错误；缓存和 UI 不应持久使用 `blob:` 图片地址

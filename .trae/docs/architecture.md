@@ -102,7 +102,4 @@
 
 ## 验证
 
-- 普通代码改动：`pnpm typecheck` → `pnpm test` → `pnpm build`
-- 构建配置/manifest/资源路径：先 `pnpm build`，再 `pnpm test`
-- 仅文档/规则：不默认构建
-- 构建中的既有 chunk 体积警告可忽略
+- 详见 `.trae/rules/core.md` 的构建与验证章节。
