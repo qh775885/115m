@@ -904,6 +904,10 @@ class PlayerManager {
     return `统计信息 <span style="opacity:.5;margin-left:8px">${res}${fps ? ` · ${fps}fps` : ''}</span>`
   }
 
+  private fpsLastTime = 0
+  private fpsLastFrames = 0
+  private currentFps = 0
+
   private calcFps(): string {
     const video = this.artplayer?.video
     if (!video) return ''
@@ -912,10 +916,25 @@ class PlayerManager {
     if (!total) {
       total = (video as HTMLVideoElement & { webkitDecodedFrameCount?: number }).webkitDecodedFrameCount ?? 0
     }
-    if (total > 0 && video.currentTime > 0) {
-      return (total / video.currentTime).toFixed(1)
+    
+    if (total === 0) return ''
+
+    const now = performance.now()
+    if (this.fpsLastTime === 0) {
+      this.fpsLastTime = now
+      this.fpsLastFrames = total
+      return ''
     }
-    return ''
+
+    const dt = (now - this.fpsLastTime) / 1000
+    if (dt >= 1) { // 至少间隔 1 秒才刷新数据
+      const df = total - this.fpsLastFrames
+      this.currentFps = Math.max(0, df / dt)
+      this.fpsLastTime = now
+      this.fpsLastFrames = total
+    }
+
+    return this.currentFps > 0 ? this.currentFps.toFixed(1) : ''
   }
 
   private setupStatsMenu() {

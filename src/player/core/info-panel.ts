@@ -73,19 +73,16 @@ export function patchArtInfoPanel(art: Artplayer, isNativeVideo: boolean): () =>
     const df = total - lastFrame
     let fps = dt > 0 ? Math.max(0, df / dt) : 0
 
-    if (fps <= 0 && total > 0 && video.currentTime > 0) {
-      fps = total / video.currentTime
-    }
-
-    if (fpsTarget) {
+    if (fpsTarget && dt >= 1) { // 至少间隔 1 秒才更新 UI，避免跳动且排除暂停期间的异常数值
       fpsTarget.textContent = `${fps.toFixed(1)} FPS`
+      lastTime = now
+      lastFrame = total
     }
-    lastTime = now
-    lastFrame = total
   }
 
   update()
-  const timer = window.setInterval(update, 1000)
+  // 每 2 秒统计一次即可，1 秒可能太快导致数值波动
+  const timer = window.setInterval(update, 2000)
   return () => {
     window.clearInterval(timer)
   }
