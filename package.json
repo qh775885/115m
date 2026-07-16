@@ -5,14 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "check": "pnpm typecheck && pnpm test && pnpm lint",
     "build": "node scripts/sync-manifest-version.mjs && vite build",
-    "doctor": "node scripts/doctor.mjs",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "release:check": "node scripts/release-check.mjs",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
     "zip": "pnpm build && powershell -NoProfile -ExecutionPolicy Bypass -Command \"if (!(Test-Path release)) { New-Item -ItemType Directory -Path release | Out-Null }; $v=(Get-Content package.json -Raw | ConvertFrom-Json).version; $out='release/115m-v' + $v + '.zip'; if (Test-Path $out) { Remove-Item -Force $out }; Compress-Archive -Path 'dist/*' -DestinationPath $out -Force\""
   },
   "dependencies": {

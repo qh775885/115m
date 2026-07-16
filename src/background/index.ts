@@ -67,6 +67,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true // 保持 sendResponse 有效
 })
 
+if (import.meta.hot) {
+  import.meta.hot.on('extension-reload', () => {
+    // 重载前向所有标签页发送刷新指令
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id && tab.url && (tab.url.includes('115.com') || tab.url.includes('115vod.com'))) {
+          // 捕获错误以防某些页面无法注入或已断开
+          chrome.tabs.reload(tab.id).catch(() => {})
+        }
+      })
+      setTimeout(() => {
+        chrome.runtime.reload()
+      }, 100)
+    })
+  })
+}
+
 let lastOpenTabMeta: { url: string, ts: number } | null = null
 
 const TRUSTED_PAGE_HOSTS = new Set(['115.com', '115vod.com'])

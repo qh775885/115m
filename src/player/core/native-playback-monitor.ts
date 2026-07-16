@@ -6,12 +6,12 @@ import type { VideoPlaybackQualityLike } from './types'
 import { shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
 
 const AUDIO_PROBE_DELAY_MS = 4500
-const STALL_CHECK_INTERVAL_MS = 1500
-const STALL_TIME_THRESHOLD_MS = 4500
+const STALL_CHECK_INTERVAL_MS = 1000
+const STALL_TIME_THRESHOLD_MS = 3000
 const STALL_MIN_BUFFER_AHEAD_SEC = 6
 const STALL_MAX_TIME_DRIFT_SEC = 0.12
 const SEEK_LONG_JUMP_SEC = 45
-const SEEK_RECOVERY_WINDOW_MS = 8000
+const SEEK_RECOVERY_WINDOW_MS = 6000
 
 export interface NativePlaybackDeps {
   art: Artplayer
@@ -217,9 +217,16 @@ export class NativePlaybackMonitor {
     const hasEnoughBuffer = bufferedAhead >= STALL_MIN_BUFFER_AHEAD_SEC
     const mediaLikelyStalled = video.readyState <= HTMLMediaElement.HAVE_CURRENT_DATA
     const inSeekRecovery = this.seekRecoveryUntil > Date.now()
-    const stallThresholdMs = inSeekRecovery
-      ? Math.max(2500, STALL_TIME_THRESHOLD_MS - 1500)
-      : STALL_TIME_THRESHOLD_MS
+    
+    // 如果播放器卡在片头(currentTime几乎为0)，缩短降级等待时间(2.5秒)，避免一开始白等太久
+    const isInitialStall = video.currentTime < 1 && this.deps.getPerfMarksPlaying()
+    
+    let stallThresholdMs = STALL_TIME_THRESHOLD_MS
+    if (inSeekRecovery) {
+      stallThresholdMs = Math.max(2500, STALL_TIME_THRESHOLD_MS - 1500)
+    } else if (isInitialStall) {
+      stallThresholdMs = 2500
+    }
 
     if (mediaLikelyStalled && timeDrift <= STALL_MAX_TIME_DRIFT_SEC && frameDrift === 0) {
       if (!this.stallStartedAt) {
@@ -227,13 +234,15 @@ export class NativePlaybackMonitor {
       }
       else if (Date.now() - this.stallStartedAt >= stallThresholdMs) {
         this.stallFallbackInFlight = true
-        console.warn('[115m][native] stall detected, fallback to HLS', {
+        console.warn(`[115m][native] stall detected, fallback to HLS`, {
           currentTime,
           bufferedAhead,
           readyState: video.readyState,
           networkState: video.networkState,
           totalFrames,
           inSeekRecovery,
+          isInitialStall,
+          stallThresholdMs
         })
         await this.deps.onFallbackToHls(
           inSeekRecovery ? '无损远跳后恢复失败，已改用 115原画' : '无损播放卡死，已改用 115原画',
