@@ -1,3 +1,4 @@
+import { Icons } from '../../shared/icons'
 import type { PlaybackMode } from './player-playback-mode'
 import { getPlaybackModeLabel, getPlaybackModeOptions } from './player-playback-mode'
 import { bindClickSelectorBehavior } from './player-selector'
@@ -5,12 +6,12 @@ import { bindClickSelectorBehavior } from './player-selector'
 function getPlaybackModeIcon(mode: PlaybackMode) {
   switch (mode) {
     case 'repeat':
-      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h8.59l-1.3-1.29 1.42-1.42L19.41 8l-3.7 3.71-1.42-1.42L15.59 9H7a3 3 0 0 0-3 3v1H2v-1a5 5 0 0 1 5-5Zm10 4h2v1a5 5 0 0 1-5 5H8.41l1.3 1.29-1.42 1.42L4.59 16l3.7-3.71 1.42 1.42L8.41 15H14a3 3 0 0 0 3-3v-1Z"/></svg>'
+      return Icons.Repeat
     case 'stop':
-      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>'
+      return Icons.Stop
     case 'next':
     default:
-      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 6.5v11l8-5.5-8-5.5Zm9 0h2v11h-2z"/></svg>'
+      return Icons.SkipForward
   }
 }
 

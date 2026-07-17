@@ -1,3 +1,4 @@
+import { Icons } from '../../shared/icons'
 import { saveVolumePreference } from './history'
 import { bindClickSelectorBehavior } from './player-selector'
 import type Artplayer from 'artplayer'
@@ -6,12 +7,9 @@ export const CUSTOM_VOLUME_CONTROL_NAME = 'm115-custom-volume-control'
 
 function getVolumeIconSvg(volume: number, muted: boolean) {
   if (muted || volume === 0) {
-    return `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3z"/><path fill="currentColor" d="M4.7 3.3 3.3 4.7l16 16 1.4-1.4-16-16z"/></svg>`
+    return Icons.VolumeX
   }
-  if (volume < 0.5) {
-    return `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.32v7.36A4.5 4.5 0 0 0 16.5 12z"/></svg>`
-  }
-  return `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.32v7.36A4.5 4.5 0 0 0 16.5 12zM19 12a7 7 0 0 0-3-5.71v1.55A5.5 5.5 0 0 1 17.5 12 5.5 5.5 0 0 1 16 16.16v1.55A7 7 0 0 0 19 12z"/></svg>`
+  return Icons.Volume2
 }
 
 export function buildCustomVolumeControl() {

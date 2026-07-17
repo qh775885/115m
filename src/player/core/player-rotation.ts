@@ -1,4 +1,7 @@
+import { Icons } from '../../shared/icons'
+
 const ROTATION_STEP = 90
+
 
 export function normalizeRotationDegrees(value: number): number {
   const normalized = value % 360
@@ -66,7 +69,7 @@ export function applyRotationToVideo(params: {
 }
 
 function buildRotateSvg() {
-  return '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="display:block;flex:none;color:inherit;"><path fill="currentColor" d="M15.55 5.55 11 1v3.07A8 8 0 1 0 20 12h-2a6 6 0 1 1-6-6v4l4.55-4.45Z"/></svg>'
+  return Icons.RotateCw
 }
 
 export function buildRotateControlItem(params: {
@@ -80,15 +83,15 @@ export function buildRotateControlItem(params: {
     position: 'right' as const,
     index: 12,
     tooltip: rotation === 0 ? '画面旋转' : `画面旋转 ${rotation}°`,
-    html: `<span class="m115-control-shell m115-control-button" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;color:${rotation === 0 ? 'rgba(255,255,255,.92)' : '#54b4ff'};line-height:0;font-size:0;">${buildRotateSvg()}</span>`,
+    html: `<span class="m115-control-shell m115-control-button" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;color:${rotation === 0 ? 'rgba(255,255,255,.92)' : '#54b4ff'};line-height:0;font-size:0;">${buildRotateSvg()}</span>`,
     style: {
-      width: '46px',
-      minWidth: '46px',
-      maxWidth: '46px',
-      height: '46px',
-      minHeight: '46px',
-      maxHeight: '46px',
-      marginRight: '4px',
+      width: 'var(--m115-control-size)',
+      minWidth: 'var(--m115-control-size)',
+      maxWidth: 'var(--m115-control-size)',
+      height: 'var(--m115-control-size)',
+      minHeight: 'var(--m115-control-size)',
+      maxHeight: 'var(--m115-control-size)',
+      marginRight: '0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

@@ -184,13 +184,13 @@
 
 .art-video-player .art-controls-left .m115-nav-control,
 .art-video-player .art-controls-right .m115-rotate-control {
-  width: var(--m115-control-box-size) !important;
-  min-width: var(--m115-control-box-size) !important;
-  max-width: var(--m115-control-box-size) !important;
-  height: var(--m115-control-box-size) !important;
-  min-height: var(--m115-control-box-size) !important;
-  max-height: var(--m115-control-box-size) !important;
-  flex: 0 0 var(--m115-control-box-size) !important;
+  width: var(--m115-control-size) !important;
+  min-width: var(--m115-control-size) !important;
+  max-width: var(--m115-control-size) !important;
+  height: var(--m115-control-size) !important;
+  min-height: var(--m115-control-size) !important;
+  max-height: var(--m115-control-size) !important;
+  flex: 0 0 var(--m115-control-size) !important;
 }
 
 
@@ -792,28 +792,28 @@
 
 
 .art-video-player .art-controls-left .art-control-playAndPause {
-  width: 46px !important;
-  min-width: 46px !important;
-  max-width: 46px !important;
-  height: 46px !important;
-  min-height: 46px !important;
-  max-height: 46px !important;
-  flex-basis: 46px !important;
+  width: var(--m115-control-size) !important;
+  min-width: var(--m115-control-size) !important;
+  max-width: var(--m115-control-size) !important;
+  height: var(--m115-control-size) !important;
+  min-height: var(--m115-control-size) !important;
+  max-height: var(--m115-control-size) !important;
+  flex-basis: var(--m115-control-size) !important;
 }
 
 
 .art-video-player .art-controls-left .art-control-playAndPause .art-icon {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 14px !important;
-  background: rgba(255,255,255,.08) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 24px rgba(0,0,0,.16);
+  width: var(--m115-control-visual) !important;
+  height: var(--m115-control-visual) !important;
+  border-radius: var(--m115-chip-radius) !important;
+  background: var(--m115-control-chip) !important;
+  box-shadow: inset 0 0 0 1px var(--m115-control-soft-border);
 }
 
 
 .art-video-player .art-controls-left .art-control-playAndPause:hover .art-icon {
-  background: rgba(255,255,255,.14) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 12px 28px rgba(0,0,0,.18);
+  background: var(--m115-control-chip-hover) !important;
+  box-shadow: inset 0 0 0 1px var(--m115-control-border);
 }
 
 

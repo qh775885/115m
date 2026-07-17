@@ -1,3 +1,4 @@
+import { Icons } from '../../shared/icons'
 import type Artplayer from 'artplayer'
 import { escapeHtml } from '../../shared/utils'
 import { bindClickSelectorBehavior } from './player-selector'
@@ -7,8 +8,7 @@ import type { AudioManager } from './audio-manager'
 export const MEDIA_TRACK_CONTROL_NAME = 'm115-media-track-control'
 
 function getMediaTrackIcon() {
-  // 使用一个代表字幕/音轨的 CC 图标
-  return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;flex:none;"><rect width="18" height="14" x="3" y="5" rx="2" ry="2" fill="none"/><path d="M7 15h2a2 2 0 0 1 2-2v0a2 2 0 0 1-2-2H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m8 0h2a2 2 0 0 0 2-2v0a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2" fill="none"/></svg>'
+  return Icons.MediaTrack
 }
 
 export interface MediaTrackControllerDeps {

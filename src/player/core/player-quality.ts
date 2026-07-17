@@ -1,9 +1,10 @@
+import { Icons } from '../../shared/icons'
 import { buildArtplayerQuality } from './quality'
 import type { QualityOption } from './types'
 import { bindClickSelectorBehavior } from './player-selector'
 
 function getQualityIcon() {
-  return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;flex:none;"><rect width="20" height="14" x="2" y="5" rx="2" fill="none"/><path d="M2 10h20" fill="none"/></svg>'
+  return Icons.Quality
 }
 
 export function buildQualityControlItem(params: {
