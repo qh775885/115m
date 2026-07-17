@@ -490,7 +490,7 @@
 }
 
 
-.art-video-player .art-controls-left .m115-custom-volume-control:hover {
+.art-video-player .art-controls-left .m115-custom-volume-control.is-expanded {
   width: var(--m115-volume-expanded-width);
   flex-basis: var(--m115-volume-expanded-width);
 }

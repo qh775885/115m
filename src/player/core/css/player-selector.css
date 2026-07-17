@@ -4,7 +4,7 @@
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transform: translateY(6px) scale(.98) !important;
+  transform: translateY(6px) !important;
   transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
 }
 
@@ -14,7 +14,7 @@
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transform: translateY(6px) scale(.98) !important;
+  transform: translateY(6px) !important;
 }
 
 
@@ -25,7 +25,7 @@
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  transform: translateY(0) scale(1) !important;
+  transform: translateY(0) !important;
 }
 
 

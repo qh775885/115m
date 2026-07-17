@@ -58,6 +58,39 @@ export function buildCustomVolumeControl() {
           : `linear-gradient(to right, #1890ff ${percentage}%, rgba(255,255,255,0.2) ${percentage}%)`
       }
 
+      // Hover 防抖逻辑
+      let hoverTimeout: number | null = null
+      const enterDelay = 120 // 移入延迟 120ms 展开
+      const leaveDelay = 250 // 移出延迟 250ms 收起
+
+      const expandVolume = () => {
+        if (hoverTimeout) {
+          clearTimeout(hoverTimeout)
+          hoverTimeout = null
+        }
+        container.classList.add('is-expanded')
+        $control.classList.add('is-expanded')
+      }
+
+      const collapseVolume = () => {
+        if (hoverTimeout) {
+          clearTimeout(hoverTimeout)
+          hoverTimeout = null
+        }
+        container.classList.remove('is-expanded')
+        $control.classList.remove('is-expanded')
+      }
+
+      container.addEventListener('mouseenter', () => {
+        if (hoverTimeout) clearTimeout(hoverTimeout)
+        hoverTimeout = window.setTimeout(expandVolume, enterDelay)
+      })
+
+      container.addEventListener('mouseleave', () => {
+        if (hoverTimeout) clearTimeout(hoverTimeout)
+        hoverTimeout = window.setTimeout(collapseVolume, leaveDelay)
+      })
+
       art.on('ready', () => {
          updateUI()
       })

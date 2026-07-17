@@ -4,7 +4,7 @@ import type { OverlayPlaylistItem } from './overlay'
 
 const esc = escapeHtml
 const PLAYLIST_COVER_FEATURE_ENABLED = true
-const PLAYLIST_COVER_CONCURRENCY = 1
+const PLAYLIST_COVER_CONCURRENCY = 3
 let activePlaylistCoverTasks = 0
 const playlistCoverTaskQueue: Array<() => void> = []
 

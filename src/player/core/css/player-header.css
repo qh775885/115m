@@ -58,11 +58,11 @@
 .m115-header-back {
   width: 36px !important;
   height: 36px !important;
-  transition: background-color .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 
 
 .m115-header-action:hover,
 .m115-header-back:hover {
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.16);
 }
