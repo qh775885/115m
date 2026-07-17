@@ -1,0 +1,156 @@
+.m115-settings-container {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  box-sizing: border-box;
+}
+
+.m115-settings-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.m115-settings-item {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--m115-control-text) !important;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  margin: 1px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.m115-settings-item:hover {
+  background: var(--m115-menu-hover) !important;
+}
+
+.m115-settings-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  opacity: 0.85;
+}
+
+.m115-settings-item-label {
+  flex: 1;
+  text-align: left;
+}
+
+.m115-settings-item-value {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 4px;
+}
+
+.m115-settings-item-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+.m115-settings-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+.m115-settings-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 4px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.m115-settings-back {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--m115-control-text) !important;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-right: 8px;
+}
+
+.m115-settings-back:hover {
+  background: var(--m115-menu-hover) !important;
+}
+
+.m115-settings-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.m115-settings-option {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--m115-control-text) !important;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin: 1px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.m115-settings-option:hover {
+  background: var(--m115-menu-hover) !important;
+}
+
+.m115-settings-option.is-active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.m115-settings-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
+
+/* 覆盖 Artplayer 默认 selector-list 样式以适应自定义面板 */
+.art-video-player .m115-settings-menu-control .art-selector-list {
+  padding: 0 !important;
+  min-width: 240px;
+  overflow: hidden;
+}
+
+.art-video-player .m115-settings-menu-control .m115-control-shell {
+  border-radius: 12px !important;
+}

@@ -53,6 +53,8 @@ export function buildPlaybackModeControlItem(params: {
       if (mode !== 'next' && mode !== 'repeat' && mode !== 'stop') {
         return getPlaybackModeIcon(params.currentPlaybackMode)
       }
+      const controlEl = document.querySelector('.m115-playback-mode-control')
+      if (controlEl) controlEl.classList.remove('m115-selector-open')
       params.onSelectPlaybackMode(mode)
       return getPlaybackModeIcon(mode)
     },

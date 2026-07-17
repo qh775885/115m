@@ -22,6 +22,7 @@ export interface AudioManagerDeps {
     track: any
   }) => Promise<void>
   onShowToast: (msg: string) => void
+  onRenderRequest?: () => void
 }
 
 export class AudioManager {
@@ -165,13 +166,37 @@ export class AudioManager {
   /** 更新 artplayer 中的音轨控件 */
   renderControl() {
     if (!this.art) return
-    updateArtplayerControl(this.art, AUDIO_CONTROL_NAME, this.buildControl())
+    if (this.deps?.onRenderRequest) {
+      this.deps.onRenderRequest()
+    } else {
+      updateArtplayerControl(this.art, AUDIO_CONTROL_NAME, this.buildControl())
+    }
   }
 
   /** 清理同步定时器 */
   clearSyncTimers() {
     this.syncTimers.forEach(timer => window.clearTimeout(timer))
     this.syncTimers = []
+  }
+
+  /**
+   * 应用音轨选择并触发重建
+   */
+  async applyTrackSelection(id: number) {
+    if (!this.art || !this.deps) return
+    const target = this.audioTrackOptions.find(track => track.id === id)
+    if (!target) return
+
+    const video = this.art.video
+    const currentTime = video.currentTime
+    const shouldResume = !video.paused
+
+    await this.deps.onRebuildHls({
+      id,
+      currentTime,
+      shouldResume,
+      track: (target as any).rawTrack // 忽略类型检查，原逻辑存在
+    })
   }
 
   /** 调度延迟音轨同步 */

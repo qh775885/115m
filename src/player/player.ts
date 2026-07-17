@@ -6,9 +6,6 @@ import Artplayer from 'artplayer'
 import type HlsType from 'hls.js'
 import playerSkinCss from './core/player-skin.css?inline'
 import playerQualityCss from './core/css/player-quality.css?inline'
-import playerSpeedCss from './core/css/player-speed.css?inline'
-import playerAudioCss from './core/css/player-audio.css?inline'
-import playerSubtitleCss from './core/css/player-subtitle.css?inline'
 import playerPlaybackModeCss from './core/css/player-playback-mode.css?inline'
 import playerNavigationCss from './core/css/player-navigation.css?inline'
 import playerRotationCss from './core/css/player-rotation.css?inline'
@@ -17,10 +14,11 @@ import playerHeaderCss from './core/css/player-header.css?inline'
 import playerSelectorCss from './core/css/player-selector.css?inline'
 import playerVolumeCss from './core/player-volume.css?inline'
 import uiLayerCss from './core/ui-layer.css?inline'
+import playerMediaTrackCss from './core/css/player-media-track.css?inline'
+import playerSettingsMenuCss from './core/css/player-settings-menu.css?inline'
 import type { M3u8Item } from '../lib/types'
 import { buildArtplayerQuality, buildQualityOptions, getQualityDisplayName, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './core/player-quality'
-import { buildSpeedControlItem as buildSpeedControlConfig } from './core/player-speed'
 import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
@@ -38,6 +36,8 @@ import { bindPlayerEvents } from './core/events'
 import { PlayerOverlayController, readOverlayMetaFromQuery, type OverlayPlaylistItem } from './core/overlay'
 import { getNextPlaylistItem, getPlaybackEndCountdownPlan, getPreviousPlaylistItem } from './core/player-navigation'
 import { fetchBreadcrumbPath, fetchPlaylistData, resolvePlaybackBundle, type ResolvedPlaybackBundle } from './core/player-services'
+import { MediaTrackController } from './core/player-media-track'
+import { SettingsMenuController } from './core/player-settings-menu'
 import { buildOverlayMetaPatch, buildPlayerHistoryUrl, findPlaylistItemByPickCode } from './core/player-switch'
 import { MoveDialog } from './core/move-dialog'
 import {
@@ -68,7 +68,7 @@ function injectPlayerSkinStyles() {
   if (document.getElementById('m115-player-skin-style')) return
   const style = document.createElement('style')
   style.id = 'm115-player-skin-style'
-  style.textContent = `${playerSkinCss}\n${playerQualityCss}\n${playerSpeedCss}\n${playerAudioCss}\n${playerSubtitleCss}\n${playerPlaybackModeCss}\n${playerNavigationCss}\n${playerRotationCss}\n${playerPlaylistCss}\n${playerHeaderCss}\n${playerSelectorCss}\n${playerVolumeCss}\n${uiLayerCss}`
+  style.textContent = `${playerSkinCss}\n${playerQualityCss}\n${playerPlaybackModeCss}\n${playerNavigationCss}\n${playerRotationCss}\n${playerPlaylistCss}\n${playerHeaderCss}\n${playerSelectorCss}\n${playerVolumeCss}\n${uiLayerCss}\n${playerMediaTrackCss}\n${playerSettingsMenuCss}`
   document.head.appendChild(style)
 }
 
@@ -116,6 +116,8 @@ class PlayerManager {
   private static readonly PLAYBACK_MODE_CONTROL_NAME = 'm115-playback-mode-control'
   private static readonly PREV_CONTROL_NAME = 'm115-prev-control'
   private static readonly NEXT_CONTROL_NAME = 'm115-next-control'
+  private static readonly MEDIA_TRACK_CONTROL_NAME = 'm115-media-track-control'
+  private static readonly SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
   private static readonly VIDEO_SWITCH_COOLDOWN_MS = 1200
   private artplayer: Artplayer | null = null
   private hlsInstance: HlsType | null = null
@@ -154,6 +156,8 @@ class PlayerManager {
   private currentPlaybackRate = 1
   private currentPlaybackMode: PlaybackMode = loadPlaybackMode()
   private subtitleController: SubtitleController | null = null
+  private mediaTrackController: MediaTrackController | null = null
+  private settingsMenuController: SettingsMenuController | null = null
   private currentHlsSourceUrl: string | null = null
   private currentHlsLogicalUrl: string | null = null
   private isSwitchingVideo = false
@@ -379,6 +383,12 @@ class PlayerManager {
     this.subtitleController?.destroy()
     this.subtitleController = new SubtitleController()
 
+    this.mediaTrackController?.destroy()
+    this.mediaTrackController = new MediaTrackController()
+
+    this.settingsMenuController?.destroy()
+    this.settingsMenuController = new SettingsMenuController()
+
     // YouTube-like idle delay: keep controls visible for a few seconds after mouse movement.
     Artplayer.CONTROL_HIDE_TIME = 6000
 
@@ -396,17 +406,11 @@ class PlayerManager {
         this.buildPrevControlItem(),
         this.buildNextControlItem(),
         buildCustomVolumeControl(),
-        this.rotationManager.buildControl(),
-        this.buildQualityControlItem(),
-        this.audioManager!.buildControl(),
-        this.subtitleController!.buildControl(),
-        this.buildPlaybackModeControlItem(),
-        this.buildSpeedControlItem(),
       ],
       loop: false,
       playbackRate: false,
       aspectRatio: false,
-      fullscreen: true,
+      fullscreen: false,
       fullscreenWeb: false,
       miniProgressBar: true,
       theme: '#1890ff',
@@ -516,6 +520,7 @@ class PlayerManager {
       getCurrentHlsLogicalUrl: () => this.currentHlsLogicalUrl,
       onRebuildHls: (params) => this.rebuildHlsForAudioTrack(params),
       onShowToast: (msg) => this.overlay?.showToast(msg),
+      onRenderRequest: () => this.mediaTrackController?.renderControl(),
     })
 
     if (type === 'native') {
@@ -530,7 +535,32 @@ class PlayerManager {
       art: this.artplayer,
       getCurrentPickCode: () => this.currentPickCode,
       onShowToast: (msg) => this.overlay?.showToast(msg),
+      onRenderRequest: () => this.mediaTrackController?.renderControl(),
     })
+
+    this.mediaTrackController?.attach({
+      art: this.artplayer,
+      subtitleController: this.subtitleController,
+      audioManager: this.audioManager,
+    })
+
+    this.settingsMenuController?.attach({
+      art: this.artplayer,
+      currentPlaybackRate: this.currentPlaybackRate,
+      onSelectPlaybackRate: (value) => this.applyPlaybackRate(value),
+    })
+
+    // 添加合并后的右侧控件
+    this.artplayer.controls.add(this.buildQualityControlItem())
+    if (this.mediaTrackController) {
+      this.artplayer.controls.add(this.mediaTrackController.buildControl()!)
+    }
+    this.artplayer.controls.add(this.buildPlaybackModeControlItem())
+    this.artplayer.controls.add(this.rotationManager.buildControl())
+    if (this.settingsMenuController) {
+      this.artplayer.controls.add(this.settingsMenuController.buildControl()!)
+    }
+
     void this.fetchBreadcrumbs()
 
     if (this.artplayer) {
@@ -558,8 +588,7 @@ class PlayerManager {
             mounted: ($el: HTMLElement) => { this.infoMenuEl = $el },
           })
           this.renderQualityPanel()
-          this.audioManager?.renderControl()
-          this.subtitleController?.renderControl()
+          this.mediaTrackController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderPlaybackNavControls()
           this.rotationManager?.renderControl()
@@ -569,8 +598,7 @@ class PlayerManager {
           this.perfMarks.loadedmetadata = performance.now()
           this.updateQualityByUrl(this.artplayer?.url || '')
           this.renderQualityPanel()
-          this.audioManager?.renderControl()
-          this.subtitleController?.renderControl()
+          this.mediaTrackController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderSpeedControl()
           this.rotationManager?.apply()
@@ -643,14 +671,6 @@ class PlayerManager {
     this.updateQualityControl()
   }
 
-  private buildSpeedControlItem(): any {
-    return buildSpeedControlConfig({
-      controlName: PlayerManager.SPEED_CONTROL_NAME,
-      currentPlaybackRate: this.currentPlaybackRate,
-      onSelectPlaybackRate: value => this.applyPlaybackRate(value),
-    })
-  }
-
   private buildPlaybackModeControlItem(): any {
     return buildPlaybackModeControlConfig({
       controlName: PlayerManager.PLAYBACK_MODE_CONTROL_NAME,
@@ -665,8 +685,7 @@ class PlayerManager {
   }
 
   private renderSpeedControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.SPEED_CONTROL_NAME, this.buildSpeedControlItem())
+    this.settingsMenuController?.renderControl()
   }
 
   private safeRemoveContextmenuItem(name: string) {

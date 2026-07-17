@@ -33,6 +33,7 @@ export interface SubtitleControllerDeps {
   art: Artplayer
   getCurrentPickCode: () => string
   onShowToast: (msg: string) => void
+  onRenderRequest?: () => void
 }
 
 export class SubtitleController {
@@ -58,7 +59,11 @@ export class SubtitleController {
   /** 渲染字幕控件 */
   renderControl() {
     if (!this.art) return
-    updateArtplayerControl(this.art, 'm115-subtitle-control', this.buildControl())
+    if (this.deps?.onRenderRequest) {
+      this.deps.onRenderRequest()
+    } else {
+      updateArtplayerControl(this.art, 'm115-subtitle-control', this.buildControl())
+    }
   }
 
   /** 清除偏好应用标记（视频切换时调用） */
@@ -138,7 +143,7 @@ export class SubtitleController {
     }
   }
 
-  private async applySelection(sid: string, remember = false) {
+  async applySelection(sid: string, remember = false) {
     if (!this.subtitleManager || !this.deps) return
     const items = this.subtitleManager.getItems()
     const item = sid ? items.find(entry => entry.sid === sid) : null
