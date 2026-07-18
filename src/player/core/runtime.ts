@@ -5,6 +5,20 @@ function isContextInvalidated(e: unknown): boolean {
   return e instanceof Error && /Extension context invalidated/i.test(e.message)
 }
 
+/** 调试辅助：在页面内显示日志 */
+function debugLogToPage(msg: string) {
+  if (typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') !== '1') return
+  if (typeof document === 'undefined') return
+  let el = document.getElementById('m115-debug-log')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'm115-debug-log'
+    el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
+    document.body.appendChild(el)
+  }
+  el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
+}
+
 export function getRuntimeApi() {
   if (typeof chrome === 'undefined' || !chrome?.runtime) {
     return null
@@ -62,22 +76,37 @@ function getRuntimeMessageType(message: unknown) {
  * 通过发送一个简单的 ping 消息来唤醒 SW
  */
 export async function ensureServiceWorkerReady(maxRetries = 5, delay = 500): Promise<void> {
+  const debugMode = typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') === '1'
+  if (debugMode) debugLogToPage(`ensureServiceWorkerReady start (canUseRuntime=${canUseRuntimeMessaging()})`)
   runtimeDebug('[115m] ensureServiceWorkerReady: starting...')
   if (!canUseRuntimeMessaging()) {
     console.warn('[115m] ensureServiceWorkerReady skipped: runtime unavailable')
+    if (debugMode) debugLogToPage('runtime messaging unavailable')
     return
   }
   for (let i = 0; i < maxRetries; i++) {
     try {
       const runtime = getRuntimeApi()
       if (!runtime?.sendMessage) return
-      const result = await runtime.sendMessage({ type: 'PING' })
+      if (debugMode) debugLogToPage(`PING attempt ${i + 1}/${maxRetries}`)
+      const result = await new Promise<any>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('PING timeout')), 3000)
+        runtime.sendMessage({ type: 'PING' }, (response) => {
+          clearTimeout(timer)
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message))
+            return
+          }
+          resolve(response)
+        })
+      })
+      if (debugMode) debugLogToPage(`PING success on attempt ${i + 1}`)
       runtimeDebug('[115m] ensureServiceWorkerReady: PING response', result)
       if (result) return
     }
     catch (e) {
+      if (debugMode) debugLogToPage(`PING error: ${e instanceof Error ? e.message : String(e)}`)
       if (isContextInvalidated(e)) {
-        // Extension reload invalidates the old page context. Show a refresh tip without polluting error panels.
         showContextInvalidatedTip()
         return
       }
@@ -87,6 +116,7 @@ export async function ensureServiceWorkerReady(maxRetries = 5, delay = 500): Pro
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
+  if (debugMode) debugLogToPage(`SW retries exhausted (${maxRetries})`)
   console.error('[115m] Service Worker not ready after retries')
 }
 

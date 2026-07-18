@@ -23,8 +23,8 @@ function readJson(path) {
 
 const packagePath = resolve(root, 'package.json')
 const manifestPath = resolve(root, 'manifest.json')
-const projectBaselinePath = resolve(root, '.trae/rules/project-baseline.md')
-const releaseRulePath = resolve(root, '.trae/rules/release.md')
+const projectBaselinePath = resolve(root, '.ai/rules/project-baseline.md')
+const releaseRulePath = resolve(root, '.ai/rules/release.md')
 const docsRunbookPath = resolve(root, 'docs/runbooks/docs.md')
 const messagesRunbookPath = resolve(root, 'docs/runbooks/messages.md')
 const playerRunbookPath = resolve(root, 'docs/runbooks/player.md')
@@ -39,10 +39,10 @@ if (pkg.version === manifest.version) ok(`package.json 与 manifest.json 版本�
 else fail(`版本不一致：package.json=${pkg.version}, manifest.json=${manifest.version}`)
 
 if (existsSync(projectBaselinePath)) ok('已存在项目核心规则')
-else fail('缺少 .trae/rules/project-baseline.md')
+else fail('缺少 .ai/rules/project-baseline.md')
 
 if (existsSync(releaseRulePath)) ok('已存在发布规则')
-else warn('缺少 .trae/rules/release.md')
+else warn('缺少 .ai/rules/release.md')
 
 if (existsSync(docsRunbookPath)) ok('已存在文档维护 runbook')
 else warn('缺少 docs/runbooks/docs.md')

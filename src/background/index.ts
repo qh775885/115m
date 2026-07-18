@@ -26,40 +26,27 @@ import {
 } from './media-info'
 
 // 安装时初始化
-chrome.runtime.onInstalled.addListener((details) => {
-  registerEarlyOverrideScript()
+chrome.runtime.onInstalled.addListener((_details) => {
+  // early 页面接管已移至 content script 同步执行，无需额外注册
 })
 
-// 浏览器启动时，确保 early script 已注册
-chrome.runtime.onStartup.addListener(() => {
-  registerEarlyOverrideScript()
-})
-
-/**
- * 注册一个极轻量的 content script，在 document_start 阶段同步覆盖 115 视频页面
- * 脚本放在 public/ 目录下，Vite 原样复制不打包，确保同步执行
- * 这样能在 115 原生行内脚本执行之前接管页面，避免 "undefined action!" 闪现
- */
-async function registerEarlyOverrideScript() {
-  try {
-    await chrome.scripting.registerContentScripts([{
-      id: 'video-page-early-override',
-      matches: [
-        'https://115.com/web/lixian/master/video/*',
-        'https://*.115.com/web/lixian/master/video/*',
-      ],
-      js: ['video-page-early.js'],
-      runAt: 'document_start',
-      world: 'ISOLATED' as any,
-    }])
-  }
-  catch (e) {
-    console.warn('[115m] Failed to register early override script:', e)
-  }
+// 避免被休眠
+const ALARM_NAME = 'keep-alive'
+if (typeof chrome !== 'undefined' && chrome.alarms) {
+  chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 })
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === ALARM_NAME) {
+      // 空操作唤醒
+    }
+  })
 }
 
 // 监听来自 content script 和 player 页面的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message && message.type === 'PING') {
+    sendResponse({ pong: true })
+    return true
+  }
   handleMessage(message, sender).then(sendResponse).catch((err) => {
     console.error('[115m] BG error:', err)
     sendResponse({ error: err.message })
@@ -67,30 +54,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true // 保持 sendResponse 有效
 })
 
-if (import.meta.hot) {
-  import.meta.hot.on('extension-reload', () => {
-    // 重载前向所有标签页发送刷新指令
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach((tab) => {
-        if (tab.id && tab.url && (tab.url.includes('115.com') || tab.url.includes('115vod.com'))) {
-          // 捕获错误以防某些页面无法注入或已断开
-          chrome.tabs.reload(tab.id).catch(() => {})
-        }
-      })
-      setTimeout(() => {
-        chrome.runtime.reload()
-      }, 100)
-    })
-  })
-}
+
 
 let lastOpenTabMeta: { url: string, ts: number } | null = null
 
-const TRUSTED_PAGE_HOSTS = new Set(['115.com', '115vod.com'])
+const TRUSTED_PAGE_HOSTS = new Set(['115.com', '115vod.com', 'localhost'])
 const TRUSTED_EXTENSION_PROTOCOL = 'chrome-extension:'
 const MAIN_WORLD_ALLOWED_PATHS = [
   { host: 'webapi.115.com', path: '/files' },
-  { host: 'webapi.115.com', path: '/files/' },
   { host: 'webapi.115.com', path: '/rb/delete' },
   { host: 'webapi.115.com', path: '/movies/subtitle' },
   { host: 'proapi.115.com', path: '/app/chrome/downurl' },
@@ -109,6 +80,8 @@ function isTrustedSender(sender?: chrome.runtime.MessageSender) {
   try {
     const url = new URL(rawUrl)
     if (url.protocol === TRUSTED_EXTENSION_PROTOCOL && url.host === chrome.runtime.id) return true
+    // 开发模式下，允许 WXT 的 background 热更新请求
+    if (url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) return true
     return TRUSTED_PAGE_HOSTS.has(url.hostname) || url.hostname.endsWith('.115.com')
   }
   catch {
@@ -149,10 +122,11 @@ function assertDownloadUrl(rawUrl: string) {
 }
 
 async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.MessageSender): Promise<any> {
+  if (message.type === 'PING') {
+    return { pong: true }
+  }
+  
   switch (message.type) {
-    case 'PING':
-      return { pong: true }
-
     case 'MAIN_WORLD_FETCH':
       assertTrustedSender(sender, message.type)
       assertAllowedMainWorldUrl(message.data.url)

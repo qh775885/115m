@@ -1,5 +1,5 @@
-// 页面已被 video-page-early.js（public/）在 document_start 阶段同步接管
-// 这里不再重复 document.write，避免二次覆盖导致的竞态问题
+// 页面已被 video-page.content.ts 在 document_start 阶段同步接管（document.write）
+// 这里只负责加载播放器模块和启动初始化
 
 import '../player/player'
 
@@ -15,7 +15,7 @@ function clearNativeVideoRequests() {
   }
 }
 
-async function init() {
+function init() {
   if (window.top !== window) return
   if (!/\/web\/lixian\/master\/video\//.test(window.location.pathname)) return
   if (window.location.search.includes('m115_transcode_fallback=1')) return
@@ -30,11 +30,16 @@ async function init() {
   }
 
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
+
+  // 确保 initPlayer 被调用（防止 player.ts 底部的条件检查失败）
+  if (typeof window.__115m_initPlayer === 'function') {
+    window.__115m_initPlayer()
+  }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { void init() })
+  document.addEventListener('DOMContentLoaded', () => { init() })
 }
 else {
-  void init()
+  init()
 }

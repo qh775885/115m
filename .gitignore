@@ -35,13 +35,17 @@ temp/
 *.sln
 *.sw?
 
-# OS files
+# wxt
+.wxt/
 .DS_Store
 Thumbs.db
 Desktop.ini
 计划.md
 
-# temporary scripts
+# debug/temp files
+.dbg/
+debug-*
+*.ndjson
 patch*.js
 patch*.cjs
 scripts/debug-*.mjs

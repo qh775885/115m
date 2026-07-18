@@ -16,10 +16,11 @@
     "sourceMap": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "~/*": ["./*"]
     },
-    "types": ["chrome", "node"]
+    "types": ["chrome", "node", "wxt/vite-builder-env"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", ".wxt/types/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".wxt"]
 }

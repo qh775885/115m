@@ -7,6 +7,20 @@ import { normalizePlaylistItems } from './playlist'
 import type { OverlayPathItem, OverlayPlaylistItem } from './overlay'
 import { fetchM3u8WithRetry } from './source'
 
+/** 调试辅助：在页面内显示日志 */
+function debugLogToPage(msg: string) {
+  if (typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') !== '1') return
+  if (typeof document === 'undefined') return
+  let el = document.getElementById('m115-debug-log')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'm115-debug-log'
+    el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
+    document.body.appendChild(el)
+  }
+  el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
+}
+
 type RuntimeSender = <T = unknown>(message: unknown, retries?: number, delay?: number, timeoutMs?: number) => Promise<T | null>
 
 const PLAYBACK_SOURCE_TIMEOUT_MS = 12000
@@ -29,6 +43,8 @@ export async function resolvePlaybackBundle(
   pickCode: string,
   canUseNativeUltraSource = true,
 ): Promise<ResolvedPlaybackBundle> {
+  const debugMode = typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') === '1'
+  if (debugMode) debugLogToPage(`resolvePlaybackBundle start: ${pickCode}`)
   const qualityPreference = await loadQualityPreference(pickCode)
   let m3u8Error: unknown = null
   let ultraError: unknown = null
@@ -36,6 +52,7 @@ export async function resolvePlaybackBundle(
   const timedSendMessage: RuntimeSender = (message, retries, delay, timeoutMs = PLAYBACK_SOURCE_TIMEOUT_MS) =>
     sendMessage(message, retries, delay, timeoutMs)
 
+  if (debugMode) debugLogToPage('fetching m3u8 and ultra sources')
   const m3u8Promise = fetchM3u8WithRetry(pickCode).catch((error) => {
     m3u8Error = error
     return [] as M3u8Item[]
@@ -47,6 +64,7 @@ export async function resolvePlaybackBundle(
   })
 
   const [downloadResult, m3u8List] = await Promise.all([ultraPromise, m3u8Promise])
+  if (debugMode) debugLogToPage(`sources fetched: ultra=${!!downloadResult?.url?.url}, m3u8=${Array.isArray(m3u8List) ? m3u8List.length : 0}, m3u8Err=${m3u8Error instanceof Error ? m3u8Error.message : String(m3u8Error)}, ultraErr=${ultraError instanceof Error ? ultraError.message : String(ultraError)}`)
   const ultraUrl = downloadResult?.url?.url || null
   const resolvedM3u8List = Array.isArray(m3u8List) ? m3u8List : []
 

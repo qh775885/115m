@@ -28,7 +28,7 @@ export interface NavigateToVideoOptions {
 
 export function readPlayerBootstrapConfig(search: string): PlayerBootstrapConfig {
   const params = new URLSearchParams(search)
-  const pickCode = params.get('pickCode')
+  const pickCode = params.get('pickCode') || params.get('pick_code')
   const traceId = params.get('traceId') || undefined
   const clickTsRaw = params.get('clickTs')
   const clickTs = clickTsRaw ? Number(clickTsRaw) : undefined

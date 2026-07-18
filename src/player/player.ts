@@ -4,6 +4,7 @@
 
 import Artplayer from 'artplayer'
 import type HlsType from 'hls.js'
+import '../player/style.css'
 import playerSkinCss from './core/player-skin.css?inline'
 import playerQualityCss from './core/css/player-quality.css?inline'
 import playerPlaybackModeCss from './core/css/player-playback-mode.css?inline'
@@ -65,11 +66,24 @@ import { RotationManager } from './core/rotation-manager'
 import { SubtitleController } from './core/subtitle-controller'
 
 function injectPlayerSkinStyles() {
-  if (document.getElementById('m115-player-skin-style')) return
   const style = document.createElement('style')
   style.id = 'm115-player-skin-style'
   style.textContent = `${playerSkinCss}\n${playerQualityCss}\n${playerPlaybackModeCss}\n${playerNavigationCss}\n${playerRotationCss}\n${playerPlaylistCss}\n${playerHeaderCss}\n${playerSelectorCss}\n${playerVolumeCss}\n${uiLayerCss}\n${playerMediaTrackCss}\n${playerSettingsMenuCss}`
-  document.head.appendChild(style)
+  
+  const insertStyle = () => {
+    if (document.getElementById('m115-player-skin-style')) return
+    if (document.head) {
+      document.head.appendChild(style)
+    } else {
+      document.documentElement.appendChild(style)
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertStyle)
+  } else {
+    insertStyle()
+  }
 }
 
 injectPlayerSkinStyles()
@@ -233,28 +247,49 @@ class PlayerManager {
     })
   }
 
+  /** 调试辅助：在页面内显示日志 */
+  private debugLogToPage(msg: string) {
+    if (localStorage.getItem('115m-player-debug') !== '1') return
+    let el = document.getElementById('m115-debug-log')
+    if (!el) {
+      el = document.createElement('div')
+      el.id = 'm115-debug-log'
+      el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
+      document.body.appendChild(el)
+    }
+    el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
+  }
+
   private async init() {
+    const debugMode = localStorage.getItem('115m-player-debug') === '1'
+    if (debugMode) this.debugLogToPage('init() called')
     try {
       this.perf('player-init-start')
 
-      // 确保 Service Worker 已就绪（冷启动时可能需要等待）
       const loadingTextEl = document.getElementById('loading-text')
       if (loadingTextEl) {
         loadingTextEl.textContent = '正在初始化...'
       }
-      await ensureServiceWorkerReady()
+
+      if (debugMode) this.debugLogToPage('calling ensureServiceWorkerReady')
+      await ensureServiceWorkerReady(10, 1000)
+      if (debugMode) this.debugLogToPage('ensureServiceWorkerReady done')
 
       if (loadingTextEl) {
         loadingTextEl.textContent = '正在获取播放源...'
       }
 
+      if (debugMode) this.debugLogToPage('calling resolvePlaybackForPickCode')
       const playback = await this.resolvePlaybackForPickCode(this.currentPickCode)
+      if (debugMode) this.debugLogToPage(`resolvePlaybackForPickCode done: ultra=${!!playback.ultraUrl}, m3u8=${playback.m3u8List.length}, type=${playback.initialPlayback.type}`)
       this.applyResolvedPlayback(playback)
 
       this.perfMarks.ultraReady = performance.now()
       this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.m3u8List.length })
 
+      if (debugMode) this.debugLogToPage(`calling createArtplayer: type=${playback.initialPlayback.type}`)
       this.createArtplayer(playback.initialPlayback.url, playback.initialPlayback.type)
+      if (debugMode) this.debugLogToPage(`createArtplayer done: hasArtplayer=${!!this.artplayer}`)
       this.perf(playback.initialPlayback.type === 'native' ? 'create-player-native' : 'create-player-hls', {
         label: playback.initialPlayback.currentQualityLabel,
         hasPreference: !!playback.qualityPreference,
@@ -276,9 +311,11 @@ class PlayerManager {
       )
     }
     catch (error) {
+      if (debugMode) this.debugLogToPage(`ERROR: ${error instanceof Error ? error.message : String(error)}`)
       this.showError(`播放器初始化失败: ${error instanceof Error ? error.message : String(error)}`)
     }
     finally {
+      if (debugMode) this.debugLogToPage('finally block - hiding loading')
       const loadingEl = document.getElementById('loading')
       if (loadingEl) loadingEl.style.display = 'none'
     }
@@ -1571,12 +1608,21 @@ class PlayerManager {
 let playerManager: PlayerManager | null = null
 
 function initPlayer() {
+  if (playerManager) return // 防止重复初始化
+
   const { pickCode, traceId, clickTs, keepPlaylistOpen, playlistToken } = readPlayerBootstrapConfig(window.location.search)
 
   if (!pickCode) {
-    const el = document.getElementById('artplayer-app')
-    if (el) {
-      el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff4d4f;font-size:18px;">缺少 pickCode 参数</div>'
+    const showError = () => {
+      const el = document.getElementById('artplayer-app')
+      if (el) {
+        el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff4d4f;font-size:18px;">缺少 pickCode 参数</div>'
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showError)
+    } else {
+      showError()
     }
     return
   }
@@ -1584,10 +1630,10 @@ function initPlayer() {
   playerManager = new PlayerManager({ pickCode, traceId, clickTs, keepPlaylistOpen, playlistToken })
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initPlayer)
-}
-else {
+// content script 暴露 initPlayer 供 video-page.ts 的 init() 调用
+;(window as any).__115m_initPlayer = initPlayer
+// 页面接管已在 video-page.content.ts 中同步完成，此处直接检查 DOM 就绪状态
+if (document.getElementById('loading-text')) {
   initPlayer()
 }
 
