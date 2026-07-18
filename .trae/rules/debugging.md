@@ -1,7 +1,6 @@
 ---
 alwaysApply: false
-description: 调试运行时 bug、需要收集浏览器/扩展日志时使用此规则。
-scene: debugging
+description: 当排查复杂 Bug、需要注入临时代码收集浏览器或扩展日志、或启动本地日志服务器时，请智能应用此规则
 ---
 # 调试日志规则
 

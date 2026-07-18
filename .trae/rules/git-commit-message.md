@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: 编写 Git 提交信息时使用此规则。
+description: 当需要编写 Git 提交信息（commit message）、分析代码差异或提交代码时，请智能应用此规则
 scene: git_message
 ---
 # Git 提交信息规则

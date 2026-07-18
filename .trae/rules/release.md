@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: 准备发布新版本时，用于自动提取变更并生成版本更新说明。
+description: 当准备发布新版本、生成版本更新说明、或编写 Changelog 时，请智能应用此规则
 ---
 # 版本更新说明规则
 
