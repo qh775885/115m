@@ -36,6 +36,14 @@
   transition: background-color .16s ease, box-shadow .16s ease;
 }
 
+.art-video-player .art-controls-right .m115-rotate-control .m115-control-shell svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  flex: none;
+  margin: 0 !important;
+}
+
 
 .art-video-player .art-controls-right .m115-rotate-control:hover .m115-control-shell {
   background: var(--m115-control-chip-hover) !important;
@@ -76,4 +84,4 @@
   min-width: var(--m115-control-size) !important;
   max-width: var(--m115-control-size) !important;
   flex: 0 0 var(--m115-control-size) !important;
-}
+}

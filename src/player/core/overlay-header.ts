@@ -1,4 +1,5 @@
 import { UI_LAYER } from './ui-layer'
+import { Icons } from '../../shared/icons'
 
 export function createHeaderActionButton(title: string, icon: string) {
   const button = document.createElement('button')
@@ -17,9 +18,7 @@ export function createHeaderActionButton(title: string, icon: string) {
 }
 
 export function getFavoriteButtonIcon(marked: boolean) {
-  return marked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24"><path style="fill:#facc15" d="m12 3.6 2.55 5.16 5.7.83-4.12 4.02.97 5.67L12 16.6l-5.1 2.68.97-5.67-4.12-4.02 5.7-.83L12 3.6z"/></svg>'
-    : '<svg width="18" height="18" viewBox="0 0 24 24"><path style="fill:none;stroke:rgba(255,255,255,.72);stroke-width:2;stroke-linejoin:round" d="m12 3.6 2.55 5.16 5.7.83-4.12 4.02.97 5.67L12 16.6l-5.1 2.68.97-5.67-4.12-4.02 5.7-.83L12 3.6z"/></svg>'
+  return marked ? Icons.StarFilled : Icons.Star
 }
 
 export function createOverlayHeaderScaffold() {
@@ -62,7 +61,7 @@ export function createOverlayHeaderScaffold() {
     'cursor:pointer',
     'flex-shrink:0',
   ].join(';')
-  back.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'
+  back.innerHTML = Icons.Back
 
   const info = document.createElement('div')
   info.className = 'm115-header-info'

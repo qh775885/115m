@@ -1,5 +1,6 @@
 import type Artplayer from 'artplayer'
 import { escapeHtml } from '../../shared/utils'
+import { Icons } from '../../shared/icons'
 import { UI_LAYER } from './ui-layer'
 import { readOverlayMetaQuery } from './player-query'
 import { createHeaderActionButton, createOverlayHeaderScaffold, getFavoriteButtonIcon } from './overlay-header'
@@ -520,7 +521,7 @@ export class PlayerOverlayController {
     titleRow.appendChild(title)
     titleRow.appendChild(stats)
     titleRow.appendChild(favBtn)
-    const moveBtn = createHeaderActionButton('移动视频', '<svg width="18" height="18" viewBox="0 0 24 24"><path style="fill:none;stroke:rgba(255,255,255,.82);stroke-width:2" d="M5 9l-3 3 3 3"/><path style="fill:none;stroke:rgba(255,255,255,.82);stroke-width:2" d="M2 12h14"/><path style="fill:none;stroke:rgba(255,255,255,.82);stroke-width:2" d="M12 5V2h10v20H12v-3"/></svg>')
+    const moveBtn = createHeaderActionButton('移动视频', Icons.Move)
     moveBtn.addEventListener('click', async () => {
       const { fileId, cid } = this.options.meta
       if (!fileId) {
@@ -536,7 +537,7 @@ export class PlayerOverlayController {
         else this.showToast('移动失败: ' + msg)
       }
     })
-    const deleteBtn = createHeaderActionButton('删除视频', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.82)" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>')
+    const deleteBtn = createHeaderActionButton('删除视频', Icons.Trash)
     deleteBtn.addEventListener('click', async () => {
       const fileId = this.options.meta.fileId
       const parentId = this.options.meta.cid
@@ -612,7 +613,7 @@ export class PlayerOverlayController {
     tab.setAttribute('aria-label', '播放列表')
     tab.setAttribute('aria-expanded', 'false')
     tab.classList.add('m115-interactive', 'm115-layer-playlist-tab')
-    tab.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></svg>'
+    tab.innerHTML = Icons.Playlist
 
     tab.addEventListener('mouseenter', () => {
       tab.style.background = 'rgba(0,0,0,.7)'
@@ -669,7 +670,7 @@ export class PlayerOverlayController {
     closeBtn.className = 'm115-playlist-close'
     closeBtn.title = '关闭'
     closeBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,.5);cursor:pointer;transition:background .15s,color .15s'
-    closeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+    closeBtn.innerHTML = Icons.Close
     closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(255,255,255,.1)'; closeBtn.style.color = '#fff' })
     closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = 'rgba(255,255,255,.5)' })
     closeBtn.addEventListener('click', () => this.setPlaylistOpen(false))

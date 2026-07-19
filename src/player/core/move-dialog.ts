@@ -1,5 +1,6 @@
 import { UI_LAYER } from './ui-layer'
 import { escapeHtml } from '../../shared/utils'
+import { Icons } from '../../shared/icons'
 import { canUseRuntimeMessaging, getRuntimeApi } from './runtime'
 import {
   apiCreateFolder,
@@ -259,9 +260,9 @@ const DIALOG_STYLES = `
 `
 
 // ─── SVG Icons ───
-const ICON_FOLDER = '<svg viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>'
-const ICON_FOLDER_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>'
-const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+const ICON_FOLDER = Icons.FolderTree
+const ICON_FOLDER_PLUS = Icons.FolderPlus
+const ICON_CLOCK = Icons.Clock
 
 // ─── Recent Moves Storage ───
 function getRecentMoves(): RecentMoveRecord[] {

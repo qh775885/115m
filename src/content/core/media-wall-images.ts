@@ -3,6 +3,7 @@ import { isImageExtension, readAttr } from '../../shared/utils'
 import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './media-wall-folders'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
+import { Icons } from '../../shared/icons'
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')
@@ -85,7 +86,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const closeBtn = doc.createElement('button')
   closeBtn.type = 'button'
   closeBtn.className = 'm115-viewer-tool-btn is-icon'
-  closeBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  closeBtn.innerHTML = Icons.Close
   closeBtn.title = '关闭'
   closeBtn.setAttribute('aria-label', '关闭')
 
@@ -106,12 +107,12 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const prevBtn = doc.createElement('button')
   prevBtn.type = 'button'
   prevBtn.className = 'm115-viewer-nav m115-viewer-prev'
-  prevBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>'
+  prevBtn.innerHTML = Icons.ChevronLeft
 
   const nextBtn = doc.createElement('button')
   nextBtn.type = 'button'
   nextBtn.className = 'm115-viewer-nav m115-viewer-next'
-  nextBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>'
+  nextBtn.innerHTML = Icons.ChevronRight
 
   const mediaFrame = doc.createElement('div')
   mediaFrame.className = 'm115-viewer-frame'
@@ -119,7 +120,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const deleteBtn = doc.createElement('button')
   deleteBtn.type = 'button'
   deleteBtn.className = 'm115-viewer-frame-delete'
-  deleteBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>'
+  deleteBtn.innerHTML = Icons.Trash
   deleteBtn.title = '删除当前图片'
   deleteBtn.setAttribute('aria-label', '删除当前图片')
 
@@ -138,7 +139,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const thumbsToggle = doc.createElement('button')
   thumbsToggle.type = 'button'
   thumbsToggle.className = 'm115-viewer-thumbs-toggle'
-  thumbsToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
+  thumbsToggle.innerHTML = Icons.ChevronDown
   thumbsToggle.title = '收起缩略图'
   thumbsToggle.setAttribute('aria-label', '收起缩略图')
 
@@ -193,9 +194,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const WHEEL_GESTURE_RESET_DELAY = 120
 
   const updateThumbsToggle = () => {
-    thumbsToggle.innerHTML = thumbsCollapsed
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
+    thumbsToggle.innerHTML = thumbsCollapsed ? Icons.Minus : Icons.ChevronDown
     thumbsToggle.title = thumbsCollapsed ? '展开缩略图' : '收起缩略图'
     thumbsToggle.setAttribute('aria-label', thumbsToggle.title)
     thumbsWrap.classList.toggle('is-collapsed', thumbsCollapsed)
@@ -753,7 +752,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
       selection.type = 'button'
       selection.className = 'm115-folder-selection'
       selection.setAttribute('aria-label', '选择图片')
-      selection.innerHTML = '<span class="m115-folder-selection-box"><svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 8.2L6.6 11.3L12.5 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+      selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check}</span>`
       selection.addEventListener('mousedown', (event) => {
         if (event.button !== 0) return
         event.preventDefault()

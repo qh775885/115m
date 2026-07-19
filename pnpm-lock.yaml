@@ -20,6 +20,9 @@ importers:
       hls.js:
         specifier: ^1.6.16
         version: 1.6.16
+      lucide:
+        specifier: ^1.25.0
+        version: 1.25.0
       m3u8-parser:
         specifier: ^7.2.0
         version: 7.2.0
@@ -1637,6 +1640,9 @@ packages:
   log-update@6.1.0:
     resolution: {integrity: sha512-9ie8ItPR6tjY5uYJh8K/Zrv/RMZ5VOlOWvtZdEHYSTFKZfIBPQa9tOAEeAWhd+AnIneLJ22w5fjOYtoutpWq5w==}
     engines: {node: '>=18'}
+
+  lucide@1.25.0:
+    resolution: {integrity: sha512-Pg/9Ga1xTbrnI6GY/7J9krIYmJIkAf3PkK6wPmsAeUtAQsBdGxs1+dfvLqjf9nPI5aFm9+VquT75JGpO3QXSpQ==}
 
   m3u8-parser@7.2.0:
     resolution: {integrity: sha512-CRatFqpjVtMiMaKXxNvuI3I++vUumIXVVT/JpCpdU/FynV/ceVw1qpPyyBNindL+JlPMSesx+WX1QJaZEJSaMQ==}
@@ -3788,6 +3794,8 @@ snapshots:
       slice-ansi: 7.1.2
       strip-ansi: 7.2.0
       wrap-ansi: 9.0.2
+
+  lucide@1.25.0: {}
 
   m3u8-parser@7.2.0:
     dependencies:

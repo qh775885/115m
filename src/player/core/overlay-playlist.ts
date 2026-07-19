@@ -1,4 +1,5 @@
 import { escapeHtml } from '../../shared/utils'
+import { Icons } from '../../shared/icons'
 import { getVideoCovers } from '../../lib/videoThumbnail'
 import type { OverlayPlaylistItem } from './overlay'
 
@@ -69,7 +70,7 @@ export function buildPlaylistHtml(items: OverlayPlaylistItem[], currentPickCode:
         style="display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
         <span style="flex-shrink:0;width:22px;text-align:center;font-size:11px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.35)'}">${num}</span>
         <div class="m115-pl-thumb" style="position:relative;width:120px;height:68px;border-radius:6px;flex-shrink:0;background:#1a1a1a;overflow:hidden;display:flex;align-items:center;justify-content:center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span style="color:rgba(255,255,255,.15)">${Icons.Play}</span>
         </div>
         <div style="min-width:0;flex:1;overflow:hidden">
           <div style="font-size:13px;font-weight:500;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.78)'}">${escapeHtml(item.name)}</div>
@@ -78,10 +79,10 @@ export function buildPlaylistHtml(items: OverlayPlaylistItem[], currentPickCode:
         </div>
         <div class="m115-pl-actions" style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto;opacity:0;pointer-events:none;transition:opacity .15s;">
           <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3"/><path d="M2 12h14"/><path d="M12 5V2h10v20H12v-3"/></svg>
+            ${Icons.Move}
           </button>
           <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            ${Icons.Trash}
           </button>
         </div>
       </div>

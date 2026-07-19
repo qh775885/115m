@@ -1,5 +1,6 @@
 import type { MediaWallFolderItem } from './media-wall-types'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
+import { Icons } from '../../shared/icons'
 
 function dispatchMouseSequence(target: HTMLElement, events: Array<{ type: string, init: MouseEventInit }>) {
   events.forEach(({ type, init }) => {
@@ -273,7 +274,7 @@ export function renderFoldersSection(
     selection.type = 'button'
     selection.className = 'm115-folder-selection'
     selection.setAttribute('aria-label', '选择文件夹')
-    selection.innerHTML = '<span class="m115-folder-selection-box"><svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 8.2L6.6 11.3L12.5 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+    selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check}</span>`
     selection.addEventListener('mousedown', (event) => {
       if (event.button !== 0) return
       event.preventDefault()
@@ -302,7 +303,7 @@ export function renderFoldersSection(
     const starIcon = doc.createElement('span')
     starIcon.className = 'm115-folder-icon'
     starIcon.setAttribute('aria-hidden', 'true')
-    starIcon.innerHTML = '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.2L9.68 5.6L13.43 6.14L10.72 8.77L11.36 12.5L8 10.73L4.64 12.5L5.28 8.77L2.57 6.14L6.32 5.6L8 2.2Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>'
+    starIcon.innerHTML = Icons.Star
     starBtn.appendChild(starIcon)
     starBtn.addEventListener('click', (event) => {
       event.preventDefault()

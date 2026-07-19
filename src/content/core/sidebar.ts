@@ -12,7 +12,6 @@ const SIDEBAR_SETTINGS_ID = 'm115-sidebar-settings'
 const SIDEBAR_PREHIDE_ID = 'm115-sidebar-prehide'
 const SIDEBAR_STORAGE_KEY = 'm115_sidebar_enabled'
 const ICON_BASE = 'https://115.com/icons'
-
 const NAV_ITEMS: SidebarNavItem[] = [
   { id: 'wangpan', title: '网盘', icon: `${ICON_BASE}/storage_allcloudfiles.svg`, href: 'https://115.com/?cid=0&offset=0&mode=wangpan', defaultEnabled: true },
   { id: 'upload', title: '最近上传', icon: `${ICON_BASE}/storage/channel_recent_upload.svg`, href: '//115.com/?tab=upload&mode=wangpan', dataNav: 'upload', defaultEnabled: true },
