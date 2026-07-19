@@ -28,6 +28,9 @@ description: 115m 项目核心规则，所有开发必须遵循
   - `pnpm build` 会输出稳定版到 `dist/chrome-mv3`。
 - `pnpm zip` 的压缩包产物默认在 `.wxt/` 目录下。
 
+## UI 与视图边界
+- **左侧栏独立性**：左侧栏 (`src/content/core/sidebar.ts`) 是独立模块，使用 115 网盘原生图标资源 (`https://115.com/icons/...`)，不参与项目全局图标系统（如 Iconify 或 SVG sprite）的集成或修改。
+
 ## 安全
 - 不泄露密钥、账号、环境信息。
 - 不做未经确认的破坏性操作。
