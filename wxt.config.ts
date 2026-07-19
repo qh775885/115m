@@ -30,8 +30,7 @@ export default defineConfig({
       "cookies",
       "scripting",
       "webNavigation",
-      "tabs",
-      "alarms"
+      "tabs"
     ],
     host_permissions: [
       "https://115.com/*",

@@ -342,12 +342,6 @@ function injectBatchButton(doc: Document) {
     void runBatch(doc, files)
   }, true)
 
-  doc.addEventListener('click', () => window.setTimeout(() => updateBatchButtonVisibility(doc), 0), true)
-  doc.addEventListener('pointerup', () => window.setTimeout(() => updateBatchButtonVisibility(doc), 0), true)
-  doc.addEventListener('keyup', () => window.setTimeout(() => updateBatchButtonVisibility(doc), 0), true)
-  doc.addEventListener('change', () => updateBatchButtonVisibility(doc), true)
-  const observer = new MutationObserver(() => updateBatchButtonVisibility(doc))
-  observer.observe(doc.documentElement, { subtree: true, attributes: true, attributeFilter: ['class', 'checked'] })
   toolbar.insertAdjacentElement('afterbegin', btn)
   updateBatchButtonVisibility(doc)
 }
@@ -493,9 +487,37 @@ function stopUnarchiveButtonEvent(event: Event) {
   event.stopImmediatePropagation()
 }
 
+const actionCleanups = new Map<Document, () => void>()
+
 export function setupUnarchiveActions(doc: Document) {
+  const existing = actionCleanups.get(doc)
+  if (existing) {
+    injectBatchButton(doc)
+    return existing
+  }
+
   injectStyles(doc)
   injectBatchButton(doc)
+  const scheduleVisibilityUpdate = () => window.setTimeout(() => updateBatchButtonVisibility(doc), 0)
+  const updateVisibility = () => updateBatchButtonVisibility(doc)
+  const observer = new MutationObserver(updateVisibility)
+  doc.addEventListener('click', scheduleVisibilityUpdate, true)
+  doc.addEventListener('pointerup', scheduleVisibilityUpdate, true)
+  doc.addEventListener('keyup', scheduleVisibilityUpdate, true)
+  doc.addEventListener('change', updateVisibility, true)
+  observer.observe(doc.documentElement, { subtree: true, attributes: true, attributeFilter: ['class', 'checked'] })
+
+  const cleanup = () => {
+    doc.removeEventListener('click', scheduleVisibilityUpdate, true)
+    doc.removeEventListener('pointerup', scheduleVisibilityUpdate, true)
+    doc.removeEventListener('keyup', scheduleVisibilityUpdate, true)
+    doc.removeEventListener('change', updateVisibility, true)
+    observer.disconnect()
+    doc.getElementById('m115-batch-unarchive-btn')?.remove()
+    actionCleanups.delete(doc)
+  }
+  actionCleanups.set(doc, cleanup)
+  return cleanup
 }
 
 export function injectUnarchiveButton(item: HTMLElement, file: FileInfo) {

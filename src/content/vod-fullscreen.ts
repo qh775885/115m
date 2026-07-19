@@ -17,13 +17,14 @@ function tryClickWebFullscreen(): boolean {
 function waitAndFullscreen() {
   if (tryClickWebFullscreen()) return
 
-  let attempts = 0
-  const timer = setInterval(() => {
-    attempts++
-    if (tryClickWebFullscreen() || attempts >= 40) {
-      clearInterval(timer)
+  const observer = new MutationObserver(() => {
+    if (tryClickWebFullscreen()) {
+      observer.disconnect()
+      window.clearTimeout(timeout)
     }
-  }, 250)
+  })
+  const timeout = window.setTimeout(() => observer.disconnect(), 10_000)
+  observer.observe(document.documentElement, { childList: true, subtree: true })
 }
 
 if (document.readyState === 'loading') {

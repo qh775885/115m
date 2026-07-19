@@ -11,15 +11,16 @@ import { sendRuntimeMessageSafe } from './core/runtime'
 import { initUnarchiveHelper } from './core/unarchive-helper'
 import { injectUnarchiveButton, setupUnarchiveActions } from './core/unarchive-actions'
 import { HomePlayBinder } from './core/home-play-binder'
-import { watchWangpanFrame, primeSidebarPrehideForPage } from './core/home-frame'
+import { watchWangpanFrame } from './core/home-frame'
 import { HomeScrollBinder } from './core/home-scroll-binder'
 
 class HomeController {
-  private boundDocs = new WeakSet<Document>()
+  private boundDocs = new Set<Document>()
   private scannedItems = new WeakSet<HTMLElement>()
-  private observers: MutationObserver[] = []
+  private observers = new Map<Document, MutationObserver>()
   private scanFrames = new Map<Document, number>()
-  private unarchiveCleanups = new WeakMap<Document, () => void>()
+  private unarchiveCleanups = new Map<Document, () => void>()
+  private unarchiveActionCleanups = new Map<Document, () => void>()
   private playBinder = new HomePlayBinder((file, playlist) => openPlayer(file!, playlist))
   private scrollBinder = new HomeScrollBinder()
   private stopWatchFrame: (() => void) | null = null
@@ -31,11 +32,9 @@ class HomeController {
   }
 
   destroy() {
-    this.observers.forEach(o => o.disconnect())
-    this.observers = []
+    [...this.boundDocs].forEach(doc => this.unbindDocument(doc))
     this.scanFrames.forEach(frame => window.cancelAnimationFrame(frame))
     this.scanFrames.clear()
-    this.scrollBinder.destroy()
     this.stopWatchFrame?.()
     this.stopWatchFrame = null
     globalThis.chrome?.runtime?.onMessage?.removeListener(this.handleRuntimeMessage)
@@ -74,13 +73,30 @@ class HomeController {
     if (!this.unarchiveCleanups.has(doc)) {
       this.unarchiveCleanups.set(doc, initUnarchiveHelper(doc))
     }
+    if (!this.unarchiveActionCleanups.has(doc)) {
+      this.unarchiveActionCleanups.set(doc, setupUnarchiveActions(doc))
+    }
     this.injectStyles(doc)
     this.scanAndRender(doc)
     this.scrollBinder.bind(doc)
 
     const observer = new MutationObserver(() => this.scheduleScanAndRender(doc))
     observer.observe(doc.documentElement, { childList: true, subtree: true })
-    this.observers.push(observer)
+    this.observers.set(doc, observer)
+  }
+
+  private unbindDocument(doc: Document) {
+    if (!this.boundDocs.delete(doc)) return
+    this.observers.get(doc)?.disconnect()
+    this.observers.delete(doc)
+    const frame = this.scanFrames.get(doc)
+    if (frame) window.cancelAnimationFrame(frame)
+    this.scanFrames.delete(doc)
+    this.unarchiveCleanups.get(doc)?.()
+    this.unarchiveCleanups.delete(doc)
+    this.unarchiveActionCleanups.get(doc)?.()
+    this.unarchiveActionCleanups.delete(doc)
+    this.scrollBinder.unbind(doc)
   }
 
   private scheduleScanAndRender(doc: Document) {
@@ -114,7 +130,7 @@ class HomeController {
     renderMediaWall(doc)
     setupUnarchiveActions(doc)
 
-    const items = doc.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
+    const items = list.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
     items.forEach((node) => {
       const item = node as HTMLElement
       if (this.scannedItems.has(item)) return
@@ -145,8 +161,6 @@ function init() {
   controller = new HomeController()
   controller.init()
 }
-
-primeSidebarPrehideForPage()
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init)

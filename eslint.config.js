@@ -6,7 +6,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['dist/', 'release/', 'public/'],
+    ignores: ['.dbg/', '.wxt/', 'dist/', 'release/', 'public/', '参考/', 'debug-server-node.js'],
   },
   {
     languageOptions: {

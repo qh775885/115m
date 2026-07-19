@@ -128,7 +128,8 @@ export function renderMediaWall(doc: Document) {
   const { items, folders, images } = collectMediaItems(list)
   const signature = buildSignature(items, folders, images)
   const previousState = stateByDoc.get(doc)
-  if (previousState?.listEl === list && previousState.signature === signature) return
+  const hasWall = !!list.querySelector(`#${WALL_ID}`)
+  if (previousState?.listEl === list && previousState.signature === signature && hasWall) return
 
   clearWall(list)
   if (!folders.length && !images.length) {

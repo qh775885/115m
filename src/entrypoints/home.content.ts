@@ -5,6 +5,7 @@ export default defineContentScript({
   matchAboutBlank: true,
   cssInjectionMode: "ui",
   main(ctx) {
-    import('../content/home.ts');
+    if (/\/web\/lixian\/master\/video\//.test(window.location.pathname)) return
+    void import('../content/home.ts')
   },
 });

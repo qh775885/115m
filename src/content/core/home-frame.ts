@@ -1,8 +1,7 @@
-import { injectSidebarPrehide } from './sidebar'
-
-export function watchWangpanFrame(onDocumentReady: (doc: Document) => void) {
+export function watchWangpanFrame(
+  onDocumentReady: (doc: Document) => void,
+) {
   const boundFrames = new WeakSet<HTMLIFrameElement>()
-  const observers: MutationObserver[] = []
 
   const bindFrame = () => {
     const frame = document.querySelector('iframe[name="wangpan"]') as HTMLIFrameElement | null
@@ -19,28 +18,8 @@ export function watchWangpanFrame(onDocumentReady: (doc: Document) => void) {
 
   const observer = new MutationObserver(bindFrame)
   observer.observe(document.documentElement, { childList: true, subtree: true })
-  observers.push(observer)
 
   return () => {
-    observers.forEach(o => o.disconnect())
+    observer.disconnect()
   }
-}
-
-export function primeSidebarPrehideForPage() {
-  injectSidebarPrehide(document)
-
-  const tryInjectFrame = () => {
-    const frame = document.querySelector('iframe[name="wangpan"]') as HTMLIFrameElement | null
-    const doc = frame?.contentDocument
-    if (doc) {
-      injectSidebarPrehide(doc)
-    }
-  }
-
-  tryInjectFrame()
-
-  const observer = new MutationObserver(() => tryInjectFrame())
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-
-  window.setTimeout(() => observer.disconnect(), 15000)
 }

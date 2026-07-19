@@ -28,10 +28,17 @@ export class HomeScrollBinder {
     this.docs.add(doc)
   }
 
+  unbind(doc: Document) {
+    this.observers.get(doc)?.disconnect()
+    this.scrollManagers.get(doc)?.unbind()
+    this.docs.delete(doc)
+    this.observers.delete(doc)
+    this.scrollManagers.delete(doc)
+  }
+
   destroy() {
     this.docs.forEach((doc) => {
-      this.observers.get(doc)?.disconnect()
-      this.scrollManagers.get(doc)?.unbind()
+      this.unbind(doc)
     })
     this.docs.clear()
     this.observers = new WeakMap()

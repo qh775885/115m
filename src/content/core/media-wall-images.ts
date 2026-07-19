@@ -16,10 +16,14 @@ function startSelectionSync(sourceItem: HTMLElement, sync: () => void): () => vo
     subtree: true,
     childList: true,
   })
-  sourceItem.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+  const inputs = Array.from(sourceItem.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'))
+  inputs.forEach((input) => {
     input.addEventListener('change', sync)
   })
-  return () => observer.disconnect()
+  return () => {
+    observer.disconnect()
+    inputs.forEach(input => input.removeEventListener('change', sync))
+  }
 }
 
 export function buildImageItem(item: HTMLElement): MediaWallImageItem | null {
@@ -784,7 +788,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
       stopSyncList.push(startSelectionSync(image.sourceItem, syncSelectionState))
     })
 
-    installWallDragSelection(
+    const stopDragSelection = installWallDragSelection(
       doc,
       section,
       '.m115-image-card',
@@ -798,6 +802,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
     window.setTimeout(syncSelectionState, 180)
 
     section.addEventListener('DOMNodeRemoved', () => {
+      stopDragSelection()
       stopSyncList.forEach(stopSync => stopSync())
     }, { once: true })
 

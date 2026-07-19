@@ -6,6 +6,10 @@
   "type": "module",
   "scripts": {
     "build": "wxt build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
     "zip": "wxt zip && node scripts/sync-manifest-version.mjs",
     "dev": "wxt",
     "postinstall": "wxt prepare"

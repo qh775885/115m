@@ -352,7 +352,7 @@ export function renderFoldersSection(
     grid.appendChild(card)
   })
 
-  installWallDragSelection(
+  const stopDragSelection = installWallDragSelection(
     doc,
     section,
     '.m115-folder-card',
@@ -364,6 +364,7 @@ export function renderFoldersSection(
   window.setTimeout(syncSelectionState, 0)
   window.setTimeout(syncSelectionState, 80)
 
+  section.addEventListener('DOMNodeRemoved', stopDragSelection, { once: true })
   section.appendChild(grid)
   return section
 }

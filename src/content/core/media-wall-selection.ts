@@ -157,15 +157,15 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
     doc.removeEventListener('mouseup', onMouseUp, true)
   }
 
-  host.addEventListener('mousedown', (event) => {
+  const onHostMouseDown = (event: MouseEvent) => {
     if (event.button !== 0 || !event.isTrusted) return
     const target = event.target as HTMLElement | null
     if (!target || target.closest('.m115-folder-actions,.m115-folder-action-btn')) return
     if (!target.closest(itemSelector) && !target.closest('.m115-folder-grid,.m115-image-grid,.m115-media-wall')) return
     startDragTracking(event)
-  }, true)
+  }
 
-  doc.addEventListener('mousedown', (event) => {
+  const onDocumentMouseDown = (event: MouseEvent) => {
     if (event.button !== 0 || pointerDown || !event.isTrusted) return
     const target = event.target as HTMLElement | null
     if (!target || target.closest('.m115-folder-actions,.m115-folder-action-btn')) return
@@ -173,11 +173,25 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
     const inWall = !!target.closest('.m115-media-wall,.list-contents') || !!pointedElement?.closest('.m115-media-wall,.list-contents')
     if (!inWall) return
     startDragTracking(event)
-  }, true)
+  }
 
-  host.addEventListener('click', (event) => {
+  const onHostClick = (event: MouseEvent) => {
     if (Date.now() > suppressClickUntil) return
     event.preventDefault()
     event.stopPropagation()
-  }, true)
+  }
+
+  host.addEventListener('mousedown', onHostMouseDown, true)
+  doc.addEventListener('mousedown', onDocumentMouseDown, true)
+  host.addEventListener('click', onHostClick, true)
+
+  return () => {
+    pointerDown = false
+    removeSelectBox()
+    host.removeEventListener('mousedown', onHostMouseDown, true)
+    doc.removeEventListener('mousedown', onDocumentMouseDown, true)
+    doc.removeEventListener('mousemove', onMouseMove, true)
+    doc.removeEventListener('mouseup', onMouseUp, true)
+    host.removeEventListener('click', onHostClick, true)
+  }
 }
