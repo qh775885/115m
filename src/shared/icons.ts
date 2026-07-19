@@ -42,9 +42,25 @@ function renderAttributes(attributes: Record<string, string | number | undefined
     .join(' ')
 }
 
+if (typeof document !== 'undefined') {
+  const injectStyles = () => {
+    if (document.getElementById('m115-lucide-styles')) return
+    const style = document.createElement('style')
+    style.id = 'm115-lucide-styles'
+    style.textContent = 'svg.m115-lucide-icon path,svg.m115-lucide-icon circle,svg.m115-lucide-icon rect,svg.m115-lucide-icon line,svg.m115-lucide-icon polyline,svg.m115-lucide-icon polygon{fill:var(--m115-svg-fill,none)!important;}'
+    ;(document.head || document.documentElement).appendChild(style)
+  }
+  if (document.head || document.documentElement) {
+    injectStyles()
+  } else {
+    document.addEventListener('DOMContentLoaded', injectStyles)
+  }
+}
+
 function iconTemplate(node: IconNode, width = 20, height = 20, fill = 'none') {
   const content = node.map(([tag, attributes]) => `<${tag} ${renderAttributes(attributes)}/>`).join('')
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;flex:none;">${content}</svg>`
+  const fillVar = fill !== 'none' ? `--m115-svg-fill: ${fill};` : ''
+  return `<svg class="m115-lucide-icon" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;flex:none;${fillVar}">${content}</svg>`
 }
 
 export const Icons = {
