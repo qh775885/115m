@@ -1,3 +1,5 @@
+import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
+
 function isContextInvalidated(error: unknown): boolean {
   return error instanceof Error && /Extension context invalidated/i.test(error.message)
 }
@@ -78,4 +80,12 @@ export async function sendRuntimeMessageSafe<T = unknown>(
   }
   console.warn(`[115m] sendRuntimeMessage failed after retries: ${messageLabel}`)
   return null
+}
+
+export async function sendTypedRuntimeMessageSafe<T extends RuntimeMessage>(
+  message: T,
+  retries = 2,
+  delay = 300,
+): Promise<RuntimeMessageResponse<T> | RuntimeContextInvalidatedResult | null> {
+  return await sendRuntimeMessageSafe<RuntimeMessageResponse<T>>(message, retries, delay)
 }

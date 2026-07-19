@@ -14,12 +14,16 @@ function fail(message) {
 }
 
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
-const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'))
+const manifestPath = resolve(root, 'dist', 'chrome-mv3', 'manifest.json')
+if (!existsSync(manifestPath)) {
+  fail('缺少 WXT 构建产物：dist/chrome-mv3/manifest.json，请先执行 pnpm zip')
+}
+const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
 
 if (pkg.version !== manifest.version) {
-  fail(`版本不一致：package.json=${pkg.version}, manifest.json=${manifest.version}`)
+  fail(`版本不一致：package.json=${pkg.version}, 构建 manifest=${manifest.version}`)
 }
-step(`版本一致：${pkg.version}`)
+step(`构建 manifest 版本一致：${pkg.version}`)
 
 const zipPath = resolve(root, 'release', `115m-v${pkg.version}.zip`)
 if (!existsSync(zipPath)) {

@@ -6,6 +6,7 @@ export default defineContentScript({
   runAt: 'document_start',
   allFrames: true,
   matchAboutBlank: true,
+  cssInjectionMode: "ui",
   async main(ctx) {
     // 页面接管必须在 content script 自身中同步完成
     // 不能依赖外部动态注册的 early script（时序不可控，manifest 声明的 CS 先于动态注册的 CS 执行）

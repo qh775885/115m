@@ -14,6 +14,15 @@ import {
 import { executeInMainWorld } from './helpers'
 import { query115Tabs } from '../platform/115/main-world'
 
+function parseJsonOrNull(text: string): unknown | null {
+  try {
+    return JSON.parse(text)
+  }
+  catch {
+    return null
+  }
+}
+
 export async function handleFetchM3u8(message: MsgFetchM3u8) {
   const pickCode = message.data.pickCode
   const url = `https://115.com/api/video/m3u8/${pickCode}.m3u8`
@@ -59,29 +68,10 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
 
     const url = `https://webapi.115.com/movies/subtitle?pickcode=${pickCode}`
 
-    // 转义 URL 中可能破坏模板字面量的字符（反引号、${、反斜杠、双引号）
-    const safeUrl = url.replace(/[`\\$"]/g, '\\$&')
-
-    // 注入简单的 fetch 逻辑，确保最纯粹的请求环境
-    const script = `
-      (async () => {
-        try {
-          const res = await fetch("${safeUrl}", { credentials: "include" });
-          const text = await res.text();
-          return { ok: true, text };
-        } catch (e) {
-          return { ok: false, error: e.message };
-        }
-      })()
-    `
-
     try {
-      const mainWorldResult = await executeInMainWorld(sender, script)
+      const mainWorldResult = await executeInMainWorld(sender, url)
       if (mainWorldResult?.ok && mainWorldResult.text) {
-        let parsed: any = null
-        try {
-          parsed = JSON.parse(mainWorldResult.text)
-        } catch (e) {}
+        const parsed = parseJsonOrNull(mainWorldResult.text)
 
         if (parsed) return parsed
       }
@@ -99,10 +89,7 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
     })
 
     const text = await res.text()
-    let result: any = null
-    try {
-      result = JSON.parse(text)
-    } catch (e) {}
+    const result = parseJsonOrNull(text)
 
     if (result) {
       return result
@@ -122,7 +109,8 @@ export async function handleFetchPlaylist(message: MsgFetchPlaylist) {
     const tabId = tabs[0]?.id
     if (!tabId) return { error: 'no 115.com tab found', list: [], path: [] }
 
-    let { cid, pickCode } = message.data
+    let { cid } = message.data
+    const { pickCode } = message.data
 
     if (!cid && pickCode) {
       const videoResult = await fetchVideoInfoByPickCode(tabId, pickCode) as any

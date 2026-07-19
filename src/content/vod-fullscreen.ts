@@ -3,6 +3,8 @@
  * 等待播放器加载后点击网页全屏按钮
  */
 
+export {}
+
 function tryClickWebFullscreen(): boolean {
   const btn = document.querySelector('[rel="web_fullscreen"]') as HTMLElement
   if (btn) {

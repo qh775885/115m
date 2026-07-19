@@ -58,21 +58,18 @@ export class MediaTrackController {
     const currentAudioTrackLabel = audioMgr.currentTrackLabel
 
     // 3. 构建字幕分区 HTML
-    let subtitleSectionHtml = ''
-    if (subtitleItems.length > 0) {
-      subtitleSectionHtml = [
+    const subtitleSectionHtml = subtitleItems.length > 0
+      ? [
         '<div class="m115-media-section-title">字幕</div>',
         `<button type="button" class="m115-media-option ${selectedSid ? '' : 'is-active'}" data-type="subtitle" data-value="">关闭字幕</button>`,
         ...subtitleItems.map(item => 
           `<button type="button" class="m115-media-option ${item.sid === selectedSid ? 'is-active' : ''}" data-type="subtitle" data-value="${escapeHtml(item.sid)}">${escapeHtml(item.title)}</button>`
         )
       ].join('')
-    } else {
-      subtitleSectionHtml = [
+      : [
         '<div class="m115-media-section-title">字幕</div>',
         '<div class="m115-media-empty">无可用字幕</div>'
       ].join('')
-    }
 
     // 4. 构建音轨分区 HTML (仅在音轨数 > 1 时显示)
     let audioSectionHtml = ''

@@ -714,7 +714,7 @@ export class MoveDialog {
 
       // Notify background to refresh 115 wangpan tabs
       if (canUseRuntimeMessaging()) {
-        getRuntimeApi()?.sendMessage({ type: 'MOVE_SUCCESS_REFRESH' }).catch(() => {})
+        getRuntimeApi()?.sendMessage({ type: 'REQUEST_MOVE_REFRESH' }).catch(() => {})
       }
 
       this.close({ moved: true, targetCid })

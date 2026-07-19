@@ -159,7 +159,7 @@ async function readEntriesWithPasswordSupport(file: FileInfo, allowPasswordPromp
     return await readArchiveEntries(file.pickCode)
   }
   catch (error) {
-    if (!allowPasswordPrompt) throw new Error('需要密码，批量解压已跳过')
+    if (!allowPasswordPrompt) throw new Error('需要密码，批量解压已跳过', { cause: error })
     await unlockArchiveIfNeeded(file, error)
     return await readArchiveEntries(file.pickCode)
   }
@@ -212,7 +212,9 @@ async function unarchiveOne(file: FileInfo, onProgress?: (percent: number) => vo
     try {
       await deleteEmptyFolder(parentCid, folder.cid)
     }
-    catch {}
+    catch {
+      throw error
+    }
     throw error
   }
 }
@@ -453,10 +455,12 @@ function injectStyles(doc: Document) {
 
 async function refreshNativeList(doc: Document) {
   try {
-    await sendRuntimeMessageSafe({ type: 'MOVE_SUCCESS_REFRESH' })
+    await sendRuntimeMessageSafe({ type: 'REQUEST_MOVE_REFRESH' })
     return true
   }
-  catch {}
+  catch {
+    await Promise.resolve()
+  }
 
   const win = doc.defaultView as (Window & { Main?: any }) | null
   try {
@@ -469,7 +473,9 @@ async function refreshNativeList(doc: Document) {
       return true
     }
   }
-  catch {}
+  catch {
+    await Promise.resolve()
+  }
   const refreshBtn = Array.from(doc.querySelectorAll<HTMLElement>('a,button,li')).find(el => el.textContent?.trim() === '刷新' || el.getAttribute('menu') === 'refresh')
   refreshBtn?.click()
   return !!refreshBtn

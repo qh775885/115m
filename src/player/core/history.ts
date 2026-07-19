@@ -1,4 +1,4 @@
-import { sendRuntimeMessageSafe } from './runtime'
+import { sendTypedRuntimeMessageSafe } from './runtime'
 
 export interface VolumePreference {
   volume: number
@@ -325,7 +325,7 @@ export async function loadPlayHistoryMap(): Promise<PlayHistoryMap> {
   if (!LOCAL_PLAY_HISTORY_ENABLED) return {}
 
   try {
-    return await sendRuntimeMessageSafe<PlayHistoryMap>({
+    return await sendTypedRuntimeMessageSafe({
       type: 'GET_HISTORY_MAP',
     }) ?? {}
   }
@@ -337,7 +337,7 @@ export async function loadPlayHistoryMap(): Promise<PlayHistoryMap> {
 export async function loadNativePlayHistory(pickCode: string): Promise<PlayHistoryRecord | null> {
   if (!NATIVE_PLAY_HISTORY_ENABLED || !pickCode) return null
 
-  const response = await sendRuntimeMessageSafe<PlayHistoryRecord | null>({
+  const response = await sendTypedRuntimeMessageSafe({
     type: 'GET_NATIVE_HISTORY',
     data: { pickCode, shareId: '0' },
   })
@@ -350,7 +350,7 @@ export async function loadNativePlayHistoryMap(pickCodes: string[]): Promise<Pla
   if (!NATIVE_PLAY_HISTORY_ENABLED || pickCodes.length === 0) return {}
 
   try {
-    const nativeMap = await sendRuntimeMessageSafe<Record<string, PlayHistoryRecord>>({
+    const nativeMap = await sendTypedRuntimeMessageSafe({
       type: 'GET_NATIVE_HISTORY_MAP',
       data: { pickCodes, shareId: '0' },
     })
@@ -364,7 +364,7 @@ export async function loadNativePlayHistoryMap(pickCodes: string[]): Promise<Pla
 export async function deletePlayHistory(pickCode: string): Promise<void> {
   if (!pickCode) return
   try {
-    await sendRuntimeMessageSafe({
+    await sendTypedRuntimeMessageSafe({
       type: 'DELETE_HISTORY',
       data: { pickCode },
     })
@@ -419,7 +419,7 @@ async function persistPlayHistory(params: {
   duration: number
   quality: string
 }) {
-  await sendRuntimeMessageSafe({
+  await sendTypedRuntimeMessageSafe({
     type: 'SET_NATIVE_HISTORY',
     data: {
       pickCode: params.pickCode,
@@ -514,7 +514,7 @@ export function resetPlayHistory(params: {
   }
   pendingPlayHistoryWrites.delete(identity)
 
-  void sendRuntimeMessageSafe({
+  void sendTypedRuntimeMessageSafe({
     type: 'SET_NATIVE_HISTORY',
     data: {
       pickCode: params.pickCode,

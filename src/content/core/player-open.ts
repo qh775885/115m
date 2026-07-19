@@ -1,6 +1,6 @@
 import type { FileInfo } from './types'
 import { NORMAL_URL } from '../../lib/constants'
-import { sendRuntimeMessageSafe } from './runtime'
+import { sendTypedRuntimeMessageSafe } from './runtime'
 import { saveTemporaryPlayerPlaylist, type StoredPlayerPlaylistItem } from '../../shared/player-playlist-cache'
 
 export async function openPlayer(file: FileInfo, playlistItems: StoredPlayerPlaylistItem[] = []) {
@@ -24,7 +24,7 @@ export async function openPlayer(file: FileInfo, playlistItems: StoredPlayerPlay
 
   const url = `${NORMAL_URL}/web/lixian/master/video/?${params.toString()}`
 
-  await sendRuntimeMessageSafe({
+  await sendTypedRuntimeMessageSafe({
     type: 'OPEN_TAB',
     url,
   })

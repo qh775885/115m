@@ -1,6 +1,6 @@
 import type { M3u8Item } from '../../lib/types'
 import { fetchBestDownloadResult } from '../../lib/pro-api'
-import { sendRuntimeMessageSafe } from './runtime'
+import { sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './runtime'
 
 const PLAYBACK_SOURCE_MESSAGE_TIMEOUT_MS = 12000
 
@@ -40,7 +40,7 @@ export async function fetchM3u8WithRetry(pickCode: string): Promise<M3u8Item[]> 
   let lastError: unknown
   for (let i = 0; i < 2; i++) {
     try {
-      const res = await sendRuntimeMessageSafe<{ list?: M3u8Item[], error?: string }>({
+      const res = await sendTypedRuntimeMessageSafe({
         type: 'FETCH_M3U8',
         data: { pickCode },
       }, 0, 0, PLAYBACK_SOURCE_MESSAGE_TIMEOUT_MS)

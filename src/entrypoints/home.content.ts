@@ -3,6 +3,7 @@ export default defineContentScript({
   runAt: 'document_end',
   allFrames: true,
   matchAboutBlank: true,
+  cssInjectionMode: "ui",
   main(ctx) {
     import('../content/home.ts');
   },

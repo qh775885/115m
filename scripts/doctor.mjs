@@ -22,7 +22,7 @@ function readJson(path) {
 }
 
 const packagePath = resolve(root, 'package.json')
-const manifestPath = resolve(root, 'manifest.json')
+const generatedManifestPath = resolve(root, 'dist', 'chrome-mv3', 'manifest.json')
 const projectBaselinePath = resolve(root, '.ai/rules/project-baseline.md')
 const releaseRulePath = resolve(root, '.ai/rules/release.md')
 const docsRunbookPath = resolve(root, 'docs/runbooks/docs.md')
@@ -30,13 +30,17 @@ const messagesRunbookPath = resolve(root, 'docs/runbooks/messages.md')
 const playerRunbookPath = resolve(root, 'docs/runbooks/player.md')
 
 if (!existsSync(packagePath)) fail('缺少 package.json')
-if (!existsSync(manifestPath)) fail('缺少 manifest.json')
 
 const pkg = readJson(packagePath)
-const manifest = readJson(manifestPath)
+if (pkg.version) ok(`package.json 版本：${pkg.version}`)
+else fail('package.json 缺少 version')
 
-if (pkg.version === manifest.version) ok(`package.json 与 manifest.json 版本一致：${pkg.version}`)
-else fail(`版本不一致：package.json=${pkg.version}, manifest.json=${manifest.version}`)
+if (existsSync(generatedManifestPath)) {
+  const manifest = readJson(generatedManifestPath)
+  if (pkg.version === manifest.version) ok(`WXT 构建 manifest 版本一致：${pkg.version}`)
+  else fail(`版本不一致：package.json=${pkg.version}, 构建 manifest=${manifest.version}`)
+}
+else warn('尚无 WXT 构建 manifest，执行 pnpm build 后可检查版本')
 
 if (existsSync(projectBaselinePath)) ok('已存在项目核心规则')
 else fail('缺少 .ai/rules/project-baseline.md')

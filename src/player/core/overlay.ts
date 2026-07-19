@@ -144,7 +144,7 @@ export class PlayerOverlayController {
       void this.restorePlaylistOpen()
     }
 
-    this.titleEl && (this.titleEl.textContent = this.options.meta.title)
+    if (this.titleEl) this.titleEl.textContent = this.options.meta.title
     document.title = this.options.meta.title
 
     if (this.statsEl && this.options.meta.fileSize) {

@@ -179,13 +179,13 @@ class PlayerManager {
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
   private switchCooldownTimer: number | null = null
   private readonly handleRuntimeMessage = (message: any) => {
-    if (message?.type === 'MOVE_SUCCESS_REFRESH') {
+    if (message?.type === 'MOVE_REFRESHED') {
       void this.refreshBreadcrumbs()
       this.overlay?.showToast('文件已移动')
       return
     }
 
-    if (message?.type === 'DELETE_SUCCESS_REFRESH' && message?.data?.pickCode === this.currentPickCode) {
+    if (message?.type === 'DELETE_REFRESHED' && message?.data?.pickCode === this.currentPickCode) {
       this.overlay?.showToast('文件已删除')
     }
   }

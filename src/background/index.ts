@@ -16,7 +16,6 @@ import {
 import {
   handleDeleteFile,
   handleDeleteSuccessRefresh,
-  handleMoveFile,
   handleMoveSuccessRefresh,
 } from './file-operations'
 import {
@@ -29,17 +28,6 @@ import {
 chrome.runtime.onInstalled.addListener((_details) => {
   // early 页面接管已移至 content script 同步执行，无需额外注册
 })
-
-// 避免被休眠
-const ALARM_NAME = 'keep-alive'
-if (typeof chrome !== 'undefined' && chrome.alarms) {
-  chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 })
-  chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === ALARM_NAME) {
-      // 空操作唤醒
-    }
-  })
-}
 
 // 监听来自 content script 和 player 页面的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -62,6 +50,9 @@ const TRUSTED_PAGE_HOSTS = new Set(['115.com', '115vod.com', 'localhost'])
 const TRUSTED_EXTENSION_PROTOCOL = 'chrome-extension:'
 const MAIN_WORLD_ALLOWED_PATHS = [
   { host: 'webapi.115.com', path: '/files' },
+  { host: 'webapi.115.com', path: '/files/add' },
+  { host: 'webapi.115.com', path: '/files/move' },
+  { host: 'webapi.115.com', path: '/files/star' },
   { host: 'webapi.115.com', path: '/rb/delete' },
   { host: 'webapi.115.com', path: '/movies/subtitle' },
   { host: 'proapi.115.com', path: '/app/chrome/downurl' },
@@ -75,7 +66,7 @@ function readSenderUrl(sender?: chrome.runtime.MessageSender) {
 
 function isTrustedSender(sender?: chrome.runtime.MessageSender) {
   const rawUrl = readSenderUrl(sender)
-  if (!rawUrl) return true
+  if (!rawUrl) return false
 
   try {
     const url = new URL(rawUrl)
@@ -152,13 +143,9 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
       return { success: true }
     }
 
-    case 'MOVE_SUCCESS_REFRESH':
+    case 'REQUEST_MOVE_REFRESH':
       assertTrustedSender(sender, message.type)
       return handleMoveSuccessRefresh()
-
-    case 'DELETE_SUCCESS_REFRESH':
-      assertTrustedSender(sender, message.type)
-      return handleDeleteSuccessRefresh(message)
 
     case 'FETCH_M3U8':
       assertTrustedSender(sender, message.type)
@@ -171,10 +158,6 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
     case 'FETCH_PLAYLIST':
       assertTrustedSender(sender, message.type)
       return handleFetchPlaylist(message)
-
-    case 'MOVE_FILE':
-      assertTrustedSender(sender, message.type)
-      return handleMoveFile(message, sender)
 
     case 'DELETE_FILE':
       assertTrustedSender(sender, message.type)

@@ -492,10 +492,11 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     if (!current?.fileId) return
     try {
       const response = await sendRuntimeMessageSafe<{ ok?: boolean, error?: string }>({
-        type: 'DELETE_FILES',
-        payload: {
-          ids: [current.fileId],
+        type: 'DELETE_FILE',
+        data: {
+          fileId: current.fileId,
           parentId: current.parentId,
+          pickCode: current.pickCode,
         },
       })
       if (isRuntimeContextInvalidatedResult(response)) throw new Error('扩展已更新，请刷新页面后继续使用')

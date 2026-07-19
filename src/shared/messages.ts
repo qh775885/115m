@@ -1,6 +1,74 @@
 import type { M3u8Item } from '../lib/types'
 import type { FileItem } from '../lib/api/types'
 
+export interface PlayHistoryEntry {
+  pickCode: string
+  fileName: string
+  currentTime: number
+  duration: number
+  quality: string
+  updatedAt: number
+}
+
+export interface NativePlayHistoryRecord {
+  pickCode: string
+  currentTime: number
+  watchEnd?: boolean
+}
+
+export interface RuntimeSuccessResponse {
+  success: true
+}
+
+export interface RuntimeMainWorldResponse {
+  ok: boolean
+  text: string
+  status?: number
+  error?: string
+}
+
+export type RuntimeDeleteFileResponse =
+  | { ok: true }
+  | { ok: false, error: string }
+
+export type RuntimeTranscodeState =
+  | 'queued'
+  | 'pending_check'
+  | 'completed_refresh'
+  | 'no_task'
+  | 'manual_required'
+  | 'failed'
+
+export interface RuntimeTranscodeResponse {
+  ok: boolean
+  state: RuntimeTranscodeState
+  error?: string
+  detail?: string
+  queueCount?: number
+  etaSeconds?: number
+  priority?: number
+  pushAccepted?: boolean
+  batchQueued?: number
+  batchTotal?: number
+  batchSkipped?: number
+  autoFallback?: boolean
+  nativeFallback?: boolean
+  deduped?: true
+}
+
+export type RuntimeTranscodeFrameReadyResponse =
+  | { ok: true, frameId: number }
+  | { ok: false, error: string }
+
+export interface FetchM3u8Response {
+  list?: M3u8Item[]
+  error?: string
+}
+
+export type OpenTabResponse = RuntimeSuccessResponse & {
+  deduped?: true
+}
+
 export interface MsgSetCookie {
   type: 'SET_COOKIE'
   data: {
@@ -97,15 +165,6 @@ export interface MsgFetchPlaylist {
   data: { cid: string, pickCode?: string }
 }
 
-export interface MsgMoveFile {
-  type: 'MOVE_FILE'
-  data: {
-    fileId: string
-    parentId: string
-    cid: string
-  }
-}
-
 export interface MsgDeleteHistory {
   type: 'DELETE_HISTORY'
   data: {
@@ -147,12 +206,16 @@ export interface MsgFetchPlaylistResponse {
   error?: string
 }
 
-export interface MsgMoveSuccessRefresh {
-  type: 'MOVE_SUCCESS_REFRESH'
+export interface MsgRequestMoveRefresh {
+  type: 'REQUEST_MOVE_REFRESH'
 }
 
-export interface MsgDeleteSuccessRefresh {
-  type: 'DELETE_SUCCESS_REFRESH'
+export interface MsgMoveRefreshed {
+  type: 'MOVE_REFRESHED'
+}
+
+export interface MsgDeleteRefreshed {
+  type: 'DELETE_REFRESHED'
   data: {
     fileId: string
     parentId: string
@@ -177,11 +240,42 @@ export type RuntimeMessage =
   | MsgMainWorldGet
   | MsgTranscodeFrameReady
   | MsgFetchPlaylist
-  | MsgMoveFile
   | MsgDeleteFile
   | MsgPing
-  | MsgMoveSuccessRefresh
-  | MsgDeleteSuccessRefresh
+  | MsgRequestMoveRefresh
   | MsgTranscode
   | MsgTranscodeStatus
   | MsgTranscodeNativeFallback
+
+export type RuntimeTabNotification =
+  | MsgMoveRefreshed
+  | MsgDeleteRefreshed
+
+export interface RuntimeMessageResponseMap {
+  PING: { pong: true }
+  SET_COOKIE: RuntimeSuccessResponse
+  DOWNLOAD: RuntimeSuccessResponse
+  OPEN_TAB: OpenTabResponse
+  GET_HISTORY: PlayHistoryEntry | null
+  GET_NATIVE_HISTORY: NativePlayHistoryRecord | null
+  GET_NATIVE_HISTORY_MAP: Record<string, NativePlayHistoryRecord>
+  SET_NATIVE_HISTORY: { success: boolean }
+  GET_HISTORY_MAP: Record<string, PlayHistoryEntry>
+  SET_HISTORY: RuntimeSuccessResponse
+  DELETE_HISTORY: RuntimeSuccessResponse
+  FETCH_M3U8: FetchM3u8Response
+  FETCH_PLAYLIST: MsgFetchPlaylistResponse
+  MAIN_WORLD_FETCH: RuntimeMainWorldResponse
+  MAIN_WORLD_GET: RuntimeMainWorldResponse
+  DELETE_FILE: RuntimeDeleteFileResponse
+  TRANSCODE_FRAME_READY: RuntimeTranscodeFrameReadyResponse
+  TRANSCODE_ACCELERATE: RuntimeTranscodeResponse
+  TRANSCODE_STATUS: RuntimeTranscodeResponse
+  TRANSCODE_NATIVE_FALLBACK: RuntimeTranscodeResponse
+  REQUEST_MOVE_REFRESH: RuntimeSuccessResponse
+}
+
+export type RuntimeMessageResponse<T extends RuntimeMessage> =
+  T['type'] extends keyof RuntimeMessageResponseMap
+    ? RuntimeMessageResponseMap[T['type']]
+    : unknown

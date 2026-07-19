@@ -1,26 +1,8 @@
 {
+  "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "paths": {
-      "@/*": ["./src/*"],
-      "@lib/*": ["./src/lib/*"],
-      "~/*": ["./*"]
-    },
+    "allowImportingTsExtensions": true,
     "types": ["chrome", "node", "wxt/vite-builder-env"]
   },
-  "include": ["src/**/*.ts", ".wxt/types/**/*.ts"],
-  "exclude": ["node_modules", "dist", ".wxt"]
+  "exclude": ["dist", "参考"]
 }

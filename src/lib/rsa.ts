@@ -36,8 +36,8 @@ export class Rsa115 {
     while (pos > 2) {
       ba[--pos] = 0xFF
     }
-    ba[--pos] = 2
-    ba[--pos] = 0
+    ba[pos - 1] = 2
+    ba[0] = 0
 
     return this.a2hex(ba)
   }

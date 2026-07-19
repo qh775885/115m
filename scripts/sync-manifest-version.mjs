@@ -1,9 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const root = process.cwd()
 const packagePath = resolve(root, 'package.json')
-const manifestPath = resolve(root, 'manifest.json')
+const manifestPath = resolve(root, 'dist', 'chrome-mv3', 'manifest.json')
 
 const pkg = JSON.parse(readFileSync(packagePath, 'utf8'))
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
@@ -13,10 +13,12 @@ if (!pkg.version) {
 }
 
 if (manifest.version !== pkg.version) {
-  manifest.version = pkg.version
-  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
-  console.log(`[115m] synced manifest version -> ${pkg.version}`)
+  throw new Error(`generated manifest version mismatch: package.json=${pkg.version}, manifest.json=${manifest.version}`)
 }
-else {
-  console.log(`[115m] manifest version already ${pkg.version}`)
-}
+
+const zipName = `115m-v${pkg.version}.zip`
+const zipPath = resolve(root, 'dist', zipName)
+const releaseDir = resolve(root, 'release')
+mkdirSync(releaseDir, { recursive: true })
+copyFileSync(zipPath, resolve(releaseDir, zipName))
+console.log(`[115m] published ${zipName} to release/`)

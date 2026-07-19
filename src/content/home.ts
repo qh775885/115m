@@ -18,6 +18,7 @@ class HomeController {
   private boundDocs = new WeakSet<Document>()
   private scannedItems = new WeakSet<HTMLElement>()
   private observers: MutationObserver[] = []
+  private scanFrames = new Map<Document, number>()
   private unarchiveCleanups = new WeakMap<Document, () => void>()
   private playBinder = new HomePlayBinder((file, playlist) => openPlayer(file!, playlist))
   private scrollBinder = new HomeScrollBinder()
@@ -32,6 +33,8 @@ class HomeController {
   destroy() {
     this.observers.forEach(o => o.disconnect())
     this.observers = []
+    this.scanFrames.forEach(frame => window.cancelAnimationFrame(frame))
+    this.scanFrames.clear()
     this.scrollBinder.destroy()
     this.stopWatchFrame?.()
     this.stopWatchFrame = null
@@ -39,7 +42,7 @@ class HomeController {
   }
 
   private handleRuntimeMessage = (message: any) => {
-    if (message?.type !== 'DELETE_SUCCESS_REFRESH') return
+    if (message?.type !== 'DELETE_REFRESHED') return
     this.removeDeletedItem(message.data?.fileId, message.data?.pickCode)
   }
 
@@ -75,9 +78,18 @@ class HomeController {
     this.scanAndRender(doc)
     this.scrollBinder.bind(doc)
 
-    const observer = new MutationObserver(() => this.scanAndRender(doc))
+    const observer = new MutationObserver(() => this.scheduleScanAndRender(doc))
     observer.observe(doc.documentElement, { childList: true, subtree: true })
     this.observers.push(observer)
+  }
+
+  private scheduleScanAndRender(doc: Document) {
+    if (this.scanFrames.has(doc)) return
+    const frame = window.requestAnimationFrame(() => {
+      this.scanFrames.delete(doc)
+      this.scanAndRender(doc)
+    })
+    this.scanFrames.set(doc, frame)
   }
 
   private injectStyles(doc: Document) {
@@ -144,7 +156,7 @@ else {
 }
 
 window.addEventListener('115m-move-success', () => {
-  void sendRuntimeMessageSafe({ type: 'MOVE_SUCCESS_REFRESH' })
+  void sendRuntimeMessageSafe({ type: 'REQUEST_MOVE_REFRESH' })
 })
 
 window.addEventListener('beforeunload', () => {

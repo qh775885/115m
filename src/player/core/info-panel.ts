@@ -71,7 +71,7 @@ export function patchArtInfoPanel(art: Artplayer, isNativeVideo: boolean): () =>
     const now = performance.now()
     const dt = (now - lastTime) / 1000
     const df = total - lastFrame
-    let fps = dt > 0 ? Math.max(0, df / dt) : 0
+    const fps = dt > 0 ? Math.max(0, df / dt) : 0
 
     if (fpsTarget && dt >= 1) { // 至少间隔 1 秒才更新 UI，避免跳动且排除暂停期间的异常数值
       fpsTarget.textContent = `${fps.toFixed(1)} FPS`

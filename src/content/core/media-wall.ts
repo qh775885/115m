@@ -1,4 +1,4 @@
-import { isImageExtension, readAttr } from '../../shared/utils'
+import { readAttr } from '../../shared/utils'
 import { sendRuntimeMessageSafe } from './runtime'
 import { buildFolderItem, renderFoldersSection } from './media-wall-folders'
 import { createImageModule } from './media-wall-images'
@@ -15,10 +15,6 @@ const imageModule = createImageModule(sendRuntimeMessageSafe)
 
 const HIDDEN_CLASS = 'm115-wall-hidden-item'
 const WALL_ID = 'm115-media-wall'
-
-function toOriginalImageUrl(url: string): string {
-  return url.replace(/_\d+(\?|$)/, '_0$1')
-}
 
 function getFolderStateSignature(item: HTMLElement): string {
   const starAction = item.querySelector('.icon-star,[menu="star"],.tpstar,.tpstar-disabled') as HTMLElement | null
@@ -39,8 +35,8 @@ function getImageStateSignature(item: HTMLElement): string {
   ].join(':')
 }
 
-function buildSignature(list: HTMLElement, folders: MediaWallFolderItem[], images: MediaWallImageItem[]) {
-  const itemStates = Array.from(list.querySelectorAll<HTMLElement>('li[rel="item"]')).map((item) => {
+function buildSignature(items: HTMLElement[], folders: MediaWallFolderItem[], images: MediaWallImageItem[]) {
+  const itemStates = items.map((item) => {
     const key = readAttr(item, ['file_id', 'cate_id', 'pick_code']) || item.getAttribute('title') || ''
     if (item.getAttribute('file_type') === '0') return `${key}:${getFolderStateSignature(item)}`
     if (item.getAttribute('file_type') === '1') return `${key}:${getImageStateSignature(item)}`
@@ -99,7 +95,7 @@ function collectMediaItems(list: HTMLElement) {
   const items = Array.from(list.querySelectorAll<HTMLElement>('li[rel="item"]'))
   const folders = items.map(buildFolderItem).filter((item): item is MediaWallFolderItem => !!item)
   const images = items.map(imageModule.buildImageItem).filter((item): item is MediaWallImageItem => !!item)
-  return { folders, images }
+  return { items, folders, images }
 }
 
 function ensureWallContainer(list: HTMLElement): HTMLElement {
@@ -129,8 +125,8 @@ export function renderMediaWall(doc: Document) {
   const list = doc.querySelector('.list-contents') as HTMLElement | null
   if (!list) return
 
-  const { folders, images } = collectMediaItems(list)
-  const signature = buildSignature(list, folders, images)
+  const { items, folders, images } = collectMediaItems(list)
+  const signature = buildSignature(items, folders, images)
   const previousState = stateByDoc.get(doc)
   if (previousState?.listEl === list && previousState.signature === signature) return
 

@@ -1,10 +1,7 @@
 import { WEB_API_URL } from '../../lib/constants'
-import type { MsgFetchPlaylistResponse } from '../../shared/messages'
+import type { MsgFetchPlaylistResponse, RuntimeDeleteFileResponse, RuntimeMainWorldResponse } from '../../shared/messages'
 
-interface RuntimeGetResponse {
-  ok?: boolean
-  text?: string
-}
+type RuntimeGetResponse = RuntimeMainWorldResponse
 
 type SendMessage = <T = unknown>(message: unknown) => Promise<T | null>
 
@@ -75,7 +72,7 @@ export async function deleteVideoFile(
   parentId: string,
   pickCode: string,
 ): Promise<boolean> {
-  const response = await sendMessage<{ ok?: boolean, error?: string }>({
+  const response = await sendMessage<RuntimeDeleteFileResponse>({
     type: 'DELETE_FILE',
     data: { fileId, parentId, pickCode },
   })

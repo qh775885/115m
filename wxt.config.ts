@@ -1,9 +1,17 @@
 import { defineConfig } from 'wxt';
+import pkg from './package.json';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   srcDir: 'src',
   outDir: 'dist',
-  runner: {
+  vite: () => ({
+    plugins: [tailwindcss()],
+  }),
+  zip: {
+    artifactTemplate: '115m-v{{version}}.zip',
+  },
+  webExt: {
     disabled: true,
   },
   dev: {
@@ -13,7 +21,7 @@ export default defineConfig({
   },
   manifest: ({ mode }) => ({
     name: mode === 'development' ? "115m [DEV]" : "115m",
-    version: "1.7.3",
+    version: pkg.version,
     description: "115m | 列表预览图 + 无损播放",
     permissions: [
       "storage",
@@ -23,8 +31,6 @@ export default defineConfig({
       "scripting",
       "webNavigation",
       "tabs",
-      "activeTab",
-      "contextMenus",
       "alarms"
     ],
     host_permissions: [

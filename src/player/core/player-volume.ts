@@ -34,7 +34,6 @@ export function buildCustomVolumeControl() {
       </div>
     `,
     mounted(this: Artplayer, $control: HTMLElement) {
-      const art = this
       $control.classList.add('m115-custom-volume-control')
       const container = $control.querySelector('.m115-custom-volume-container') as HTMLElement
       const btn = $control.querySelector('.m115-volume-btn') as HTMLElement
@@ -42,12 +41,12 @@ export function buildCustomVolumeControl() {
       const valDisplay = $control.querySelector('.m115-volume-val') as HTMLElement
       
       const updateUI = () => {
-        if (!art || !art.video) return
-        const v = art.video.muted ? 0 : art.video.volume
+        if (!this.video) return
+        const v = this.video.muted ? 0 : this.video.volume
         slider.value = v.toString()
         valDisplay.textContent = Math.round(v * 100).toString()
-        btn.innerHTML = getVolumeIconSvg(v, art.video.muted)
-        container.classList.toggle('is-muted', art.video.muted || v === 0)
+        btn.innerHTML = getVolumeIconSvg(v, this.video.muted)
+        container.classList.toggle('is-muted', this.video.muted || v === 0)
         
         // update slider background fill
         const percentage = Math.round(v * 100)
@@ -89,49 +88,49 @@ export function buildCustomVolumeControl() {
         hoverTimeout = window.setTimeout(collapseVolume, leaveDelay)
       })
 
-      art.on('ready', () => {
+      this.on('ready', () => {
          updateUI()
       })
 
-      art.on('video:loadedmetadata', () => {
+      this.on('video:loadedmetadata', () => {
          updateUI()
       })
 
-      art.on('video:volumechange', () => {
+      this.on('video:volumechange', () => {
         updateUI()
         saveVolumePreference({
-          volume: art.video.volume,
-          muted: art.video.muted,
+          volume: this.video.volume,
+          muted: this.video.muted,
         })
       })
 
       slider.addEventListener('input', (e) => {
         const v = parseFloat((e.target as HTMLInputElement).value)
-        if (art && art.video) {
-          art.video.volume = v
-          if (v > 0 && art.video.muted) {
-            art.video.muted = false
+        if (this.video) {
+          this.video.volume = v
+          if (v > 0 && this.video.muted) {
+            this.video.muted = false
           }
           // 主动保存音量
           saveVolumePreference({
-            volume: art.video.volume,
-            muted: art.video.muted,
+            volume: this.video.volume,
+            muted: this.video.muted,
           })
         }
       })
 
       btn.addEventListener('click', () => {
-        if (!art || !art.video) return
-        if (art.video.muted || art.video.volume === 0) {
-          art.video.muted = false
-          if (art.video.volume === 0) art.video.volume = 0.5
+        if (!this.video) return
+        if (this.video.muted || this.video.volume === 0) {
+          this.video.muted = false
+          if (this.video.volume === 0) this.video.volume = 0.5
         } else {
-          art.video.muted = true
+          this.video.muted = true
         }
         // 主动保存音量
         saveVolumePreference({
-          volume: art.video.volume,
-          muted: art.video.muted,
+          volume: this.video.volume,
+          muted: this.video.muted,
         })
       })
 

@@ -40,7 +40,7 @@ export function buildQualityControlItem(params: {
       const label = item.html || ''
       const target = params.qualityOptions.find(opt => opt.label === label || opt.url === item.url)
       if (!target) return getQualityIcon()
-      const controlEl = document.querySelector('.m115-quality-control')
+      const controlEl = globalThis.document?.querySelector('.m115-quality-control')
       if (controlEl) controlEl.classList.remove('m115-selector-open')
       await params.onSelect(target)
       return getQualityIcon()

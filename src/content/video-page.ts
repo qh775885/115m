@@ -32,8 +32,9 @@ function init() {
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
 
   // 确保 initPlayer 被调用（防止 player.ts 底部的条件检查失败）
-  if (typeof window.__115m_initPlayer === 'function') {
-    window.__115m_initPlayer()
+  const initPlayer = (window as any).__115m_initPlayer
+  if (typeof initPlayer === 'function') {
+    initPlayer()
   }
 }
 

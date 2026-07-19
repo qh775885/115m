@@ -1,12 +1,12 @@
 import { getVideoCovers, primeThumbnailSourceUrl } from '../../lib/videoThumbnail'
 import type { VideoThumbnail } from '../../lib/videoThumbnail'
 import type { FileInfo } from './types'
-import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
+import type { RuntimeTranscodeResponse } from '../../shared/messages'
+import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './runtime'
 import {
   Scheduler,
   TaskCancelledError,
   createVisibilityObserver,
-  createScrollStopDetector,
   findScrollContainer,
 } from './utils'
 
@@ -20,7 +20,7 @@ const TRANSCODE_STATUS_POLL_MS = 15000
  * 返回 { ok: true, url } 表示 M3U8 可用，url 为最低画质源地址
  */
 async function fetchM3u8ViaBackground(pickCode: string): Promise<{ ok: true, url: string } | { ok: false }> {
-  const res = await sendRuntimeMessageSafe<{ list?: Array<{ quality: number, url: string }>, error?: string }>({
+  const res = await sendTypedRuntimeMessageSafe({
     type: 'FETCH_M3U8',
     data: { pickCode },
   })
@@ -36,20 +36,7 @@ function showPreviewUnavailable(container: HTMLElement) {
   container.innerHTML = ''
 }
 
-interface TranscodeResponse {
-  autoFallback?: boolean
-  ok?: boolean
-  state?: 'queued' | 'manual_required' | 'pending_check' | 'completed_refresh' | 'failed'
-  error?: string
-  detail?: string
-  batchQueued?: number
-  batchTotal?: number
-  batchSkipped?: number
-  queueCount?: number
-  etaSeconds?: number
-  priority?: number
-  pushAccepted?: boolean
-}
+type TranscodeResponse = RuntimeTranscodeResponse
 
 function formatTranscodeEta(etaSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(etaSeconds))
@@ -100,6 +87,13 @@ function formatTranscodeStatus(res: TranscodeResponse): { text: string, color: s
     return {
       text: res.detail || 'VIP 加速已完成，刷新页面后可预览',
       color: '#52c41a',
+    }
+  }
+
+  if (res.state === 'no_task') {
+    return {
+      text: res.detail || '未检测到转码任务，可手动发起转码',
+      color: '#faad14',
     }
   }
 
@@ -243,12 +237,76 @@ interface PreviewState {
   isLoading: boolean
   isLoaded: boolean
   error: boolean
+  isVisible: boolean
+  disposed: boolean
   cancelTask?: () => void
   visibilityObserver?: { destroy: () => void }
   scrollObserver?: { destroy: () => void }
 }
 
 const previewStates = new WeakMap<HTMLElement, PreviewState>()
+
+class PreviewObserverRegistry {
+  private readonly scrollCallbacks = new Map<HTMLElement | Window, Set<() => void>>()
+  private readonly scrollListeners = new Map<HTMLElement | Window, () => void>()
+  private readonly registeredItems = new Map<HTMLElement, () => void>()
+  private removalObserver: MutationObserver | null = null
+
+  registerScrollStop(target: HTMLElement | Window, callback: () => void) {
+    let callbacks = this.scrollCallbacks.get(target)
+    if (!callbacks) {
+      callbacks = new Set()
+      this.scrollCallbacks.set(target, callbacks)
+
+      let timer: number | undefined
+      const listener = () => {
+        if (typeof timer === 'number') window.clearTimeout(timer)
+        timer = window.setTimeout(() => {
+          timer = undefined
+          callbacks?.forEach(onScrollStop => onScrollStop())
+        }, 120)
+      }
+      const eventTarget = target === window ? window : target
+      eventTarget.addEventListener('scroll', listener, { passive: true })
+      this.scrollListeners.set(target, () => {
+        if (typeof timer === 'number') window.clearTimeout(timer)
+        eventTarget.removeEventListener('scroll', listener)
+      })
+    }
+    callbacks.add(callback)
+
+    return () => {
+      const currentCallbacks = this.scrollCallbacks.get(target)
+      if (!currentCallbacks) return
+      currentCallbacks.delete(callback)
+      if (currentCallbacks.size > 0) return
+      this.scrollListeners.get(target)?.()
+      this.scrollListeners.delete(target)
+      this.scrollCallbacks.delete(target)
+    }
+  }
+
+  registerItem(item: HTMLElement, dispose: () => void) {
+    this.registeredItems.set(item, dispose)
+    if (!this.removalObserver) {
+      this.removalObserver = new MutationObserver(() => {
+        this.registeredItems.forEach((onDispose, registeredItem) => {
+          if (!registeredItem.isConnected) onDispose()
+        })
+      })
+      this.removalObserver.observe(document.documentElement, { childList: true, subtree: true })
+    }
+
+    return () => {
+      this.registeredItems.delete(item)
+      if (this.registeredItems.size > 0) return
+      this.removalObserver?.disconnect()
+      this.removalObserver = null
+    }
+  }
+}
+
+const previewObserverRegistry = new PreviewObserverRegistry()
 
 /**
  * 渲染预览图（带可见性检测和滚动优化）
@@ -270,12 +328,14 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
     isLoading: false,
     isLoaded: false,
     error: false,
+    isVisible: false,
+    disposed: false,
   }
   previewStates.set(item, state)
 
   /** 加载预览图 */
   const loadCovers = async () => {
-    if (state.isLoading || state.isLoaded || state.error) return
+    if (state.disposed || !item.isConnected || state.isLoading || state.isLoaded || state.error) return
 
     state.isLoading = true
 
@@ -283,6 +343,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
       try {
         // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
+        if (state.disposed || !item.isConnected) return
         if (!m3u8Result.ok) {
           showTranscodeButton(container, file.pickCode)
           state.isLoaded = true
@@ -301,6 +362,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
 
         // 4. 生成封面
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
+        if (state.disposed || !item.isConnected) return
         if (!covers.length) {
           showTranscodeButton(container, file.pickCode)
           state.isLoaded = true
@@ -386,52 +448,44 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
   state.visibilityObserver = createVisibilityObserver(
     container,
     () => {
+      state.isVisible = true
       // 可见时，等待滚动停止后加载
       if (!state.isLoaded && !state.error) {
         scheduleLoadAfterScrollStop()
       }
     },
     () => {
+      state.isVisible = false
       // 不可见时，取消加载
       cancelLoad()
     }
   )
 
-  // 创建滚动检测器
-  state.scrollObserver = createScrollStopDetector(scrollTarget, 120, () => {
+  const unregisterScrollStop = previewObserverRegistry.registerScrollStop(scrollTarget, () => {
     // 滚动停止后，如果元素可见且未加载，则加载
     if (!state.isLoaded && !state.error && !state.isLoading) {
-      const rect = container.getBoundingClientRect()
-      const isVisible = rect.bottom > 0 && rect.top < window.innerHeight
-      if (isVisible) {
+      if (state.isVisible) {
         loadCovers()
       }
     }
   })
+  state.scrollObserver = { destroy: unregisterScrollStop }
 
   // 清理函数（元素移除时调用）
   const cleanup = () => {
+    if (state.disposed) return
+    state.disposed = true
+    if (typeof scrollStopTimer === 'number') {
+      window.clearTimeout(scrollStopTimer)
+      scrollStopTimer = undefined
+    }
     state.visibilityObserver?.destroy()
     state.scrollObserver?.destroy()
     cancelLoad()
+    unregisterItem()
+    previewStates.delete(item)
   }
-
-  // 使用 MutationObserver 监听元素移除
-  const mutationObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const removedNode of mutation.removedNodes) {
-        if (removedNode === item || item.contains(removedNode)) {
-          cleanup()
-          mutationObserver.disconnect()
-          return
-        }
-      }
-    }
-  })
-
-  if (item.parentElement) {
-    mutationObserver.observe(item.parentElement, { childList: true, subtree: true })
-  }
+  const unregisterItem = previewObserverRegistry.registerItem(item, cleanup)
 }
 
 /**
@@ -581,7 +635,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
       }, { once: true })
     })
 
-    const ready = await sendRuntimeMessageSafe<{ ok?: boolean, error?: string }>({
+    const ready = await sendTypedRuntimeMessageSafe({
       type: 'TRANSCODE_FRAME_READY',
       data: { pickCode },
     })
@@ -640,7 +694,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   }
 
   const runStatusCheck = () => {
-    sendRuntimeMessageSafe<TranscodeResponse>({
+    sendTypedRuntimeMessageSafe({
       type: 'TRANSCODE_STATUS',
       data: { pickCode },
     }).then((res) => {
@@ -670,7 +724,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
     }
 
     const frameReady = enableTranscodeFrameFallback ? prepareTranscodeFrame() : Promise.resolve()
-    frameReady.then(() => sendRuntimeMessageSafe<TranscodeResponse>({
+    frameReady.then(() => sendTypedRuntimeMessageSafe({
       type: 'TRANSCODE_ACCELERATE',
       data: { pickCode, batchFolder: true },
     })).then((res) => {
@@ -717,7 +771,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
     button.textContent = '后台加速中...'
     label.textContent = '正在后台打开原生播放页触发加速...'
     label.style.color = '#1677ff'
-    sendRuntimeMessageSafe<TranscodeResponse>({
+    sendTypedRuntimeMessageSafe({
       type: 'TRANSCODE_NATIVE_FALLBACK',
       data: { pickCode },
     }).then((res) => {
