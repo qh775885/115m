@@ -1,16 +1,11 @@
 ---
-alwaysApply: false
-description: 新增、修改或排查 chrome.runtime 消息链路时使用此规则。
-globs:
-  - src/shared/messages.ts
-  - src/background/**/*.ts
-  - src/content/**/*.ts
-  - src/player/core/*api*.ts
+description: 处理 chrome.runtime 消息链路相关逻辑时使用
+mode: subagent
 ---
-# 消息链路规则
+# 消息链路规范
 
-- 消息结构先改 `src/shared/messages.ts`
-- 不允许在业务文件里裸写一套新的消息结构
-- 后台负责路由和协调，业务能力尽量落回对应模块
-- 调用侧和处理侧必须同步更新
-- 如果只是普通页面逻辑改动，不要因为命中文件范围就强行套用整套消息链路判断
+- 消息结构统一定在 `src/shared/messages.ts`
+- 不要在具体业务文件里手写一个新的消息结构
+- 后台处理链路和协议由业务需求决定，尽量做到对应模块
+- 跨页面通信需要保持同步返回
+- 为解决长通信或页面生命周期的断连需要做重试或边界防御，切勿出现卡死在消息链路中段

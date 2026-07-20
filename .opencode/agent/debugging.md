@@ -1,19 +1,19 @@
 ---
-alwaysApply: false
-description: 当排查复杂 Bug、需要注入临时代码收集浏览器或扩展日志、或启动本地日志服务器时，请智能应用此规则
+description: 用于追踪和记录调试日志。当需要收集前端、后台、插件环境的日志时使用
+mode: subagent
 ---
-# 调试日志规则
+# 调试日志规范
 
-## 本地日志服务器
+## 全局日志收集器
 
-调试需要收集 content script / background / main world 的运行时日志时，使用本地 HTTP 日志服务器，避免让用户手动复制日志。
+由于需要收集 content script / background / main world 多环境日志时，请使用本地 HTTP 日志服务器，这避免了用户手动收集日志。
 
 ### 流程
 
-1. 创建临时日志服务器 `scripts/debug-log-server.mjs`（Node.js HTTP，监听 `localhost:19115`）
-2. 在需要采集日志的代码中注入临时 `debugLog` 函数，通过 `fetch POST` 上报
-3. 用 `RunCommand`（blocking: false）启动服务器，用 `CheckCommandStatus` 实时查看日志
-4. 调试完成后，**必须清除所有临时 debugLog 代码和日志服务器脚本**，不提交调试基础设施
+1. 本地临时日志服务器在 `scripts/debug-log-server.mjs`，Node.js HTTP服务，端口 `localhost:19115`。
+2. 需要采日志的代码处注入临时 `debugLog` 函数，通过 `fetch POST` 上报
+3. 用 `RunCommand`（blocking: false）后台运行，用 `CheckCommandStatus` 实时查看日志
+4. 调试完成后**务必撤销所有临时 debugLog 函数和日志上报脚本**，不要提交测试代码设施
 
 ### 日志服务器模板
 
@@ -55,8 +55,8 @@ function debugLog(tag: string, data: unknown) {
 }
 ```
 
-### 提交前检查
+### 提交前清理
 
-- `grep -r "localhost:19115" src/` 确认无残留
-- `grep -r "debug-log-server" scripts/` 确认无残留
-- 日志服务器脚本不纳入 Git
+- `grep -r "localhost:19115" src/` 确保无残留
+- `grep -r "debug-log-server" scripts/` 确保无残留
+- 日志上报脚本不要加入 Git
