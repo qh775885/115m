@@ -133,8 +133,15 @@
 }
 
 
-.art-video-player .art-controls-left,
+.art-video-player .art-controls-left { 
+  display: flex;
+  align-items: center;
+  gap: var(--m115-control-gap);
+  height: var(--m115-control-size);
+  overflow: visible !important;
+}
 .art-video-player .art-controls-right {
+  justify-content: flex-end;
   display: flex;
   align-items: center;
   gap: var(--m115-control-gap);
