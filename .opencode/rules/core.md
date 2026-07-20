@@ -10,7 +10,7 @@ description: 115m 项目核心规则，所有开发必须遵循
 - 只改当前需求涉及的功能，不顺手重构或扩展需求。
 - 涉及共享模块、消息、播放器核心链路时，先确认隔离边界。
 - 疑难问题先记录事实、排除项、已试无效方案，再动手修。
-- 提交代码前，必须阅读并遵守 `.trae/rules/git-commit-message.md` 格式。
+- 提交代码前，必须阅读并遵守 `.opencode/rules/git-commit-message.md` 格式。
 
 ## Chrome 扩展边界
 - 新增/修改 `chrome.runtime` 消息时，同步更新 `src/shared/messages.ts`。

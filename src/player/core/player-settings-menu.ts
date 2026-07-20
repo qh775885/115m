@@ -125,7 +125,7 @@ export class SettingsMenuController {
 
         // 绑定主菜单点击事件
         el.querySelectorAll<HTMLButtonElement>('.m115-settings-item').forEach((button) => {
-          button.addEventListener('click', (event) => {
+          button.addEventListener('pointerdown', (event) => {
             event.preventDefault()
             event.stopPropagation()
             
@@ -150,7 +150,7 @@ export class SettingsMenuController {
 
         // 绑定子菜单返回事件
         el.querySelectorAll<HTMLButtonElement>('.m115-settings-back').forEach((button) => {
-          button.addEventListener('click', (event) => {
+          button.addEventListener('pointerdown', (event) => {
             event.preventDefault()
             event.stopPropagation()
             this.activeSubMenu = null
@@ -165,7 +165,7 @@ export class SettingsMenuController {
 
         // 绑定倍速选择事件
         el.querySelectorAll<HTMLButtonElement>('.m115-settings-option').forEach((button) => {
-          button.addEventListener('click', (event) => {
+          button.addEventListener('pointerdown', (event) => {
             event.preventDefault()
             event.stopPropagation()
             

@@ -1,14 +1,14 @@
 .m115-settings-container {
   display: flex;
   flex-direction: column;
-  width: 240px;
+  width: 180px;
   box-sizing: border-box;
 }
 
 .m115-settings-panel {
   display: flex;
   flex-direction: column;
-  padding: 4px;
+  padding: 8px 4px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -18,22 +18,23 @@
   -webkit-appearance: none;
   border: none;
   background: transparent;
-  color: var(--m115-control-text) !important;
-  border-radius: 8px;
-  padding: 10px;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 6px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-  margin: 1px 0;
-  width: 100%;
+  transition: background-color 0.2s, color 0.2s;
+  margin: 2px 4px;
+  width: calc(100% - 8px);
   box-sizing: border-box;
 }
 
 .m115-settings-item:hover {
-  background: var(--m115-menu-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
 }
 
 .m115-settings-item-icon {
@@ -69,15 +70,15 @@
 .m115-settings-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 4px 6px;
+  margin: 6px 12px;
 }
 
 .m115-settings-header {
   display: flex;
   align-items: center;
-  padding: 6px 4px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px 12px;
   margin-bottom: 4px;
+  position: relative;
 }
 
 .m115-settings-back {
@@ -102,9 +103,12 @@
 }
 
 .m115-settings-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
+  flex: 1;
+  text-align: center;
+  padding-right: 36px;
 }
 
 .m115-settings-option {
@@ -112,27 +116,29 @@
   -webkit-appearance: none;
   border: none;
   background: transparent;
-  color: var(--m115-control-text) !important;
-  border-radius: 8px;
-  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 6px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-  margin: 1px 0;
-  width: 100%;
+  transition: background-color 0.2s, color 0.2s;
+  margin: 2px 4px;
+  width: calc(100% - 8px);
   box-sizing: border-box;
 }
 
 .m115-settings-option:hover {
-  background: var(--m115-menu-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
 }
 
 .m115-settings-option.is-active {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #fff !important;
+  color: #54b4ff !important;
+  background: rgba(84, 180, 255, 0.1) !important;
+  font-weight: 600;
 }
 
 .m115-settings-check {
@@ -145,12 +151,40 @@
 }
 
 /* 覆盖 Artplayer 默认 selector-list 样式以适应自定义面板 */
+.art-video-player .art-controls-right .m115-settings-menu-control {
+  margin-left: 0 !important;
+  width: var(--m115-control-size) !important;
+  min-width: var(--m115-control-size) !important;
+  max-width: var(--m115-control-size) !important;
+  flex: 0 0 var(--m115-control-size) !important;
+}
+
 .art-video-player .m115-settings-menu-control .art-selector-list {
-  padding: 0 !important;
-  min-width: 240px;
+  min-width: 180px;
+  right: 0;
+  transform-origin: bottom right;
   overflow: hidden;
 }
 
 .art-video-player .m115-settings-menu-control .m115-control-shell {
-  border-radius: 12px !important;
+  border-radius: 50% !important;
+  width: var(--m115-control-size) !important;
+  height: var(--m115-control-size) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  color: #fff;
+}
+
+.art-video-player .m115-settings-menu-control:hover .m115-control-shell {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.art-video-player .m115-settings-menu-control:active .m115-control-shell {
+  transform: scale(0.92) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
 }

@@ -1,4 +1,42 @@
 
+.art-video-player .art-volume-panel,
+.art-video-player .art-settings,
+.art-video-player .art-setting,
+.art-video-player .art-setting-body,
+.art-video-player .art-setting-panel,
+.art-video-player .art-selector,
+.art-video-player .art-selector-list,
+.art-video-player .art-control-selector .art-selector-list,
+.art-video-player .art-qualitys,
+.art-video-player .art-contextmenus {
+  background: rgba(24, 26, 30, 0.75) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+}
+
+.art-video-player .art-selector-list .art-selector-item,
+.art-video-player .art-control-selector .art-selector-list .art-selector-item {
+  color: rgba(255, 255, 255, 0.85);
+  transition: background-color 0.2s, color 0.2s;
+  border-radius: 6px;
+  margin: 2px 4px;
+}
+
+.art-video-player .art-selector-list .art-selector-item:hover,
+.art-video-player .art-control-selector .art-selector-list .art-selector-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.art-video-player .art-selector-list .art-selector-item.art-selector-item-active,
+.art-video-player .art-control-selector .art-selector-list .art-selector-item.art-selector-item-active {
+  color: #54b4ff;
+  background: rgba(84, 180, 255, 0.1);
+}
+
 .art-video-player .m115-click-selector .art-selector-list,
 .art-video-player .m115-click-selector .art-control-selector .art-selector-list {
   opacity: 0 !important;
