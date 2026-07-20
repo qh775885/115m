@@ -19,16 +19,24 @@ export function buildQualityControlItem(params: {
       position: 'right' as const,
       index: 10,
       style: {
-        marginRight: 'var(--m115-control-gap)',
-        width: 'var(--m115-quality-width)',
-        minWidth: 'var(--m115-quality-width)',
-        maxWidth: 'var(--m115-quality-width)',
+        width: 'auto',
+        minWidth: '0',
+        maxWidth: 'none',
         height: 'var(--m115-control-size)',
         minHeight: 'var(--m115-control-size)',
         maxHeight: 'var(--m115-control-size)',
         textAlign: 'center' as const,
+        background: 'transparent',
+        backgroundColor: 'transparent',
+        backgroundImage: 'none',
+        boxShadow: 'none',
+        border: 'none',
+        padding: '0',
+        margin: '0',
+        borderRadius: '0',
+        overflow: 'visible',
       },
-      html: getQualityIcon(),
+      html: params.currentQualityLabel || '画质',
       mounted: ($control: HTMLElement) => {
         $control.classList.add('m115-quality-control')
         bindClickSelectorBehavior($control)
@@ -39,11 +47,11 @@ export function buildQualityControlItem(params: {
     onSelect: async (item: any) => {
       const label = item.html || ''
       const target = params.qualityOptions.find(opt => opt.label === label || opt.url === item.url)
-      if (!target) return getQualityIcon()
+      if (!target) return params.currentQualityLabel || '画质'
       const controlEl = globalThis.document?.querySelector('.m115-quality-control')
       if (controlEl) controlEl.classList.remove('m115-selector-open')
       await params.onSelect(target)
-      return getQualityIcon()
+      return target.label
     },
   }
 }

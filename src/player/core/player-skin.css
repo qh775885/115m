@@ -179,6 +179,8 @@
   font-size: 0;
   flex: 0 0 var(--m115-control-size);
   overflow: visible !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 
@@ -194,14 +196,7 @@
 }
 
 
-.art-video-player .art-controls-left .art-control-playAndPause,
-.art-video-player .art-controls-right .art-control-settings,
-.art-video-player .art-controls-right .art-control-fullscreen {
-  width: var(--m115-control-size);
-  min-width: var(--m115-control-size);
-  max-width: var(--m115-control-size);
-  flex-basis: var(--m115-control-size);
-}
+
 
 
 .art-video-player .art-controls-left .art-time {
@@ -254,12 +249,14 @@
 }
 
 
-.art-video-player .art-controls-left .art-control-volume {
+.art-video-player .art-controls-left .art-control-volume,
+.art-video-player .art-controls-left .art-control-next,
+.art-video-player .art-controls-left .art-control-prev,
+.art-video-player .art-controls-left .art-control-playAndPause {
   width: var(--m115-control-size);
   min-width: var(--m115-control-size);
   max-width: var(--m115-control-size);
   flex-basis: var(--m115-control-size);
-  margin-right: 0;
 }
 
 
@@ -749,7 +746,6 @@
 .art-video-player .art-control:active .art-icon,
 .m115-nav-control:active .m115-control-shell:not(.is-disabled),
 .m115-rotate-control:active .m115-control-shell,
-.m115-quality-control:active .art-selector-value,
 .m115-media-track-control:active .art-selector-value,
 .m115-settings-menu-control:active .art-selector-value,
 .m115-volume-btn:active {
@@ -783,7 +779,6 @@
 
 
 .m115-control-button,
-.m115-quality-control .art-selector-value,
 .m115-media-track-control .art-selector-value,
 .m115-settings-menu-control .art-selector-value {
   background: var(--m115-control-chip);
@@ -860,7 +855,6 @@
 }
 
 
-.m115-quality-control,
 .art-video-player .art-controls-left .m115-rotate-control,
 .art-video-player .art-controls-right .m115-rotate-control {
   flex: 0 0 auto;
@@ -909,7 +903,6 @@
 
 
 .m115-media-track-control .art-selector-value,
-.m115-quality-control .art-selector-value,
 .m115-playback-mode-control .art-selector-value,
 .m115-settings-menu-control .art-selector-value {
   max-width: 100%;
@@ -926,7 +919,6 @@
 }
 
 .m115-media-track-control .art-selector-value svg,
-.m115-quality-control .art-selector-value svg,
 .m115-settings-menu-control .art-selector-value svg {
   fill: none !important;
 }
@@ -971,7 +963,11 @@
 
 .art-video-player .art-controls-right .art-control-settings,
 .art-video-player .art-controls-right .art-control-fullscreen {
-  margin-left: 2px;
+  width: var(--m115-control-size);
+  min-width: var(--m115-control-size);
+  max-width: var(--m115-control-size);
+  flex-basis: var(--m115-control-size);
+  margin-left: 0 !important;
 }
 
 
@@ -979,7 +975,7 @@
 .art-video-player .art-controls-right .art-control-fullscreen .art-icon {
   width: var(--m115-control-visual) !important;
   height: var(--m115-control-visual) !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   background: var(--m115-control-chip) !important;
   box-shadow: inset 0 0 0 1px var(--m115-control-soft-border) !important;
   transition: background-color .16s ease, box-shadow .16s ease;
@@ -1000,27 +996,33 @@
 
 
 .art-video-player .art-controls-right {
-  gap: 2px;
+  gap: var(--m115-control-gap);
   align-items: center;
 }
 
 
 .art-video-player .art-controls-right .art-control,
-.art-video-player .art-controls-right .m115-quality-control,
 .art-video-player .art-controls-right .m115-media-track-control,
 .art-video-player .art-controls-right .m115-playback-mode-control,
 .art-video-player .art-controls-right .m115-settings-menu-control,
 .art-video-player .art-controls-right .m115-rotate-control {
+  width: auto !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
   height: var(--m115-control-size) !important;
   min-height: var(--m115-control-size) !important;
   max-height: var(--m115-control-size) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-right: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   line-height: 1 !important;
   box-sizing: border-box;
   overflow: visible !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 
@@ -1036,29 +1038,29 @@
 .art-video-player .art-controls-right .art-selector-value,
 .art-video-player .art-controls-right .m115-control-shell,
 .art-video-player .art-controls-right .art-control .art-icon {
-  width: var(--m115-control-visual) !important;
+  width: auto !important;
   height: var(--m115-control-visual) !important;
   min-width: var(--m115-control-visual) !important;
-  max-width: var(--m115-control-visual) !important;
+  max-width: none !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   box-sizing: border-box;
   line-height: 1 !important;
-  overflow: hidden;
 }
 
 
 .art-video-player .art-controls-right .art-selector-value,
 .art-video-player .art-controls-right .m115-control-shell {
   display: inline-flex !important;
+  padding: 0 12px;
 }
 
 
 .art-video-player .art-controls-right .m115-quality-control .art-selector-value,
 .art-video-player .art-controls-right .m115-media-track-control .art-selector-value,
 .art-video-player .art-controls-right .m115-settings-menu-control .art-selector-value {
-  padding: 0 !important;
+  padding: 0 12px !important;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1068,7 +1070,7 @@
 .art-video-player .art-controls-right .m115-rotate-control .m115-control-shell,
 .art-video-player .art-controls-right .art-control-settings .art-icon,
 .art-video-player .art-controls-right .art-control-fullscreen .art-icon {
-  padding: 0 !important;
+  padding: 0;
 }
 
 
@@ -1078,13 +1080,12 @@
 
 
 .art-video-player .art-controls-right .art-control-settings {
-  margin-left: 2px !important;
+  margin-left: 0 !important;
 }
 
 
 .art-video-player .art-controls-right::before,
 .art-video-player .art-controls-right .art-control::before,
-.art-video-player .art-controls-right .m115-quality-control::before,
 .art-video-player .art-controls-right .m115-media-track-control::before,
 .art-video-player .art-controls-right .m115-playback-mode-control::before,
 .art-video-player .art-controls-right .m115-settings-menu-control::before,
@@ -1279,4 +1280,4 @@
     width: 92px !important;
     height: 52px !important;
   }
-}
+}
