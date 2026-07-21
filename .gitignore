@@ -51,3 +51,6 @@ patch*.cjs
 scripts/debug-*.mjs
 .opencode/
 .mimocode/
+.mcp.json
+.agentsroom/handoff-transcript-*.txt
+.agentsroom/handoff-summary-*.md
