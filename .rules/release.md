@@ -1,7 +1,3 @@
----
-description: 专门用于发布新版本、提取更新说明及维护 Changelog 时使用
-mode: subagent
----
 # 版本更新说明规范
 
 ## 更新日志提取

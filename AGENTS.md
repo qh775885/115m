@@ -1,8 +1,16 @@
----
-description: 115m 项目核心规则，所有开发行为必须遵循
-mode: primary
----
 # 115m 核心项目规范
+
+> ⚠️ **所有 AI 智能体（opencode, mimo, cursor 等）在执行任何任务前必须阅读此文件！**
+
+## 路由机制
+根据当前任务类型，AI 必须主动读取对应的场景规则文件：
+- **发布、版本更新、编写更新日志** -> 必须读取 `.rules/release.md`
+- **播放器相关(UI/逻辑/事件)** -> 必须读取 `.rules/player.md`
+- **消息通信(chrome.runtime)** -> 必须读取 `.rules/messages.md`
+- **Git 提交信息编写** -> 必须读取 `.rules/git-commit-message.md`
+- **环境调试/日志收集** -> 必须读取 `.rules/debugging.md`
+
+---
 
 ## 全局纪律
 - 默认在 `main` 级小步提交，保证可回退和易审查。
@@ -10,7 +18,7 @@ mode: primary
 - 只做当前请求涉及的功能，勿顺手重构或发散扩展。
 - 涉及数据、模块、消息、资源加载路径时，务必确认绝对边界。
 - 把注意力放在记录、实现、排除死胡同、解决实际问题，而不是写注释。
-- 提交代码前，请检查是否符合 `.opencode/agent/git-commit-message.md` 格式。
+- 提交代码前，请检查是否符合 `.rules/git-commit-message.md` 格式。
 
 ## Chrome 扩展边界
 - 增加/修改 `chrome.runtime` 消息时，同步维护 `src/shared/messages.ts`。

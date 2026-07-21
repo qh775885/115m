@@ -1,7 +1,3 @@
----
-description: 专门用于修改播放器相关 UI、逻辑、事件
-mode: subagent
----
 # 播放器规范
 
 ## UI 和样式规范

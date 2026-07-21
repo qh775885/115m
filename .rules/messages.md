@@ -1,7 +1,3 @@
----
-description: 处理 chrome.runtime 消息链路相关逻辑时使用
-mode: subagent
----
 # 消息链路规范
 
 - 消息结构统一定在 `src/shared/messages.ts`
