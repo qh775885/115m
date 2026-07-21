@@ -49,3 +49,5 @@ debug-*
 patch*.js
 patch*.cjs
 scripts/debug-*.mjs
+.opencode/
+.mimocode/
