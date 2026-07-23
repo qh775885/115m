@@ -71,7 +71,7 @@ function formatTranscodeStatus(res: TranscodeResponse): { text: string, color: s
 
   if (res.state === 'pending_check') {
     return {
-      text: res.detail ? `${res.detail}${batchText}` : `VIP 自动加速已发起，等待队列确认${batchText}`,
+      text: res.detail ? `${res.detail}${batchText}` : `VIP 加速已发起，等待队列确认${batchText}`,
       color: '#52c41a',
     }
   }
@@ -341,7 +341,8 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
 
     const { promise, cancel } = coverScheduler.add(async () => {
       try {
-        // 1. 通过 background 获取可靠的 M3U8 源 URL（含重试）
+        // 1. 通过 background 获取可靠的 M3U8 源 URL
+        // 仅 M3U8 不可用时判定为需要转码，并展示手动按钮（不自动触发）
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (state.disposed || !item.isConnected) return
         if (!m3u8Result.ok) {
@@ -353,9 +354,9 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         // 2. 注入缓存，跳过 content script 不可靠的 M3U8 直连
         primeThumbnailSourceUrl(file.pickCode, m3u8Result.url)
 
-        // 3. duration 缺失时无法抽帧
+        // 3. duration 缺失或抽帧失败：流已可用，只是预览不可用，不触发转码
         if (file.duration === 0) {
-          showTranscodeButton(container, file.pickCode)
+          showPreviewUnavailable(container)
           state.isLoaded = true
           return
         }
@@ -364,7 +365,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         const covers = await getVideoCovers(file.pickCode, file.duration, 5, listPreviewCoverOptions)
         if (state.disposed || !item.isConnected) return
         if (!covers.length) {
-          showTranscodeButton(container, file.pickCode)
+          showPreviewUnavailable(container)
           state.isLoaded = true
           return
         }
@@ -402,8 +403,8 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (e instanceof TaskCancelledError) {
           return
         }
-        // 封面生成失败 → 显示手动转码按钮
-        showTranscodeButton(container, file.pickCode)
+        // 封面生成失败但 M3U8 可能仍可用，不误触发转码
+        showPreviewUnavailable(container)
         state.error = true
       } finally {
         state.isLoading = false
@@ -515,7 +516,9 @@ function showCompletedHint(container: HTMLElement, message: string) {
 const acceleratedSet = new Set<string>()
 
 /**
- * 在预览区域自动触发 VIP 加速转码并显示状态
+ * 预览区手动 VIP 加速转码：
+ * - 仅在判定需要转码时展示按钮，不自动触发
+ * - 点击后提交当前视频，并顺带批量同文件夹需转码项（官方 batch_push）
  */
 function showTranscodeButton(container: HTMLElement, pickCode: string, initialStatus?: TranscodeResponse) {
   container.classList.add('is-transcode-tip')
@@ -526,7 +529,8 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
 
   const label = document.createElement('span')
   label.className = 'm115-transcode-label'
-  label.textContent = 'VIP 自动加速转码中...'
+  label.textContent = '视频需转码后才能预览'
+  label.style.color = '#fa8c16'
 
   const button = document.createElement('button')
   button.type = 'button'
@@ -542,7 +546,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
     'font-size:12px',
     'cursor:pointer',
   ].join(';')
-  button.hidden = true
+  button.hidden = false
 
   wrapper.appendChild(label)
   wrapper.appendChild(button)
@@ -651,7 +655,6 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   const enableTranscodeFrameFallback = false
 
   const applyStatus = (res: TranscodeResponse) => {
-
     // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
     if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {
       label.textContent = '⚠ 115 风控验证中，请先用 115 原生播放器播放任意视频解除验证码'
@@ -714,14 +717,12 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
     })
   }
 
-  const runTranscode = (manual = false) => {
+  const runTranscode = () => {
     stopPolling()
-    if (manual) {
-      button.disabled = true
-      button.textContent = '加速中...'
-      label.textContent = '正在请求 VIP 加速转码...'
-      label.style.color = '#1677ff'
-    }
+    button.disabled = true
+    button.textContent = '加速中...'
+    label.textContent = '正在请求 VIP 加速转码（含同文件夹）...'
+    label.style.color = '#1677ff'
 
     const frameReady = enableTranscodeFrameFallback ? prepareTranscodeFrame() : Promise.resolve()
     frameReady.then(() => sendTypedRuntimeMessageSafe({
@@ -738,30 +739,12 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
       }
 
       acceleratedSet.delete(pickCode)
-      if (manual) {
-        setNativeFallback(res?.error || '手动加速失败，可尝试后台加速')
-        return
-      }
-
-      label.textContent = '自动加速不可用，可手动重试'
-      label.style.color = '#fa8c16'
-      button.hidden = false
-      button.disabled = false
-      button.textContent = 'VIP加速转码'
+      setNativeFallback(res?.error || '手动加速失败，可尝试后台加速')
     }).catch((error) => {
       cleanupTranscodeFrame()
-      console.warn(`[115m][transcode] runTranscode exception manual=${String(manual)} error=${error instanceof Error ? error.message : String(error)}`)
+      console.warn(`[115m][transcode] runTranscode exception error=${error instanceof Error ? error.message : String(error)}`)
       acceleratedSet.delete(pickCode)
-      if (manual) {
-        setNativeFallback('手动加速异常，可尝试后台加速')
-        return
-      }
-
-      label.textContent = '自动加速不可用，可手动重试'
-      label.style.color = '#fa8c16'
-      button.hidden = false
-      button.disabled = false
-      button.textContent = 'VIP加速转码'
+      setNativeFallback('手动加速异常，可尝试后台加速')
     })
   }
 
@@ -797,7 +780,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
       runNativeFallback()
       return
     }
-    runTranscode(true)
+    runTranscode()
   })
 
   // 有初始状态（刷新恢复）→ 直接显示进度并开始轮询
@@ -806,11 +789,9 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
     return
   }
 
+  // 本页已手动触发过：只恢复状态轮询，绝不自动再推队列
   if (acceleratedSet.has(pickCode)) {
     runStatusCheck()
     return
   }
-  acceleratedSet.add(pickCode)
-
-  runTranscode(false)
 }
