@@ -144,7 +144,7 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
 
     case 'REQUEST_MOVE_REFRESH':
       assertTrustedSender(sender, message.type)
-      return handleMoveSuccessRefresh(sender)
+      return handleMoveSuccessRefresh()
 
     case 'FETCH_M3U8':
       assertTrustedSender(sender, message.type)
