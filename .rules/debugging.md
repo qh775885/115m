@@ -6,15 +6,15 @@
 
 ### 流程
 
-1. 本地临时日志服务器在 `scripts/debug-log-server.mjs`，Node.js HTTP服务，端口 `localhost:19115`。
-2. 需要采日志的代码处注入临时 `debugLog` 函数，通过 `fetch POST` 上报
-3. 用 `RunCommand`（blocking: false）后台运行，用 `CheckCommandStatus` 实时查看日志
-4. 调试完成后**务必撤销所有临时 debugLog 函数和日志上报脚本**，不要提交测试代码设施
+1. 本地临时日志服务器放在 `temp/<任务名>/debug-log-server.mjs`（或 `.dbg/`），Node.js HTTP，端口 `localhost:19115`。
+2. 需要采日志的代码处注入临时 `debugLog` 函数，通过 `fetch POST` 上报。
+3. 用终端后台启动日志服务并查看输出（各 AI 客户端用各自的后台命令方式即可）。
+4. 调试完成后**务必撤销**所有临时 `debugLog` 与日志服务脚本，并删除本任务临时目录。
 
 ### 日志服务器模板
 
 ```javascript
-// scripts/debug-log-server.mjs
+// temp/<任务名>/debug-log-server.mjs
 import { createServer } from 'node:http'
 
 const server = createServer((req, res) => {
@@ -51,8 +51,13 @@ function debugLog(tag: string, data: unknown) {
 }
 ```
 
-### 提交前清理
+### 临时文件存放
+
+- 与 `AGENTS.md` 一致：只放 `temp/`、`tmp/`、`.dbg/`（优先 `temp/<任务名>/`），**禁止**项目根目录。
+- 日志、会话笔记、env、一次性 server 脚本均按此存放，便于整夹删除。
+
+### 提交前 / 调试结束后清理
 
 - `grep -r "localhost:19115" src/` 确保无残留
-- `grep -r "debug-log-server" scripts/` 确保无残留
-- 日志上报脚本不要加入 Git
+- 日志上报脚本不要加入 Git，也不要长期留在 `scripts/`
+- 删除本任务产生的 `temp/`、`tmp/`、`.dbg/`、根目录 `debug-*` 等临时产物
