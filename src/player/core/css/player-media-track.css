@@ -98,6 +98,6 @@
 }
 
 .art-video-player .m115-media-track-control:active .art-selector-value {
-  transform: scale(0.96) !important;
+  transform: scale(0.97) !important;
   background: rgba(255, 255, 255, 0.2) !important;
 }

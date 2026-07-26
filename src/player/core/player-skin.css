@@ -198,7 +198,7 @@
   margin: 0 !important;
   padding: 0 !important;
   border-radius: 50%;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.08s ease;
   background: transparent;
 }
 
@@ -209,7 +209,7 @@
 
 .art-video-player .art-controls-left .art-control:active,
 .art-video-player .art-controls-right .art-control:active {
-  transform: scale(0.92) !important;
+  transform: scale(0.97) !important;
   background-color: transparent !important;
 }
 
@@ -765,7 +765,7 @@
 .m115-settings-menu-control .art-selector-value,
 .m115-volume-btn {
   border-radius: var(--m115-chip-radius);
-  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .08s ease;
 }
 
 

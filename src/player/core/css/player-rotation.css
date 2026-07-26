@@ -57,7 +57,7 @@
 
 .art-video-player .art-controls-right .m115-rotate-control:active .m115-control-shell,
 .art-video-player .art-controls-right .m115-rotate-control.is-active .m115-control-shell {
-  transform: scale(0.96) !important;
+  transform: scale(0.97) !important;
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
