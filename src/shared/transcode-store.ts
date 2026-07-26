@@ -38,6 +38,7 @@ export function saveTranscodeStatus(
   pickCode: string,
   status: RuntimeTranscodeResponse,
   fileId?: string,
+  skipBroadcast = false,
 ) {
   try {
     const store = getTranscodeStatusStore()
@@ -47,7 +48,9 @@ export function saveTranscodeStatus(
       status,
       updatedAt: Date.now(),
     }
-    store[pickCode] = record
+    if (pickCode) {
+      store[pickCode] = record
+    }
     if (fileId) {
       store[`fid:${fileId}`] = record
     }
@@ -58,7 +61,7 @@ export function saveTranscodeStatus(
     }
 
     // 触发 Window 事件通知当前页面 DOM 元素同步
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !skipBroadcast) {
       window.dispatchEvent(
         new CustomEvent(EVENT_NAME, {
           detail: { pickCode, fileId, status },

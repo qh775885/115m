@@ -566,8 +566,9 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
 
   // 监听全局事件，用于接收被同步的文件状态
   const unsubscribe = subscribeTranscodeStatus((event) => {
-    if (event.pickCode === pickCode || (fileId && event.fileId === fileId)) {
-      applyStatus(event.status)
+    // 只有非当前 pickCode / fileId 触发的广播事件才进行处理，避免自我触发循环
+    if ((event.pickCode && event.pickCode === pickCode) || (fileId && event.fileId === fileId)) {
+      applyStatus(event.status, true)
     }
   })
 
@@ -679,9 +680,9 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
 
   const enableTranscodeFrameFallback = false
 
-  const applyStatus = (res: TranscodeResponse) => {
+  const applyStatus = (res: TranscodeResponse, skipBroadcast = false) => {
     // 保存至本地会话级别存储中
-    saveTranscodeStatus(pickCode, res, fileId)
+    saveTranscodeStatus(pickCode, res, fileId, skipBroadcast)
 
     // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
     if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {
