@@ -24,7 +24,7 @@ import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
 import { deletePlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
-import { buildNavControlItem } from './core/player-center-controls'
+import { buildNavControlItem, mountCenterCluster } from './core/player-center-controls'
 import { buildCustomVolumeControl } from './core/player-volume'
 import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
@@ -493,6 +493,9 @@ class PlayerManager {
       },
     })
 
+    // 尽早把 上一集/播放/下一集 搬进居中簇，避免 ready 前闪现在左侧
+    mountCenterCluster(this.artplayer)
+
     // 强制覆盖 Artplayer 内部的 storage 音量，防止它覆盖我们的全局偏好
     this.artplayer.video.volume = volumePreference.volume
     this.artplayer.video.muted = volumePreference.muted
@@ -835,6 +838,8 @@ class PlayerManager {
     if (!this.artplayer) return
     updateArtplayerControl(this.artplayer, PlayerManager.PREV_CONTROL_NAME, this.buildPrevControlItem())
     updateArtplayerControl(this.artplayer, PlayerManager.NEXT_CONTROL_NAME, this.buildNextControlItem())
+    // controls.update 会把重建的控件插回左侧容器，需重新搬进居中簇
+    mountCenterCluster(this.artplayer)
   }
 
   private updateQualityControl() {

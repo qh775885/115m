@@ -81,4 +81,28 @@
 
 .art-video-player .art-controls-left .m115-nav-control:first-child {
   margin-right: 2px;
+}
+
+
+/* ===== 居中簇：上一集 / 播放 / 下一集 ===== */
+/* 容器绝对定位在控制栏水平正中，独立于左右两组，互不挤压 */
+.art-video-player .art-controls {
+  position: relative;
+}
+
+.art-video-player .art-controls .m115-center-cluster {
+  position: absolute;
+  left: 50%;
+  /* .art-controls 有 12px 底部 padding，左右组在内容区居中，需补偿一半 */
+  top: calc(50% - 6px);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--m115-control-gap);
+  padding: 0;
+  width: auto;
+  flex: none;
+  pointer-events: auto;
+  z-index: 2;
 }
