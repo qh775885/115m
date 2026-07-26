@@ -29,7 +29,7 @@ export function buildCustomVolumeControl() {
         </button>
         <div class="m115-volume-slider-wrapper">
           <input class="m115-volume-slider" type="range" min="0" max="1" step="0.01" value="1">
-          <span class="m115-volume-val">100</span>
+          <span class="m115-volume-val" aria-hidden="true">100</span>
         </div>
       </div>
     `,
@@ -53,7 +53,32 @@ export function buildCustomVolumeControl() {
         slider.style.background = percentage === 0
           ? 'rgba(255,255,255,0.2)'
           : `linear-gradient(to right, #1890ff ${percentage}%, rgba(255,255,255,0.2) ${percentage}%)`
+
+        // 数值气泡跟随滑块拇指位置（拇指 12px，两端各留半个拇指宽）
+        const trackWidth = slider.offsetWidth || 108
+        const thumbOffset = (v * (trackWidth - 12)) + 6
+        valDisplay.style.left = `${thumbOffset}px`
       }
+
+      // 数值气泡只在悬停/拖动滑块时显示
+      let valHideTimeout: number | null = null
+      const showVal = () => {
+        if (valHideTimeout) {
+          clearTimeout(valHideTimeout)
+          valHideTimeout = null
+        }
+        container.classList.add('is-adjusting')
+      }
+      const scheduleHideVal = () => {
+        if (valHideTimeout) clearTimeout(valHideTimeout)
+        valHideTimeout = window.setTimeout(() => {
+          container.classList.remove('is-adjusting')
+        }, 400)
+      }
+      slider.addEventListener('mouseenter', showVal)
+      slider.addEventListener('mouseleave', scheduleHideVal)
+      slider.addEventListener('pointerdown', showVal)
+      slider.addEventListener('pointerup', scheduleHideVal)
 
       // Hover 防抖逻辑
       let hoverTimeout: number | null = null

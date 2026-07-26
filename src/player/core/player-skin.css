@@ -20,8 +20,8 @@
   --m115-audio-width: 40px;
   --m115-mode-width: 40px;
   --m115-speed-width: 40px;
-  /* 按钮 38px + margin 6px + 滑块区 (108px 滑块 + 8px gap + 24px 百分比) */
-  --m115-volume-expanded-width: 184px;
+  /* 按钮 38px + margin 4px + 滑块区 (108px 滑块 + 10px 右侧留白) */
+  --m115-volume-expanded-width: 160px;
   --m115-volume-slider-width: 108px;
   --art-theme: #fff;
   --art-widget-background: rgba(24, 26, 30, 0.96);
