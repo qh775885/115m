@@ -54,6 +54,7 @@ export interface RuntimeTranscodeResponse {
   autoFallback?: boolean
   nativeFallback?: boolean
   deduped?: true
+  batchFileIds?: string[]
 }
 
 export type RuntimeTranscodeFrameReadyResponse =

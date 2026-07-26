@@ -11,6 +11,16 @@ import { isTransientFrameError, wait } from '../shared/utils'
 import { fetchVideoInfoByPickCode } from '../platform/115/file-actions'
 import { close115VodFrameSession, closeExtensionCreated115VodTab, fetchTextIn115VodMainWorld, query115Tabs } from '../platform/115/main-world'
 
+function debugLog(tag: string, data: unknown) {
+  try {
+    fetch('http://localhost:19115/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag, data: typeof data === 'string' ? data : JSON.stringify(data) }),
+    }).catch(() => {})
+  } catch { /* ignore */ }
+}
+
 interface TranscodeCheckResult {
   result?: number
   status?: number
@@ -360,12 +370,20 @@ async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRAN
 
   const fileIds = Array.isArray(transcoded?.data) ? transcoded.data.slice(0, limit) : []
   if (fileIds.length === 0) {
-    return { batchTotal: 0, batchQueued: 0, batchSkipped: 0, batchDetail: 'no folder transcode candidates' }
+    return { batchTotal: 0, batchQueued: 0, batchSkipped: 0, batchDetail: 'no folder transcode candidates', batchPickCodes: [] }
   }
 
+  // 115vod is_transcoded 返回的数据：对于需要转码的文件，是否有对应的 pick_code？
+  // 事实上，is_transcoded 接口的 response 中可能包含 file_id，但我们需要能和页面上的元素匹配（一般是 pick_code 或 file_id）。
+  // 查阅 is_transcoded 的 data 字段：通常 data 返回的是一个需要转码的 file_ids 数组（115vod 自己的 file_ids）。
+  // 为了在 content script 中能感知同文件夹其他被加速的文件状态，我们应该想办法拿到这些被加速文件的关联标识。
+  // background 在这里把 transcoded.data (即 fileIds) 返回给 content 侧，content 侧可以根据 file_id 找到对应的 DOM 元素！
+  // 因为 fileInfo 提取出的 FileInfo 确实包含 fileId：
+  // export interface FileInfo { pickCode: string; fileName: string; duration: number; isVideo: boolean; fileId?: string; parentId?: string; ... }
+  // 所以我们可以返回 batchFileIds 字段，content script 根据 fileId 识别同文件夹下其他加速的视频。
   const cooldownKey = getBatchCooldownKey(pickCode, fileIds)
   if (isBatchTranscodeCooling(cooldownKey)) {
-    return { batchTotal: fileIds.length, batchQueued: 0, batchSkipped: fileIds.length, batchDetail: 'batch already requested recently' }
+    return { batchTotal: fileIds.length, batchQueued: 0, batchSkipped: fileIds.length, batchDetail: 'batch already requested recently', batchFileIds: fileIds }
   }
 
   await wait(800)
@@ -380,6 +398,7 @@ async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRAN
     batchQueued: accepted ? fileIds.length : 0,
     batchSkipped: 0,
     batchDetail: result?.error || result?.msg || (accepted ? 'folder batch queued' : 'folder batch rejected'),
+    batchFileIds: fileIds,
   }
 }
 
@@ -466,9 +485,12 @@ export async function handleTranscode(message: MsgTranscode) {
         pickCodeForCooldown,
         Math.max(1, Math.min(message.data.batchLimit || MAX_BATCH_TRANSCODE_COUNT, MAX_BATCH_TRANSCODE_COUNT)),
       )
+      
+      // 这里的 batch.batchQueued 表示批量推成功的数量，并且 checkIsTranscoded 返回了这些同文件夹 fileIds/pickCodes (即 batch.batchPickCodes)
       return {
         ...response,
         ...batch,
+        batchPickCodes: batch.batchPickCodes || [],
         detail: batch.batchQueued > 0 ? `${response.detail || ''}；同文件夹已提交 ${batch.batchQueued} 个` : response.detail,
       }
     }

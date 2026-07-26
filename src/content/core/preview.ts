@@ -2,6 +2,12 @@ import { getVideoCovers, primeThumbnailSourceUrl } from '../../lib/videoThumbnai
 import type { VideoThumbnail } from '../../lib/videoThumbnail'
 import type { FileInfo } from './types'
 import type { RuntimeTranscodeResponse } from '../../shared/messages'
+import {
+  getTranscodeStatusByFileId,
+  getTranscodeStatusByPickCode,
+  saveTranscodeStatus,
+  subscribeTranscodeStatus,
+} from '../../shared/transcode-store'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './runtime'
 import {
   Scheduler,
@@ -346,7 +352,9 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (state.disposed || !item.isConnected) return
         if (!m3u8Result.ok) {
-          showTranscodeButton(container, file.pickCode)
+          // 检查是否有本地/会话保存的转码状态
+          const savedRecord = getTranscodeStatusByPickCode(file.pickCode) || (file.fileId ? getTranscodeStatusByFileId(file.fileId) : null)
+          showTranscodeButton(container, file.pickCode, file.fileId, savedRecord?.status)
           state.isLoaded = true
           return
         }
@@ -520,7 +528,7 @@ const acceleratedSet = new Set<string>()
  * - 仅在判定需要转码时展示按钮，不自动触发
  * - 点击后提交当前视频，并顺带批量同文件夹需转码项（官方 batch_push）
  */
-function showTranscodeButton(container: HTMLElement, pickCode: string, initialStatus?: TranscodeResponse) {
+function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: string, initialStatus?: TranscodeResponse) {
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
@@ -555,6 +563,23 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   let pollTimer: number | undefined
   let transcodeFrame: HTMLIFrameElement | undefined
   let nativeFallbackVisible = false
+
+  // 监听全局事件，用于接收被同步的文件状态
+  const unsubscribe = subscribeTranscodeStatus((event) => {
+    if (event.pickCode === pickCode || (fileId && event.fileId === fileId)) {
+      applyStatus(event.status)
+    }
+  })
+
+  // 元素销毁时解除事件监听和轮询
+  const observer = new MutationObserver(() => {
+    if (!container.isConnected) {
+      unsubscribe()
+      stopPolling()
+      observer.disconnect()
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
 
   const stopPolling = () => {
     if (typeof pollTimer === 'number') {
@@ -655,6 +680,9 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
   const enableTranscodeFrameFallback = false
 
   const applyStatus = (res: TranscodeResponse) => {
+    // 保存至本地会话级别存储中
+    saveTranscodeStatus(pickCode, res, fileId)
+
     // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
     if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {
       label.textContent = '⚠ 115 风控验证中，请先用 115 原生播放器播放任意视频解除验证码'
@@ -735,6 +763,20 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, initialSt
         return
       }
       if (res && applyStatus(res)) {
+        // 如果有同文件夹批量被加速的视频列表，我们需要把加速状态同步到那些视频的 UI 状态中
+        if (res.batchFileIds && res.batchFileIds.length > 0) {
+          res.batchFileIds.forEach((batchFid) => {
+            // 对每一个被批量提交的 fileId，保存其 status 并通过事件同步给本页已初始化的 showTranscodeButton DOM
+            const siblingStatus: TranscodeResponse = {
+              ok: true,
+              state: 'queued',
+              detail: '已随同文件夹视频一起加速，排队中...',
+            }
+            // 这里我们可能没有 sibling 的 pickCode，但我们有 fileId。
+            // 我们的 saveTranscodeStatus 已经支持通过 fileId 记录和分发事件。
+            saveTranscodeStatus('', siblingStatus, batchFid)
+          })
+        }
         return
       }
 
