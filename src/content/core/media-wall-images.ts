@@ -163,7 +163,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let pointerId: number | null = null
   let pointerDownX = 0
   let pointerDownY = 0
-  let clickSuppressUntil = 0
   let dragStartX = 0
   let dragStartY = 0
   let dragOriginX = 0
@@ -177,9 +176,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let velocityY = 0
   let lastPointerX = 0
   let lastPointerY = 0
-  let lastTapAt = 0
-  const lastTapX = 0
-  const lastTapY = 0
   let thumbsCollapsed = false
   let wheelGestureAccumulated = 0
   let wheelGestureTriggered = false
@@ -188,7 +184,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
 
   const DRAG_THRESHOLD = 6
   const EDGE_RESISTANCE = 0.5
-  const DOUBLE_TAP_DELAY = 260
   const INERTIA_FACTOR = 60
   const SETTLE_LERP = 0.34
   const WHEEL_GESTURE_STEP = 70
@@ -285,7 +280,9 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
       img.alt = item.title
       img.loading = 'lazy'
       btn.appendChild(img)
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
         if (currentIndex === index) return
         const previousIndex = currentIndex
         currentIndex = index
@@ -462,19 +459,11 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   imageEl.addEventListener('dblclick', (event) => {
     event.preventDefault()
     event.stopPropagation()
-    clickSuppressUntil = Date.now() + 260
-    lastTapAt = 0
     zoomAtPoint(zoomScale > 1 ? 1 : 2, event.clientX, event.clientY)
   })
 
   imageEl.addEventListener('click', (event) => {
     event.stopPropagation()
-    if (Date.now() < clickSuppressUntil) return
-    if (zoomScale > 1) return
-    window.setTimeout(() => {
-      if (Date.now() < clickSuppressUntil) return
-      close()
-    }, 220)
   })
 
   const close = () => {
@@ -610,7 +599,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     const dy = event.clientY - pointerDownY
     if (!isDragging && Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
       isDragging = true
-      clickSuppressUntil = Date.now() + 220
       imageEl.classList.add('is-dragging')
       mediaFrame.classList.add('is-dragging')
     }
@@ -645,7 +633,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     targetTranslateY = translateY
     scheduleDragFrame()
     snapBackToBounds()
-    clickSuppressUntil = Date.now() + 180
     event.preventDefault()
     event.stopPropagation()
   }
@@ -653,8 +640,16 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   imageEl.addEventListener('pointerup', finishDrag)
   imageEl.addEventListener('pointercancel', finishDrag)
 
-  overlay.addEventListener('keydown', (event) => {
+  const isTypingTarget = (target: EventTarget | null) => {
+    const el = target as HTMLElement | null
+    if (!el) return false
+    return el.isContentEditable
+      || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
+  }
+
+  doc.addEventListener('keydown', (event) => {
     if (!overlay.classList.contains('active')) return
+    if (isTypingTarget(event.target)) return
     if (event.key === 'Escape') {
       event.preventDefault()
       close()
