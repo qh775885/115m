@@ -8,7 +8,7 @@ import {
   saveTranscodeStatus,
   subscribeTranscodeStatus,
 } from '../../shared/transcode-store'
-import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './runtime'
+import { isRuntimeContextInvalidatedResult, sendTypedRuntimeMessageSafe } from './runtime'
 import {
   Scheduler,
   TaskCancelledError,
@@ -511,29 +511,6 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
   }
   const unregisterItem = previewObserverRegistry.registerItem(item, cleanup)
 }
-
-/**
- * 转码已完成但 M3U8 还有缓存延迟时的提示
- */
-function showCompletedHint(container: HTMLElement, message: string) {
-  const doc = container.ownerDocument
-
-  container.classList.add('is-transcode-tip')
-  container.innerHTML = ''
-
-  const wrapper = doc.createElement('div')
-  wrapper.className = 'm115-transcode-area'
-
-  const label = doc.createElement('span')
-  label.className = 'm115-transcode-label'
-  label.textContent = message
-  label.style.color = '#52c41a'
-
-  wrapper.appendChild(label)
-  container.appendChild(wrapper)
-}
-
-
 
 /**
  * 已触发过加速的 pickCode 集合（避免重复请求）

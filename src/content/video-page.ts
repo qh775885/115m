@@ -6,9 +6,11 @@ import '../player/player'
 function clearNativeVideoRequests() {
   try {
     const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-    entries
-      .filter(e => /proapi\.115\.com\/app\/chrome\/downurl/.test(e.name))
-      .forEach(e => performance.clearResourceTimings())
+    const hasNativeDownUrl = entries.some(e => /proapi\.115\.com\/app\/chrome\/downurl/.test(e.name))
+    if (hasNativeDownUrl) {
+      // 性能记录 API 仅支持整体清空，存在 115 原生 downurl 请求时清空一次即可
+      performance.clearResourceTimings()
+    }
   }
   catch {
     // ignore

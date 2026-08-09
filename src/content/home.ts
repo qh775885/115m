@@ -16,7 +16,7 @@ import { HomeScrollBinder } from './core/home-scroll-binder'
 
 class HomeController {
   private boundDocs = new Set<Document>()
-  private scannedItems = new WeakSet<HTMLElement>()
+  private scannedPickCodes = new Set<string>()
   private observers = new Map<Document, MutationObserver>()
   private scanFrames = new Map<Document, number>()
   private unarchiveCleanups = new Map<Document, () => void>()
@@ -133,12 +133,17 @@ class HomeController {
     const items = list.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
     items.forEach((node) => {
       const item = node as HTMLElement
-      if (this.scannedItems.has(item)) return
-      this.scannedItems.add(item)
       if (!this.isWangpanFileItem(item)) return
 
       const file = extractFileInfo(item)
       if (!file) return
+
+      // 按 pickCode 去重而非 DOM 节点：即使 115 复用同一 li 展示新文件也能正确扫描
+      if (this.scannedPickCodes.has(file.pickCode)) return
+      if (this.scannedPickCodes.size >= 10000) {
+        this.scannedPickCodes.clear()
+      }
+      this.scannedPickCodes.add(file.pickCode)
 
       addDownloadIntercept(item, file)
       injectUnarchiveButton(item, file)

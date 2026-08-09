@@ -53,6 +53,13 @@ describe('isSecondaryVolume', () => {
     expect(isSecondaryVolume('a.part001.rar')).toBe(false)
   })
 
+  it('treats multi-digit volumes (like part011, part11) as secondary', () => {
+    expect(isSecondaryVolume('a.part11.rar')).toBe(true)
+    expect(isSecondaryVolume('a.part011.rar')).toBe(true)
+    expect(isSecondaryVolume('a.part101.rar')).toBe(true)
+    expect(isSecondaryVolume('a.part111.rar')).toBe(true)
+  })
+
   it('does not treat plain numeric suffixes as volumes', () => {
     expect(isSecondaryVolume('photo.042')).toBe(false)
     expect(isSecondaryVolume('backup.123')).toBe(false)

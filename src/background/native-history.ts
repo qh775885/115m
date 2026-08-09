@@ -58,15 +58,36 @@ export async function getNativeHistory(pickCode: string, shareId?: string): Prom
   return parseNativeRecord(json.data, pickCode)
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let index = 0
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (index < items.length) {
+      const current = index
+      index += 1
+      results[current] = await fn(items[current])
+    }
+  })
+
+  await Promise.all(workers)
+  return results
+}
+
 export async function getNativeHistoryMap(pickCodes: string[], shareId?: string): Promise<Record<string, NativePlayHistoryRecord>> {
-  const entries = await Promise.all(Array.from(new Set(pickCodes)).filter(Boolean).map(async (pickCode) => {
+  const uniquePickCodes = Array.from(new Set(pickCodes)).filter(Boolean)
+  const entries = await mapWithConcurrency(uniquePickCodes, 6, async (pickCode) => {
     try {
       return [pickCode, await getNativeHistory(pickCode, shareId)] as const
     }
     catch {
       return [pickCode, null] as const
     }
-  }))
+  })
 
   return entries.reduce<Record<string, NativePlayHistoryRecord>>((map, [pickCode, record]) => {
     if (record) {

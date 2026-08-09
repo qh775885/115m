@@ -87,9 +87,13 @@ export function readTemporaryPlayerPlaylist(token: string | null | undefined): S
   if (!token) return []
 
   const now = Date.now()
-  const cache = pruneCache(readCache(), now)
-  writeCache(cache)
-  const entry = cache[token]
+  const rawCache = readCache()
+  const pruned = pruneCache(rawCache, now)
+  // 仅当确实清理了过期/空条目时才写回，避免高频读触发无意义的 localStorage 写入
+  if (Object.keys(pruned).length !== Object.keys(rawCache).length) {
+    writeCache(pruned)
+  }
+  const entry = pruned[token]
   if (!entry) return []
   return normalizeItems(entry.items)
 }

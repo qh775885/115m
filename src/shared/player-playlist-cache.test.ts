@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readTemporaryPlayerPlaylist, saveTemporaryPlayerPlaylist } from './player-playlist-cache'
 
 function createMemoryStorage(): Storage {
@@ -50,5 +50,37 @@ describe('player playlist cache', () => {
 
   it('returns empty array for unknown tokens', () => {
     expect(readTemporaryPlayerPlaylist('missing')).toEqual([])
+  })
+
+  it('does not write back to storage when nothing is pruned on read', () => {
+    const token = saveTemporaryPlayerPlaylist([
+      { pickCode: 'a', fileId: '1', name: 'A' },
+    ])
+    const setItemSpy = vi.spyOn(globalThis.localStorage, 'setItem')
+
+    readTemporaryPlayerPlaylist(token)
+    readTemporaryPlayerPlaylist(token)
+
+    // 读操作不应触发无意义的写回（除非清除了过期/空条目）
+    expect(setItemSpy).not.toHaveBeenCalled()
+  })
+
+  it('prunes expired entries and writes back only when needed', () => {
+    const token = saveTemporaryPlayerPlaylist([
+      { pickCode: 'a', fileId: '1', name: 'A' },
+    ])
+
+    // 注入一条已过期的条目
+    const raw = JSON.parse(localStorage.getItem('m115-player-playlist-cache')!)
+    raw.expired = { createdAt: Date.now() - 31 * 60 * 1000, items: [{ pickCode: 'x', fileId: '', name: 'X' }] }
+    localStorage.setItem('m115-player-playlist-cache', JSON.stringify(raw))
+
+    const setItemSpy = vi.spyOn(globalThis.localStorage, 'setItem')
+    readTemporaryPlayerPlaylist(token)
+
+    // 存在过期条目 → 读时清理并写回
+    expect(setItemSpy).toHaveBeenCalledTimes(1)
+    const updated = JSON.parse(localStorage.getItem('m115-player-playlist-cache')!)
+    expect(updated.expired).toBeUndefined()
   })
 })

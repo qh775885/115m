@@ -33,7 +33,6 @@ function setSearch(search: string) {
 
 function makeScrollableBox() {
   const box = document.createElement('div')
-  ;(box as unknown as { scrollTo: unknown }).scrollTo = vi.fn()
   return box
 }
 
@@ -92,7 +91,7 @@ describe('saveScrollPosition / restoreScrollPosition', () => {
     const box = makeScrollableBox()
     const restored = restoreScrollPosition('k', box)
     expect(restored).toBe(true)
-    expect(box.scrollTo).toHaveBeenCalledWith({ top: 300, behavior: 'instant' })
+    expect(box.scrollTop).toBe(300)
   })
 
   it('ignores saving zero or negative positions', () => {
@@ -105,7 +104,7 @@ describe('saveScrollPosition / restoreScrollPosition', () => {
     const box = makeScrollableBox()
     const restored = restoreScrollPosition('missing_key', box)
     expect(restored).toBe(false)
-    expect(box.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' })
+    expect(box.scrollTop).toBe(0)
   })
 
   it('caps the store size at 200 entries', () => {

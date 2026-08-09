@@ -58,10 +58,10 @@ export function restoreScrollPosition(key: string, scrollBox: Element): boolean 
   const store = getStore()
   const scrollTop = store[key]
   if (scrollTop && scrollTop > 0) {
-    scrollBox.scrollTo({ top: scrollTop, behavior: 'instant' })
+    scrollBox.scrollTop = scrollTop
     return true
   }
-  scrollBox.scrollTo({ top: 0, behavior: 'instant' })
+  scrollBox.scrollTop = 0
   return false
 }
 
