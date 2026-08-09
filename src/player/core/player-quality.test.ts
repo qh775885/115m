@@ -17,7 +17,7 @@ describe('player quality helpers', () => {
 
     expect(item.name).toBe('quality')
     const result = await item.onSelect({ html: '720P', url: 'https://b' })
-    expect(result).toContain('<svg')
+    expect(result).toBe('720P')
     expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
