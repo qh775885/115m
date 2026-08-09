@@ -5,6 +5,7 @@
 
 import type { RuntimeMessage } from '../shared/messages'
 import { executeInMainWorld } from './helpers'
+import { assertAllowedOpenTabUrl } from './tab-allowlist'
 import { deleteHistory, getHistory, getHistoryMap, setHistory } from './history-store'
 import { getNativeHistory, getNativeHistoryMap, setNativeHistory } from './native-history'
 import { register115VodFrameSession } from '../platform/115/main-world'
@@ -123,6 +124,7 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
       return register115VodFrameSession(sender, message.data.pickCode)
 
     case 'OPEN_TAB': {
+      assertAllowedOpenTabUrl(message.url)
       const now = Date.now()
       if (lastOpenTabMeta && lastOpenTabMeta.url === message.url && now - lastOpenTabMeta.ts < 2500) {
         return { success: true, deduped: true }
