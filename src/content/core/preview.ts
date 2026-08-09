@@ -368,7 +368,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (state.disposed || !item.isConnected) return
         if (!m3u8Result.ok) {
           // 检查是否有本地/会话保存的转码状态
-          const savedRecord = getTranscodeStatusByPickCode(file.pickCode) || (file.fileId ? getTranscodeStatusByFileId(file.fileId) : null)
+          const savedRecord = await getTranscodeStatusByPickCode(file.pickCode) || (file.fileId ? await getTranscodeStatusByFileId(file.fileId) : null)
           showTranscodeButton(container, file.pickCode, file.fileId, savedRecord?.status)
           state.isLoaded = true
           return
@@ -677,8 +677,8 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
   const enableTranscodeFrameFallback = false
 
   const applyStatus = (res: TranscodeResponse, skipBroadcast = false) => {
-    // 保存至本地会话级别存储中
-    saveTranscodeStatus(pickCode, res, fileId, skipBroadcast)
+    // 保存至扩展会话级存储中（跨标签共享）
+    void saveTranscodeStatus(pickCode, res, fileId, skipBroadcast)
 
     // 风控检测：115 返回验证码/安全异常时，直接提示用户解除，不显示重试按钮
     if (res.state === 'failed' && res.error && /验证|安全|异常|captcha|911/i.test(res.error)) {
@@ -771,7 +771,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
             }
             // 这里我们可能没有 sibling 的 pickCode，但我们有 fileId。
             // 我们的 saveTranscodeStatus 已经支持通过 fileId 记录和分发事件。
-            saveTranscodeStatus('', siblingStatus, batchFid)
+            void saveTranscodeStatus('', siblingStatus, batchFid)
           })
         }
         return

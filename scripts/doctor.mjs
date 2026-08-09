@@ -23,11 +23,10 @@ function readJson(path) {
 
 const packagePath = resolve(root, 'package.json')
 const generatedManifestPath = resolve(root, 'dist', 'chrome-mv3', 'manifest.json')
-const projectBaselinePath = resolve(root, '.ai/rules/project-baseline.md')
-const releaseRulePath = resolve(root, '.ai/rules/release.md')
-const docsRunbookPath = resolve(root, 'docs/runbooks/docs.md')
-const messagesRunbookPath = resolve(root, 'docs/runbooks/messages.md')
-const playerRunbookPath = resolve(root, 'docs/runbooks/player.md')
+const projectBaselinePath = resolve(root, 'AGENTS.md')
+const releaseRulePath = resolve(root, '.rules', 'release.md')
+const debuggingRulePath = resolve(root, '.rules', 'debugging.md')
+const devMemoryPath = resolve(root, '.rules', '开发记忆.md')
 
 if (!existsSync(packagePath)) fail('缺少 package.json')
 
@@ -43,19 +42,16 @@ if (existsSync(generatedManifestPath)) {
 else warn('尚无 WXT 构建 manifest，执行 pnpm build 后可检查版本')
 
 if (existsSync(projectBaselinePath)) ok('已存在项目核心规则')
-else fail('缺少 .ai/rules/project-baseline.md')
+else fail('缺少 AGENTS.md')
 
 if (existsSync(releaseRulePath)) ok('已存在发布规则')
-else warn('缺少 .ai/rules/release.md')
+else warn('缺少 .rules/release.md')
 
-if (existsSync(docsRunbookPath)) ok('已存在文档维护 runbook')
-else warn('缺少 docs/runbooks/docs.md')
+if (existsSync(debuggingRulePath)) ok('已存在环境调试规则')
+else warn('缺少 .rules/debugging.md')
 
-if (existsSync(messagesRunbookPath)) ok('已存在消息链路 runbook')
-else warn('缺少 docs/runbooks/messages.md')
-
-if (existsSync(playerRunbookPath)) ok('已存在播放器 runbook')
-else warn('缺少 docs/runbooks/player.md')
+if (existsSync(devMemoryPath)) ok('已存在开发记忆')
+else warn('缺少 .rules/开发记忆.md')
 
 try {
   const branch = execSync('git branch --show-current', { cwd: root, encoding: 'utf8' }).trim()

@@ -1,5 +1,7 @@
 /**
  * 转码状态存储与全局/页面广播同步
+ * 跨标签共享：优先 chrome.storage.session（扩展级会话存储），降级 sessionStorage。
+ * 广播：同页用 window 自定义事件，跨标签用 chrome.storage.onChanged。
  */
 import type { RuntimeTranscodeResponse } from './messages'
 
@@ -15,33 +17,49 @@ export interface TranscodeStatusRecord {
 
 type TranscodeStoreData = Record<string, TranscodeStatusRecord>
 
-function getStorage(): Storage | null {
+function getSessionArea(): chrome.storage.StorageArea | null {
+  const c = globalThis.chrome
+  return c?.storage?.session ?? null
+}
+
+function getWindowStorage(): Storage | null {
   if (typeof sessionStorage !== 'undefined') {
     return sessionStorage
   }
   return null
 }
 
-export function getTranscodeStatusStore(): TranscodeStoreData {
+export async function getTranscodeStatusStore(): Promise<TranscodeStoreData> {
+  const area = getSessionArea()
+  if (area) {
+    try {
+      const got = await area.get(STORAGE_KEY)
+      return (got?.[STORAGE_KEY] as TranscodeStoreData | undefined) ?? {}
+    }
+    catch {
+      return {}
+    }
+  }
   try {
-    const storage = getStorage()
+    const storage = getWindowStorage()
     if (!storage) return {}
     const raw = storage.getItem(STORAGE_KEY)
     if (!raw) return {}
     return JSON.parse(raw) as TranscodeStoreData
-  } catch {
+  }
+  catch {
     return {}
   }
 }
 
-export function saveTranscodeStatus(
+export async function saveTranscodeStatus(
   pickCode: string,
   status: RuntimeTranscodeResponse,
   fileId?: string,
   skipBroadcast = false,
-) {
+): Promise<void> {
   try {
-    const store = getTranscodeStatusStore()
+    const store = await getTranscodeStatusStore()
     const record: TranscodeStatusRecord = {
       pickCode,
       fileId,
@@ -55,12 +73,15 @@ export function saveTranscodeStatus(
       store[`fid:${fileId}`] = record
     }
 
-    const storage = getStorage()
-    if (storage) {
-      storage.setItem(STORAGE_KEY, JSON.stringify(store))
+    const area = getSessionArea()
+    if (area) {
+      await area.set({ [STORAGE_KEY]: store })
+    }
+    else {
+      const storage = getWindowStorage()
+      storage?.setItem(STORAGE_KEY, JSON.stringify(store))
     }
 
-    // 触发 Window 事件通知当前页面 DOM 元素同步
     if (typeof window !== 'undefined' && !skipBroadcast) {
       window.dispatchEvent(
         new CustomEvent(EVENT_NAME, {
@@ -68,39 +89,64 @@ export function saveTranscodeStatus(
         }),
       )
     }
-  } catch (e) {
-    console.error('[115m] saveTranscodeStatus error:', e)
+  }
+  catch (error) {
+    console.error('[115m] saveTranscodeStatus error:', error)
   }
 }
 
-export function getTranscodeStatusByPickCode(pickCode: string): TranscodeStatusRecord | null {
-  const store = getTranscodeStatusStore()
+export async function getTranscodeStatusByPickCode(pickCode: string): Promise<TranscodeStatusRecord | null> {
+  const store = await getTranscodeStatusStore()
   return store[pickCode] || null
 }
 
-export function getTranscodeStatusByFileId(fileId: string): TranscodeStatusRecord | null {
-  const store = getTranscodeStatusStore()
+export async function getTranscodeStatusByFileId(fileId: string): Promise<TranscodeStatusRecord | null> {
+  const store = await getTranscodeStatusStore()
   return store[`fid:${fileId}`] || null
 }
 
 export function subscribeTranscodeStatus(
   callback: (event: { pickCode: string; fileId?: string; status: RuntimeTranscodeResponse }) => void,
 ) {
-  if (typeof window === 'undefined') return () => {}
+  const unsubs: Array<() => void> = []
 
-  const handler = (e: Event) => {
-    const customEvent = e as CustomEvent<{
-      pickCode: string
-      fileId?: string
-      status: RuntimeTranscodeResponse
-    }>
-    if (customEvent.detail) {
-      callback(customEvent.detail)
+  if (typeof window !== 'undefined') {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        pickCode: string
+        fileId?: string
+        status: RuntimeTranscodeResponse
+      }>
+      if (customEvent.detail) {
+        callback(customEvent.detail)
+      }
     }
+    window.addEventListener(EVENT_NAME, handler)
+    unsubs.push(() => window.removeEventListener(EVENT_NAME, handler))
   }
 
-  window.addEventListener(EVENT_NAME, handler)
+  const c = globalThis.chrome
+  if (c?.storage?.onChanged) {
+    const listener = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      areaName: string,
+    ) => {
+      if (areaName !== 'session') return
+      const change = changes[STORAGE_KEY]
+      if (!change?.newValue) return
+      const newStore = change.newValue as TranscodeStoreData
+      const oldStore = (change.oldValue as TranscodeStoreData | undefined) ?? {}
+      for (const [key, record] of Object.entries(newStore)) {
+        if (JSON.stringify(oldStore[key]) !== JSON.stringify(record)) {
+          callback({ pickCode: record.pickCode, fileId: record.fileId, status: record.status })
+        }
+      }
+    }
+    c.storage.onChanged.addListener(listener)
+    unsubs.push(() => c.storage.onChanged.removeListener(listener))
+  }
+
   return () => {
-    window.removeEventListener(EVENT_NAME, handler)
+    unsubs.forEach(fn => fn())
   }
 }
