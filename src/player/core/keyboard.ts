@@ -1,7 +1,14 @@
 import type Artplayer from 'artplayer'
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return !!target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]')
+}
+
 export function bindKeyboardShortcuts(art: Artplayer): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
+    if (isEditableTarget(e.target)) return
+
     if (e.code === 'Space') {
       e.preventDefault()
       art.toggle()

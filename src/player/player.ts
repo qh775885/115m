@@ -439,6 +439,7 @@ class PlayerManager {
       autoMini: true,
       screenshot: false,
       setting: false,
+      hotkey: false,
       controls: [
         this.buildPrevControlItem(),
         this.buildNextControlItem(),
