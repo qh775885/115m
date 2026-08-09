@@ -23,11 +23,6 @@ import {
   handleFetchPlaylist,
 } from './media-info'
 
-// 安装时初始化
-chrome.runtime.onInstalled.addListener((_details) => {
-  // early 页面接管已移至 content script 同步执行，无需额外注册
-})
-
 // 监听来自 content script 和 player 页面的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === 'PING') {
@@ -40,8 +35,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   })
   return true // 保持 sendResponse 有效
 })
-
-
 
 let lastOpenTabMeta: { url: string, ts: number } | null = null
 
@@ -112,27 +105,23 @@ function assertDownloadUrl(rawUrl: string) {
 }
 
 async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.MessageSender): Promise<any> {
-  if (message.type === 'PING') {
-    return { pong: true }
+  if (message.type !== 'PING') {
+    assertTrustedSender(sender, message.type)
   }
-  
+
   switch (message.type) {
     case 'MAIN_WORLD_FETCH':
-      assertTrustedSender(sender, message.type)
       assertAllowedMainWorldUrl(message.data.url)
       return executeInMainWorld(sender, message.data.url, message.data.body, message.data.contentType)
 
     case 'MAIN_WORLD_GET':
-      assertTrustedSender(sender, message.type)
       assertAllowedMainWorldUrl(message.data.url)
       return executeInMainWorld(sender, message.data.url)
 
     case 'TRANSCODE_FRAME_READY':
-      assertTrustedSender(sender, message.type)
       return register115VodFrameSession(sender, message.data.pickCode)
 
     case 'OPEN_TAB': {
-      assertTrustedSender(sender, message.type)
       const now = Date.now()
       if (lastOpenTabMeta && lastOpenTabMeta.url === message.url && now - lastOpenTabMeta.ts < 2500) {
         return { success: true, deduped: true }
@@ -143,39 +132,30 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
     }
 
     case 'REQUEST_MOVE_REFRESH':
-      assertTrustedSender(sender, message.type)
       return handleMoveSuccessRefresh()
 
     case 'FETCH_M3U8':
-      assertTrustedSender(sender, message.type)
       return handleFetchM3u8(message)
 
     case 'FETCH_SUBTITLES':
-      assertTrustedSender(sender, message.type)
       return handleFetchSubtitles(message, sender)
 
     case 'FETCH_PLAYLIST':
-      assertTrustedSender(sender, message.type)
       return handleFetchPlaylist(message)
 
     case 'DELETE_FILE':
-      assertTrustedSender(sender, message.type)
       return handleDeleteFile(message, sender)
 
     case 'TRANSCODE_ACCELERATE':
-      assertTrustedSender(sender, message.type)
       return handleTranscode(message)
 
     case 'TRANSCODE_STATUS':
-      assertTrustedSender(sender, message.type)
       return handleTranscodeStatus(message)
 
     case 'TRANSCODE_NATIVE_FALLBACK':
-      assertTrustedSender(sender, message.type)
       return handleTranscodeNativeFallback(message)
 
     case 'SET_COOKIE': {
-      assertTrustedSender(sender, message.type)
       const { data } = message
       const domain = normalizeCookieDomain(data.domain)
       await chrome.cookies.set({
@@ -192,50 +172,47 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
     }
 
     case 'DOWNLOAD': {
-      assertTrustedSender(sender, message.type)
       const { url, filename } = message.data
       assertDownloadUrl(url)
-      chrome.downloads.download({
-        url,
-        filename: filename || undefined,
-        saveAs: true,
-      })
+      try {
+        await chrome.downloads.download({
+          url,
+          filename: filename || undefined,
+          saveAs: true,
+        })
+      }
+      catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : String(error) }
+      }
       return { success: true }
     }
 
     case 'GET_HISTORY': {
-      assertTrustedSender(sender, message.type)
       return await getHistory(message.data.pickCode)
     }
 
     case 'GET_NATIVE_HISTORY': {
-      assertTrustedSender(sender, message.type)
       return await getNativeHistory(message.data.pickCode, message.data.shareId)
     }
 
     case 'GET_NATIVE_HISTORY_MAP': {
-      assertTrustedSender(sender, message.type)
       return await getNativeHistoryMap(message.data.pickCodes, message.data.shareId)
     }
 
     case 'SET_NATIVE_HISTORY': {
-      assertTrustedSender(sender, message.type)
       return { success: await setNativeHistory(message.data) }
     }
 
     case 'GET_HISTORY_MAP': {
-      assertTrustedSender(sender, message.type)
       return await getHistoryMap()
     }
 
     case 'SET_HISTORY': {
-      assertTrustedSender(sender, message.type)
       await setHistory(message.data)
       return { success: true }
     }
 
     case 'DELETE_HISTORY': {
-      assertTrustedSender(sender, message.type)
       await deleteHistory(message.data.pickCode)
       return { success: true }
     }

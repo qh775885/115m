@@ -70,6 +70,10 @@ export type OpenTabResponse = RuntimeSuccessResponse & {
   deduped?: true
 }
 
+export type RuntimeDownloadResponse =
+  | { success: true }
+  | { success: false, error: string }
+
 export interface MsgSetCookie {
   type: 'SET_COOKIE'
   data: {
@@ -255,7 +259,7 @@ export type RuntimeTabNotification =
 export interface RuntimeMessageResponseMap {
   PING: { pong: true }
   SET_COOKIE: RuntimeSuccessResponse
-  DOWNLOAD: RuntimeSuccessResponse
+  DOWNLOAD: RuntimeDownloadResponse
   OPEN_TAB: OpenTabResponse
   GET_HISTORY: PlayHistoryEntry | null
   GET_NATIVE_HISTORY: NativePlayHistoryRecord | null
