@@ -1339,7 +1339,7 @@ class PlayerManager {
     if (item.pickCode === this.currentPickCode) {
       return this.currentParentId()
     }
-    return readPlaylistCidFromLocation(window.location.search) || this.currentParentId()
+    return item.cid || readPlaylistCidFromLocation(window.location.search) || this.currentParentId()
   }
 
   private currentParentId(): string {

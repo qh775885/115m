@@ -25,6 +25,7 @@ export function normalizePlaylistItems(
         isMarked: item.m === 1 || item.iv === 1,
         duration: item.play_long || 0,
         sha: item.sha || '',
+        cid: item.cid || item.pid || '',
       }
     })
 }

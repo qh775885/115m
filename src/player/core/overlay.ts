@@ -25,6 +25,7 @@ export interface OverlayPlaylistItem {
   isMarked?: boolean
   duration?: number
   sha?: string
+  cid?: string
   progressSec?: number
   progressPercent?: number
 }
@@ -212,7 +213,19 @@ export class PlayerOverlayController {
   }
 
   updateMeta(meta: Partial<PlayerOverlayMeta>) {
+    const prevCid = this.options.meta.cid
     Object.assign(this.options.meta, meta)
+
+    if (typeof meta.cid === 'string') {
+      if (meta.cid) {
+        this.options.meta.cid = meta.cid
+        this.options.meta.parentId = meta.cid
+      }
+      else {
+        this.options.meta.cid = prevCid
+        this.options.meta.parentId = prevCid
+      }
+    }
 
     if (typeof meta.title === 'string') {
       this.setCurrentTitle(meta.title)

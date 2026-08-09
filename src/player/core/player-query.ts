@@ -22,6 +22,7 @@ export interface NavigateToVideoOptions {
   title?: string
   fileId?: string
   fileSize?: string
+  cid?: string
   isMarked?: boolean
   keepPlaylistOpen?: boolean
 }
@@ -85,6 +86,9 @@ export function buildNavigateToVideoUrl(pathname: string, search: string, pickCo
   }
   if (options.fileSize) {
     params.set('fileSize', options.fileSize)
+  }
+  if (options.cid) {
+    params.set('cid', options.cid)
   }
   if (typeof options.isMarked === 'boolean') {
     params.set('marked', options.isMarked ? '1' : '0')

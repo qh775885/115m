@@ -28,6 +28,7 @@ describe('normalizePlaylistItems', () => {
         isMarked: true,
         duration: 100,
         sha: 'sha1',
+        cid: '',
       },
     ])
   })
