@@ -1,9 +1,8 @@
 import type { FileInfo } from './types'
 import { wait } from '../../shared/utils'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
+import { isArchiveFileName, stripArchiveExtension } from '../../shared/archive'
 
-const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz']
-const COMPOUND_ARCHIVE_EXTENSIONS = ['tar.gz', 'tar.bz2', 'tar.xz']
 const MAX_PROGRESS_CHECKS = 120
 const PROGRESS_DELAY_MS = 1500
 const MAX_BATCH_UNARCHIVE_FILES = 5
@@ -21,23 +20,6 @@ type UnarchiveResult = {
   ok: boolean
   fileName: string
   message: string
-}
-
-function isArchiveFileName(name: string): boolean {
-  const lower = name.trim().toLowerCase()
-  return ARCHIVE_EXTENSIONS.some(ext => lower.endsWith(`.${ext}`))
-}
-
-function stripArchiveExtension(name: string): string {
-  const trimmed = name.trim()
-  const lower = trimmed.toLowerCase()
-  for (const ext of COMPOUND_ARCHIVE_EXTENSIONS) {
-    if (lower.endsWith(`.${ext}`)) return trimmed.slice(0, trimmed.length - ext.length - 1)
-  }
-  for (const ext of ARCHIVE_EXTENSIONS) {
-    if (lower.endsWith(`.${ext}`)) return trimmed.slice(0, trimmed.length - ext.length - 1)
-  }
-  return trimmed
 }
 
 function isSecondaryVolume(name: string): boolean {

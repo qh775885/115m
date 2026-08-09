@@ -1,21 +1,6 @@
-const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz']
+import { ARCHIVE_EXTENSIONS, isArchiveFileName, stripArchiveExtension } from '../../shared/archive'
+
 const LAST_ARCHIVE_NAME_KEY = 'm115:last-unarchive-name'
-
-function isArchiveFileName(name: string): boolean {
-  const lower = name.trim().toLowerCase()
-  return ARCHIVE_EXTENSIONS.some(ext => lower.endsWith(`.${ext}`))
-}
-
-function stripArchiveExtension(name: string): string {
-  const trimmed = name.trim()
-  const lower = trimmed.toLowerCase()
-  for (const ext of ARCHIVE_EXTENSIONS) {
-    if (lower.endsWith(`.${ext}`)) {
-      return trimmed.slice(0, trimmed.length - ext.length - 1)
-    }
-  }
-  return trimmed
-}
 
 function rememberArchiveName(name: string) {
   try {
