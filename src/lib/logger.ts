@@ -13,18 +13,16 @@ export class Logger {
   }
   debug(...args: any[]) {
     if (this.silent) return
-    // console.debug(`[${this.name}]`, ...args)
+    console.debug(`[${this.name}]`, ...args)
   }
   info(...args: any[]) {
     if (this.silent) return
-    // console.info(`[${this.name}]`, ...args)
+    console.info(`[${this.name}]`, ...args)
   }
   warn(...args: any[]) {
-    if (this.silent) return
     console.warn(`[${this.name}]`, ...args)
   }
   error(...args: any[]) {
-    if (this.silent) return
     console.error(`[${this.name}]`, ...args)
   }
   clearLogs() {}
