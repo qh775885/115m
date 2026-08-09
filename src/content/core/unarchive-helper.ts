@@ -188,10 +188,19 @@ function enhanceCreateFolderDialog(doc: Document): boolean {
 }
 
 function scheduleEnhanceCreateFolderDialog(doc: Document) {
-  const delays = [60, 160, 320, 600]
-  for (const delay of delays) {
-    window.setTimeout(() => enhanceCreateFolderDialog(doc), delay)
+  if (doc.querySelector<HTMLElement>('.dialog-box.dialog-mini.window-current')) {
+    enhanceCreateFolderDialog(doc)
+    return
   }
+
+  const observer = new MutationObserver(() => {
+    const target = doc.querySelector<HTMLElement>('.dialog-box.dialog-mini.window-current')
+    if (!target) return
+    observer.disconnect()
+    enhanceCreateFolderDialog(doc)
+  })
+  observer.observe(doc.body, { childList: true, subtree: true })
+  window.setTimeout(() => observer.disconnect(), 5000)
 }
 
 function injectStyles(doc: Document) {

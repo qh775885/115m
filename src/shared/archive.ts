@@ -24,3 +24,12 @@ export function stripArchiveExtension(name: string): string {
   }
   return trimmed
 }
+
+/**
+ * 判断是否为分卷压缩包的非首卷（如 xxx.part02.rar、xxx.part2.rar）
+ * 首卷（.part001.rar / .part1.rar）不在此列。
+ */
+export function isSecondaryVolume(name: string): boolean {
+  const lower = name.trim().toLowerCase()
+  return /\.part\d+\.rar$/i.test(lower) && !/\.part0*1\.rar$/i.test(lower)
+}

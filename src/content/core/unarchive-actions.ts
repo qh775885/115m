@@ -1,7 +1,7 @@
 import type { FileInfo } from './types'
 import { wait } from '../../shared/utils'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
-import { isArchiveFileName, stripArchiveExtension } from '../../shared/archive'
+import { isArchiveFileName, isSecondaryVolume, stripArchiveExtension } from '../../shared/archive'
 
 const MAX_PROGRESS_CHECKS = 120
 const PROGRESS_DELAY_MS = 1500
@@ -21,12 +21,6 @@ type UnarchiveResult = {
   fileName: string
   message: string
 }
-
-function isSecondaryVolume(name: string): boolean {
-  const lower = name.trim().toLowerCase()
-  return /\.part(?!0*1\.)\d+\.rar$/.test(lower) || /\.(?!0*1$)\d{3}$/.test(lower)
-}
-
 
 async function requestJson<T>(url: string, body?: URLSearchParams): Promise<T> {
   const res = await sendRuntimeMessageSafe<MainWorldResponse>({
@@ -470,6 +464,7 @@ function stopUnarchiveButtonEvent(event: Event) {
 }
 
 const actionCleanups = new Map<Document, () => void>()
+const visibilityTimers = new Map<Document, number>()
 
 export function setupUnarchiveActions(doc: Document) {
   const existing = actionCleanups.get(doc)
@@ -480,9 +475,13 @@ export function setupUnarchiveActions(doc: Document) {
 
   injectStyles(doc)
   injectBatchButton(doc)
-  const scheduleVisibilityUpdate = () => window.setTimeout(() => updateBatchButtonVisibility(doc), 0)
+  const scheduleVisibilityUpdate = () => {
+    const timer = visibilityTimers.get(doc)
+    if (timer) window.clearTimeout(timer)
+    visibilityTimers.set(doc, window.setTimeout(() => updateBatchButtonVisibility(doc), 300))
+  }
   const updateVisibility = () => updateBatchButtonVisibility(doc)
-  const observer = new MutationObserver(updateVisibility)
+  const observer = new MutationObserver(scheduleVisibilityUpdate)
   doc.addEventListener('click', scheduleVisibilityUpdate, true)
   doc.addEventListener('pointerup', scheduleVisibilityUpdate, true)
   doc.addEventListener('keyup', scheduleVisibilityUpdate, true)
@@ -495,6 +494,9 @@ export function setupUnarchiveActions(doc: Document) {
     doc.removeEventListener('keyup', scheduleVisibilityUpdate, true)
     doc.removeEventListener('change', updateVisibility, true)
     observer.disconnect()
+    const timer = visibilityTimers.get(doc)
+    if (timer) window.clearTimeout(timer)
+    visibilityTimers.delete(doc)
     doc.getElementById('m115-batch-unarchive-btn')?.remove()
     actionCleanups.delete(doc)
   }

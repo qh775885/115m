@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isArchiveFileName, stripArchiveExtension } from './archive'
+import { isArchiveFileName, isSecondaryVolume, stripArchiveExtension } from './archive'
 
 describe('isArchiveFileName', () => {
   it('detects common archive extensions', () => {
@@ -37,5 +37,30 @@ describe('stripArchiveExtension', () => {
 
   it('trims surrounding whitespace', () => {
     expect(stripArchiveExtension('  a.zip  ')).toBe('a')
+  })
+})
+
+describe('isSecondaryVolume', () => {
+  it('detects non-first split volumes', () => {
+    expect(isSecondaryVolume('a.part2.rar')).toBe(true)
+    expect(isSecondaryVolume('a.part02.rar')).toBe(true)
+    expect(isSecondaryVolume('a.part10.rar')).toBe(true)
+  })
+
+  it('excludes the first volume', () => {
+    expect(isSecondaryVolume('a.part1.rar')).toBe(false)
+    expect(isSecondaryVolume('a.part01.rar')).toBe(false)
+    expect(isSecondaryVolume('a.part001.rar')).toBe(false)
+  })
+
+  it('does not treat plain numeric suffixes as volumes', () => {
+    expect(isSecondaryVolume('photo.042')).toBe(false)
+    expect(isSecondaryVolume('backup.123')).toBe(false)
+    expect(isSecondaryVolume('a.042')).toBe(false)
+  })
+
+  it('does not match non-rar archives', () => {
+    expect(isSecondaryVolume('a.part2.zip')).toBe(false)
+    expect(isSecondaryVolume('a.zip')).toBe(false)
   })
 })
