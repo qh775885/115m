@@ -3,7 +3,7 @@ import { readAttr } from '../../shared/utils'
 import { parseDuration } from './utils'
 
 export function isPlayIntentTarget(target: HTMLElement): boolean {
-  if (target.closest('.file-opr,[menu],.m115-cover-container')) return false
+  if (target.closest('.file-opr,[menu],.m115-cover-container,input[type="checkbox"],.checkbox')) return false
   return !!target.closest('.file-name .name,.file-name,.name,.file-thumb')
 }
 

@@ -1,6 +1,6 @@
 import type { FileInfo } from './types'
 import type { StoredPlayerPlaylistItem } from '../../shared/player-playlist-cache'
-import { extractFileInfo } from './extractors'
+import { extractFileInfo, isPlayIntentTarget } from './extractors'
 
 function isStoredPlaylistItem(file: FileInfo): file is FileInfo & StoredPlayerPlaylistItem {
   return typeof file.fileId === 'string' && typeof file.fileSize === 'string'
@@ -21,6 +21,8 @@ export class HomePlayBinder {
     if (!fileNameNode) return
 
     const handleClickPlayer = (event: Event) => {
+      const target = event.target as HTMLElement | null
+      if (target && !isPlayIntentTarget(target)) return
       const now = Date.now()
       if (this.openingLock) {
         event.preventDefault()
