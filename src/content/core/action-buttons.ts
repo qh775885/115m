@@ -1,4 +1,5 @@
 import type { FileInfo } from './types'
+import { VOD_URL } from '../../lib/constants'
 
 /**
  * 在文件列表项的操作区域注入「115播放」按钮
@@ -21,7 +22,7 @@ export function injectActionButtons(item: HTMLElement, file: FileInfo) {
     e.preventDefault()
     e.stopPropagation()
     e.stopImmediatePropagation()
-    const vodUrl = `https://115vod.com/?pickcode=${file.pickCode}&share_id=0`
+    const vodUrl = `${VOD_URL}/?pickcode=${file.pickCode}&share_id=0`
     window.open(vodUrl, '_blank')
   })
 
