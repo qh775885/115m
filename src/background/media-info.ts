@@ -3,6 +3,7 @@
  */
 import type {
   MsgFetchM3u8,
+  MsgFetchM3u8Text,
   MsgFetchPlaylist,
   MsgFetchSubtitles,
 } from '../shared/messages'
@@ -25,7 +26,7 @@ function parseJsonOrNull(text: string): unknown | null {
 
 export async function handleFetchM3u8(message: MsgFetchM3u8) {
   const pickCode = message.data.pickCode
-  const url = `https://115.com/api/video/m3u8/${pickCode}.m3u8`
+  const url = `https://115.com/api/video/m3u8/${encodeURIComponent(pickCode)}.m3u8`
   const maxRetries = 2
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -49,6 +50,41 @@ export async function handleFetchM3u8(message: MsgFetchM3u8) {
 
       // 重试用尽，返回空列表
       return { list: [] }
+    }
+    catch (e: any) {
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+        continue
+      }
+      return { error: e?.message || String(e) }
+    }
+  }
+
+  return { error: 'unreachable' }
+}
+
+export async function handleFetchM3u8Text(message: MsgFetchM3u8Text) {
+  const pickCode = message.data.pickCode
+  const url = `https://115.com/api/video/m3u8/${encodeURIComponent(pickCode)}.m3u8`
+  const maxRetries = 2
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        credentials: 'include',
+        headers: { Accept: '*/*' },
+      })
+      const text = await res.text()
+      if (text.trim().startsWith('#EXTM3U')) {
+        return { text }
+      }
+
+      // 响应不是有效 M3U8，重试
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+        continue
+      }
+      return { text: '', error: 'not a valid m3u8' }
     }
     catch (e: any) {
       if (attempt < maxRetries) {

@@ -19,6 +19,7 @@ import {
 } from './file-operations'
 import {
   handleFetchM3u8,
+  handleFetchM3u8Text,
   handleFetchSubtitles,
   handleFetchPlaylist,
 } from './media-info'
@@ -136,6 +137,9 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
 
     case 'FETCH_M3U8':
       return handleFetchM3u8(message)
+
+    case 'FETCH_M3U8_TEXT':
+      return handleFetchM3u8Text(message)
 
     case 'FETCH_SUBTITLES':
       return handleFetchSubtitles(message, sender)

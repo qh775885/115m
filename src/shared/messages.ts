@@ -66,6 +66,11 @@ export interface FetchM3u8Response {
   error?: string
 }
 
+export interface FetchM3u8TextResponse {
+  text?: string
+  error?: string
+}
+
 export type OpenTabResponse = RuntimeSuccessResponse & {
   deduped?: true
 }
@@ -142,6 +147,11 @@ export interface MsgOpenTab {
 
 export interface MsgFetchM3u8 {
   type: 'FETCH_M3U8'
+  data: { pickCode: string }
+}
+
+export interface MsgFetchM3u8Text {
+  type: 'FETCH_M3U8_TEXT'
   data: { pickCode: string }
 }
 
@@ -240,6 +250,7 @@ export type RuntimeMessage =
   | MsgDeleteHistory
   | MsgOpenTab
   | MsgFetchM3u8
+  | MsgFetchM3u8Text
   | MsgFetchSubtitles
   | MsgMainWorldFetch
   | MsgMainWorldGet
@@ -269,6 +280,7 @@ export interface RuntimeMessageResponseMap {
   SET_HISTORY: RuntimeSuccessResponse
   DELETE_HISTORY: RuntimeSuccessResponse
   FETCH_M3U8: FetchM3u8Response
+  FETCH_M3U8_TEXT: FetchM3u8TextResponse
   FETCH_PLAYLIST: MsgFetchPlaylistResponse
   MAIN_WORLD_FETCH: RuntimeMainWorldResponse
   MAIN_WORLD_GET: RuntimeMainWorldResponse

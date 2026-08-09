@@ -50,7 +50,7 @@ import {
   resolveOriginalPlaceholderUrl,
   syncPlaybackStateByUrl,
 } from './core/playback-state'
-import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from './core/runtime'
+import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './core/runtime'
 import {
   buildUpdatedMarkedUrl,
   readPathFromLocation,
@@ -62,6 +62,7 @@ import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from '.
 import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
+import { findVariantInMaster, normalizePlaylistUrl as normalizePlaylistUrlUtil } from './core/playlist-url'
 import { RotationManager } from './core/rotation-manager'
 import { SubtitleController } from './core/subtitle-controller'
 
@@ -352,15 +353,22 @@ class PlayerManager {
 
   private async fetchMasterPlaylistText(): Promise<string | null> {
     try {
-      const response = await fetch(`https://115.com/api/video/m3u8/${this.currentPickCode}.m3u8`, {
-        credentials: 'include',
-      })
-      const text = await response.text()
-      return text.startsWith('#EXTM3U') ? text : null
+      const res = await sendTypedRuntimeMessageSafe({
+        type: 'FETCH_M3U8_TEXT',
+        data: { pickCode: this.currentPickCode },
+      }, 2, 500, 12000)
+      if (!res) return null
+      if ('text' in res && res.text) return res.text
+      return null
     }
     catch {
       return null
     }
+  }
+
+  /** 归一化播放列表 URL，用于容错匹配（忽略协议/域名/查询串差异） */
+  private normalizePlaylistUrl(url: string): string {
+    return normalizePlaylistUrlUtil(url)
   }
 
   private async buildHlsPlaybackUrl(selectedUrl: string): Promise<string> {
@@ -375,13 +383,8 @@ class PlayerManager {
       return selectedUrl
     }
 
-    let streamInf = ''
-    for (let i = 0; i < lines.length; i += 1) {
-      if (lines[i]?.trim() === selectedUrl.trim()) {
-        streamInf = lines[i - 1]?.trim() || ''
-        break
-      }
-    }
+    const { streamInf: matchedStreamInf, matchedUrl } = findVariantInMaster(masterText, selectedUrl)
+    let streamInf = matchedStreamInf
 
     if (!streamInf.startsWith('#EXT-X-STREAM-INF')) {
       const groupId = audioTags[0].match(/GROUP-ID="([^"]+)"/i)?.[1] || 'Audio-Group'
@@ -392,7 +395,7 @@ class PlayerManager {
       streamInf = `${streamInf},AUDIO="${groupId}"`
     }
 
-    const wrapped = ['#EXTM3U', ...audioTags, streamInf, selectedUrl].join('\n')
+    const wrapped = ['#EXTM3U', ...audioTags, streamInf, matchedUrl || selectedUrl].join('\n')
     return URL.createObjectURL(new Blob([wrapped], { type: 'application/vnd.apple.mpegurl' }))
   }
 
@@ -1475,6 +1478,8 @@ class PlayerManager {
       this.artplayer.seek = 0
       
       this.applyResolvedPlayback(playback)
+      // 切换视频时重置倍速，避免上一集的倍速残留到下一集
+      this.applyPlaybackRate(1)
       const metaPatch = buildOverlayMetaPatch(targetItem)
       if (metaPatch) {
         this.overlay?.updateMeta(metaPatch)

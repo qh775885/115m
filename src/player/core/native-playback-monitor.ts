@@ -228,7 +228,7 @@ export class NativePlaybackMonitor {
       stallThresholdMs = 2500
     }
 
-    if (mediaLikelyStalled && timeDrift <= STALL_MAX_TIME_DRIFT_SEC && frameDrift === 0) {
+    if (mediaLikelyStalled && timeDrift <= STALL_MAX_TIME_DRIFT_SEC && frameDrift <= 1) {
       if (!this.stallStartedAt) {
         this.stallStartedAt = Date.now()
       }
@@ -288,13 +288,18 @@ export class NativePlaybackMonitor {
     }
 
     const totalFrames = this.getTotalVideoFrames(video)
-    if (!shouldFallbackNativeBlackVideo({
+    const shouldFallback = shouldFallbackNativeBlackVideo({
       currentTime: video.currentTime || 0,
       readyState: video.readyState,
       videoWidth: video.videoWidth || 0,
       videoHeight: video.videoHeight || 0,
       totalVideoFrames: totalFrames,
-    })) {
+    })
+    if (!shouldFallback) {
+      // 片头阶段（<3s）未解码出帧可能只是加载未完成，继续观察，避免黑屏降级链断裂
+      if ((video.currentTime || 0) < 3) {
+        this.scheduleVideoProbe()
+      }
       return
     }
 
