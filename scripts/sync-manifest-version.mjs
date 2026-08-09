@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const root = process.cwd()
@@ -21,4 +21,5 @@ const zipPath = resolve(root, 'dist', zipName)
 const releaseDir = resolve(root, 'release')
 mkdirSync(releaseDir, { recursive: true })
 copyFileSync(zipPath, resolve(releaseDir, zipName))
+unlinkSync(zipPath)
 console.log(`[115m] published ${zipName} to release/`)
