@@ -33,6 +33,7 @@ export class AudioManager {
   private currentAudioTrackId = -1
   private currentAudioTrackLabel = '音轨'
   private preferredAudioTrackId: number | null = null
+  private pendingAudioTrackId: number | null = null
   private audioPreferenceAppliedForPickCode = ''
   private syncTimers: number[] = []
 
@@ -68,6 +69,7 @@ export class AudioManager {
   resetPreferenceFlag() {
     this.audioPreferenceAppliedForPickCode = ''
     this.preferredAudioTrackId = null
+    this.pendingAudioTrackId = null
   }
 
   /** 同步音轨列表从 HLS 实例 */
@@ -80,6 +82,28 @@ export class AudioManager {
       id: index,
       label: this.getTrackLabel(track, index),
     }))
+
+    if (this.pendingAudioTrackId !== null && this.pendingAudioTrackId < tracks.length) {
+      const targetId = this.pendingAudioTrackId
+      this.pendingAudioTrackId = null
+      this.preferredAudioTrackId = targetId
+      this.currentAudioTrackId = targetId
+      const active = this.audioTrackOptions.find(track => track.id === targetId)
+      this.currentAudioTrackLabel = active?.label || (this.audioTrackOptions.length > 0 ? this.audioTrackOptions[0].label : '音轨')
+      try {
+        const target = tracks[targetId]
+        if (target && typeof hls.setAudioOption === 'function') {
+          hls.setAudioOption(target)
+        }
+        hls.audioTrack = targetId
+      }
+      catch {
+        // ignore and continue
+      }
+      this.renderControl()
+      return
+    }
+
     this.currentAudioTrackId = typeof hls?.audioTrack === 'number' ? hls.audioTrack : -1
     const active = this.audioTrackOptions.find(track => track.id === this.currentAudioTrackId)
     this.currentAudioTrackLabel = active?.label || (this.audioTrackOptions.length > 0 ? this.audioTrackOptions[0].label : '音轨')
@@ -136,6 +160,7 @@ export class AudioManager {
     const shouldResume = !!art && !art.video.paused
     const track = Array.isArray(hls.audioTracks) ? hls.audioTracks[id] : null
     this.preferredAudioTrackId = id
+    this.pendingAudioTrackId = id
     this.currentAudioTrackId = id
     const active = this.audioTrackOptions.find(t => t.id === id)
     if (active) {
@@ -183,20 +208,7 @@ export class AudioManager {
    * 应用音轨选择并触发重建
    */
   async applyTrackSelection(id: number) {
-    if (!this.art || !this.deps) return
-    const target = this.audioTrackOptions.find(track => track.id === id)
-    if (!target) return
-
-    const video = this.art.video
-    const currentTime = video.currentTime
-    const shouldResume = !video.paused
-
-    await this.deps.onRebuildHls({
-      id,
-      currentTime,
-      shouldResume,
-      track: (target as any).rawTrack // 忽略类型检查，原逻辑存在
-    })
+    this.applyTrack(id)
   }
 
   /** 调度延迟音轨同步 */
