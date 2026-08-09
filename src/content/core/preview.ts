@@ -123,6 +123,7 @@ let lightboxImg: HTMLImageElement | null = null
 let lightboxTime: HTMLDivElement | null = null
 let lightboxCovers: VideoThumbnail[] = []
 let lightboxIndex = 0
+let lightboxDoc: Document | null = null
 
 function renderLightboxImage() {
   const cover = lightboxCovers[lightboxIndex]
@@ -139,7 +140,10 @@ function closeCoverLightbox() {
   lightboxImg = null
   lightboxTime = null
   lightboxCovers = []
-  document.removeEventListener('keydown', handleLightboxKeydown, true)
+  if (lightboxDoc) {
+    lightboxDoc.removeEventListener('keydown', handleLightboxKeydown, true)
+    lightboxDoc = null
+  }
 }
 
 function showLightboxImage(nextIndex: number) {
@@ -177,34 +181,35 @@ function handleLightboxWheel(event: WheelEvent) {
   showLightboxImage(lightboxIndex + (event.deltaY > 0 ? 1 : -1))
 }
 
-function openCoverLightbox(covers: VideoThumbnail[], index: number) {
+function openCoverLightbox(doc: Document, covers: VideoThumbnail[], index: number) {
   if (!covers.length) return
 
   closeCoverLightbox()
 
+  lightboxDoc = doc
   lightboxCovers = covers
   lightboxIndex = index
 
-  const root = document.createElement('div')
+  const root = doc.createElement('div')
   root.className = 'm115-cover-lightbox'
 
-  const image = document.createElement('img')
+  const image = doc.createElement('img')
   image.className = 'm115-cover-lightbox-img'
 
-  const time = document.createElement('div')
+  const time = doc.createElement('div')
   time.className = 'm115-cover-lightbox-time'
 
-  const closeButton = document.createElement('button')
+  const closeButton = doc.createElement('button')
   closeButton.type = 'button'
   closeButton.className = 'm115-cover-lightbox-close'
   closeButton.textContent = '×'
 
-  const prevButton = document.createElement('button')
+  const prevButton = doc.createElement('button')
   prevButton.type = 'button'
   prevButton.className = 'm115-cover-lightbox-nav is-prev'
   prevButton.textContent = '‹'
 
-  const nextButton = document.createElement('button')
+  const nextButton = doc.createElement('button')
   nextButton.type = 'button'
   nextButton.className = 'm115-cover-lightbox-nav is-next'
   nextButton.textContent = '›'
@@ -214,7 +219,7 @@ function openCoverLightbox(covers: VideoThumbnail[], index: number) {
   root.appendChild(closeButton)
   root.appendChild(prevButton)
   root.appendChild(nextButton)
-  document.documentElement.appendChild(root)
+  doc.documentElement.appendChild(root)
 
   lightboxRoot = root
   lightboxImg = image
@@ -235,7 +240,7 @@ function openCoverLightbox(covers: VideoThumbnail[], index: number) {
     event.stopPropagation()
     showLightboxImage(lightboxIndex + 1)
   })
-  document.addEventListener('keydown', handleLightboxKeydown, true)
+  doc.addEventListener('keydown', handleLightboxKeydown, true)
 }
 
 /** 预览图加载状态 */
@@ -251,12 +256,11 @@ interface PreviewState {
 }
 
 const previewStates = new WeakMap<HTMLElement, PreviewState>()
-
-class PreviewObserverRegistry {
+export class PreviewObserverRegistry {
   private readonly scrollCallbacks = new Map<HTMLElement | Window, Set<() => void>>()
   private readonly scrollListeners = new Map<HTMLElement | Window, () => void>()
-  private readonly registeredItems = new Map<HTMLElement, () => void>()
-  private removalObserver: MutationObserver | null = null
+  private readonly registeredItemsByDoc = new Map<Document, Map<HTMLElement, () => void>>()
+  private readonly removalObservers = new Map<Document, MutationObserver>()
 
   registerScrollStop(target: HTMLElement | Window, callback: () => void) {
     let callbacks = this.scrollCallbacks.get(target)
@@ -287,27 +291,36 @@ class PreviewObserverRegistry {
       currentCallbacks.delete(callback)
       if (currentCallbacks.size > 0) return
       this.scrollListeners.get(target)?.()
+
       this.scrollListeners.delete(target)
       this.scrollCallbacks.delete(target)
     }
   }
 
   registerItem(item: HTMLElement, dispose: () => void) {
-    this.registeredItems.set(item, dispose)
-    if (!this.removalObserver) {
-      this.removalObserver = new MutationObserver(() => {
-        this.registeredItems.forEach((onDispose, registeredItem) => {
+    const doc = item.ownerDocument
+    let items = this.registeredItemsByDoc.get(doc)
+    if (!items) {
+      items = new Map()
+      this.registeredItemsByDoc.set(doc, items)
+
+      const observer = new MutationObserver(() => {
+        items?.forEach((onDispose, registeredItem) => {
           if (!registeredItem.isConnected) onDispose()
         })
       })
-      this.removalObserver.observe(document.documentElement, { childList: true, subtree: true })
+      observer.observe(doc.documentElement, { childList: true, subtree: true })
+      this.removalObservers.set(doc, observer)
     }
+    items.set(item, dispose)
 
     return () => {
-      this.registeredItems.delete(item)
-      if (this.registeredItems.size > 0) return
-      this.removalObserver?.disconnect()
-      this.removalObserver = null
+      items?.delete(item)
+      if (items && items.size === 0) {
+        this.removalObservers.get(doc)?.disconnect()
+        this.removalObservers.delete(doc)
+        this.registeredItemsByDoc.delete(doc)
+      }
     }
   }
 }
@@ -320,12 +333,14 @@ const previewObserverRegistry = new PreviewObserverRegistry()
 export function renderPreview(item: HTMLElement, file: FileInfo) {
   if (item.querySelector('.m115-cover-container')) return
 
+  const doc = item.ownerDocument
+
   item.classList.add('with-ext-video-cover')
 
-  const container = document.createElement('div')
+  const container = doc.createElement('div')
   container.className = 'm115-cover-container'
 
-  const skeleton = document.createElement('div')
+  const skeleton = doc.createElement('div')
   skeleton.className = 'm115-cover-skeleton'
   container.appendChild(skeleton)
   item.appendChild(container)
@@ -378,14 +393,14 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
           return
         }
 
-        const row = document.createElement('div')
+        const row = doc.createElement('div')
         row.className = 'm115-cover-loaded'
 
         covers.forEach((cover, index) => {
-          const thumb = document.createElement('span')
+          const thumb = doc.createElement('span')
           thumb.className = 'm115-cover-thumb'
 
-          const img = document.createElement('img')
+          const img = doc.createElement('img')
           img.className = 'm115-cover-img'
           img.src = cover.imgUrl
           img.alt = `预览 ${Math.floor(cover.time)}s`
@@ -394,7 +409,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
           thumb.addEventListener('click', (event) => {
             event.preventDefault()
             event.stopPropagation()
-            openCoverLightbox(covers, index)
+            openCoverLightbox(doc, covers, index)
           })
           thumb.addEventListener('dblclick', (event) => {
             event.preventDefault()
@@ -501,13 +516,15 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
  * 转码已完成但 M3U8 还有缓存延迟时的提示
  */
 function showCompletedHint(container: HTMLElement, message: string) {
+  const doc = container.ownerDocument
+
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
-  const wrapper = document.createElement('div')
+  const wrapper = doc.createElement('div')
   wrapper.className = 'm115-transcode-area'
 
-  const label = document.createElement('span')
+  const label = doc.createElement('span')
   label.className = 'm115-transcode-label'
   label.textContent = message
   label.style.color = '#52c41a'
@@ -529,18 +546,20 @@ const acceleratedSet = new Set<string>()
  * - 点击后提交当前视频，并顺带批量同文件夹需转码项（官方 batch_push）
  */
 function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: string, initialStatus?: TranscodeResponse) {
+  const doc = container.ownerDocument
+
   container.classList.add('is-transcode-tip')
   container.innerHTML = ''
 
-  const wrapper = document.createElement('div')
+  const wrapper = doc.createElement('div')
   wrapper.className = 'm115-transcode-area'
 
-  const label = document.createElement('span')
+  const label = doc.createElement('span')
   label.className = 'm115-transcode-label'
   label.textContent = '视频需转码后才能预览'
   label.style.color = '#fa8c16'
 
-  const button = document.createElement('button')
+  const button = doc.createElement('button')
   button.type = 'button'
   button.className = 'm115-transcode-btn'
   button.textContent = 'VIP加速转码'
@@ -580,7 +599,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
       observer.disconnect()
     }
   })
-  observer.observe(document.body, { childList: true, subtree: true })
+  observer.observe(doc.body, { childList: true, subtree: true })
 
   const stopPolling = () => {
     if (typeof pollTimer === 'number') {
@@ -637,7 +656,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
   const prepareTranscodeFrame = async () => {
     cleanupTranscodeFrame()
 
-    const frame = document.createElement('iframe')
+    const frame = doc.createElement('iframe')
     transcodeFrame = frame
     frame.dataset['115mTranscodeFrame'] = pickCode
     frame.src = `https://115vod.com/?pickcode=${encodeURIComponent(pickCode)}&share_id=0`
@@ -655,7 +674,7 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
       'z-index:2147483647',
       'pointer-events:auto',
     ].join(';')
-    document.documentElement.appendChild(frame)
+    doc.documentElement.appendChild(frame)
 
     await new Promise<void>((resolve, reject) => {
       const timer = window.setTimeout(() => reject(new Error('115vod iframe load timeout')), 8000)
