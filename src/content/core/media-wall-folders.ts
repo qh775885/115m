@@ -158,6 +158,8 @@ function syncStarButtonState(starBtn: HTMLButtonElement, active: boolean) {
   starBtn.disabled = false
   starBtn.title = active ? '取消星标' : '星标'
   starBtn.setAttribute('aria-label', active ? '取消星标' : '星标')
+  const starIcon = starBtn.querySelector<HTMLElement>('.m115-folder-icon')
+  if (starIcon) starIcon.innerHTML = active ? Icons.StarFilled : Icons.Star
 }
 
 function scheduleFolderStarSync(
@@ -303,7 +305,7 @@ export function renderFoldersSection(
     const starIcon = doc.createElement('span')
     starIcon.className = 'm115-folder-icon'
     starIcon.setAttribute('aria-hidden', 'true')
-    starIcon.innerHTML = Icons.Star
+    starIcon.innerHTML = folder.isStarred ? Icons.StarFilled : Icons.Star
     starBtn.appendChild(starIcon)
     starBtn.addEventListener('click', (event) => {
       event.preventDefault()
