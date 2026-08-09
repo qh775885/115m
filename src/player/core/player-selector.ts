@@ -1,9 +1,51 @@
+const selectorControls = new Set<HTMLElement>()
+
+let sharedListenerBound = false
+
+function closeAllSelectors() {
+  selectorControls.forEach((control) => {
+    if (!control.isConnected) {
+      selectorControls.delete(control)
+      return
+    }
+    control.classList.remove('m115-selector-open')
+  })
+}
+
+function ensureSharedListeners() {
+  if (sharedListenerBound) return
+  sharedListenerBound = true
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null
+    if (!target) return
+    let insideOpen = false
+    selectorControls.forEach((control) => {
+      if (control.contains(target) && control.classList.contains('m115-selector-open')) {
+        insideOpen = true
+      }
+    })
+    if (!insideOpen) {
+      closeAllSelectors()
+    }
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeAllSelectors()
+    }
+  })
+}
+
 export function bindClickSelectorBehavior(control: HTMLElement) {
   if ((control as any).__m115SelectorBound) {
     return
   }
   ;(control as any).__m115SelectorBound = true
   control.classList.add('m115-click-selector')
+  selectorControls.add(control)
+
+  ensureSharedListeners()
 
   const close = () => {
     control.classList.remove('m115-selector-open')
@@ -38,18 +80,6 @@ export function bindClickSelectorBehavior(control: HTMLElement) {
     }
     else {
       open()
-    }
-  })
-
-  document.addEventListener('click', (event) => {
-    if (!control.contains(event.target as Node)) {
-      close()
-    }
-  })
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      close()
     }
   })
 }
