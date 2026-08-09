@@ -247,7 +247,7 @@ export class PlayerOverlayController {
     item.progressPercent = progressPercent
 
     if (!this.playlistListEl) return
-    const node = this.playlistListEl.querySelector<HTMLElement>(`.m115-pl-item[data-pickcode="${esc(pickCode)}"]`)
+    const node = this.playlistListEl.querySelector<HTMLElement>(`.m115-pl-item[data-pickcode="${escapeHtml(pickCode)}"]`)
     if (!node) return
 
     const container = node.querySelector<HTMLElement>('[data-role="playlist-progress"]')
@@ -284,7 +284,7 @@ export class PlayerOverlayController {
 
   showPlaybackEndPanel(state: OverlayPlaybackEndState) {
     if (!this.endPanelEl || !this.endPanelTextEl || !this.endPanelSubTextEl) return
-    this.endPanelTextEl.textContent = state.mode === 'autoplay-next' ? '当前视频播放完成' : '当前视频已播放完成'
+    this.endPanelTextEl.textContent = '当前视频播放完成'
     if (state.mode === 'autoplay-next' && state.nextTitle) {
       const sec = Math.max(1, state.countdownSec || 1)
       this.endPanelSubTextEl.textContent = `${sec} 秒后自动播放下一集：${state.nextTitle}`
@@ -796,14 +796,15 @@ export class PlayerOverlayController {
     const nextOpen = !this.playlistOpen
     overlayDebug('[115m] handlePlaylistToggle:', { nextOpen, sidebarEl: !!this.sidebarEl, playlistListEl: !!this.playlistListEl })
     if (nextOpen) {
-      const items = await this.options.onPlaylistToggle(true)
-      overlayDebug('[115m] playlist items received:', items.length)
-      this.renderPlaylist(items)
+      try {
+        const items = await this.options.onPlaylistToggle(true)
+        overlayDebug('[115m] playlist items received:', items.length)
+        this.renderPlaylist(items)
+      }
+      catch (error) {
+        overlayDebug('[115m] playlist toggle failed:', error)
+      }
     }
     this.setPlaylistOpen(nextOpen)
   }
 }
-
-
-// Alias for attribute escaping (same logic)
-const esc = escapeHtml
