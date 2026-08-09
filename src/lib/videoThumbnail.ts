@@ -2,6 +2,7 @@ import type { FrameData } from './clipper/DecoderFlow'
 import { drive115 } from './drive115'
 import { M3U8ClipperNew } from './clipper/m3u8Clipper'
 import { getImageResize } from './image'
+import { BoundedCache } from './cache'
 
 /**
  * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
@@ -19,10 +20,16 @@ const CACHE_VERSION = 'v4'
 const SEEK_CONCURRENCY = 3
 const PRECISE_TARGET_ACCEPT_DELTA = 2.5
 const PRECISE_EARLY_SUCCESS_DELTA = 0.45
-const sourceUrlCache = new Map<string, Promise<string>>()
-const memoryCoverCache = new Map<string, VideoThumbnail[]>()
-const memorySingleCoverCache = new Map<string, Promise<VideoThumbnail | null>>()
-const memoryTimelineCache = new Map<string, VideoThumbnail[]>()
+
+const SOURCE_URL_CACHE_LIMIT = 200
+const COVER_CACHE_LIMIT = 200
+const SINGLE_COVER_CACHE_LIMIT = 100
+const TIMELINE_CACHE_LIMIT = 100
+
+const sourceUrlCache = new BoundedCache<Promise<string>>(SOURCE_URL_CACHE_LIMIT)
+const memoryCoverCache = new BoundedCache<VideoThumbnail[]>(COVER_CACHE_LIMIT)
+const memorySingleCoverCache = new BoundedCache<Promise<VideoThumbnail | null>>(SINGLE_COVER_CACHE_LIMIT)
+const memoryTimelineCache = new BoundedCache<VideoThumbnail[]>(TIMELINE_CACHE_LIMIT)
 
 export interface VideoCoverOptions {
   maxWidth?: number
@@ -362,7 +369,7 @@ function selectCoverSet(covers: VideoThumbnail[], duration: number, coverNum: nu
       return Math.abs(current.time - targetTime) < Math.abs(best.time - targetTime) ? current : best
     }, null)
     if (nearest) {
-      picked.set(`${nearest.time}-${nearest.imgUrl.slice(0, 32)}`, nearest)
+      picked.set(`${nearest.time}-${nearest.imgUrl.length}-${nearest.imgUrl}`, nearest)
     }
   }
 
@@ -399,6 +406,10 @@ async function readTimelineCovers(pickCode: string): Promise<VideoThumbnail[]> {
   return []
 }
 
+export function coversSignature(covers: VideoThumbnail[]): string {
+  return covers.map(cover => `${cover.time}:${cover.imgUrl.length}:${cover.imgUrl}`).join('|')
+}
+
 async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): Promise<void> {
   const cacheKey = getTimelineCacheKey(pickCode)
   memoryTimelineCache.set(cacheKey, covers)
@@ -406,6 +417,19 @@ async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): 
   const storageArea = getStorageArea()
   if (!storageArea) {
     return
+  }
+
+  try {
+    const existing = await storageArea.get(cacheKey)
+    const existingCovers = normalizeCachedCovers(existing[cacheKey] as VideoThumbnail[] | undefined)
+    if (existingCovers.length > 0 && coversSignature(existingCovers) === coversSignature(covers)) {
+      return
+    }
+  }
+  catch (error) {
+    if (!isContextInvalidatedError(error)) {
+      console.warn('[115m] 读取时间轴缓存失败:', error)
+    }
   }
 
   const storableResults = await Promise.all(covers.map(coverToStorableDataUrl))
@@ -435,7 +459,6 @@ export async function getVideoCoverAt(
 
   if (!pending) {
     pending = (async () => {
-      const startedAt = Date.now()
       const clipper = await openClipper(pickCode)
       try {
         const cover = await generateAccurateCover(
@@ -444,7 +467,6 @@ export async function getVideoCoverAt(
           duration ?? normalizedTime + 30,
           resolvedOptions,
         )
-        void startedAt
         return cover
       }
       finally {
@@ -465,7 +487,6 @@ export async function getVideoCoverAt(
 
 export async function getVideoCovers(pickCode: string, duration: number, coverNum = 5, options?: VideoCoverOptions): Promise<VideoThumbnail[]> {
   const resolvedOptions = resolveCoverOptions(options)
-  const startedAt = Date.now()
 
   const cacheKey = getBatchCacheKey(pickCode, coverNum, resolvedOptions.cacheScope)
   const inMemory = normalizeCachedCovers(memoryCoverCache.get(cacheKey))
@@ -515,7 +536,6 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
     ])
     const results = selectCoverSet(mergedTimeline, duration, coverNum)
 
-    void startedAt
     if (results.length === 0) {
       return results
     }
@@ -525,6 +545,18 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
     try {
       const writeCache = async () => {
         if (storageArea) {
+          try {
+            const existing = await storageArea.get(cacheKey)
+            const existingCovers = normalizeCachedCovers(existing[cacheKey] as VideoThumbnail[] | undefined)
+            if (existingCovers.length > 0 && coversSignature(existingCovers) === coversSignature(results)) {
+              return
+            }
+          }
+          catch (error) {
+            if (!isContextInvalidatedError(error)) {
+              console.warn('[115m] 读取缓存失败:', error)
+            }
+          }
           const storableResults = await Promise.all(results.map(coverToStorableDataUrl))
           await storageArea.set({ [cacheKey]: storableResults })
         }
