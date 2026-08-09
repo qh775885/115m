@@ -4,6 +4,7 @@ import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } fro
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
 import { Icons } from '../../shared/icons'
+import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemTitle } from './native-dom'
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')
@@ -17,7 +18,7 @@ function startSelectionSync(sourceItem: HTMLElement, sync: () => void): () => vo
     subtree: true,
     childList: true,
   })
-  const inputs = Array.from(sourceItem.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'))
+  const inputs = getItemCheckboxes(sourceItem)
   inputs.forEach((input) => {
     input.addEventListener('change', sync)
   })
@@ -28,11 +29,11 @@ function startSelectionSync(sourceItem: HTMLElement, sync: () => void): () => vo
 }
 
 export function buildImageItem(item: HTMLElement): MediaWallImageItem | null {
-  if (item.getAttribute('file_type') !== '1') return null
-  if (item.getAttribute('iv') === '1') return null
+  if (getFileType(item) !== '1') return null
+  if (getImageIv(item) === '1') return null
 
-  const title = item.getAttribute('title') || item.querySelector('.file-name .name')?.textContent?.trim() || '图片'
-  const thumbUrl = item.getAttribute('path') || item.querySelector('img')?.getAttribute('src') || ''
+  const title = getItemTitle(item) || '图片'
+  const thumbUrl = getImageThumbUrl(item)
   if (!thumbUrl || !isImageExtension(title)) return null
 
   return {

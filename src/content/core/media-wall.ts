@@ -2,6 +2,14 @@ import { readAttr } from '../../shared/utils'
 import { sendRuntimeMessageSafe } from './runtime'
 import { buildFolderItem, renderFoldersSection } from './media-wall-folders'
 import { createImageModule } from './media-wall-images'
+import {
+  getContextMenuAnchor,
+  getFileItems,
+  getFileListContainer,
+  getHasDesc,
+  getStarStateKey,
+  isRemarkVisible,
+} from './native-dom'
 import type { MediaWallFolderItem, MediaWallImageItem } from './media-wall-types'
 
 interface MediaWallState {
@@ -17,14 +25,12 @@ const HIDDEN_CLASS = 'm115-wall-hidden-item'
 const WALL_ID = 'm115-media-wall'
 
 function getFolderStateSignature(item: HTMLElement): string {
-  const starAction = item.querySelector('.icon-star,[menu="star"],.tpstar,.tpstar-disabled') as HTMLElement | null
-  const remarkAction = item.querySelector('.icon-remarks,[menu="remark"],.file-remark,.remarks') as HTMLElement | null
   return [
     item.getAttribute('title') || '',
     item.getAttribute('img_url') || '',
-    starAction?.getAttribute('is_star') || '',
-    remarkAction ? getComputedStyle(remarkAction).display : 'none',
-    item.getAttribute('has_desc') || '',
+    getStarStateKey(item),
+    isRemarkVisible(item) ? 'visible' : 'none',
+    getHasDesc(item),
   ].join(':')
 }
 
@@ -51,7 +57,7 @@ function clearWall(list: HTMLElement) {
 }
 
 function forwardNativeContextMenu(sourceItem: HTMLElement, event: MouseEvent) {
-  const anchor = (sourceItem.querySelector('.file-name .name,[menu="open"],[rel="view_folder"],.file-thumb img,.photo-icon img') as HTMLElement | null) || sourceItem
+  const anchor = getContextMenuAnchor(sourceItem)
   sourceItem.classList.remove(HIDDEN_CLASS)
 
   const previousStyle = sourceItem.getAttribute('style') || ''
@@ -92,7 +98,7 @@ function renderImagesSection(doc: Document, images: MediaWallImageItem[]) {
 }
 
 function collectMediaItems(list: HTMLElement) {
-  const items = Array.from(list.querySelectorAll<HTMLElement>('li[rel="item"]'))
+  const items = getFileItems(list)
   const folders = items.map(buildFolderItem).filter((item): item is MediaWallFolderItem => !!item)
   const images = items.map(imageModule.buildImageItem).filter((item): item is MediaWallImageItem => !!item)
   return { items, folders, images }
@@ -122,7 +128,7 @@ function scheduleMediaWallRefresh(doc: Document) {
 }
 
 export function renderMediaWall(doc: Document) {
-  const list = doc.querySelector('.list-contents') as HTMLElement | null
+  const list = getFileListContainer(doc)
   if (!list) return
 
   const { items, folders, images } = collectMediaItems(list)

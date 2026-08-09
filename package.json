@@ -1,6 +1,6 @@
 {
   "name": "115m",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "license": "GPL-3.0-only",
   "private": true,
   "type": "module",
@@ -32,6 +32,7 @@
     "@types/node": "^26.1.1",
     "eslint": "^10.7.0",
     "globals": "^17.7.0",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.0",
     "typescript-eslint": "^8.64.0",

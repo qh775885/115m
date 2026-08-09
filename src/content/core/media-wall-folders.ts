@@ -1,6 +1,18 @@
 import type { MediaWallFolderItem } from './media-wall-types'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { Icons } from '../../shared/icons'
+import {
+  getFileType,
+  getFolderCoverUrl,
+  getFolderId,
+  getItemTitle,
+  getOpenAnchor,
+  getRemarkAction,
+  getSelectionTarget,
+  getStarAction,
+  isItemStarred,
+  isRemarkVisible,
+} from './native-dom'
 
 function dispatchMouseSequence(target: HTMLElement, events: Array<{ type: string, init: MouseEventInit }>) {
   events.forEach(({ type, init }) => {
@@ -46,9 +58,7 @@ function buildMouseInit(event?: MouseEvent, button = 0): MouseEventInit {
 }
 
 function findNativeSelectionTarget(sourceItem: HTMLElement): HTMLElement {
-  return sourceItem.querySelector<HTMLElement>('.checkbox[menu="file_check_one"]')
-    || sourceItem.querySelector<HTMLElement>('input[type="checkbox"]')
-    || sourceItem
+  return getSelectionTarget(sourceItem)
 }
 
 function toggleNativeFolderSelection(sourceItem: HTMLElement, hiddenClass: string, event?: MouseEvent) {
@@ -72,7 +82,7 @@ export function selectNativeFolder(sourceItem: HTMLElement, hiddenClass: string,
 }
 
 export function openNativeFolder(sourceItem: HTMLElement, hiddenClass: string) {
-  const anchor = (sourceItem.querySelector('.file-name .name,[menu="open"],[rel="view_folder"]') as HTMLElement | null) || sourceItem
+  const anchor = getOpenAnchor(sourceItem)
 
   withVisibleSourceItem(sourceItem, hiddenClass, () => {
     sourceItem.style.setProperty('left', '-9999px', 'important')
@@ -115,7 +125,7 @@ export function openNativeFolder(sourceItem: HTMLElement, hiddenClass: string) {
 }
 
 export function openNativeFolderContextMenu(sourceItem: HTMLElement, hiddenClass: string, event: MouseEvent) {
-  const anchor = (sourceItem.querySelector('.file-name .name,[menu="open"],[rel="view_folder"]') as HTMLElement | null) || sourceItem
+  const anchor = getOpenAnchor(sourceItem)
 
   withVisibleSourceItem(sourceItem, hiddenClass, () => {
     sourceItem.style.setProperty('left', `${event.clientX}px`, 'important')
@@ -145,13 +155,6 @@ export function openNativeFolderContextMenu(sourceItem: HTMLElement, hiddenClass
   })
 }
 
-function isSourceItemStarred(sourceItem: HTMLElement, starAction: HTMLElement | null): boolean {
-  return starAction?.getAttribute('is_star') === '1'
-    || sourceItem.getAttribute('is_star') === '1'
-    || sourceItem.getAttribute('star') === '1'
-    || sourceItem.classList.contains('is-starred')
-}
-
 function syncStarButtonState(starBtn: HTMLButtonElement, active: boolean) {
   starBtn.classList.toggle('is-active', active)
   starBtn.classList.remove('is-pending')
@@ -166,10 +169,9 @@ function scheduleFolderStarSync(
   doc: Document,
   starBtn: HTMLButtonElement,
   sourceItem: HTMLElement,
-  starAction: HTMLElement | null,
   scheduleMediaWallRefresh: (doc: Document) => void,
 ) {
-  const sync = () => syncStarButtonState(starBtn, isSourceItemStarred(sourceItem, starAction))
+  const sync = () => syncStarButtonState(starBtn, isItemStarred(sourceItem))
   window.setTimeout(sync, 180)
   window.setTimeout(() => {
     sync()
@@ -182,22 +184,22 @@ function scheduleFolderStarSync(
 }
 
 export function buildFolderItem(item: HTMLElement): MediaWallFolderItem | null {
-  if (item.getAttribute('file_type') !== '0') return null
+  if (getFileType(item) !== '0') return null
 
-  const title = item.getAttribute('title') || item.querySelector('.file-name .name')?.textContent?.trim() || '文件夹'
-  const coverUrl = item.getAttribute('img_url') || ''
+  const title = getItemTitle(item) || '文件夹'
+  const coverUrl = getFolderCoverUrl(item)
   if (!coverUrl) return null
 
-  const starAction = item.querySelector('.icon-star,[menu="star"],.tpstar,.tpstar-disabled') as HTMLElement | null
-  const remarkAction = item.querySelector('.icon-remarks,[menu="remark"],.file-remark,.remarks') as HTMLElement | null
+  const starAction = getStarAction(item)
+  const remarkAction = getRemarkAction(item)
 
   return {
-    id: item.getAttribute('cate_id') || title,
+    id: getFolderId(item) || title,
     title,
     coverUrl,
     sourceItem: item,
-    isStarred: isSourceItemStarred(item, starAction),
-    hasRemark: !!remarkAction && getComputedStyle(remarkAction).display !== 'none',
+    isStarred: isItemStarred(item),
+    hasRemark: isRemarkVisible(item),
     starAction,
     remarkAction,
     open: () => openNativeFolder(item, 'm115-wall-hidden-item'),
@@ -314,7 +316,7 @@ export function renderFoldersSection(
       starBtn.disabled = true
       starBtn.classList.add('is-pending')
       folder.starAction.click()
-      scheduleFolderStarSync(doc, starBtn, folder.sourceItem, folder.starAction, scheduleMediaWallRefresh)
+      scheduleFolderStarSync(doc, starBtn, folder.sourceItem, scheduleMediaWallRefresh)
     })
     actions.appendChild(starBtn)
 
