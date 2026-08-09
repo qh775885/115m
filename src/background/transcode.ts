@@ -11,16 +11,6 @@ import { isTransientFrameError, wait } from '../shared/utils'
 import { fetchVideoInfoByPickCode } from '../platform/115/file-actions'
 import { close115VodFrameSession, closeExtensionCreated115VodTab, fetchTextIn115VodMainWorld, query115Tabs } from '../platform/115/main-world'
 
-function debugLog(tag: string, data: unknown) {
-  try {
-    fetch('http://localhost:19115/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tag, data: typeof data === 'string' ? data : JSON.stringify(data) }),
-    }).catch(() => {})
-  } catch { /* ignore */ }
-}
-
 interface TranscodeCheckResult {
   result?: number
   status?: number
@@ -171,9 +161,20 @@ function buildQueuedResponse(job: TranscodeCheckResult | null | undefined, detai
   }
 }
 
-async function getTranscodeContext(pickCode: string) {
-  const tabs = await query115Tabs()
-  const tabId = tabs[0]?.id
+/**
+ * 从 115 标签页列表中选择转码上下文目标 tab
+ * 优先当前活跃 tab，避免多标签/多账号时取错账号上下文
+ */
+export function pickTranscodeTab(tabs: Array<{ id?: number, active?: boolean }>): number | undefined {
+  return tabs.find(tab => tab.active)?.id ?? tabs[0]?.id
+}
+
+async function getTranscodeContext(pickCode: string, sender?: chrome.runtime.MessageSender) {
+  let tabId = sender?.tab?.id
+  if (!tabId) {
+    const tabs = await query115Tabs()
+    tabId = pickTranscodeTab(tabs)
+  }
   if (!tabId) return { error: '未找到 115.com 页面' }
 
   const videoResult = await fetchVideoInfoByPickCode(tabId, pickCode) as any
@@ -194,10 +195,10 @@ async function getTranscodeContext(pickCode: string) {
   }
 }
 
-export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
+export async function handleTranscodeStatus(message: MsgTranscodeStatus, sender?: chrome.runtime.MessageSender) {
 
   try {
-    const context = await getTranscodeContext(message.data.pickCode)
+    const context = await getTranscodeContext(message.data.pickCode, sender)
     if ('error' in context) {
       return { ok: false, state: 'failed', error: context.error }
     }
@@ -260,17 +261,6 @@ export async function handleTranscodeStatus(message: MsgTranscodeStatus) {
 
     console.error('[115m] transcode status error:', e)
     return { ok: false, state: 'failed', error: e?.message || String(e) }
-  }
-}
-
-async function parseJsonResponse<T>(response: Response): Promise<T | null> {
-  const text = await response.text()
-  if (!text) return null
-  try {
-    return JSON.parse(text) as T
-  }
-  catch {
-    return null
   }
 }
 
@@ -373,14 +363,8 @@ async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRAN
     return { batchTotal: 0, batchQueued: 0, batchSkipped: 0, batchDetail: 'no folder transcode candidates', batchPickCodes: [] }
   }
 
-  // 115vod is_transcoded 返回的数据：对于需要转码的文件，是否有对应的 pick_code？
-  // 事实上，is_transcoded 接口的 response 中可能包含 file_id，但我们需要能和页面上的元素匹配（一般是 pick_code 或 file_id）。
-  // 查阅 is_transcoded 的 data 字段：通常 data 返回的是一个需要转码的 file_ids 数组（115vod 自己的 file_ids）。
-  // 为了在 content script 中能感知同文件夹其他被加速的文件状态，我们应该想办法拿到这些被加速文件的关联标识。
-  // background 在这里把 transcoded.data (即 fileIds) 返回给 content 侧，content 侧可以根据 file_id 找到对应的 DOM 元素！
-  // 因为 fileInfo 提取出的 FileInfo 确实包含 fileId：
-  // export interface FileInfo { pickCode: string; fileName: string; duration: number; isVideo: boolean; fileId?: string; parentId?: string; ... }
-  // 所以我们可以返回 batchFileIds 字段，content script 根据 fileId 识别同文件夹下其他加速的视频。
+  // is_transcoded 返回同文件夹需转码的 file_ids 数组；把 fileIds 回传 content 侧，
+  // 供其按 fileId 匹配 DOM 元素并同步同文件夹其他视频的加速状态
   const cooldownKey = getBatchCooldownKey(pickCode, fileIds)
   if (isBatchTranscodeCooling(cooldownKey)) {
     return { batchTotal: fileIds.length, batchQueued: 0, batchSkipped: fileIds.length, batchDetail: 'batch already requested recently', batchFileIds: fileIds }
@@ -403,7 +387,7 @@ async function pushFolderBatchTranscode(pickCode: string, limit = MAX_BATCH_TRAN
 }
 
 // ─── TRANSCODE_ACCELERATE ───
-async function transcodeOne(pickCodeForCooldown: string) {
+async function transcodeOne(pickCodeForCooldown: string, sender?: chrome.runtime.MessageSender) {
 
   const cached = getTranscodeCooldown(pickCodeForCooldown)
   if (cached) {
@@ -411,7 +395,7 @@ async function transcodeOne(pickCodeForCooldown: string) {
     return { ...(cached as object), deduped: true }
   }
 
-  const context = await getTranscodeContext(pickCodeForCooldown)
+  const context = await getTranscodeContext(pickCodeForCooldown, sender)
   if ('error' in context) {
 
     return { ok: false, state: 'failed', error: context.error }
@@ -460,7 +444,6 @@ async function transcodeOne(pickCodeForCooldown: string) {
       pushAccepted: !!pushResult?.state,
       detail: pushResult?.msg || 'transcode not queued automatically',
     }
-    setTranscodeCooldown(pickCode, response)
 
     return response
   }
@@ -471,15 +454,14 @@ async function transcodeOne(pickCodeForCooldown: string) {
     pushAccepted: false,
     detail: pushResult?.msg || pushResult?.error || 'vip push rejected',
   }
-  setTranscodeCooldown(pickCode, response)
 
   return response
 }
 
-export async function handleTranscode(message: MsgTranscode) {
+export async function handleTranscode(message: MsgTranscode, sender?: chrome.runtime.MessageSender) {
   const pickCodeForCooldown = message.data.pickCode
   try {
-    const response = await transcodeOne(pickCodeForCooldown) as Record<string, unknown>
+    const response = await transcodeOne(pickCodeForCooldown, sender) as Record<string, unknown>
     if (message.data.batchFolder && response.ok && response.state !== 'failed') {
       const batch = await pushFolderBatchTranscode(
         pickCodeForCooldown,

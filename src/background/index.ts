@@ -151,10 +151,10 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
       return handleDeleteFile(message, sender)
 
     case 'TRANSCODE_ACCELERATE':
-      return handleTranscode(message)
+      return handleTranscode(message, sender)
 
     case 'TRANSCODE_STATUS':
-      return handleTranscodeStatus(message)
+      return handleTranscodeStatus(message, sender)
 
     case 'TRANSCODE_NATIVE_FALLBACK':
       return handleTranscodeNativeFallback(message)
