@@ -82,12 +82,7 @@ export class ChunkReader {
     const contentLength = parseInt(res.headers.get('content-length') ?? '0')
 
     if (res.status === 206) {
-      this.offset += contentLength // Use actual content length to advance offset
-      // Also advance offset by at least limit if content length is wrong, maybe? No, let's just use what we read.
-      // Wait, the previous code was: this.offset += this.limit.
-      // We should use actual content length if possible, or just limit:
-      // this.offset += contentLength || (end ? end - start + 1 : this.limit)
-      
+      // 用实际读取的字节数推进偏移量
       const advanced = contentLength > 0 ? contentLength : (end !== undefined ? end - start + 1 : this.limit)
       this.offset = start + advanced
 
@@ -104,6 +99,9 @@ export class ChunkReader {
       return undefined
     }
 
+    // 服务器不支持 Range（返回 200 全量内容）：单次请求已取完所有数据，
+    // 标记完成，避免 autoReadChunk 反复重读同一份数据直到超时
+    this.doned = true
     return res.arrayBuffer()
   }
 }
