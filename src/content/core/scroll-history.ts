@@ -6,9 +6,8 @@
  * 数据存储在 sessionStorage 中，浏览器标签关闭时自动清除。
  */
 
-import { readAttr } from '../../shared/utils'
-
 const STORAGE_KEY = 'm115_scroll_history'
+const MAX_STORE_KEYS = 200
 
 interface ScrollStore {
   [key: string]: number
@@ -24,15 +23,21 @@ function getStore(): ScrollStore {
 }
 
 function setStore(data: ScrollStore) {
+  const keys = Object.keys(data)
+  if (keys.length > MAX_STORE_KEYS) {
+    const dropCount = keys.length - MAX_STORE_KEYS
+    keys.slice(0, dropCount).forEach((key) => delete data[key])
+  }
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
 /**
- * 构建 sessionStorage 的 key：cid + offset（分页偏移量）
- * 115 网盘翻页时 offset 会变，同一 cid 不同页码的滚动位置分别记录。
+ * 构建 sessionStorage 的 key：cid + offset + tpl（视图类型）
+ * 115 网盘翻页时 offset 会变，同一 cid 不同页码的滚动位置分别记录；
+ * tpl 区分列表/网格视图，避免切换视图时串用位置。
  */
-function buildKey(cid: string, offset: string): string {
-  return `${cid}_${offset}`
+function buildKey(cid: string, offset: string, tpl: string): string {
+  return `${cid}_${offset}_${tpl}`
 }
 
 /**
@@ -61,25 +66,19 @@ export function restoreScrollPosition(key: string, scrollBox: Element): boolean 
 }
 
 /**
- * 从 document 或 URL 中提取 cid 和 offset
+ * 从 document 或 URL 中提取 cid、offset、tpl
  */
-export function extractListParams(doc: Document): { cid: string, offset: string } {
+export function extractListParams(doc: Document): { cid: string, offset: string, tpl: string } {
   const params = new URLSearchParams(doc.defaultView?.location.search ?? '')
   const cid = params.get('cid') ?? '0'
   const offset = params.get('offset') ?? '0'
-  return { cid, offset }
-}
-
-function extractListFingerprint(doc: Document): string {
-  const items = Array.from(doc.querySelectorAll<HTMLElement>('.list-contents [rel="item"],.list-thumb [rel="item"],.list-contents li,.list-thumb li')).slice(0, 20)
-  const ids = items.map(item => readAttr(item, ['cid', 'file_id', 'fid', 'fileid', 'pick_code', 'pickcode']) || item.querySelector('.file-name .name,.name')?.textContent?.trim() || '').filter(Boolean)
-  return ids.join('|')
+  const tpl = params.get('tpl') ?? ''
+  return { cid, offset, tpl }
 }
 
 export function buildListKey(doc: Document): string {
-  const { cid, offset } = extractListParams(doc)
-  const fingerprint = extractListFingerprint(doc)
-  return buildKey(cid, `${offset}_${fingerprint}`)
+  const { cid, offset, tpl } = extractListParams(doc)
+  return buildKey(cid, offset, tpl)
 }
 
 /**
