@@ -36,6 +36,57 @@ class Request {
 
 const request = new Request()
 
+export interface VerificationTabRecord {
+  tabId?: number
+  openedAt: number
+}
+
+export const VERIFICATION_TAB_COOLDOWN_MS = 10_000
+
+let verificationTabRecord: VerificationTabRecord | undefined
+
+export function shouldOpenVerificationTab(
+  record: VerificationTabRecord | undefined,
+  tabStillValid: boolean,
+  now: number,
+): boolean {
+  if (!record) return true
+  if (record.tabId !== undefined) {
+    return !tabStillValid
+  }
+  return now - record.openedAt >= VERIFICATION_TAB_COOLDOWN_MS
+}
+
+async function isVerificationTabValid(tabId: number): Promise<boolean> {
+  if (typeof chrome === 'undefined' || !chrome.tabs) return false
+  try {
+    const tab = await chrome.tabs.get(tabId)
+    return /^https:\/\/([^/]+\.)?115vod\.com\//.test(tab.url || '')
+  }
+  catch {
+    return false
+  }
+}
+
+async function openVerificationTab(url: string) {
+  const now = Date.now()
+  const tabStillValid = verificationTabRecord?.tabId !== undefined
+    ? await isVerificationTabValid(verificationTabRecord.tabId)
+    : false
+  if (!shouldOpenVerificationTab(verificationTabRecord, tabStillValid, now)) {
+    return
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.tabs) {
+    const tab = await chrome.tabs.create({ url }).catch(() => undefined)
+    verificationTabRecord = { tabId: tab?.id, openedAt: now }
+  }
+  else if (typeof window !== 'undefined') {
+    window.open(url, '_blank')
+    verificationTabRecord = { tabId: undefined, openedAt: now }
+  }
+}
+
 /**
  * 115 Drive 核心类
  */
@@ -93,11 +144,7 @@ export class Drive115 {
         if (res.code === 911) {
           console.warn('[Drive115] 需要人机验证')
           const verifyUrl = `${VOD_URL}/?pickcode=${pickcode}`
-          if (typeof chrome !== 'undefined' && chrome.tabs) {
-            chrome.tabs.create({ url: verifyUrl }).catch(() => {})
-          } else if (typeof window !== 'undefined') {
-            window.open(verifyUrl, '_blank')
-          }
+          await openVerificationTab(verifyUrl)
         }
         throw new Error(`获取 m3u8 失败: ${res.error}`)
       }
