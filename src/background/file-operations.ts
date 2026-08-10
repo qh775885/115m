@@ -8,20 +8,26 @@ import type {
 import {
   deleteFileIn115Page,
   refreshListPageIn115Tab,
-  removeDeletedNodeIn115Tab,
 } from '../platform/115/file-actions'
 import { find115TabId, query115Tabs, queryPlayerTabs } from '../platform/115/main-world'
 
-export async function handleMoveSuccessRefresh() {
+export function filterTabsInWindow(tabs: chrome.tabs.Tab[], windowId?: number): chrome.tabs.Tab[] {
+  if (!windowId) return tabs
+  return tabs.filter(tab => tab.windowId === windowId)
+}
+
+export async function handleMoveSuccessRefresh(sender?: chrome.runtime.MessageSender) {
+  const windowId = sender?.tab?.windowId
+
   const playerTabs = await queryPlayerTabs()
-  for (const tab of playerTabs) {
+  for (const tab of filterTabsInWindow(playerTabs, windowId)) {
     if (tab.id) {
       chrome.tabs.sendMessage(tab.id, { type: 'MOVE_REFRESHED' }).catch(() => {})
     }
   }
 
   const allTabs = await query115Tabs()
-  for (const tab of allTabs) {
+  for (const tab of filterTabsInWindow(allTabs, windowId)) {
     if (tab.id && !playerTabs.some(pt => pt.id === tab.id)) {
       try {
         await refreshListPageIn115Tab(tab.id)
@@ -46,34 +52,31 @@ export async function handleDeleteFile(
   const { fileId, parentId, pickCode } = message.data
   const result = await deleteFileIn115Page(tabId, { fileId, parentId }) as { ok?: boolean, error?: string } | undefined
   if (result?.ok) {
-    await handleDeleteSuccessRefresh({
-      type: 'DELETE_REFRESHED',
-      data: { fileId, parentId, pickCode },
-    })
+    await handleDeleteSuccessRefresh(
+      {
+        type: 'DELETE_REFRESHED',
+        data: { fileId, parentId, pickCode },
+      },
+      sender?.tab?.windowId,
+    )
   }
   return result ?? { ok: false, error: 'delete executeScript empty' }
 }
 
-export async function handleDeleteSuccessRefresh(message: MsgDeleteRefreshed) {
+export async function handleDeleteSuccessRefresh(message: MsgDeleteRefreshed, windowId?: number) {
   const { fileId, parentId, pickCode } = message.data
 
   const playerTabs = await queryPlayerTabs()
-  for (const tab of playerTabs) {
+  for (const tab of filterTabsInWindow(playerTabs, windowId)) {
     if (tab.id) {
       chrome.tabs.sendMessage(tab.id, { type: 'DELETE_REFRESHED', data: { fileId, parentId, pickCode } }).catch(() => {})
     }
   }
 
   const allTabs = await query115Tabs()
-  for (const tab of allTabs) {
+  for (const tab of filterTabsInWindow(allTabs, windowId)) {
     if (tab.id && !playerTabs.some(pt => pt.id === tab.id)) {
       chrome.tabs.sendMessage(tab.id, { type: 'DELETE_REFRESHED', data: { fileId, parentId, pickCode } }).catch(() => {})
-      try {
-        await removeDeletedNodeIn115Tab(tab.id, { fileId, pickCode })
-      }
-      catch {
-        // ignore per-tab sync failures
-      }
     }
   }
 

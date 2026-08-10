@@ -137,7 +137,7 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
     }
 
     case 'REQUEST_MOVE_REFRESH':
-      return handleMoveSuccessRefresh()
+      return handleMoveSuccessRefresh(sender)
 
     case 'FETCH_M3U8':
       return handleFetchM3u8(message)

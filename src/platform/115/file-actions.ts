@@ -92,26 +92,3 @@ export async function refreshListPageIn115Tab(tabId: number) {
     },
   })
 }
-
-export async function removeDeletedNodeIn115Tab(tabId: number, payload: { fileId: string, pickCode: string }) {
-  await runIn115MainWorld({
-    tabId,
-    args: [payload],
-    func: (data: { fileId: string, pickCode: string }) => {
-      const docs: Document[] = [document]
-      const frame = document.querySelector('iframe[name="wangpan"]') as HTMLIFrameElement | null
-      if (frame?.contentDocument) docs.push(frame.contentDocument)
-
-      for (const doc of docs) {
-        const selector = [
-          `[file_id="${data.fileId}"]`,
-          `[fid="${data.fileId}"]`,
-          `[fileid="${data.fileId}"]`,
-          `[pick_code="${data.pickCode}"]`,
-          `[pickcode="${data.pickCode}"]`,
-        ].join(',')
-        doc.querySelectorAll(selector).forEach((node) => node.remove())
-      }
-    },
-  })
-}
