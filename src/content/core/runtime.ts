@@ -1,4 +1,5 @@
 import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
+import { recordRuntimeFailure } from '../../shared/telemetry'
 
 function isContextInvalidated(error: unknown): boolean {
   return error instanceof Error && /Extension context invalidated/i.test(error.message)
@@ -79,6 +80,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
     }
   }
   console.warn(`[115m] sendRuntimeMessage failed after retries: ${messageLabel}`)
+  recordRuntimeFailure(messageLabel)
   return null
 }
 

@@ -1,4 +1,5 @@
 import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
+import { recordRuntimeFailure } from '../../shared/telemetry'
 
 /**
  * 检测是否为扩展上下文失效错误（扩展更新/重载后旧页面的连接会断开）
@@ -166,6 +167,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
     }
   }
   console.warn('[115m] sendRuntimeMessage failed after retries:', getRuntimeMessageType(message))
+  recordRuntimeFailure(getRuntimeMessageType(message))
   return null
 }
 
