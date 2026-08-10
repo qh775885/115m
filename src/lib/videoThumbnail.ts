@@ -3,6 +3,7 @@ import { drive115 } from './drive115'
 import { M3U8ClipperNew } from './clipper/m3u8Clipper'
 import { getImageResize } from './image'
 import { BoundedCache } from './cache'
+import { CACHE_VERSION } from './cache-schema'
 
 /**
  * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
@@ -16,7 +17,6 @@ export class M3u8UnavailableError extends Error {
 
 const MAX_WIDTH = 720
 const MAX_HEIGHT = 720
-const CACHE_VERSION = 'v4'
 const SEEK_CONCURRENCY = 3
 const PRECISE_TARGET_ACCEPT_DELTA = 2.5
 const PRECISE_EARLY_SUCCESS_DELTA = 0.45

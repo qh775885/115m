@@ -23,6 +23,9 @@ import {
   handleFetchSubtitles,
   handleFetchPlaylist,
 } from './media-info'
+import { sweepStaleCache } from './cache-sweeper'
+
+void sweepStaleCache()
 
 // 监听来自 content script 和 player 页面的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
