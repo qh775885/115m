@@ -3,8 +3,9 @@ import { readAttr } from '../../shared/utils'
 import { parseDuration } from './utils'
 
 export function isPlayIntentTarget(target: HTMLElement): boolean {
-  if (target.closest('.file-opr,[menu],.m115-cover-container,input[type="checkbox"],.checkbox')) return false
-  return !!target.closest('.file-name .name,.file-name,.name,.file-thumb')
+  if (target.closest('.file-opr,.m115-cover-container,input[type="checkbox"],.checkbox')) return false
+  if (target.closest('[menu]') && !target.closest('a.name, .name')) return false
+  return !!target.closest('.file-name .name, a.name, .file-name, .name, .file-thumb')
 }
 
 export function extractFileInfo(item: HTMLElement): FileInfo | null {

@@ -142,4 +142,29 @@ describe('isPlayIntentTarget', () => {
     doc.body.appendChild(name)
     expect(isPlayIntentTarget(name)).toBe(true)
   })
+
+  it('命中带 menu 属性的文件名链接（115 原生 view_file_one）', () => {
+    const link = doc.createElement('a')
+    link.className = 'name'
+    link.setAttribute('menu', 'view_file_one')
+    const wrap = doc.createElement('span')
+    wrap.className = 'file-name'
+    wrap.appendChild(link)
+    doc.body.appendChild(wrap)
+    expect(isPlayIntentTarget(link)).toBe(true)
+    const inner = doc.createElement('span')
+    link.appendChild(inner)
+    expect(isPlayIntentTarget(inner)).toBe(true)
+  })
+
+  it('排除带 menu 属性的星标等操作按钮', () => {
+    const star = doc.createElement('a')
+    star.className = 'icon-star'
+    star.setAttribute('menu', 'star')
+    const wrap = doc.createElement('span')
+    wrap.className = 'file-name'
+    wrap.appendChild(star)
+    doc.body.appendChild(wrap)
+    expect(isPlayIntentTarget(star)).toBe(false)
+  })
 })
