@@ -37,9 +37,7 @@ export default defineConfig({
       "https://*.115.com/*",
       "https://webapi.115.com/*",
       "https://proapi.115.com/*",
-      "https://aps.115.com/*",
       "https://dl.115cdn.net/*",
-      "https://cdnfhnfile.115cdn.net/*",
       "https://115vod.com/*",
       "https://*.115vod.com/*"
     ],
