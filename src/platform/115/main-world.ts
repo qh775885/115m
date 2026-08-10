@@ -143,6 +143,35 @@ export async function closeExtensionCreated115VodTab() {
   }
 }
 
+export function createVodTabRefCounter() {
+  let count = 0
+  return {
+    acquire() {
+      count++
+    },
+    release() {
+      if (count > 0) count--
+      return count
+    },
+    isActive() {
+      return count > 0
+    },
+  }
+}
+
+const extension115VodTabRefs = createVodTabRefCounter()
+
+export async function acquireExtension115VodTabScope() {
+  extension115VodTabRefs.acquire()
+}
+
+export async function releaseExtension115VodTabScope() {
+  const remaining = extension115VodTabRefs.release()
+  if (remaining === 0) {
+    await closeExtensionCreated115VodTab()
+  }
+}
+
 export async function runIn115MainWorld<TArgs extends unknown[], TResult>(
   options: RunIn115MainWorldOptions<TArgs, TResult>,
 ): Promise<TResult | undefined> {

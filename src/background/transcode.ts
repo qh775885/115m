@@ -9,7 +9,7 @@ import type {
 import { handleFetchM3u8 } from './media-info'
 import { isTransientFrameError, wait } from '../shared/utils'
 import { fetchVideoInfoByPickCode } from '../platform/115/file-actions'
-import { close115VodFrameSession, closeExtensionCreated115VodTab, fetchTextIn115VodMainWorld, query115Tabs } from '../platform/115/main-world'
+import { acquireExtension115VodTabScope, close115VodFrameSession, fetchTextIn115VodMainWorld, query115Tabs, releaseExtension115VodTabScope } from '../platform/115/main-world'
 
 interface TranscodeCheckResult {
   result?: number
@@ -460,6 +460,7 @@ async function transcodeOne(pickCodeForCooldown: string, sender?: chrome.runtime
 
 export async function handleTranscode(message: MsgTranscode, sender?: chrome.runtime.MessageSender) {
   const pickCodeForCooldown = message.data.pickCode
+  await acquireExtension115VodTabScope()
   try {
     const response = await transcodeOne(pickCodeForCooldown, sender) as Record<string, unknown>
     if (message.data.batchFolder && response.ok && response.state !== 'failed') {
@@ -491,7 +492,7 @@ export async function handleTranscode(message: MsgTranscode, sender?: chrome.run
   }
   finally {
     await close115VodFrameSession(pickCodeForCooldown)
-    await closeExtensionCreated115VodTab()
+    await releaseExtension115VodTabScope()
   }
 }
 
