@@ -120,45 +120,71 @@ export class Drive115 {
   }
 
   /**
-   * 解析 M3U8 列表
+   * 拉取 M3U8 原始文本，带 911 人机验证处理与重试
+   * 供 media-info 与 getM3u8Info 共用，行为统一
    */
-  async getM3u8Info(url: string, pickcode: string): Promise<M3u8Item[]> {
-    const response = await this.req.get(url, {
-      headers: { 
-        'Accept': '*/*'
-      },
-    })
+  async fetchM3u8TextWithRetry(pickcode: string, maxRetries = 2): Promise<string> {
+    const url = this.getM3u8Url(pickcode)
 
-    const htmlText = await response.text()
-
-    if (!htmlText.startsWith('#')) {
-      let res: VideoM3u8Res | undefined
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        res = JSON.parse(htmlText) as VideoM3u8Res
-      }
-      catch {
-        throw new Drive115Error.NotFoundM3u8()
-      }
+        const response = await this.req.get(url, {
+          headers: { 'Accept': '*/*' },
+        })
+        const text = await response.text()
 
-      if (res && res.state === false) {
-        if (res.code === 911) {
-          console.warn('[Drive115] 需要人机验证')
-          const verifyUrl = `${VOD_URL}/?pickcode=${pickcode}`
-          await openVerificationTab(verifyUrl)
+        if (text.startsWith('#')) {
+          return text
         }
-        throw new Error(`获取 m3u8 失败: ${res.error}`)
+
+        let res: VideoM3u8Res | undefined
+        try {
+          res = JSON.parse(text) as VideoM3u8Res
+        }
+        catch {
+          throw new Drive115Error.NotFoundM3u8()
+        }
+
+        if (res && res.state === false) {
+          if (res.code === 911) {
+            console.warn('[Drive115] 需要人机验证')
+            const verifyUrl = `${VOD_URL}/?pickcode=${pickcode}`
+            await openVerificationTab(verifyUrl)
+          }
+          throw new Error(`获取 m3u8 失败: ${res.error}`)
+        }
+
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+          continue
+        }
+        return text
+      }
+      catch (error) {
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+          continue
+        }
+        throw error
       }
     }
 
-    return parseM3u8Text(htmlText)
+    throw new Error('m3u8 fetch failed')
+  }
+
+  /**
+   * 解析 M3U8 列表
+   */
+  async getM3u8Info(pickcode: string): Promise<M3u8Item[]> {
+    const text = await this.fetchM3u8TextWithRetry(pickcode)
+    return parseM3u8Text(text)
   }
 
   /**
    * 获取 M3U8 列表
    */
   async getM3u8(pickcode: string): Promise<M3u8Item[]> {
-    const url = this.getM3u8Url(pickcode)
-    return this.getM3u8Info(url, pickcode)
+    return this.getM3u8Info(pickcode)
   }
 
   /**

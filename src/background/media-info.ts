@@ -8,6 +8,7 @@ import type {
   MsgFetchSubtitles,
 } from '../shared/messages'
 import { parseM3u8Text } from '../lib/m3u8-parser'
+import { drive115 } from '../lib/drive115'
 import {
   fetchPlaylistIn115Page,
   fetchVideoInfoByPickCode,
@@ -25,77 +26,23 @@ function parseJsonOrNull(text: string): unknown | null {
 }
 
 export async function handleFetchM3u8(message: MsgFetchM3u8) {
-  const pickCode = message.data.pickCode
-  const url = `https://115.com/api/video/m3u8/${encodeURIComponent(pickCode)}.m3u8`
-  const maxRetries = 2
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await fetch(url, {
-        credentials: 'include',
-        headers: { Accept: '*/*' },
-      })
-      const htmlText = await res.text()
-      const m3u8List = parseM3u8Text(htmlText)
-
-      if (m3u8List.length > 0) {
-        return { list: m3u8List }
-      }
-
-      // 响应不是有效 M3U8（可能是 JSON 错误），重试
-      if (attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
-        continue
-      }
-
-      // 重试用尽，返回空列表
-      return { list: [] }
-    }
-    catch (e: any) {
-      if (attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
-        continue
-      }
-      return { error: e?.message || String(e) }
-    }
+  try {
+    const text = await drive115.fetchM3u8TextWithRetry(message.data.pickCode)
+    return { list: parseM3u8Text(text) }
   }
-
-  return { error: 'unreachable' }
+  catch (e: any) {
+    return { error: e?.message || String(e) }
+  }
 }
 
 export async function handleFetchM3u8Text(message: MsgFetchM3u8Text) {
-  const pickCode = message.data.pickCode
-  const url = `https://115.com/api/video/m3u8/${encodeURIComponent(pickCode)}.m3u8`
-  const maxRetries = 2
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await fetch(url, {
-        credentials: 'include',
-        headers: { Accept: '*/*' },
-      })
-      const text = await res.text()
-      if (text.trim().startsWith('#EXTM3U')) {
-        return { text }
-      }
-
-      // 响应不是有效 M3U8，重试
-      if (attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
-        continue
-      }
-      return { text: '', error: 'not a valid m3u8' }
-    }
-    catch (e: any) {
-      if (attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
-        continue
-      }
-      return { error: e?.message || String(e) }
-    }
+  try {
+    const text = await drive115.fetchM3u8TextWithRetry(message.data.pickCode)
+    return { text }
   }
-
-  return { error: 'unreachable' }
+  catch (e: any) {
+    return { error: e?.message || String(e) }
+  }
 }
 
 export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: chrome.runtime.MessageSender) {
