@@ -76,7 +76,6 @@ const PLAY_HISTORY_COMPLETED_RATIO = 0.98
 const PLAY_HISTORY_WRITE_DEBOUNCE_MS = 3000
 const PLAY_HISTORY_MIN_WRITE_INTERVAL_MS = 15000
 const NATIVE_PLAY_HISTORY_ENABLED = true
-const LOCAL_PLAY_HISTORY_ENABLED = false
 
 function normalizeVolumePreference(value: unknown): VolumePreference {
   if (!value || typeof value !== 'object') return DEFAULT_VOLUME_PREFERENCE
@@ -321,19 +320,6 @@ export async function loadPlayHistoryWhenReady(
   }
 }
 
-export async function loadPlayHistoryMap(): Promise<PlayHistoryMap> {
-  if (!LOCAL_PLAY_HISTORY_ENABLED) return {}
-
-  try {
-    return await sendTypedRuntimeMessageSafe({
-      type: 'GET_HISTORY_MAP',
-    }) ?? {}
-  }
-  catch {
-    return {}
-  }
-}
-
 export async function loadNativePlayHistory(pickCode: string): Promise<PlayHistoryRecord | null> {
   if (!NATIVE_PLAY_HISTORY_ENABLED || !pickCode) return null
 
@@ -358,19 +344,6 @@ export async function loadNativePlayHistoryMap(pickCodes: string[]): Promise<Pla
   }
   catch {
     return {}
-  }
-}
-
-export async function deletePlayHistory(pickCode: string): Promise<void> {
-  if (!pickCode) return
-  try {
-    await sendTypedRuntimeMessageSafe({
-      type: 'DELETE_HISTORY',
-      data: { pickCode },
-    })
-  }
-  catch {
-    // ignore delete errors
   }
 }
 

@@ -1,15 +1,6 @@
 import type { M3u8Item } from '../lib/types'
 import type { FileItem } from '../lib/api/types'
 
-export interface PlayHistoryEntry {
-  pickCode: string
-  fileName: string
-  currentTime: number
-  duration: number
-  quality: string
-  updatedAt: number
-}
-
 export interface NativePlayHistoryRecord {
   pickCode: string
   currentTime: number
@@ -100,11 +91,6 @@ export interface MsgDownload {
   }
 }
 
-export interface MsgGetHistory {
-  type: 'GET_HISTORY'
-  data: { pickCode: string }
-}
-
 export interface MsgGetNativeHistory {
   type: 'GET_NATIVE_HISTORY'
   data: { pickCode: string, shareId?: string }
@@ -122,21 +108,6 @@ export interface MsgSetNativeHistory {
     currentTime: number
     definition?: number
     shareId?: string
-  }
-}
-
-export interface MsgGetHistoryMap {
-  type: 'GET_HISTORY_MAP'
-}
-
-export interface MsgSetHistory {
-  type: 'SET_HISTORY'
-  data: {
-    pickCode: string
-    fileName: string
-    currentTime: number
-    duration: number
-    quality: string
   }
 }
 
@@ -178,13 +149,6 @@ export interface MsgTranscodeFrameReady {
 export interface MsgFetchPlaylist {
   type: 'FETCH_PLAYLIST'
   data: { cid: string, pickCode?: string }
-}
-
-export interface MsgDeleteHistory {
-  type: 'DELETE_HISTORY'
-  data: {
-    pickCode: string
-  }
 }
 
 export interface MsgDeleteFile {
@@ -241,13 +205,9 @@ export interface MsgDeleteRefreshed {
 export type RuntimeMessage =
   | MsgSetCookie
   | MsgDownload
-  | MsgGetHistory
   | MsgGetNativeHistory
   | MsgGetNativeHistoryMap
   | MsgSetNativeHistory
-  | MsgGetHistoryMap
-  | MsgSetHistory
-  | MsgDeleteHistory
   | MsgOpenTab
   | MsgFetchM3u8
   | MsgFetchM3u8Text
@@ -272,13 +232,9 @@ export interface RuntimeMessageResponseMap {
   SET_COOKIE: RuntimeSuccessResponse
   DOWNLOAD: RuntimeDownloadResponse
   OPEN_TAB: OpenTabResponse
-  GET_HISTORY: PlayHistoryEntry | null
   GET_NATIVE_HISTORY: NativePlayHistoryRecord | null
   GET_NATIVE_HISTORY_MAP: Record<string, NativePlayHistoryRecord>
   SET_NATIVE_HISTORY: { success: boolean }
-  GET_HISTORY_MAP: Record<string, PlayHistoryEntry>
-  SET_HISTORY: RuntimeSuccessResponse
-  DELETE_HISTORY: RuntimeSuccessResponse
   FETCH_M3U8: FetchM3u8Response
   FETCH_M3U8_TEXT: FetchM3u8TextResponse
   FETCH_PLAYLIST: MsgFetchPlaylistResponse

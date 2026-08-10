@@ -23,7 +23,7 @@ import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerCo
 import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
-import { deletePlayHistory, loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
+import { loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
 import { buildNavControlItem, mountCenterCluster } from './core/player-center-controls'
 import { buildCustomVolumeControl } from './core/player-volume'
 import type { QualityOption } from './core/types'
@@ -1386,7 +1386,6 @@ class PlayerManager {
     const keepPlaylistOpen = this.keepPlaylistOpenOnInit || this.overlay?.isPlaylistExpanded() === true
 
     await deleteVideoFile(sendRuntimeMessageSafe, fileId, parentId, pickCode)
-    await deletePlayHistory(pickCode)
 
     this.playlistItemsCache = this.playlistItemsCache.filter(item => item.pickCode !== pickCode)
     this.syncOverlayPlaybackNav()

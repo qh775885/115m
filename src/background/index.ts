@@ -6,7 +6,6 @@
 import type { RuntimeMessage } from '../shared/messages'
 import { executeInMainWorld } from './helpers'
 import { assertAllowedOpenTabUrl } from './tab-allowlist'
-import { deleteHistory, getHistory, getHistoryMap, setHistory } from './history-store'
 import { getNativeHistory, getNativeHistoryMap, setNativeHistory } from './native-history'
 import { register115VodFrameSession } from '../platform/115/main-world'
 import {
@@ -193,10 +192,6 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
       return { success: true }
     }
 
-    case 'GET_HISTORY': {
-      return await getHistory(message.data.pickCode)
-    }
-
     case 'GET_NATIVE_HISTORY': {
       return await getNativeHistory(message.data.pickCode, message.data.shareId)
     }
@@ -207,20 +202,6 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
 
     case 'SET_NATIVE_HISTORY': {
       return { success: await setNativeHistory(message.data) }
-    }
-
-    case 'GET_HISTORY_MAP': {
-      return await getHistoryMap()
-    }
-
-    case 'SET_HISTORY': {
-      await setHistory(message.data)
-      return { success: true }
-    }
-
-    case 'DELETE_HISTORY': {
-      await deleteHistory(message.data.pickCode)
-      return { success: true }
     }
 
     default:
