@@ -165,9 +165,17 @@ export class DecoderFlow {
       const elapsed = Date.now() - startTime
       const timeout = this._checkTimeout(startTime, timeoutMs)
 
-      // 如果解码器未配置，主动尝试读取数据（每100ms尝试一次）
-      if (this.videoDecoder?.state === 'unconfigured' && Date.now() - lastAutoReadTime > 100) {
-        this.logger.debug(`解码器未配置，主动尝试读取数据`)
+      // 解码队列为空且待处理样本为空时，主动尝试读取数据（每100ms尝试一次）
+      // 覆盖两种场景：
+      // 1. 解码器未配置，等待读取关键帧信息（SPS/PPS）以配置解码器；
+      // 2. 解码器已配置但当前已读数据未产出完整样本（如块边界截断 PES、分片无关键帧），
+      //    此时必须主动继续读取推进 reader，否则仅靠 ondequeue 驱动会在该状态下空转直至超时
+      if (
+        (this.videoDecoder?.decodeQueueSize ?? 0) === 0
+        && this.sampleQueue.length === 0
+        && Date.now() - lastAutoReadTime > 100
+      ) {
+        this.logger.debug(`解码队列空闲，主动尝试读取数据`)
         await this.autoReadChunk()
         lastAutoReadTime = Date.now()
       }
@@ -180,7 +188,7 @@ export class DecoderFlow {
       if (this._shouldStop() || this._isExhausted() || timeout) {
         if (timeout) {
           this.logger.error(`超时! 循环次数: ${loopCount}, 已耗时: ${elapsed}ms`)
-          this.logger.error(`超时时的状态:`, {
+          this.logger.error(`超时时的状态: ${JSON.stringify({
             targetTime: this.targetTime,
             segmentUrl: this.segmentUrl,
             videoDecoderState: this.videoDecoder?.state,
@@ -191,7 +199,7 @@ export class DecoderFlow {
             readerIsDoned: this.reader?.isDoned,
             isRunning: this.isRunning,
             firstPts: this.firstPts,
-          })
+          })}`)
           this._stop()
 
           throw new DecoderFlowError.Timeout(
