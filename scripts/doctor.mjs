@@ -26,7 +26,7 @@ const generatedManifestPath = resolve(root, 'dist', 'chrome-mv3', 'manifest.json
 const projectBaselinePath = resolve(root, 'AGENTS.md')
 const releaseRulePath = resolve(root, '.rules', 'release.md')
 const debuggingRulePath = resolve(root, '.rules', 'debugging.md')
-const devMemoryPath = resolve(root, '.rules', '开发记忆.md')
+const devMemoryPath = resolve(root, '.rules', '迭代否决项.md')
 
 if (!existsSync(packagePath)) fail('缺少 package.json')
 
@@ -50,8 +50,8 @@ else warn('缺少 .rules/release.md')
 if (existsSync(debuggingRulePath)) ok('已存在环境调试规则')
 else warn('缺少 .rules/debugging.md')
 
-if (existsSync(devMemoryPath)) ok('已存在开发记忆')
-else warn('缺少 .rules/开发记忆.md')
+if (existsSync(devMemoryPath)) ok('已存在迭代否决项')
+else warn('缺少 .rules/迭代否决项.md')
 
 try {
   const branch = execSync('git branch --show-current', { cwd: root, encoding: 'utf8' }).trim()
