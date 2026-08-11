@@ -418,7 +418,7 @@ export class DecoderFlow {
     const decodeQueueSize = this.videoDecoder?.decodeQueueSize ?? 0
     const shouldRead = (
       decodeQueueSize === 0
-      && !this.frame
+      && !this.shouldFinish
       && this.isRunning
       && this.reader
       && !this.reader.isDoned
