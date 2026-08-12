@@ -176,6 +176,12 @@ class PlayerManager {
   private currentHlsSourceUrl: string | null = null
   private currentHlsLogicalUrl: string | null = null
   private isSwitchingVideo = false
+  /** switchUrl/switchQuality 执行期间置位，用于 hls fatal 错误时打破 artplayer 内部 Promise 挂起 */
+  private switchUrlInFlight = false
+  /** 当前 hls 实例是否已尝试过一次媒体错误恢复（每次 initHls 重置） */
+  private hlsMediaRecoverAttempted = false
+  /** HLS 初始化代次：每次 initHls 自增，用于废弃被新切换（切集/切画质）取代的旧加载流程 */
+  private hlsInitSeq = 0
   private lastVideoSwitchStartedAt = 0
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
   private switchCooldownTimer: number | null = null
@@ -322,7 +328,8 @@ class PlayerManager {
     }
   }
 
-  private async initHls(video: HTMLVideoElement, url: string): Promise<HlsType> {
+  private async initHls(video: HTMLVideoElement, url: string): Promise<HlsType | undefined> {
+    const seq = ++this.hlsInitSeq
     if (this.hlsInstance) {
       this.hlsInstance.destroy()
       this.hlsInstance = null
@@ -333,9 +340,35 @@ class PlayerManager {
     this.currentHlsSourceUrl = null
     this.currentHlsLogicalUrl = url
     const sourceUrl = await this.buildHlsPlaybackUrl(url)
+    // 加载期间发生了新的切换（快速切集/切画质），本流程已过期：放弃，
+    // 避免旧流程继续创建实例并 attachMedia 到同一 video 元素，造成 bufferAppendError 等冲突
+    if (seq !== this.hlsInitSeq) return undefined
     this.currentHlsSourceUrl = sourceUrl
     const hls = await createHlsInstance(video, sourceUrl)
+    if (seq !== this.hlsInitSeq) {
+      hls.destroy()
+      return undefined
+    }
     this.hlsInstance = hls
+    this.hlsMediaRecoverAttempted = false
+
+    // HLS 源加载失败（签名 URL 失效等）时，hls.js 不会让 video 触发 canplay/error，
+    // artplayer 的 switchUrl 会永久挂起导致播放器卡死。切换流程中遇到 fatal 错误：
+    // - 媒体类错误（如 bufferAppendError 瞬时抖动）先 recover 一次，能自愈则继续播放；
+    // - 仍失败或其它类型错误，主动触发 video error 打破挂起，交由调用方 catch 提示。
+    hls.on('hlsError' as any, (_event: any, data: any) => {
+      if (!this.switchUrlInFlight || !data?.fatal) return
+      if (data.type === 'mediaError' && !this.hlsMediaRecoverAttempted) {
+        this.hlsMediaRecoverAttempted = true
+        playerDebug('[115m] HLS 媒体错误，尝试恢复:', data?.details ?? data?.type)
+        ;(hls as any).recoverMediaError?.()
+        return
+      }
+      console.error('[115m] HLS 源加载失败（切换中）:', data?.details ?? data?.type)
+      this.hlsInstance = null
+      hls.destroy()
+      this.failSwitchUrl('视频源加载失败')
+    })
 
     hls.on('hlsAudioTracksUpdated' as any, () => {
       this.audioManager?.syncFromHls()
@@ -459,39 +492,48 @@ class PlayerManager {
       contextmenu: [],
       customType: {
         m3u8: async (video, url) => {
-          if (url === ORIGINAL_PLACEHOLDER_URL) {
-            saveQualityPreference(this.currentPickCode, '115原画', 9999)
-            // 立即更新内部状态，以便后续 UI 同步正常工作
-            const opt = this.qualityOptions.find(o => o.url === url)
-            if (opt) {
-              this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-              this.renderQualityPanel()
-            }
-
-            const resolvedUrl = await this.ensureOriginalSourceLoaded()
-            if (!resolvedUrl) {
-              this.showError('115原画加载失败，请稍后重试')
-              return
-            }
-            url = resolvedUrl
-          }
-          else {
-            const opt = this.qualityOptions.find(o => o.url === url)
-            if (opt) {
-              // 只要是手动切换（非首次加载且已就绪），就记录偏好
-              if (this.perfMarks.loadedmetadata) {
-                saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
+          try {
+            if (url === ORIGINAL_PLACEHOLDER_URL) {
+              saveQualityPreference(this.currentPickCode, '115原画', 9999)
+              // 立即更新内部状态，以便后续 UI 同步正常工作
+              const opt = this.qualityOptions.find(o => o.url === url)
+              if (opt) {
+                this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
+                this.renderQualityPanel()
               }
-              this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-              this.renderQualityPanel()
+
+              const resolvedUrl = await this.ensureOriginalSourceLoaded()
+              if (!resolvedUrl) {
+                this.showError('115原画加载失败，请稍后重试')
+                this.failSwitchUrl('115原画加载失败')
+                return
+              }
+              url = resolvedUrl
+            }
+            else {
+              const opt = this.qualityOptions.find(o => o.url === url)
+              if (opt) {
+                // 只要是手动切换（非首次加载且已就绪），就记录偏好
+                if (this.perfMarks.loadedmetadata) {
+                  saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
+                }
+                this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
+                this.renderQualityPanel()
+              }
+            }
+
+            if (this.artplayer && await isHlsSupported()) {
+              await this.initHls(video as HTMLVideoElement, url)
+            }
+            else {
+              this.showError('您的浏览器不支持 HLS 播放')
             }
           }
-
-          if (this.artplayer && await isHlsSupported()) {
-            await this.initHls(video as HTMLVideoElement, url)
-          }
-          else {
-            this.showError('您的浏览器不支持 HLS 播放')
+          catch (error) {
+            console.error('[115m] HLS 初始化失败:', error)
+            this.showError('视频源加载失败，请稍后重试')
+            // 主动触发 video error，打破 artplayer switchUrl 的永久挂起，避免播放器卡死
+            this.failSwitchUrl(error instanceof Error ? error.message : 'HLS init failed')
           }
         },
       },
@@ -875,7 +917,13 @@ class PlayerManager {
     saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
 
     try {
-      await this.artplayer.switchQuality(opt.url)
+      this.switchUrlInFlight = true
+      try {
+        await this.withSwitchTimeout(this.artplayer.switchQuality(opt.url))
+      }
+      finally {
+        this.switchUrlInFlight = false
+      }
     }
     catch (error) {
       if (!this.artplayer) return
@@ -1055,7 +1103,13 @@ class PlayerManager {
     this.renderQualityPanel()
     this.overlay?.showToast(`${reason}，已切换 115原画`)
     try {
-      await this.artplayer.switchUrl(bestQualityUrl)
+      this.switchUrlInFlight = true
+      try {
+        await this.withSwitchTimeout(this.artplayer.switchUrl(bestQualityUrl))
+      }
+      finally {
+        this.switchUrlInFlight = false
+      }
     }
     catch (error) {
       console.error('[115m] fallbackToHls switchUrl failed:', error)
@@ -1447,6 +1501,38 @@ class PlayerManager {
     this.syncOverlayPlaybackNav()
   }
 
+  /**
+   * 给 artplayer.switchUrl/switchQuality 增加超时兜底。
+   * artplayer 内部 switchUrl 依赖 video:canplay resolve / video:error reject，
+   * HLS 源加载失败时可能永远不会触发这两个事件，导致 Promise 永久挂起、播放器卡死。
+   * 超时后主动 reject，交由调用方 catch 提示，避免卡死。
+   */
+  private withSwitchTimeout<T>(promise: Promise<T>, timeoutMs = 15000, message = '视频切换超时'): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = window.setTimeout(() => reject(new Error(message)), timeoutMs)
+      promise.then(
+        (value) => {
+          window.clearTimeout(timer)
+          resolve(value)
+        },
+        (error) => {
+          window.clearTimeout(timer)
+          reject(error)
+        },
+      )
+    })
+  }
+
+  /**
+   * 主动触发 video 的 error 事件，打破 artplayer switchUrl 的内部挂起（它会 reject switchUrl 的 Promise）。
+   * 仅在 HLS 加载失败/初始化异常且 switchUrl 在途时调用，避免播放器永久停在"切换中"。
+   */
+  private failSwitchUrl(reason: string) {
+    const video = this.artplayer?.video
+    if (!video) return
+    video.dispatchEvent(new ErrorEvent('error', { message: reason }))
+  }
+
   private async switchToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
     if (!this.artplayer || !pickCode || pickCode === this.currentPickCode) return
 
@@ -1492,7 +1578,13 @@ class PlayerManager {
       }))
       this.syncOverlayPlaybackNav()
       this.overlay?.updatePlaylist(this.playlistItemsCache)
-      await this.artplayer.switchUrl(playback.initialPlayback.url)
+      this.switchUrlInFlight = true
+      try {
+        await this.withSwitchTimeout(this.artplayer.switchUrl(playback.initialPlayback.url))
+      }
+      finally {
+        this.switchUrlInFlight = false
+      }
       if (requestId !== this.switchVideoRequestId || !this.artplayer) return
       
       // 切换 URL 后再次重置，防止内部状态污染
