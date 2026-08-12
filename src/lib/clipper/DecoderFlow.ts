@@ -51,6 +51,9 @@ export class DecoderFlow {
   static readonly LOGGER_NAME = 'DecoderFlow'
   static readonly PRECISE_FINISH_WINDOW = 0.4
   static readonly PRECISE_OVERSHOOT_LIMIT = 1.2
+  /** 已找到帧后，允许继续逼近 targetTime 的宽限期（毫秒）。
+   *  避免大分片/慢网下精确模式每次都拖满超时（5s）才返回帧 */
+  static readonly FRAME_GRACE_MS = 1500
   protected logger = appLogger.sub(DecoderFlow.LOGGER_NAME)
   private videoDecoder: VideoDecoder | undefined
   private demuxer: DemuxerTsNew | undefined
@@ -160,10 +163,30 @@ export class DecoderFlow {
 
     let loopCount = 0
     let lastAutoReadTime = Date.now()
+    let frameFoundAt: number | undefined
     while (this.isRunning) {
       loopCount++
       const elapsed = Date.now() - startTime
       const timeout = this._checkTimeout(startTime, timeoutMs)
+
+      // 已找到帧后，再给一段继续逼近 targetTime 的宽限期，到点返回当前最佳帧，
+      // 避免大分片/慢网下每次都要拖满超时才返回（悬停预览连续候选点会成倍拖慢）
+      if (this.frame && !this.shouldFinish) {
+        if (frameFoundAt === undefined) {
+          frameFoundAt = Date.now()
+        }
+        else if (Date.now() - frameFoundAt > DecoderFlow.FRAME_GRACE_MS) {
+          this.logger.debug(`有帧后宽限期结束, 返回当前帧, 已耗时: ${Date.now() - startTime}ms`)
+          this._stop()
+          const frameTime = this.frameTime ?? this._getFrameRealTime(this.frame.timestamp)
+          return {
+            videoFrame: this.frame.clone(),
+            frameTime,
+            seekTime: this.targetTime,
+            consumedTime: Date.now() - startTime,
+          }
+        }
+      }
 
       // 解码队列为空且待处理样本为空时，主动尝试读取数据（每100ms尝试一次）
       // 覆盖两种场景：
@@ -187,6 +210,18 @@ export class DecoderFlow {
 
       if (this._shouldStop() || this._isExhausted() || timeout) {
         if (timeout) {
+          if (this.frame) {
+            // 超时但已找到帧：返回当前最佳帧，避免"有帧还报错"
+            this.logger.warn(`超时但已找到帧, 返回当前帧, 已耗时: ${Date.now() - startTime}ms`)
+            this._stop()
+            const frameTime = this.frameTime ?? this._getFrameRealTime(this.frame.timestamp)
+            return {
+              videoFrame: this.frame.clone(),
+              frameTime,
+              seekTime: this.targetTime,
+              consumedTime: Date.now() - startTime,
+            }
+          }
           this.logger.error(`超时! 循环次数: ${loopCount}, 已耗时: ${elapsed}ms`)
           this.logger.error(`超时时的状态: ${JSON.stringify({
             targetTime: this.targetTime,
