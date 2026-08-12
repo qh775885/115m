@@ -7,6 +7,12 @@ import type { RuntimeTranscodeResponse } from './messages'
 
 const STORAGE_KEY = 'm115_transcode_status_store'
 const EVENT_NAME = 'm115-transcode-status-updated'
+const SELF_WRITE_WINDOW_MS = 5000
+
+// 本上下文最近一次写入的 store 快照与其写入时刻。
+// 用于在 chrome.storage.onChanged 中识别「由本上下文自身写入」触发的变更，避免自我触发循环。
+let lastLocalWriteStore: TranscodeStoreData | null = null
+let lastLocalWriteAt = 0
 
 export interface TranscodeStatusRecord {
   pickCode: string
@@ -75,6 +81,8 @@ export async function saveTranscodeStatus(
 
     const area = getSessionArea()
     if (area) {
+      lastLocalWriteStore = store
+      lastLocalWriteAt = Date.now()
       await area.set({ [STORAGE_KEY]: store })
     }
     else {
@@ -136,6 +144,16 @@ export function subscribeTranscodeStatus(
       if (!change?.newValue) return
       const newStore = change.newValue as TranscodeStoreData
       const oldStore = (change.oldValue as TranscodeStoreData | undefined) ?? {}
+
+      // 忽略由本上下文自身写入触发的变更，杜绝「set → onChanged → 回调 → set」自我触发循环。
+      if (
+        lastLocalWriteStore
+        && Date.now() - lastLocalWriteAt <= SELF_WRITE_WINDOW_MS
+        && JSON.stringify(newStore) === JSON.stringify(lastLocalWriteStore)
+      ) {
+        lastLocalWriteStore = null
+        return
+      }
       for (const [key, record] of Object.entries(newStore)) {
         if (JSON.stringify(oldStore[key]) !== JSON.stringify(record)) {
           callback({ pickCode: record.pickCode, fileId: record.fileId, status: record.status })

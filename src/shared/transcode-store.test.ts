@@ -103,6 +103,34 @@ describe('transcode-store (chrome.storage.session)', () => {
     unsub()
   })
 
+  it('onChanged 自触发（本上下文刚写入的相同 store）被过滤，不回调循环', async () => {
+    await saveTranscodeStatus('P1', { ok: true, state: 'queued' }, 'F1', true)
+    const cb = vi.fn()
+    const unsub = subscribeTranscodeStatus(cb)
+
+    const sameAsWritten = mock.data.get('m115_transcode_status_store') as Record<string, unknown>
+    mock.emit({
+      m115_transcode_status_store: { oldValue: undefined, newValue: sameAsWritten },
+    })
+    expect(cb).not.toHaveBeenCalled()
+
+    const differentStore = {
+      ...sameAsWritten,
+      P2: {
+        pickCode: 'P2',
+        fileId: 'F2',
+        status: { ok: true, state: 'queued' },
+        updatedAt: 2,
+      },
+    }
+    mock.emit({
+      m115_transcode_status_store: { oldValue: sameAsWritten, newValue: differentStore },
+    })
+    expect(cb).toHaveBeenCalledTimes(1)
+    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ pickCode: 'P2' }))
+    unsub()
+  })
+
   it('订阅退订后不再收到同页广播', async () => {
     const cb = vi.fn()
     const unsub = subscribeTranscodeStatus(cb)
