@@ -253,6 +253,7 @@ interface PreviewState {
   cancelTask?: () => void
   visibilityObserver?: { destroy: () => void }
   scrollObserver?: { destroy: () => void }
+  dispose?: () => void
 }
 
 const previewStates = new WeakMap<HTMLElement, PreviewState>()
@@ -277,10 +278,15 @@ export class PreviewObserverRegistry {
         }, 120)
       }
       const eventTarget = target === window ? window : target
-      eventTarget.addEventListener('scroll', listener, { passive: true })
+      const onScroll = typeof eventTarget.addEventListener === 'function'
+        ? () => eventTarget.addEventListener('scroll', listener, { passive: true })
+        : () => {}
+      onScroll()
       this.scrollListeners.set(target, () => {
         if (typeof timer === 'number') window.clearTimeout(timer)
-        eventTarget.removeEventListener('scroll', listener)
+        if (typeof eventTarget.removeEventListener === 'function') {
+          eventTarget.removeEventListener('scroll', listener)
+        }
       })
     }
     callbacks.add(callback)
@@ -331,7 +337,14 @@ const previewObserverRegistry = new PreviewObserverRegistry()
  * 渲染预览图（带可见性检测和滚动优化）
  */
 export function renderPreview(item: HTMLElement, file: FileInfo) {
-  if (item.querySelector('.m115-cover-container')) return
+  // 115 列表复用同一 DOM 节点展示新文件：先销毁该节点旧预览的所有资源
+  // （可见性/滚动观察器、转码轮询与订阅、封面任务），防止残留监听继续发请求。
+  const existing = previewStates.get(item)
+  if (existing && !existing.disposed) {
+    existing.dispose?.()
+  }
+  item.querySelector('.m115-cover-container')?.remove()
+  item.classList.remove('with-ext-video-cover')
 
   const doc = item.ownerDocument
 
@@ -509,6 +522,7 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
     unregisterItem()
     previewStates.delete(item)
   }
+  state.dispose = cleanup
   const unregisterItem = previewObserverRegistry.registerItem(item, cleanup)
 }
 
