@@ -18,6 +18,29 @@ describe('fetchWithTimeout', () => {
     expect(fetch).toHaveBeenCalledWith('http://x', expect.objectContaining({ signal: expect.anything() }))
   })
 
+  it('超时保护覆盖 body 读取阶段（发头后挂起也能中断）', async () => {
+    let abortSignal: AbortSignal | undefined
+    const response = {
+      ok: true,
+      text: () => new Promise<string>((_resolve, reject) => {
+        abortSignal!.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+      }),
+    } as unknown as Response
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      abortSignal = init?.signal as AbortSignal
+      return Promise.resolve(response)
+    }))
+
+    const res = await fetchWithTimeout('http://x', undefined, 100)
+    const reading = res.text()
+    // 先挂上 rejection 断言（同步附加 handler），再推进计时器触发 abort，
+    // 避免 reject 先于断言产生而报 unhandled rejection
+    const assertion = expect(reading).rejects.toThrow()
+    await vi.advanceTimersByTimeAsync(200)
+    await assertion
+    expect(abortSignal!.aborted).toBe(true)
+  })
+
   it('超时后通过 AbortController 中断挂起的请求', async () => {
     const signals: AbortSignal[] = []
     vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {

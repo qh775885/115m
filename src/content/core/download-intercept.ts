@@ -8,6 +8,13 @@ const sendRuntimeMessageForDownload = async <T = unknown>(message: unknown): Pro
   return response
 }
 
+interface BoundDownloadIntercept {
+  pickCode: string
+  handler: EventListener
+}
+
+const boundDownloadNodes = new WeakMap<HTMLElement, BoundDownloadIntercept>()
+
 /**
  * 拦截列表中原生下载按钮，替换为扩展下载（可被 IDM/aria2 等下载器自动接管）
  */
@@ -15,7 +22,15 @@ export function addDownloadIntercept(item: HTMLElement, file: FileInfo) {
   const downloadNode = item.querySelector('.file-opr a[menu="download_one"]') as HTMLElement | null
   if (!downloadNode) return
 
-  downloadNode.addEventListener('click', async (e) => {
+  const existing = boundDownloadNodes.get(downloadNode)
+  // 幂等保护：115 复用 li / 扫描去重集合清空后会对同一按钮重复调用，
+  // 不拦截会造成监听叠加（单击多次解析直链、多次开窗、旧 pickCode 错误下载）
+  if (existing && existing.pickCode === file.pickCode) return
+  if (existing) {
+    downloadNode.removeEventListener('click', existing.handler, true)
+  }
+
+  const handler: EventListener = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     e.stopImmediatePropagation()
@@ -37,5 +52,8 @@ export function addDownloadIntercept(item: HTMLElement, file: FileInfo) {
     } finally {
       downloadNode.style.opacity = '1'
     }
-  }, true)
+  }
+
+  downloadNode.addEventListener('click', handler, true)
+  boundDownloadNodes.set(downloadNode, { pickCode: file.pickCode, handler })
 }

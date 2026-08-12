@@ -4,10 +4,13 @@ import { runIn115MainWorld } from './main-world'
 export async function fetchVideoInfoByPickCode(tabId: number, pickCode: string) {
   return await runIn115MainWorld({
     tabId,
-    args: [`https://webapi.115.com/files/video?pickcode=${pickCode}&share_id=0&local=1`],
-    func: async (url: string) => {
+    args: [`https://webapi.115.com/files/video?pickcode=${pickCode}&share_id=0&local=1`, 15_000],
+    func: async (url: string, fetchTimeoutMs: number) => {
       try {
-        const res = await fetch(url, { credentials: 'include' })
+        const signal = typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function'
+          ? (AbortSignal as any).timeout(fetchTimeoutMs)
+          : undefined
+        const res = await fetch(url, { credentials: 'include', signal })
         return await res.json()
       }
       catch (error) {
@@ -28,10 +31,13 @@ export async function fetchPlaylistIn115Page(tabId: number, cid: string): Promis
 
   return await runIn115MainWorld({
     tabId,
-    args: [`https://webapi.115.com/files?${params}`],
-    func: async (url: string) => {
+    args: [`https://webapi.115.com/files?${params}`, 15_000],
+    func: async (url: string, fetchTimeoutMs: number) => {
       try {
-        const res = await fetch(url, { credentials: 'include' })
+        const signal = typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function'
+          ? (AbortSignal as any).timeout(fetchTimeoutMs)
+          : undefined
+        const res = await fetch(url, { credentials: 'include', signal })
         return await res.json()
       }
       catch (error) {

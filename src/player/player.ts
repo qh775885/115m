@@ -89,6 +89,8 @@ function injectPlayerSkinStyles() {
 
 injectPlayerSkinStyles()
 
+const HLS_STEADY_RECOVER_MAX = 3
+
 interface PlayerConfig {
   pickCode: string
   traceId?: string
@@ -182,6 +184,8 @@ class PlayerManager {
   private hlsMediaRecoverAttempted = false
   /** HLS 初始化代次：每次 initHls 自增，用于废弃被新切换（切集/切画质）取代的旧加载流程 */
   private hlsInitSeq = 0
+  /** 稳态播放期间 HLS 网络错误自动恢复（startLoad）次数，播放成功后清零 */
+  private hlsSteadyRecoverCount = 0
   private lastVideoSwitchStartedAt = 0
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
   private switchCooldownTimer: number | null = null
@@ -351,13 +355,20 @@ class PlayerManager {
     }
     this.hlsInstance = hls
     this.hlsMediaRecoverAttempted = false
+    this.hlsSteadyRecoverCount = 0
 
     // HLS 源加载失败（签名 URL 失效等）时，hls.js 不会让 video 触发 canplay/error，
     // artplayer 的 switchUrl 会永久挂起导致播放器卡死。切换流程中遇到 fatal 错误：
     // - 媒体类错误（如 bufferAppendError 瞬时抖动）先 recover 一次，能自愈则继续播放；
     // - 仍失败或其它类型错误，主动触发 video error 打破挂起，交由调用方 catch 提示。
     hls.on('hlsError' as any, (_event: any, data: any) => {
-      if (!this.switchUrlInFlight || !data?.fatal) return
+      if (!data?.fatal) return
+
+      if (!this.switchUrlInFlight) {
+        this.handleSteadyHlsFatalError(hls, data)
+        return
+      }
+
       if (data.type === 'mediaError' && !this.hlsMediaRecoverAttempted) {
         this.hlsMediaRecoverAttempted = true
         playerDebug('[115m] HLS 媒体错误，尝试恢复:', data?.details ?? data?.type)
@@ -382,6 +393,70 @@ class PlayerManager {
     this.audioManager?.scheduleSync()
     void this.audioManager?.hydrateFromMasterPlaylist()
     return hls
+  }
+
+  /**
+   * 切换到非 m3u8 源（无损 mp4）前销毁旧 hls 实例。
+   * 该路径 artplayer 直接改 video.src，不经过 customType.m3u8，不会走 initHls 的销毁逻辑；
+   * 残留的 hls 实例会泄漏 worker/定时器，其 recoverMediaError 还可能重新 attachMedia
+   * 覆盖正在播放的原生流，并在后续切换中注入虚假错误。
+   */
+  private disposeHlsInstance() {
+    this.hlsInitSeq += 1
+    if (this.hlsInstance) {
+      this.hlsInstance.destroy()
+      this.hlsInstance = null
+    }
+    if (this.currentHlsSourceUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.currentHlsSourceUrl)
+    }
+    this.currentHlsSourceUrl = null
+    this.currentHlsLogicalUrl = null
+    this.hlsMediaRecoverAttempted = false
+  }
+
+  /**
+   * 稳态播放（非切源期间）的 HLS fatal 错误自愈。
+   * 此前只在 switchUrlInFlight 时处理 fatal，稳定播放中 hls.js 重试耗尽抛出的
+   * fatal 会被直接忽略，画面永久卡在加载态。此处限量自愈：
+   * - 网络错误：startLoad(-1) 从当前位置续载，最多 HLS_STEADY_RECOVER_MAX 次；
+   * - 媒体错误：recoverMediaError() 仅一次；
+   * 恢复次数在播放成功后清零（onPlaying）。自愈额度用尽时提示用户，避免无提示卡死。
+   */
+  private handleSteadyHlsFatalError(hls: HlsType, data: any) {
+    if (this.hlsInstance !== hls) return
+
+    if (data.type === 'networkError') {
+      if (this.hlsSteadyRecoverCount < HLS_STEADY_RECOVER_MAX) {
+        this.hlsSteadyRecoverCount += 1
+        console.warn('[115m] HLS 稳态网络错误，尝试续载恢复:', data?.details ?? data?.type, `(${this.hlsSteadyRecoverCount}/${HLS_STEADY_RECOVER_MAX})`)
+        try {
+          hls.startLoad(-1)
+        }
+        catch {
+          this.overlay?.showToast('播放网络异常，请重试')
+        }
+        return
+      }
+      console.error('[115m] HLS 稳态网络错误，自愈额度已用尽:', data?.details ?? data?.type)
+      this.overlay?.showToast('网络连接异常，加载失败')
+      return
+    }
+
+    if (data.type === 'mediaError') {
+      if (!this.hlsMediaRecoverAttempted) {
+        this.hlsMediaRecoverAttempted = true
+        console.warn('[115m] HLS 稳态媒体错误，尝试恢复:', data?.details ?? data?.type)
+        ;(hls as any).recoverMediaError?.()
+        return
+      }
+      console.error('[115m] HLS 稳态媒体错误，恢复失败:', data?.details ?? data?.type)
+      this.overlay?.showToast('播放异常，请刷新重试')
+      return
+    }
+
+    console.error('[115m] HLS 稳态致命错误（未处理类型）:', data?.details ?? data?.type)
+    this.overlay?.showToast('播放出错，请刷新重试')
   }
 
   private async fetchMasterPlaylistText(): Promise<string | null> {
@@ -695,6 +770,7 @@ class PlayerManager {
         },
         onPlaying: () => {
           this.clearPlaybackEndState()
+          this.hlsSteadyRecoverCount = 0
           this.nativeMonitor?.resetRetryCount()
           this.nativeMonitor?.onPlaying()
           this.perfMarks.playing = performance.now()
@@ -915,6 +991,10 @@ class PlayerManager {
 
     // 记住用户手动选择的画质
     saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
+
+    if (this.currentPlaybackType === 'native') {
+      this.disposeHlsInstance()
+    }
 
     try {
       this.switchUrlInFlight = true
@@ -1563,6 +1643,10 @@ class PlayerManager {
       this.artplayer.seek = 0
       
       this.applyResolvedPlayback(playback)
+      // 切到无损（原生）源时销毁上一集的 hls 实例，m3u8 源由 initHls 自行销毁旧实例
+      if (this.currentPlaybackType === 'native') {
+        this.disposeHlsInstance()
+      }
       // 切换视频时重置倍速，避免上一集的倍速残留到下一集
       this.applyPlaybackRate(1)
       const metaPatch = buildOverlayMetaPatch(targetItem)

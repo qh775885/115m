@@ -73,7 +73,6 @@ const DEFAULT_VOLUME_PREFERENCE: VolumePreference = {
 }
 const PLAY_HISTORY_COMPLETED_REMAINING_SEC = 15
 const PLAY_HISTORY_COMPLETED_RATIO = 0.98
-const PLAY_HISTORY_WRITE_DEBOUNCE_MS = 3000
 const PLAY_HISTORY_MIN_WRITE_INTERVAL_MS = 15000
 const NATIVE_PLAY_HISTORY_ENABLED = true
 
@@ -403,6 +402,17 @@ async function persistPlayHistory(params: {
   })
 }
 
+async function persistPlayHistoryThrottled(identity: string, params: PendingPlayHistoryWrite['params']) {
+  pendingPlayHistoryWrites.delete(identity)
+  try {
+    await persistPlayHistory(params)
+    lastPlayHistoryWriteAt.set(identity, Date.now())
+  }
+  catch {
+    // ignore save errors
+  }
+}
+
 export function savePlayHistory(params: {
   pickCode: string
   fileName: string
@@ -416,57 +426,42 @@ export function savePlayHistory(params: {
 
   const identity = buildPlayHistoryIdentity(params)
   const current = pendingPlayHistoryWrites.get(identity)
-  if (current?.timer) {
-    window.clearTimeout(current.timer)
-  }
 
   if (params.immediate) {
-    pendingPlayHistoryWrites.delete(identity)
-    void persistPlayHistory(params).then(() => {
-      lastPlayHistoryWriteAt.set(identity, Date.now())
-    }).catch(() => {
-      // ignore save errors
-    })
+    if (current?.timer) {
+      window.clearTimeout(current.timer)
+    }
+    void persistPlayHistoryThrottled(identity, params)
+    return
+  }
+
+  const now = Date.now()
+  const lastAt = lastPlayHistoryWriteAt.get(identity) ?? 0
+  const elapsed = now - lastAt
+
+  // 节流写入：距上次落库满最小间隔则立即写（leading），否则安排一次不重置的
+  // 尾随定时器（trailing）。timeupdate 高频调用只刷新待写参数，绝不重置定时器，
+  // 保证连续播放期间按最小间隔周期性落库，避免关页签丢失整段进度
+  if (elapsed >= PLAY_HISTORY_MIN_WRITE_INTERVAL_MS) {
+    if (current?.timer) {
+      window.clearTimeout(current.timer)
+    }
+    void persistPlayHistoryThrottled(identity, params)
+    return
+  }
+
+  if (current?.timer) {
+    current.params = params
     return
   }
 
   const next: PendingPlayHistoryWrite = {
     params,
-    timer: window.setTimeout(async () => {
+    timer: window.setTimeout(() => {
       const latest = pendingPlayHistoryWrites.get(identity)
       if (!latest) return
-
-      const now = Date.now()
-      const lastAt = lastPlayHistoryWriteAt.get(identity) ?? 0
-      const elapsed = now - lastAt
-      if (elapsed < PLAY_HISTORY_MIN_WRITE_INTERVAL_MS) {
-        latest.timer = window.setTimeout(async () => {
-          try {
-            await persistPlayHistory(latest.params)
-            lastPlayHistoryWriteAt.set(identity, Date.now())
-          }
-          catch {
-            // ignore save errors
-          }
-          finally {
-            pendingPlayHistoryWrites.delete(identity)
-          }
-        }, PLAY_HISTORY_MIN_WRITE_INTERVAL_MS - elapsed)
-        pendingPlayHistoryWrites.set(identity, latest)
-        return
-      }
-
-      try {
-        await persistPlayHistory(latest.params)
-        lastPlayHistoryWriteAt.set(identity, Date.now())
-      }
-      catch {
-        // ignore save errors
-      }
-      finally {
-        pendingPlayHistoryWrites.delete(identity)
-      }
-    }, PLAY_HISTORY_WRITE_DEBOUNCE_MS),
+      void persistPlayHistoryThrottled(identity, latest.params)
+    }, PLAY_HISTORY_MIN_WRITE_INTERVAL_MS - elapsed),
   }
 
   pendingPlayHistoryWrites.set(identity, next)

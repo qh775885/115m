@@ -6,16 +6,36 @@ function isStoredPlaylistItem(file: FileInfo): file is FileInfo & StoredPlayerPl
   return typeof file.fileId === 'string' && typeof file.fileSize === 'string'
 }
 
+interface BoundPlayItem {
+  pickCode: string
+  fileNameNode: HTMLElement
+  handler: EventListener
+}
+
 export class HomePlayBinder {
-  private playBoundItems = new WeakSet<HTMLElement>()
+  private playBoundItems = new WeakMap<HTMLElement, BoundPlayItem>()
   private lastOpen: { pickCode: string, ts: number } | null = null
   private openingLock = false
 
-  bindItemPlay(item: HTMLElement) {
-    if (this.playBoundItems.has(item)) return
+  private unbindItem(item: HTMLElement, existing: BoundPlayItem) {
+    existing.fileNameNode.removeEventListener('click', existing.handler, true)
+    item.removeEventListener('dblclick', existing.handler, true)
+    this.playBoundItems.delete(item)
+  }
 
+  bindItemPlay(item: HTMLElement) {
     const file = extractFileInfo(item)
-    if (!file || !file.isVideo) return
+    const existing = this.playBoundItems.get(item)
+
+    // 115 会复用同一 li 节点展示新文件：旧监听闭包持有旧 pickCode，
+    // 复用时必须先解绑旧文件再绑定新文件，否则点击会打开错误的视频
+    if (!file || !file.isVideo) {
+      if (existing) this.unbindItem(item, existing)
+      return
+    }
+
+    if (existing && existing.pickCode === file.pickCode) return
+    if (existing) this.unbindItem(item, existing)
 
     const fileNameNode = (item.querySelector('.file-thumb') || item.querySelector('.file-name .name') || item.querySelector('.file-name')) as HTMLElement | null
     if (!fileNameNode) return
@@ -51,7 +71,11 @@ export class HomePlayBinder {
 
     fileNameNode.addEventListener('click', handleClickPlayer as EventListener, true)
     item.addEventListener('dblclick', handleClickPlayer as EventListener, true)
-    this.playBoundItems.add(item)
+    this.playBoundItems.set(item, {
+      pickCode: file.pickCode,
+      fileNameNode,
+      handler: handleClickPlayer as EventListener,
+    })
   }
 
   private collectVisiblePlaylistItems(doc: Document): StoredPlayerPlaylistItem[] {

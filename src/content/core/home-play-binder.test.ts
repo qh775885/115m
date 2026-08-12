@@ -81,6 +81,34 @@ describe('HomePlayBinder dblclick', () => {
     dispatchDblclick(li.querySelector('.file-name')!)
     expect(openPlayer).toHaveBeenCalledTimes(1)
   })
+
+  it('115 复用 li 展示新文件后，点击打开新文件而非旧文件', () => {
+    const li = createVideoItem(doc)
+    doc.body.appendChild(li)
+    const binder = new HomePlayBinder(openPlayer)
+    binder.bindItemPlay(li)
+
+    li.setAttribute('pick_code', 'P2')
+    li.setAttribute('title', 'video2.mp4')
+    binder.bindItemPlay(li)
+
+    dispatchDblclick(li.querySelector('.file-name')!)
+    expect(openPlayer).toHaveBeenCalledTimes(1)
+    expect((openPlayer as ReturnType<typeof vi.fn>).mock.calls[0][0].pickCode).toBe('P2')
+  })
+
+  it('li 复用后不再是视频时解除旧的播放绑定', () => {
+    const li = createVideoItem(doc)
+    doc.body.appendChild(li)
+    const binder = new HomePlayBinder(openPlayer)
+    binder.bindItemPlay(li)
+
+    li.removeAttribute('pick_code')
+    binder.bindItemPlay(li)
+
+    dispatchDblclick(li.querySelector('.file-name')!)
+    expect(openPlayer).not.toHaveBeenCalled()
+  })
 })
 
 describe('isPlayIntentTarget', () => {

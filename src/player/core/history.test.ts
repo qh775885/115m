@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { buildPlaylistProgressSnapshot, isCompletedPlayback, loadAudioTrackPreference, loadPlayHistoryWhenReady, resetPlayHistory, saveAudioTrackPreference, savePlayHistory, saveSubtitlePreference, saveVideoRotation, loadSubtitlePreference, loadVideoRotation, shouldRestorePlayHistory } from './history'
 
@@ -58,6 +59,61 @@ describe('native play history write', () => {
     })
 
     vi.unstubAllGlobals()
+  })
+
+  it('persists progress periodically during continuous playback', async () => {
+    vi.useFakeTimers()
+    const sendMessage = vi.fn().mockResolvedValue({ success: true })
+    vi.stubGlobal('chrome', { runtime: { sendMessage } })
+
+    try {
+      const base = {
+        pickCode: 'pick-throttle',
+        fileName: 'pick-throttle',
+        duration: 120,
+        quality: '115原画',
+      }
+
+      savePlayHistory({ ...base, currentTime: 10 })
+      await vi.advanceTimersByTimeAsync(0)
+      expect(sendMessage).toHaveBeenCalledTimes(1)
+
+      savePlayHistory({ ...base, currentTime: 12 })
+      savePlayHistory({ ...base, currentTime: 14 })
+      savePlayHistory({ ...base, currentTime: 16 })
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(sendMessage).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(10000)
+      expect(sendMessage).toHaveBeenCalledTimes(2)
+      expect(sendMessage).toHaveBeenLastCalledWith({
+        type: 'SET_NATIVE_HISTORY',
+        data: {
+          pickCode: 'pick-throttle',
+          shareId: '0',
+          currentTime: 16,
+          definition: 0,
+        },
+      })
+
+      savePlayHistory({ ...base, currentTime: 30 })
+      savePlayHistory({ ...base, currentTime: 32 })
+      await vi.advanceTimersByTimeAsync(15000)
+      expect(sendMessage).toHaveBeenCalledTimes(3)
+      expect(sendMessage).toHaveBeenLastCalledWith({
+        type: 'SET_NATIVE_HISTORY',
+        data: {
+          pickCode: 'pick-throttle',
+          shareId: '0',
+          currentTime: 32,
+          definition: 0,
+        },
+      })
+    }
+    finally {
+      vi.useRealTimers()
+      vi.unstubAllGlobals()
+    }
   })
 
   it('resets progress through 115 native history', async () => {

@@ -158,7 +158,7 @@ export class DecoderFlow {
     await this.autoReadChunk()
 
     this.videoDecoder.ondequeue = () => {
-      this.autoReadChunk()
+      this.triggerAutoReadChunk()
     }
 
     let loopCount = 0
@@ -449,7 +449,16 @@ export class DecoderFlow {
   /**
    * 自动读取分块
    */
-  private async autoReadChunk() {
+  private readChunkInFlight: Promise<void> | null = null
+
+  /**
+   * 读取下一块数据。ondequeue 回调与等待循环会并发调用本方法，
+   * 若不加互斥两个 reader.next() 会取到相同字节区间（重复 Range 请求、
+   * 数据乱序入 demuxer），因此共用同一个在途读取 Promise。
+   */
+  private async autoReadChunk(): Promise<void> {
+    if (this.readChunkInFlight) return this.readChunkInFlight
+
     const decodeQueueSize = this.videoDecoder?.decodeQueueSize ?? 0
     const shouldRead = (
       decodeQueueSize === 0
@@ -459,11 +468,13 @@ export class DecoderFlow {
       && !this.reader.isDoned
     )
 
-    if (shouldRead && this.reader) {
+    if (!shouldRead || !this.reader) return
+
+    const task = (async () => {
       try {
         this.logger.debug(`autoReadChunk 开始读取, decodeQueueSize: ${decodeQueueSize}`)
-        const arrayBuffer = await this.reader.next()
-        
+        const arrayBuffer = await this.reader!.next()
+
         // 如果在等待数据返回的途中，解码器已经被 cleanup(destroy) 销毁，则直接丢弃数据，不报警告
         if (!this.isRunning || !this.demuxer) {
           return
@@ -474,7 +485,7 @@ export class DecoderFlow {
           this.pushData(arrayBuffer)
         }
         else {
-          this.logger.debug(`autoReadChunk 读取返回 undefined, reader.isDoned: ${this.reader.isDoned}`)
+          this.logger.debug(`autoReadChunk 读取返回 undefined, reader.isDoned: ${this.reader!.isDoned}`)
         }
       }
       catch (error) {
@@ -484,7 +495,17 @@ export class DecoderFlow {
         )
         throw this.error
       }
-    }
+      finally {
+        this.readChunkInFlight = null
+      }
+    })()
+    this.readChunkInFlight = task
+    return task
+  }
+
+  /** fire-and-forget 触发读块（ondequeue 回调使用），错误已记录在 this.error，避免 unhandled rejection */
+  private triggerAutoReadChunk() {
+    void this.autoReadChunk().catch(() => {})
   }
 
   /**

@@ -10,6 +10,7 @@ import type {
   DownloadResult,
   FilesDownloadRes, VideoM3u8Res,
 } from './api/types'
+import { fetchWithTimeout } from './promise'
 
 export class Drive115Error extends Error {
   static NotFoundM3u8 = class extends Error {
@@ -17,15 +18,18 @@ export class Drive115Error extends Error {
   }
 }
 
+/** 网络请求超时（毫秒），防止弱网/不响应时 fetch 永久挂起拖死整条链路 */
+const REQUEST_TIMEOUT_MS = 15_000
+
 /**
  * 网络请求封装
  */
 class Request {
   async get(url: string, options?: RequestInit): Promise<Response> {
-    return fetch(url, {
+    return fetchWithTimeout(url, {
       credentials: 'include',
       ...options,
-    })
+    }, REQUEST_TIMEOUT_MS)
   }
 
   async getJson<T>(url: string): Promise<T> {

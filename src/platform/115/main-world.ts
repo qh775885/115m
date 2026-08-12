@@ -1,9 +1,25 @@
 import { isTransientFrameError, wait } from '../../shared/utils'
+import { fetchWithTimeout } from '../../lib/promise'
 
 export interface MainWorldTextResponse {
   ok: boolean
   text: string
   error?: string
+}
+
+/** 单次 115vod fetch 超时（毫秒）：防止弱网挂起阻塞整个串行队列 */
+const VOD_FETCH_TIMEOUT_MS = 20_000
+/** 队列单步总超时：串行的 direct/main_world/page 路径合计兜底，保证队列永远向前 */
+const VOD_QUEUE_STEP_TIMEOUT_MS = 45_000
+
+function withVodQueueTimeout(promise: Promise<MainWorldTextResponse>, ms: number): Promise<MainWorldTextResponse> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<MainWorldTextResponse>((resolve) => {
+    timer = setTimeout(() => resolve({ ok: false, text: '', error: '115vod fetch timeout' }), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer !== undefined) clearTimeout(timer)
+  })
 }
 
 export type VodFetchMode = 'auto' | 'direct' | 'main_world' | 'page'
@@ -216,8 +232,8 @@ export async function fetchTextIn115MainWorld(
   try {
     const result = await runIn115MainWorld({
       sender,
-      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded'],
-      func: async (fetchUrl: string, fetchBody: string, requestContentType: string) => {
+      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded', VOD_FETCH_TIMEOUT_MS],
+      func: async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
         try {
           const isPost = fetchBody.length > 0
           const options: RequestInit = {
@@ -227,6 +243,9 @@ export async function fetchTextIn115MainWorld(
           if (isPost) {
             options.headers = { 'Content-Type': requestContentType }
             options.body = fetchBody
+          }
+          if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
+            options.signal = (AbortSignal as any).timeout(fetchTimeoutMs)
           }
 
           const res = await fetch(fetchUrl, options)
@@ -311,7 +330,10 @@ export async function fetchTextIn115VodMainWorld(
   pickCode?: string,
   mode: VodFetchMode = 'auto',
 ): Promise<MainWorldTextResponse> {
-  vodRequestQueue = vodRequestQueue.catch(() => ({ ok: true, text: '' })).then(() => fetchTextIn115VodMainWorldQueued(sender, url, body, contentType, pickCode, mode))
+  vodRequestQueue = vodRequestQueue.catch(() => ({ ok: true, text: '' })).then(() => withVodQueueTimeout(
+    fetchTextIn115VodMainWorldQueued(sender, url, body, contentType, pickCode, mode),
+    VOD_QUEUE_STEP_TIMEOUT_MS,
+  ))
   return await vodRequestQueue
 }
 
@@ -330,12 +352,12 @@ async function fetchTextDirectVod(
       headers['Content-Type'] = contentType
     }
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: isPost ? 'POST' : 'GET',
       credentials: 'include',
       headers,
       body: isPost ? safeBody : undefined,
-    })
+    }, VOD_FETCH_TIMEOUT_MS)
     const text = await response.text()
     return { ok: response.ok, text }
   }
@@ -385,8 +407,8 @@ async function fetchTextIn115VodMainWorldQueued(
     const result = await runIn115MainWorld({
       tabId,
       ...(frameSession ? { frameId: frameSession.frameId } : {}),
-      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8'],
-      func: async (fetchUrl: string, fetchBody: string, requestContentType: string) => {
+      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS],
+      func: async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
         try {
           const isPost = fetchBody.length > 0
           const options: RequestInit = {
@@ -403,6 +425,9 @@ async function fetchTextIn115VodMainWorldQueued(
               'Content-Type': requestContentType,
             }
             options.body = fetchBody
+          }
+          if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
+            options.signal = (AbortSignal as any).timeout(fetchTimeoutMs)
           }
 
           const res = await fetch(fetchUrl, options)
