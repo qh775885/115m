@@ -23,6 +23,7 @@ export interface AudioManagerDeps {
   }) => Promise<void>
   onShowToast: (msg: string) => void
   onRenderRequest?: () => void
+  fetchMasterPlaylistText: () => Promise<string | null>
 }
 
 export class AudioManager {
@@ -115,11 +116,10 @@ export class AudioManager {
   async hydrateFromMasterPlaylist() {
     if (!this.deps) return
     try {
-      const pickCode = this.deps.getCurrentPickCode()
-      const response = await fetch(`https://115.com/api/video/m3u8/${pickCode}.m3u8`, {
-        credentials: 'include',
-      })
-      const text = await response.text()
+      // 复用播放器已拉取的 master 文本（走 FETCH_M3U8_TEXT 消息 + 内存缓存），
+      // 避免与 buildHlsPlaybackUrl 重复 fetch 同一 URL
+      const text = await this.deps.fetchMasterPlaylistText()
+      if (!text) return
       const tags = text.match(/#EXT-X-MEDIA:TYPE=AUDIO[^\n]*/ig) || []
       if (tags.length <= 1) return
 

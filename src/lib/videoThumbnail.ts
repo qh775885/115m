@@ -480,7 +480,13 @@ export async function getVideoCoverAt(
   }
 
   try {
-    return await pending
+    const cover = await pending
+    // 抽帧失败（弱网/分片异常等）会 resolve 为 null，此处不缓存失败结果：
+    // 否则本次会话内该时间点永远返回 null、不再重试，弱网恢复后也无法出图
+    if (!cover) {
+      memorySingleCoverCache.delete(cacheKey)
+    }
+    return cover
   }
   catch (error) {
     memorySingleCoverCache.delete(cacheKey)

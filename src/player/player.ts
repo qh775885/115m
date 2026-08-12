@@ -60,6 +60,7 @@ import {
 import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './core/player-api'
 import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from './core/playlist-navigation'
 import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
+import { primeThumbnailSourceUrl } from '../lib/videoThumbnail'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
 import { findVariantInMaster, normalizePlaylistUrl as normalizePlaylistUrlUtil } from './core/playlist-url'
@@ -186,6 +187,8 @@ class PlayerManager {
   private hlsInitSeq = 0
   /** 稳态播放期间 HLS 网络错误自动恢复（startLoad）次数，播放成功后清零 */
   private hlsSteadyRecoverCount = 0
+  /** master 播放列表文本缓存：initHls 内 buildHlsPlaybackUrl 与 hydrateFromMasterPlaylist 共用，避免每次重复拉取 */
+  private masterTextCache: { pickCode: string, text: string, fetchedAt: number } | null = null
   private lastVideoSwitchStartedAt = 0
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
   private switchCooldownTimer: number | null = null
@@ -460,14 +463,22 @@ class PlayerManager {
   }
 
   private async fetchMasterPlaylistText(): Promise<string | null> {
+    const pickCode = this.currentPickCode
+    // 短 TTL 内存缓存：同一集内多次请求（buildHlsPlaybackUrl + hydrateFromMasterPlaylist）只拉一次；
+    // 切集后 pickCode 变化自然失效，避免每次都走一次消息往返
+    if (this.masterTextCache && this.masterTextCache.pickCode === pickCode && Date.now() - this.masterTextCache.fetchedAt < 30_000) {
+      return this.masterTextCache.text
+    }
     try {
       const res = await sendTypedRuntimeMessageSafe({
         type: 'FETCH_M3U8_TEXT',
-        data: { pickCode: this.currentPickCode },
+        data: { pickCode },
       }, 2, 500, 12000)
-      if (!res) return null
-      if ('text' in res && res.text) return res.text
-      return null
+      const text = res && 'text' in res && res.text ? res.text : null
+      if (text) {
+        this.masterTextCache = { pickCode, text, fetchedAt: Date.now() }
+      }
+      return text
     }
     catch {
       return null
@@ -682,6 +693,7 @@ class PlayerManager {
       onRebuildHls: (params) => this.rebuildHlsForAudioTrack(params),
       onShowToast: (msg) => this.overlay?.showToast(msg),
       onRenderRequest: () => this.mediaTrackController?.renderControl(),
+      fetchMasterPlaylistText: () => this.fetchMasterPlaylistText(),
     })
 
     if (type === 'native') {
@@ -1726,6 +1738,11 @@ class PlayerManager {
     this.nativeMonitor?.resetRetryCount()
     this.ultraUrl = playback.ultraUrl
     this.m3u8List = playback.m3u8List
+    // 播放器已持有 m3u8 列表：预置缩略图源 URL，避免悬停预览首次打开时再走一次 getM3u8
+    const thumbnailSource = [...playback.m3u8List].sort((a, b) => a.quality - b.quality)[0]
+    if (thumbnailSource?.url && this.currentPickCode) {
+      primeThumbnailSourceUrl(this.currentPickCode, thumbnailSource.url)
+    }
     this.isNativeVideo = playback.initialPlayback.isNativeVideo
     this.currentPlaybackType = playback.initialPlayback.type
     this.currentQuality = playback.initialPlayback.currentQuality
