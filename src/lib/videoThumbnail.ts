@@ -201,28 +201,31 @@ async function renderCover(result: FrameData, options: RenderCoverOptions = defa
     return null
   }
 
-  const bitmap = await createImageBitmap(result.videoFrame, {
-    resizeQuality: 'pixelated',
-    resizeWidth: resize.width,
-    resizeHeight: resize.height,
-  })
-
+  let bitmap: ImageBitmap | null = null
   try {
+    bitmap = await createImageBitmap(result.videoFrame, {
+      resizeQuality: 'pixelated',
+      resizeWidth: resize.width,
+      resizeHeight: resize.height,
+    })
     ctx.drawImage(bitmap, 0, 0, resize.width, resize.height)
+
+    const blob = await canvas.convertToBlob({ type: 'image/webp', quality: options.quality })
+    const imgUrl = await blobToDataUrl(blob)
+
+    return {
+      imgUrl,
+      width: resize.width,
+      height: resize.height,
+      time: result.frameTime,
+    }
+  }
+  catch {
+    return null
   }
   finally {
-    bitmap.close()
+    bitmap?.close()
     result.videoFrame.close()
-  }
-
-  const blob = await canvas.convertToBlob({ type: 'image/webp', quality: options.quality })
-  const imgUrl = await blobToDataUrl(blob)
-
-  return {
-    imgUrl,
-    width: resize.width,
-    height: resize.height,
-    time: result.frameTime,
   }
 }
 
