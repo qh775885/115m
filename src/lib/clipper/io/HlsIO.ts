@@ -1,6 +1,7 @@
 import type { Segment as M3U8Segment } from 'm3u8-parser'
 import { Parser } from 'm3u8-parser'
 import { FetchIO } from './FetchIO'
+import { fetchWithTimeout } from '../../promise'
 
 /**
  * 请求信息
@@ -89,9 +90,11 @@ export class HlsIO extends FetchIO {
     if (!this.info) {
       throw new Error('info is undefined')
     }
-    const response = await fetch(this.info.url, {
-      headers: this.info.headers,
-    })
+    const response = await fetchWithTimeout(
+      this.info.url,
+      { headers: this.info.headers },
+      FetchIO.REQUEST_TIMEOUT_MS,
+    )
     const m3u8Text = await response.text()
     const parser = new Parser({
       uri: this.info.url,

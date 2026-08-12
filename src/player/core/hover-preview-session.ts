@@ -291,8 +291,12 @@ export class HoverPreviewSession {
       this.onDisplayRefreshRequested()
       this.scheduleBackgroundRefinement(duration)
     }
-    catch {
-      // thumbnail loading failed, skip refinement
+    catch (error) {
+      this.onDebug('coarse covers failed', {
+        pickCode: this.pickCode,
+        duration,
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     finally {
       this.thumbnailsLoading = false

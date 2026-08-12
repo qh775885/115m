@@ -38,7 +38,11 @@ async function fetchM3u8ViaBackground(pickCode: string): Promise<{ ok: true, url
   return { ok: true, url: source.url }
 }
 
-function showPreviewUnavailable(container: HTMLElement) {
+function showPreviewUnavailable(container: HTMLElement, hint?: string) {
+  if (hint) {
+    container.innerHTML = `<div style="font-size:11px;color:rgba(0,0,0,.38);line-height:1.6;text-align:center;">${hint}</div>`
+    return
+  }
   container.innerHTML = ''
 }
 
@@ -440,7 +444,8 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
           return
         }
         // 封面生成失败但 M3U8 可能仍可用，不误触发转码
-        showPreviewUnavailable(container)
+        console.warn('[115m] 封面抽帧失败:', e)
+        showPreviewUnavailable(container, '封面预览失败，可能网络不佳')
         state.error = true
       } finally {
         state.isLoading = false

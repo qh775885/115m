@@ -1,10 +1,14 @@
 import { ChunkReader } from './ChunkIO'
+import { fetchWithTimeout } from '../../promise'
 
 /**
  * FetchIO 类 - 负责从URL获取指定范围的视频数据
  * 处理数据块的读取和管理，支持缓存和请求去重
  */
 export class FetchIO {
+  /** 网络请求超时（毫秒），防止弱网/不响应时 fetch 永久挂起 */
+  static readonly REQUEST_TIMEOUT_MS = 15000
+
   /**
    * 创建分块读取器
    * @param url 目标URL
@@ -28,11 +32,14 @@ export class FetchIO {
     start: number,
     end?: number,
   ): Promise<Response> {
-    const response = await fetch(url, {
-      headers: {
-        Range: `bytes=${start}-${end ?? ''}`,
+    return await fetchWithTimeout(
+      url,
+      {
+        headers: {
+          Range: `bytes=${start}-${end ?? ''}`,
+        },
       },
-    })
-    return response
+      FetchIO.REQUEST_TIMEOUT_MS,
+    )
   }
 }

@@ -179,7 +179,8 @@ export function lazyLoadPlaylistCovers(listEl: HTMLElement, items: OverlayPlayli
         if (covers.length > 0 && thumbEl.isConnected) {
           thumbEl.innerHTML = `<img src="${covers[0].imgUrl}" alt="" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block" />`
         }
-      }).catch(() => {
+      }).catch((error) => {
+        console.warn(`[115m] 播放列表封面抽帧失败 ${item.pickCode}:`, error)
       })
     }
   }, { root: listEl, rootMargin: '200px 0px' })
