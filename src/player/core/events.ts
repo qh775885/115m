@@ -42,6 +42,10 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
   const root = art.template.$player as HTMLDivElement
   const mask = art.template.$mask as HTMLDivElement
 
+  /** 点击目标是否位于播放器容器内 */
+  const isInsidePlayer = (target: EventTarget | null): boolean =>
+    target instanceof Element && root.contains(target)
+
   art.on('ready', () => {
     onPerf('art-ready', { type: getType() })
     onReady()
@@ -136,39 +140,19 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
   }
 
   /**
-   * 判断点击目标是否应该触发播放/暂停。
-   * 任何非交互元素的点击都应该 toggle 播放状态。
+   * 画面点击播放/暂停已由入口 content script（document.write 后最先注册的 window 捕获监听）处理，
+   * 此处只保留双击拦截与右键菜单逻辑。
    */
-  const handleRootClick = (event: MouseEvent) => {
-    const target = event.target
-    
-    // 如果右键菜单正在显示，点击任意位置都关闭菜单，不触发播放/暂停
-    if (art.contextmenu.show) {
-      art.contextmenu.show = false
-      event.stopImmediatePropagation()
-      return
-    }
-    
-    // 交互控件区域 → 不处理，让 ArtPlayer 自己处理
-    if (isInteractiveTarget(target)) return
-    // 其他所有区域（包括 video、poster、mask、controls 空白处、header 空白处）→ toggle 播放
-    event.stopImmediatePropagation()
-    if (art.video.paused) {
-      safePlay(art)
-    }
-    else {
-      art.pause()
-    }
-  }
-
   const handleRootDoubleClick = (event: MouseEvent) => {
     const target = event.target
+    if (!isInsidePlayer(target)) return
     if (isInteractiveTarget(target)) return
     event.stopImmediatePropagation()
   }
 
   // Toggle contextmenu: first right-click → ArtPlayer menu, second → browser menu
   const handleContextmenu = (event: MouseEvent) => {
+    if (!isInsidePlayer(event.target)) return
     if (art.contextmenu.show) {
       // ArtPlayer menu is visible → close it and let browser default through
       art.contextmenu.show = false
@@ -180,16 +164,14 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
     event.stopImmediatePropagation()
   }
 
-  root.addEventListener('contextmenu', handleContextmenu, true)
-  root.addEventListener('click', handleRootClick, true)
-  root.addEventListener('dblclick', handleRootDoubleClick, true)
+  window.addEventListener('contextmenu', handleContextmenu, true)
+  window.addEventListener('dblclick', handleRootDoubleClick, true)
 
   const cleanupKeyboard = bindKeyboardShortcuts(art)
 
   return () => {
-    root.removeEventListener('contextmenu', handleContextmenu, true)
-    root.removeEventListener('click', handleRootClick, true)
-    root.removeEventListener('dblclick', handleRootDoubleClick, true)
+    window.removeEventListener('contextmenu', handleContextmenu, true)
+    window.removeEventListener('dblclick', handleRootDoubleClick, true)
     cleanupKeyboard()
   }
 }

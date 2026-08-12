@@ -22,6 +22,30 @@ export default defineContentScript({
     }
 
     // document.write 之后，当前 content script 的执行上下文仍然有效
+    // 立即绑定画面点击播放/暂停：此时文档刚重建、无任何其他脚本，
+    // 本监听是 window 捕获层第一个注册者，页面后续脚本即使 stopImmediatePropagation 也无法阻止
+    window.addEventListener('pointerdown', (event) => {
+      const video = document.querySelector('.art-video') as HTMLVideoElement | null
+      if (!video || event.button !== 0) return
+      const target = event.target
+      if (!(target instanceof Element)) return
+      // 排除播放器控件容器与扩展交互 UI。
+      // 注意：不能排除 .art-bottom（它覆盖整个画面，暂停时 pointer-events 为 auto，排除会导致画面点击失效），
+      // 只需排除其内部的进度条/控制栏等控件区域。
+      if (target.closest('.art-controls, .art-controls-left, .art-controls-right, .art-controls-center, .art-progress, .art-control-progress, .art-header, .art-settings, .art-info, .art-contextmenus, .art-control, .art-selector, .art-selector-item, .art-volume-panel, .m115-interactive, .m115-playlist-sidebar, .move-dialog-mask, .move-dialog-box')) return
+      // 点击位置必须落在视频画面可视区域内
+      const rect = video.getBoundingClientRect()
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      if (video.paused) {
+        void video.play().catch(() => {})
+      }
+      else {
+        video.pause()
+      }
+    }, true)
+
     // 异步加载播放器模块
     await import('../content/video-page.ts')
   },
