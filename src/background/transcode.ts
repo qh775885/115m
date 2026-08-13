@@ -40,11 +40,34 @@ const BATCH_TRANSCODE_COOLDOWN_MS = 10 * 60_000
 const MAX_BATCH_TRANSCODE_COUNT = 20
 const NATIVE_FALLBACK_TIMEOUT_MS = 12_000
 const NATIVE_FALLBACK_SETTLE_MS = 3_000
+/** 转码状态查询的短缓存 TTL：content 每 15s 轮询，串行 3~5 个请求，命中窗口内复用结果避免重复拉取 */
+const TRANSCODE_STATUS_CACHE_TTL_MS = 12_000
 const transcodeCooldown = new Map<string, { ts: number, response: unknown }>()
 const batchTranscodeCooldown = new Map<string, number>()
 let nativeFallbackQueue: Promise<unknown> = Promise.resolve()
 const nativeFallbackTabs = new Set<number>()
 type TabLoadStatus = 'loading' | 'complete'
+
+/** 转码状态 per-pickCode 缓存：响应复用 + in-flight 合并 */
+const transcodeStatusCache = new Map<string, { ts: number, response?: unknown, inFlight?: Promise<unknown> }>()
+
+function getCachedTranscodeStatus(pickCode: string): unknown | null {
+  const cached = transcodeStatusCache.get(pickCode)
+  if (!cached) return null
+  if (Date.now() - cached.ts > TRANSCODE_STATUS_CACHE_TTL_MS) {
+    transcodeStatusCache.delete(pickCode)
+    return null
+  }
+  return cached.response ?? cached.inFlight ?? null
+}
+
+function setCachedTranscodeStatus(pickCode: string, value: unknown | Promise<unknown>) {
+  const isPromise = value instanceof Promise
+  transcodeStatusCache.set(pickCode, {
+    ts: Date.now(),
+    ...(isPromise ? { inFlight: value } : { response: value }),
+  })
+}
 
 function isPageModeDisabledError(error: unknown): boolean {
   return /115vod page mode disabled/i.test(String(error))
@@ -197,71 +220,86 @@ async function getTranscodeContext(pickCode: string, sender?: chrome.runtime.Mes
 
 export async function handleTranscodeStatus(message: MsgTranscodeStatus, sender?: chrome.runtime.MessageSender) {
 
-  try {
-    const context = await getTranscodeContext(message.data.pickCode, sender)
-    if ('error' in context) {
-      return { ok: false, state: 'failed', error: context.error }
+  const pickCode = message.data.pickCode
+
+  const cached = getCachedTranscodeStatus(pickCode)
+  if (cached) {
+    if (cached instanceof Promise) {
+      return await cached
     }
+    return cached
+  }
 
-    const job = await checkTranscodeJob(context.sha1, context.pickCode)
-
-    // status === 3 表示在排队中，有 count / time 进度信息
-    if (job?.status === 3) {
-
-      return buildQueuedResponse(job, 'queue status refreshed')
-    }
-
-    // 先尝试直接拉取 m3u8，最终判断依据是能否实际播放
-    const m3u8List = await handleFetchM3u8({ type: 'FETCH_M3U8', data: { pickCode: context.pickCode } })
-
-    if (m3u8List?.list && m3u8List.list.length > 0) {
-
-      return {
-        ok: true,
-        state: 'completed_refresh',
-        detail: 'VIP 加速已完成，刷新页面后可预览',
+  const checkPromise = (async () => {
+    try {
+      const context = await getTranscodeContext(pickCode, sender)
+      if ('error' in context) {
+        return { ok: false, state: 'failed', error: context.error }
       }
-    }
 
-    // m3u8 不可用 → 检查 is_transcoded 判断是否还有任务记录
-    const transcoded = await checkIsTranscoded(context.pickCode)
+      const job = await checkTranscodeJob(context.sha1, context.pickCode)
 
-    // is_transcoded state=1 但 m3u8 不可用
-    // 如果 job status 不是 3（排队中），说明没有活跃的转码任务
-    // state=1 只表示"该文件支持转码"，不代表正在转码
-    if (transcoded?.state === 1) {
-      // 有活跃的 job（status=3 已在上面处理），其他 status 说明没在转码
-      if (job?.status === 127 || !job || job?.status === 0) {
+      // status === 3 表示在排队中，有 count / time 进度信息
+      if (job?.status === 3) {
+
+        return buildQueuedResponse(job, 'queue status refreshed')
+      }
+
+      // 先尝试直接拉取 m3u8，最终判断依据是能否实际播放
+      const m3u8List = await handleFetchM3u8({ type: 'FETCH_M3U8', data: { pickCode: context.pickCode } })
+
+      if (m3u8List?.list && m3u8List.list.length > 0) {
 
         return {
           ok: true,
-          state: 'no_task',
-          detail: '视频支持转码但未在队列中，可手动发起转码',
+          state: 'completed_refresh',
+          detail: 'VIP 加速已完成，刷新页面后可预览',
+        }
+      }
+
+      // m3u8 不可用 → 检查 is_transcoded 判断是否还有任务记录
+      const transcoded = await checkIsTranscoded(context.pickCode)
+
+      // is_transcoded state=1 但 m3u8 不可用
+      // 如果 job status 不是 3（排队中），说明没有活跃的转码任务
+      // state=1 只表示"该文件支持转码"，不代表正在转码
+      if (transcoded?.state === 1) {
+        // 有活跃的 job（status=3 已在上面处理），其他 status 说明没在转码
+        if (job?.status === 127 || !job || job?.status === 0) {
+
+          return {
+            ok: true,
+            state: 'no_task',
+            detail: '视频支持转码但未在队列中，可手动发起转码',
+          }
+        }
+
+        return {
+          ok: true,
+          state: 'queued',
+          queueCount: job?.count,
+          etaSeconds: job?.time,
+          priority: job?.priority,
+          detail: '转码处理中，等待完成...',
         }
       }
 
       return {
         ok: true,
-        state: 'queued',
-        queueCount: job?.count,
-        etaSeconds: job?.time,
-        priority: job?.priority,
-        detail: '转码处理中，等待完成...',
+        state: 'no_task',
+        detail: '未检测到转码任务',
+        autoFallback: true, // 没有活跃任务且也没有转码记录（transcoded.state !== 1），大概率是原生不支持播放的刚上传视频（B类）
       }
     }
+    catch (e: any) {
 
-    return {
-      ok: true,
-      state: 'no_task',
-      detail: '未检测到转码任务',
-      autoFallback: true, // 没有活跃任务且也没有转码记录（transcoded.state !== 1），大概率是原生不支持播放的刚上传视频（B类）
+      console.error('[115m] transcode status error:', e)
+      return { ok: false, state: 'failed', error: e?.message || String(e) }
     }
-  }
-  catch (e: any) {
+  })()
 
-    console.error('[115m] transcode status error:', e)
-    return { ok: false, state: 'failed', error: e?.message || String(e) }
-  }
+  setCachedTranscodeStatus(pickCode, checkPromise)
+  return await checkPromise
 }
 
 function parseJsonText<T>(text: string): T | null {
@@ -502,6 +540,7 @@ export async function handleTranscodeNativeFallback(message: MsgTranscodeNativeF
     try {
       await runNativeFallbackOnce(pickCode)
       await wait(1200)
+      transcodeStatusCache.delete(pickCode)
       const status = await handleTranscodeStatus({ type: 'TRANSCODE_STATUS', data: { pickCode } }) as Record<string, unknown>
       if (status.ok && status.state !== 'failed') {
         return {

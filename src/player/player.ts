@@ -649,6 +649,7 @@ class PlayerManager {
 
     this.artplayer.on('video:pause', () => {
       this.syncCurrentPlaylistProgress(true)
+      this.nativeMonitor?.onPause()
     })
 
     this.artplayer.on('video:seeking', () => {

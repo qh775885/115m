@@ -98,6 +98,14 @@ export class NativePlaybackMonitor {
     }
   }
 
+  /** video:pause 事件：暂停时停止音视频探测与卡顿检测，避免无限自我重排 */
+  onPause() {
+    this.clearAudioProbe()
+    this.clearVideoProbe()
+    this.clearStallCheck()
+    this.stallStartedAt = 0
+  }
+
   /** video:error 事件 */
   async onError() {
     if (!this.art || !this.deps) return
@@ -282,7 +290,9 @@ export class NativePlaybackMonitor {
     if (this.stallFallbackInFlight) return
 
     const video = this.art.video as HTMLVideoElement
-    if (video.paused || video.ended || video.seeking || video.currentTime < 1) {
+    // 暂停/结束时不重排探测，等 play 事件再重新调度，避免无限自我重排
+    if (video.paused || video.ended) return
+    if (video.seeking || video.currentTime < 1) {
       this.scheduleVideoProbe()
       return
     }
@@ -318,7 +328,9 @@ export class NativePlaybackMonitor {
   private async checkAudioDecode() {
     if (!this.art || !this.isNativePlayback || !this.deps) return
     const video = this.art.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number }
-    if (video.paused || video.currentTime < 1) {
+    // 暂停时不重排探测，等 play 事件再重新调度，避免无限自我重排
+    if (video.paused) return
+    if (video.currentTime < 1) {
       this.scheduleAudioProbe()
       return
     }

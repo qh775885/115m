@@ -27,6 +27,7 @@ export class SubtitleManager {
   private loadToken = 0
   private rafId = 0
   private destroyed = false
+  private lastCueText = ''
   private nativeTracks: Map<string, { track: TextTrack, cues: SubtitleCue[] }> = new Map()
   private cleanupFns: Array<() => void> = []
 
@@ -280,12 +281,23 @@ export class SubtitleManager {
       return
     }
 
+    // 同一 cue 保持期间不重复写 DOM，仅在文本变化时更新
+    if (cue.text === this.lastCueText) {
+      return
+    }
+
+    this.lastCueText = cue.text
     this.textEl.textContent = cue.text
     this.layer.style.display = 'flex'
   }
 
   private hide() {
-    this.textEl.textContent = ''
-    this.layer.style.display = 'none'
+    if (this.lastCueText !== '') {
+      this.lastCueText = ''
+      this.textEl.textContent = ''
+    }
+    if (this.layer.style.display !== 'none') {
+      this.layer.style.display = 'none'
+    }
   }
 }
