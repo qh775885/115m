@@ -32,25 +32,21 @@ import { isHlsSupported } from './core/hls'
 import { HlsPlayerController } from './core/player-hls'
 import { PlayerQualityController } from './core/player-quality-controller'
 import { PlayerPlaylistController } from './core/player-playlist'
+import { PlayerActionsController } from './core/player-actions'
 import type { VideoPlaybackQualityLike } from './core/types'
 import { HoverPreviewController } from './core/hover-preview'
 import { bindPlayerEvents } from './core/events'
-import { PlayerOverlayController, readOverlayMetaFromQuery, type OverlayPlaylistItem } from './core/overlay'
-import { fetchBreadcrumbPath, resolvePlaybackBundle } from './core/player-services'
+import { PlayerOverlayController, readOverlayMetaFromQuery } from './core/overlay'
+import { resolvePlaybackBundle } from './core/player-services'
 import { MediaTrackController } from './core/player-media-track'
 import { SettingsMenuController } from './core/player-settings-menu'
 import { buildOverlayMetaPatch, buildPlayerHistoryUrl, findPlaylistItemByPickCode } from './core/player-switch'
-import { MoveDialog } from './core/move-dialog'
 import { applyFallbackToHlsState } from './core/playback-state'
 import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from './core/runtime'
 import {
-  buildUpdatedMarkedUrl,
-  readPathFromLocation,
   readPlayerBootstrapConfig,
-  readPlaylistCidFromLocation,
 } from './core/player-query'
-import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './core/player-api'
-import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from './core/playlist-navigation'
+import { buildPlaybackNavState, getPlaylistPosition } from './core/playlist-navigation'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
 import { RotationManager } from './core/rotation-manager'
@@ -132,6 +128,7 @@ class PlayerManager {
   private hoverPreview: HoverPreviewController | null = null
   private overlay: PlayerOverlayController | null = null
   private playlist = new PlayerPlaylistController()
+  private actions = new PlayerActionsController()
   private switchVideoRequestId = 0
   private traceId = ''
   private clickTs = 0
@@ -162,7 +159,7 @@ class PlayerManager {
   private switchCooldownTimer: number | null = null
   private readonly handleRuntimeMessage = (message: any) => {
     if (message?.type === 'MOVE_REFRESHED') {
-      void this.refreshBreadcrumbs().catch(error => {
+      void this.actions.refreshBreadcrumbs().catch(error => {
         console.error('[115m] 刷新面包屑失败:', error)
       })
       this.overlay?.showToast('文件已移动')
@@ -386,6 +383,18 @@ class PlayerManager {
       formatFileSize: size => this.formatFileSize(size),
     })
 
+    this.actions.attach({
+      getCurrentPickCode: () => this.currentPickCode,
+      getPlaylist: () => this.playlist,
+      getKeepPlaylistOpenOnInit: () => this.keepPlaylistOpenOnInit,
+      navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
+      updatePlaylist: items => this.overlay?.updatePlaylist(items),
+      updateBreadcrumbs: path => this.overlay?.updateBreadcrumbs(path),
+      updateFavoriteStatus: isMarked => this.overlay?.updateFavoriteStatus(isMarked),
+      isPlaylistExpanded: () => this.overlay?.isPlaylistExpanded() === true,
+      onShowToast: msg => this.overlay?.showToast(msg),
+    })
+
     this.hlsController.attach({
       getArtplayer: () => this.artplayer,
       getCurrentPickCode: () => this.currentPickCode,
@@ -583,7 +592,7 @@ class PlayerManager {
       this.artplayer.controls.add(this.settingsMenuController.buildControl()!)
     }
 
-    void this.fetchBreadcrumbs()
+    void this.actions.fetchBreadcrumbs()
 
     if (this.artplayer) {
       this.setupStatsMenu()
@@ -745,8 +754,8 @@ class PlayerManager {
     this.overlay = new PlayerOverlayController({
       art: this.artplayer,
       meta,
-      onMoveFile: async (fileId, cid) => await this.moveFile(fileId, cid),
-      onToggleFavorite: async (fileId, nextMarked) => await this.toggleFavorite(fileId, nextMarked),
+      onMoveFile: async (fileId, cid) => await this.actions.moveFile(fileId, cid),
+      onToggleFavorite: async (fileId, nextMarked) => await this.actions.toggleFavorite(fileId, nextMarked),
       onPlaylistToggle: async (open) => {
         if (!open) return []
         const items = await this.playlist.fetchPlaylistItems()
@@ -761,9 +770,9 @@ class PlayerManager {
           this.navigateToVideo(pickCode, keepPlaylistOpen)
         }
       },
-      onPlaylistMove: async item => await this.movePlaylistVideo(item),
-      onPlaylistDelete: async item => await this.deletePlaylistVideo(item),
-      onDeleteFile: async (fileId, parentId, pickCode) => await this.deleteCurrentVideo(fileId, parentId, pickCode),
+      onPlaylistMove: async item => await this.actions.movePlaylistVideo(item),
+      onPlaylistDelete: async item => await this.actions.deletePlaylistVideo(item),
+      onDeleteFile: async (fileId, parentId, pickCode) => await this.actions.deleteCurrentVideo(fileId, parentId, pickCode),
       onPlayPrevious: () => this.playlist.playPrevious(),
       onPlayNext: () => this.playlist.playNext(),
       onReplay: () => this.playlist.replayCurrent(),
@@ -778,24 +787,10 @@ class PlayerManager {
     void this.playlist.prefetchPlaylistItems()
     // 异步获取最新的收藏状态
     if (meta.fileId) {
-      void this.fetchFileFavoriteStatus(meta.fileId)
+      void this.actions.fetchFileFavoriteStatus(meta.fileId)
     }
   }
 
-  private async fetchFileFavoriteStatus(fileId: string): Promise<void> {
-    const requestPickCode = this.currentPickCode
-    try {
-      const favoriteStatus = await fetchFavoriteStatus(sendRuntimeMessageSafe, requestPickCode)
-      if (requestPickCode !== this.currentPickCode) return
-      if (favoriteStatus !== null) {
-        this.overlay?.updateFavoriteStatus(favoriteStatus)
-        // 同步更新 URL 的 marked 参数，避免刷新后读到旧值
-        window.history.replaceState(null, '', buildUpdatedMarkedUrl(window.location.pathname, window.location.search, favoriteStatus))
-      }
-    } catch (error) {
-      playerDebug('[115m] fetchFileFavoriteStatus failed:', error)
-    }
-  }
 
   private setupProgressHoverPreview(previewSourceUrl?: string, previewSourceType?: 'native' | 'hls') {
     if (!this.artplayer) return
@@ -931,161 +926,7 @@ class PlayerManager {
     renderPlayerError(message)
   }
 
-  /**
-   * 主动通过 API 获取面包屑，不依赖 DOM 提取或 URL 参数
-   */
-  private async fetchBreadcrumbs(expectedPickCode = this.currentPickCode): Promise<void> {
-    const pathFromQuery = readPathFromLocation(window.location.search)
-    if (expectedPickCode !== this.currentPickCode) return
-    if (pathFromQuery.length > 0) {
-      this.overlay?.updateBreadcrumbs(pathFromQuery)
-      return
-    }
-
-    // 通过 API 获取（需要 cid 或 pickCode）
-    const cid = readPlaylistCidFromLocation(window.location.search)
-    const path = await fetchBreadcrumbPath(sendRuntimeMessageSafe, cid, expectedPickCode)
-
-    if (expectedPickCode !== this.currentPickCode) return
-    if (path.length > 0) {
-      this.overlay?.updateBreadcrumbs(path)
-    }
-  }
-
-  /**
-   * 刷新面包屑（移动文件后调用）
-   */
-  private async refreshBreadcrumbs(): Promise<void> {
-    // 强制通过 API 获取最新路径
-    const path = await fetchBreadcrumbPath(sendRuntimeMessageSafe, '', this.currentPickCode)
-
-    if (path.length > 0) {
-      this.overlay?.updateBreadcrumbs(path)
-    }
-  }
-
-  private async moveFile(fileId: string, cid: string): Promise<void> {
-    if (!fileId) throw new Error('fileId missing')
-
-    const dialog = new MoveDialog(
-      fileId,
-      cid || '0',
-      () => this.refreshBreadcrumbs(),
-    )
-    const result = await dialog.show()
-    if (result.moved) {
-      this.handleCurrentVideoMoved()
-    }
-  }
-
-  private async movePlaylistVideo(item: OverlayPlaylistItem): Promise<void> {
-    if (!item.fileId) {
-      this.overlay?.showToast('文件 ID 缺失')
-      return
-    }
-
-    const parentId = this.getPlaylistItemParentId(item)
-    const dialog = new MoveDialog(
-      item.fileId,
-      parentId || '0',
-      () => item.pickCode === this.currentPickCode ? this.refreshBreadcrumbs() : undefined,
-    )
-    const result = await dialog.show()
-    if (result.moved) {
-      this.handlePlaylistVideoMoved(item.pickCode)
-    }
-  }
-
-  private handleCurrentVideoMoved() {
-    this.handlePlaylistVideoMoved(this.currentPickCode)
-  }
-
-  private handlePlaylistVideoMoved(movedPickCode: string) {
-    if (!movedPickCode) return
-
-    const beforeCount = this.playlist.items.length
-    this.playlist.setItems(this.playlist.items.filter(item => item.pickCode !== movedPickCode))
-    if (this.playlist.items.length === beforeCount) return
-
-    this.playlist.syncOverlayPlaybackNav()
-    this.overlay?.updatePlaylist(this.playlist.items)
-  }
-
-  private getPlaylistItemParentId(item: OverlayPlaylistItem): string {
-    if (item.pickCode === this.currentPickCode) {
-      return this.currentParentId()
-    }
-    return item.cid || readPlaylistCidFromLocation(window.location.search) || this.currentParentId()
-  }
-
-  private currentParentId(): string {
-    const meta = readOverlayMetaFromQuery()
-    return meta.cid || meta.parentId || '0'
-  }
-
-  private async toggleFavorite(fileId: string, nextMarked: boolean): Promise<boolean> {
-    if (!fileId) return !nextMarked
-
-    const result = await updateFavoriteStatus(sendRuntimeMessageSafe, fileId, nextMarked)
-    if (result === nextMarked) {
-      window.history.replaceState(null, '', buildUpdatedMarkedUrl(window.location.pathname, window.location.search, nextMarked))
-    }
-    return result
-  }
-
-  private async deleteCurrentVideo(fileId: string, parentId: string, pickCode: string): Promise<void> {
-    await this.deleteVideoFromPlaylist({ fileId, parentId, pickCode, navigateAfterDelete: true })
-  }
-
-  private async deletePlaylistVideo(item: OverlayPlaylistItem): Promise<void> {
-    if (!item.fileId || !item.pickCode) {
-      this.overlay?.showToast('缺少删除参数')
-      return
-    }
-    await this.deleteVideoFromPlaylist({
-      fileId: item.fileId,
-      parentId: this.getPlaylistItemParentId(item),
-      pickCode: item.pickCode,
-      navigateAfterDelete: item.pickCode === this.currentPickCode,
-    })
-  }
-
-  private async deleteVideoFromPlaylist(params: {
-    fileId: string
-    parentId: string
-    pickCode: string
-    navigateAfterDelete: boolean
-  }): Promise<void> {
-    const { fileId, parentId, pickCode, navigateAfterDelete } = params
-    const items = await this.playlist.fetchPlaylistItems().catch(() => this.playlist.items)
-    const { nextPickCode } = getDeleteFallback(items, pickCode)
-    const keepPlaylistOpen = this.keepPlaylistOpenOnInit || this.overlay?.isPlaylistExpanded() === true
-
-    await deleteVideoFile(sendRuntimeMessageSafe, fileId, parentId, pickCode)
-
-    this.playlist.setItems(this.playlist.items.filter(item => item.pickCode !== pickCode))
-    this.playlist.syncOverlayPlaybackNav()
-    this.overlay?.updatePlaylist(this.playlist.items)
-
-    if (!navigateAfterDelete) {
-      this.overlay?.showToast('已删除')
-      return
-    }
-
-    if (nextPickCode) {
-      this.navigateToVideo(nextPickCode, keepPlaylistOpen, true)
-      return
-    }
-
-    if (window.history.length > 1) {
-      window.history.back()
-      return
-    }
-
-    window.close()
-  }
-
-  private navigateToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
+    private navigateToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
     if (!pickCode || pickCode === this.currentPickCode) return
 
     this.playlist.clearPlaybackEndState()
@@ -1233,10 +1074,10 @@ class PlayerManager {
         () => requestId === this.switchVideoRequestId && this.currentPickCode === pickCode,
       )
 
-      void this.fetchBreadcrumbs(pickCode)
+      void this.actions.fetchBreadcrumbs(pickCode)
 
       if (targetItem?.fileId) {
-        void this.fetchFileFavoriteStatus(targetItem.fileId)
+        void this.actions.fetchFileFavoriteStatus(targetItem.fileId)
       }
     }
     catch (error) {
@@ -1349,6 +1190,7 @@ window.addEventListener('beforeunload', () => {
 })
 
 ;(window as any).playerManager = playerManager
+
 
 
 
