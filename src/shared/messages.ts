@@ -66,9 +66,26 @@ export type OpenTabResponse = RuntimeSuccessResponse & {
   deduped?: true
 }
 
-export type RuntimeDownloadResponse =
-  | { success: true }
-  | { success: false, error: string }
+export interface SubtitleItem {
+  sid: string
+  title: string
+  url: string
+  type: string
+  language?: string
+  sha1?: string
+}
+
+/** 115 字幕接口原始响应（可能含 list / autoload / sub_list 多种形状，由播放器侧 normalize） */
+export interface FetchSubtitlesResponse {
+  data?: {
+    list?: SubtitleItem[]
+    autoload?: SubtitleItem
+    sub_list?: SubtitleItem[]
+    [key: string]: unknown
+  }
+  list?: SubtitleItem[]
+  error?: string
+}
 
 export interface MsgSetCookie {
   type: 'SET_COOKIE'
@@ -82,15 +99,6 @@ export interface MsgSetCookie {
     sameSite: string
   }
 }
-
-export interface MsgDownload {
-  type: 'DOWNLOAD'
-  data: {
-    url: string
-    filename: string
-  }
-}
-
 export interface MsgGetNativeHistory {
   type: 'GET_NATIVE_HISTORY'
   data: { pickCode: string, shareId?: string }
@@ -204,7 +212,6 @@ export interface MsgDeleteRefreshed {
 
 export type RuntimeMessage =
   | MsgSetCookie
-  | MsgDownload
   | MsgGetNativeHistory
   | MsgGetNativeHistoryMap
   | MsgSetNativeHistory
@@ -230,13 +237,13 @@ export type RuntimeTabNotification =
 export interface RuntimeMessageResponseMap {
   PING: { pong: true }
   SET_COOKIE: RuntimeSuccessResponse
-  DOWNLOAD: RuntimeDownloadResponse
   OPEN_TAB: OpenTabResponse
   GET_NATIVE_HISTORY: NativePlayHistoryRecord | null
   GET_NATIVE_HISTORY_MAP: Record<string, NativePlayHistoryRecord>
   SET_NATIVE_HISTORY: { success: boolean }
   FETCH_M3U8: FetchM3u8Response
   FETCH_M3U8_TEXT: FetchM3u8TextResponse
+  FETCH_SUBTITLES: FetchSubtitlesResponse
   FETCH_PLAYLIST: MsgFetchPlaylistResponse
   MAIN_WORLD_FETCH: RuntimeMainWorldResponse
   MAIN_WORLD_GET: RuntimeMainWorldResponse

@@ -1,9 +1,12 @@
 import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
 import { recordRuntimeFailure } from '../../shared/telemetry'
-
-function isContextInvalidated(error: unknown): boolean {
-  return error instanceof Error && /Extension context invalidated/i.test(error.message)
-}
+import {
+  canUseRuntimeMessaging,
+  formatRuntimeMessage,
+  getRuntimeApi,
+  isContextInvalidated,
+  showContextInvalidatedTip,
+} from '../../shared/runtime-utils'
 
 export interface RuntimeContextInvalidatedResult {
   runtimeContextInvalidated: true
@@ -14,36 +17,6 @@ export function isRuntimeContextInvalidatedResult(value: unknown): value is Runt
 }
 
 let runtimeContextInvalidated = false
-
-function formatRuntimeMessage(message: unknown): string {
-  if (message && typeof message === 'object' && 'type' in message) {
-    return String((message as { type?: unknown }).type ?? 'unknown')
-  }
-  return String(message)
-}
-
-function showContextInvalidatedTip() {
-  if (document.getElementById('ext-invalidated-tip')) return
-  const tip = document.createElement('div')
-  tip.id = 'ext-invalidated-tip'
-  tip.style.cssText = [
-    'position:fixed',
-    'top:20px',
-    'left:50%',
-    'transform:translateX(-50%)',
-    'z-index:999999',
-    'background:rgba(0,0,0,.85)',
-    'color:#fff',
-    'padding:12px 24px',
-    'border-radius:8px',
-    'font-size:14px',
-    'cursor:pointer',
-    'box-shadow:0 4px 20px rgba(0,0,0,.5)',
-  ].join(';')
-  tip.textContent = '扩展已更新，点击刷新页面'
-  tip.addEventListener('click', () => location.reload())
-  document.body.appendChild(tip)
-}
 
 /**
  * 向 background 发送消息，带重试机制

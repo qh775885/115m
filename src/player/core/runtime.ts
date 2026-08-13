@@ -1,12 +1,12 @@
 import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
 import { recordRuntimeFailure } from '../../shared/telemetry'
-
-/**
- * 检测是否为扩展上下文失效错误（扩展更新/重载后旧页面的连接会断开）
- */
-function isContextInvalidated(e: unknown): boolean {
-  return e instanceof Error && /Extension context invalidated/i.test(e.message)
-}
+import {
+  canUseRuntimeMessaging,
+  formatRuntimeMessage,
+  getRuntimeApi,
+  isContextInvalidated,
+  showContextInvalidatedTip,
+} from '../../shared/runtime-utils'
 
 /** 调试辅助：在页面内显示日志 */
 function debugLogToPage(msg: string) {
@@ -22,55 +22,12 @@ function debugLogToPage(msg: string) {
   el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
 }
 
-export function getRuntimeApi() {
-  if (typeof chrome === 'undefined' || !chrome?.runtime) {
-    return null
-  }
-  return chrome.runtime
-}
-
-export function canUseRuntimeMessaging() {
-  const runtime = getRuntimeApi()
-  return !!runtime && typeof runtime.sendMessage === 'function'
-}
-
-/**
- * 扩展上下文失效时，提示用户刷新页面
- */
-function showContextInvalidatedTip() {
-  // 避免重复提示
-  if (document.getElementById('ext-invalidated-tip')) return
-  const tip = document.createElement('div')
-  tip.id = 'ext-invalidated-tip'
-  tip.style.cssText = [
-    'position:fixed',
-    'top:20px',
-    'left:50%',
-    'transform:translateX(-50%)',
-    'z-index:999999',
-    'background:rgba(0,0,0,.85)',
-    'color:#fff',
-    'padding:12px 24px',
-    'border-radius:8px',
-    'font-size:14px',
-    'cursor:pointer',
-    'box-shadow:0 4px 20px rgba(0,0,0,.5)',
-  ].join(';')
-  tip.textContent = '扩展已更新，点击刷新页面'
-  tip.addEventListener('click', () => location.reload())
-  document.body.appendChild(tip)
-}
+export { getRuntimeApi, canUseRuntimeMessaging }
 
 function runtimeDebug(...args: unknown[]) {
   if (localStorage.getItem('115m-player-debug') === '1') {
     console.debug(...args)
   }
-}
-
-function getRuntimeMessageType(message: unknown) {
-  return message && typeof message === 'object' && 'type' in message
-    ? String((message as { type?: unknown }).type || 'unknown')
-    : 'unknown'
 }
 
 /**
@@ -134,7 +91,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
   timeoutMs = 0,
 ): Promise<T | null> {
   if (!canUseRuntimeMessaging()) {
-    console.warn('[115m] sendRuntimeMessage skipped: runtime unavailable', getRuntimeMessageType(message))
+    console.warn('[115m] sendRuntimeMessage skipped: runtime unavailable', formatRuntimeMessage(message))
     return null
   }
   for (let i = 0; i <= retries; i++) {
@@ -152,7 +109,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
         return result
       }
       // result 为 undefined 时重试（可能由于 Service Worker 尚未就绪导致没有响应）
-      runtimeDebug('[115m] sendMessage got undefined, retrying...', i, getRuntimeMessageType(message))
+      runtimeDebug('[115m] sendMessage got undefined, retrying...', i, formatRuntimeMessage(message))
     }
     catch (e) {
       if (isContextInvalidated(e)) {
@@ -160,14 +117,14 @@ export async function sendRuntimeMessageSafe<T = unknown>(
         showContextInvalidatedTip()
         return null
       }
-      runtimeDebug('[115m] sendMessage error, retrying...', i, getRuntimeMessageType(message), e)
+      runtimeDebug('[115m] sendMessage error, retrying...', i, formatRuntimeMessage(message), e)
     }
     if (i < retries) {
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
-  console.warn('[115m] sendRuntimeMessage failed after retries:', getRuntimeMessageType(message))
-  recordRuntimeFailure(getRuntimeMessageType(message))
+  console.warn('[115m] sendRuntimeMessage failed after retries:', formatRuntimeMessage(message))
+  recordRuntimeFailure(formatRuntimeMessage(message))
   return null
 }
 

@@ -54,7 +54,7 @@ const MAIN_WORLD_ALLOWED_PATHS = [
   { host: 'proapi.115.com', path: '/app/chrome/downurl' },
   { host: '115vod.com', path: '/webapi/movies/subtitle' },
 ]
-const DOWNLOAD_ALLOWED_HOSTS = ['115cdn.net']
+
 
 function readSenderUrl(sender?: chrome.runtime.MessageSender) {
   return sender?.url || sender?.tab?.url || ''
@@ -98,14 +98,6 @@ function normalizeCookieDomain(domain: string) {
     throw new Error('Cookie domain is not allowed')
   }
   return normalized
-}
-
-function assertDownloadUrl(rawUrl: string) {
-  const url = new URL(rawUrl)
-  if (url.protocol !== 'https:') throw new Error('Download URL must use https')
-  if (!DOWNLOAD_ALLOWED_HOSTS.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`))) {
-    throw new Error('Download URL is not allowed')
-  }
 }
 
 async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.MessageSender): Promise<any> {
@@ -176,22 +168,6 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
         expirationDate: data.expirationDate,
         sameSite: data.sameSite as chrome.cookies.SameSiteStatus,
       })
-      return { success: true }
-    }
-
-    case 'DOWNLOAD': {
-      const { url, filename } = message.data
-      assertDownloadUrl(url)
-      try {
-        await chrome.downloads.download({
-          url,
-          filename: filename || undefined,
-          saveAs: true,
-        })
-      }
-      catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : String(error) }
-      }
       return { success: true }
     }
 
