@@ -2,7 +2,7 @@ import type { FrameData } from './clipper/DecoderFlow'
 import { drive115 } from './drive115'
 import { M3U8ClipperNew } from './clipper/m3u8Clipper'
 import { getImageResize } from './image'
-import { BoundedCache } from './cache'
+import { BoundedCache, ByteBudgetCache } from './cache'
 import { CACHE_VERSION } from './cache-schema'
 
 /**
@@ -22,14 +22,48 @@ const PRECISE_TARGET_ACCEPT_DELTA = 2.5
 const PRECISE_EARLY_SUCCESS_DELTA = 0.45
 
 const SOURCE_URL_CACHE_LIMIT = 200
-const COVER_CACHE_LIMIT = 200
-const SINGLE_COVER_CACHE_LIMIT = 100
-const TIMELINE_CACHE_LIMIT = 100
+/** 内存封面/时间轴缓存字节预算（dataURL 单条可达几十 MB，按条数设限不可控） */
+const COVER_CACHE_BYTE_BUDGET = 64 * 1024 * 1024
+const SINGLE_COVER_CACHE_BYTE_BUDGET = 32 * 1024 * 1024
+const TIMELINE_CACHE_BYTE_BUDGET = 64 * 1024 * 1024
+/** 单条时间轴记录允许的最大封面条数，防止按 pickCode 单调增长 */
+const TIMELINE_ENTRY_LIMIT = 200
 
 const sourceUrlCache = new BoundedCache<Promise<string>>(SOURCE_URL_CACHE_LIMIT)
-const memoryCoverCache = new BoundedCache<VideoThumbnail[]>(COVER_CACHE_LIMIT)
-const memorySingleCoverCache = new BoundedCache<Promise<VideoThumbnail | null>>(SINGLE_COVER_CACHE_LIMIT)
-const memoryTimelineCache = new BoundedCache<VideoThumbnail[]>(TIMELINE_CACHE_LIMIT)
+const memoryCoverCache = new ByteBudgetCache<VideoThumbnail[]>(COVER_CACHE_BYTE_BUDGET, estimateCoversBytes)
+/** 单点封面缓存：只存已 resolve 的成功结果（dataURL 字符串按 UTF-16 2 字节/字符估算） */
+const memorySingleCoverCache = new ByteBudgetCache<VideoThumbnail>(SINGLE_COVER_CACHE_BYTE_BUDGET, estimateSingleCoverBytes)
+/** 单点封面 in-flight 去重：同一时间点的并发请求共享一个 Promise，resolve 后即移除 */
+const singleCoverInflight = new Map<string, Promise<VideoThumbnail | null>>()
+const memoryTimelineCache = new ByteBudgetCache<VideoThumbnail[]>(TIMELINE_CACHE_BYTE_BUDGET, estimateCoversBytes)
+
+function estimateSingleCoverBytes(cover: VideoThumbnail): number {
+  return cover.imgUrl.length * 2
+}
+
+function estimateCoversBytes(covers: VideoThumbnail[]): number {
+  let bytes = 0
+  for (const cover of covers) {
+    bytes += cover.imgUrl.length * 2
+  }
+  return bytes
+}
+
+/** 时间轴超过条数上限时按时间均匀截断，防止单个 pickCode 的记录无限增长 */
+function capTimelineCovers(covers: VideoThumbnail[], limit: number): VideoThumbnail[] {
+  if (covers.length <= limit) {
+    return covers
+  }
+  const step = covers.length / limit
+  const picked = new Map<string, VideoThumbnail>()
+  for (let i = 0; i < limit; i++) {
+    const cover = covers[Math.min(covers.length - 1, Math.floor(i * step))]
+    if (cover) {
+      picked.set(`${cover.time}:${cover.imgUrl.length}:${cover.imgUrl}`, cover)
+    }
+  }
+  return sortAndDedupeCovers(Array.from(picked.values()))
+}
 
 export interface VideoCoverOptions {
   maxWidth?: number
@@ -394,7 +428,7 @@ async function readTimelineCovers(pickCode: string): Promise<VideoThumbnail[]> {
 
   try {
     const cached = await storageArea.get(cacheKey)
-    const hit = normalizeCachedCovers(cached[cacheKey] as VideoThumbnail[] | undefined)
+    const hit = capTimelineCovers(normalizeCachedCovers(cached[cacheKey] as VideoThumbnail[] | undefined), TIMELINE_ENTRY_LIMIT)
     if (hit.length > 0) {
       memoryTimelineCache.set(cacheKey, hit)
       return hit
@@ -415,7 +449,8 @@ export function coversSignature(covers: VideoThumbnail[]): string {
 
 async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): Promise<void> {
   const cacheKey = getTimelineCacheKey(pickCode)
-  memoryTimelineCache.set(cacheKey, covers)
+  const capped = capTimelineCovers(covers, TIMELINE_ENTRY_LIMIT)
+  memoryTimelineCache.set(cacheKey, capped)
 
   const storageArea = getStorageArea()
   if (!storageArea) {
@@ -425,7 +460,7 @@ async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): 
   try {
     const existing = await storageArea.get(cacheKey)
     const existingCovers = normalizeCachedCovers(existing[cacheKey] as VideoThumbnail[] | undefined)
-    if (existingCovers.length > 0 && coversSignature(existingCovers) === coversSignature(covers)) {
+    if (existingCovers.length > 0 && coversSignature(existingCovers) === coversSignature(capped)) {
       return
     }
   }
@@ -435,7 +470,8 @@ async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): 
     }
   }
 
-  const storableResults = await Promise.all(covers.map(coverToStorableDataUrl))
+  // 新生成的封面已是 dataURL，coverToStorableDataUrl 对 data: 直接短路，不会重复 fetch
+  const storableResults = await Promise.all(capped.map(coverToStorableDataUrl))
   await storageArea.set({ [cacheKey]: storableResults })
 }
 
@@ -458,40 +494,39 @@ export async function getVideoCoverAt(
   const resolvedOptions = resolveCoverOptions(options)
   const normalizedTime = clampTime(time, duration)
   const cacheKey = getSingleCacheKey(pickCode, normalizedTime)
-  let pending = memorySingleCoverCache.get(cacheKey)
 
+  const cached = memorySingleCoverCache.get(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  let pending = singleCoverInflight.get(cacheKey)
   if (!pending) {
     pending = (async () => {
       const clipper = await openClipper(pickCode)
       try {
-        const cover = await generateAccurateCover(
+        return await generateAccurateCover(
           clipper,
           normalizedTime,
           duration ?? normalizedTime + 30,
           resolvedOptions,
         )
-        return cover
       }
       finally {
         clipper.destroy()
       }
     })()
-    memorySingleCoverCache.set(cacheKey, pending)
+    singleCoverInflight.set(cacheKey, pending)
+    pending.finally(() => singleCoverInflight.delete(cacheKey)).catch(() => {})
   }
 
-  try {
-    const cover = await pending
-    // 抽帧失败（弱网/分片异常等）会 resolve 为 null，此处不缓存失败结果：
-    // 否则本次会话内该时间点永远返回 null、不再重试，弱网恢复后也无法出图
-    if (!cover) {
-      memorySingleCoverCache.delete(cacheKey)
-    }
-    return cover
+  const cover = await pending
+  // 抽帧失败（弱网/分片异常等）会 resolve 为 null，此处不缓存失败结果：
+  // 否则本次会话内该时间点永远返回 null、不再重试，弱网恢复后也无法出图
+  if (cover) {
+    memorySingleCoverCache.set(cacheKey, cover)
   }
-  catch (error) {
-    memorySingleCoverCache.delete(cacheKey)
-    throw error
-  }
+  return cover
 }
 
 export async function getVideoCovers(pickCode: string, duration: number, coverNum = 5, options?: VideoCoverOptions): Promise<VideoThumbnail[]> {
@@ -539,10 +574,10 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
     const covers = await mapWithConcurrency(missingTimes, SEEK_CONCURRENCY, async time =>
       generateCoverWithFallbacks(clipper, time, duration, fallbackWindow, false, resolvedOptions),
     )
-    const mergedTimeline = sortAndDedupeCovers([
+    const mergedTimeline = capTimelineCovers(sortAndDedupeCovers([
       ...timelineCovers,
       ...covers.filter((item): item is VideoThumbnail => item !== null),
-    ])
+    ]), TIMELINE_ENTRY_LIMIT)
     const results = selectCoverSet(mergedTimeline, duration, coverNum)
 
     if (results.length === 0) {
