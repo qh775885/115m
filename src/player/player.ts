@@ -194,7 +194,9 @@ class PlayerManager {
   private switchCooldownTimer: number | null = null
   private readonly handleRuntimeMessage = (message: any) => {
     if (message?.type === 'MOVE_REFRESHED') {
-      void this.refreshBreadcrumbs()
+      void this.refreshBreadcrumbs().catch(error => {
+        console.error('[115m] 刷新面包屑失败:', error)
+      })
       this.overlay?.showToast('文件已移动')
       return
     }
@@ -349,7 +351,12 @@ class PlayerManager {
     const sourceUrl = await this.buildHlsPlaybackUrl(url)
     // 加载期间发生了新的切换（快速切集/切画质），本流程已过期：放弃，
     // 避免旧流程继续创建实例并 attachMedia 到同一 video 元素，造成 bufferAppendError 等冲突
-    if (seq !== this.hlsInitSeq) return undefined
+    if (seq !== this.hlsInitSeq) {
+      if (sourceUrl !== url && sourceUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(sourceUrl)
+      }
+      return undefined
+    }
     this.currentHlsSourceUrl = sourceUrl
     const hls = await createHlsInstance(video, sourceUrl)
     if (seq !== this.hlsInitSeq) {
@@ -580,19 +587,19 @@ class PlayerManager {
         m3u8: async (video, url) => {
           try {
             if (url === ORIGINAL_PLACEHOLDER_URL) {
+              const resolvedUrl = await this.ensureOriginalSourceLoaded()
+              if (!resolvedUrl) {
+                this.showError('115原画加载失败，请稍后重试')
+                this.failSwitchUrl('115原画加载失败')
+                return
+              }
+              // 原画源加载成功后才记录偏好，避免源持续不可用时每次自动加载都带着失败偏好重试
               saveQualityPreference(this.currentPickCode, '115原画', 9999)
               // 立即更新内部状态，以便后续 UI 同步正常工作
               const opt = this.qualityOptions.find(o => o.url === url)
               if (opt) {
                 this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
                 this.renderQualityPanel()
-              }
-
-              const resolvedUrl = await this.ensureOriginalSourceLoaded()
-              if (!resolvedUrl) {
-                this.showError('115原画加载失败，请稍后重试')
-                this.failSwitchUrl('115原画加载失败')
-                return
               }
               url = resolvedUrl
             }
@@ -613,6 +620,8 @@ class PlayerManager {
             }
             else {
               this.showError('您的浏览器不支持 HLS 播放')
+              // 主动触发 video error，打破 artplayer switchUrl 的永久挂起，避免播放器卡死
+              this.failSwitchUrl('您的浏览器不支持 HLS 播放')
             }
           }
           catch (error) {
@@ -830,6 +839,11 @@ class PlayerManager {
 
   private applyPlaybackStatePatch(state: Partial<PlaybackState>) {
     Object.assign(this, state)
+    // isNativeVideo 与 currentPlaybackType 是同一事实的两个投影，patch 更新 isNativeVideo 时同步 playbackType，
+    // 避免 onError 用 isNativeVideo、nativeMonitor 用 currentPlaybackType 时两处判断不一致
+    if (state.isNativeVideo !== undefined) {
+      this.currentPlaybackType = state.isNativeVideo ? 'native' : 'hls'
+    }
   }
 
   private buildQualityControlItem(): any {
@@ -1373,7 +1387,7 @@ class PlayerManager {
         countdown -= 1
         if (countdown <= 0) {
           this.clearPlaybackEndState()
-          this.navigateToVideo(next.pickCode)
+          this.navigateToVideo(next.pickCode, this.overlay?.isPlaylistExpanded() === true, true)
           return
         }
         this.overlay?.showPlaybackEndPanel({
