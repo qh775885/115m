@@ -1,6 +1,7 @@
 import type Artplayer from 'artplayer'
 import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
+import { showToast } from '../../shared/ui/toast'
 import { UI_LAYER } from './ui-layer'
 import { readOverlayMetaQuery } from './player-query'
 import { createHeaderActionButton, createOverlayHeaderScaffold, getFavoriteButtonIcon } from './overlay-header'
@@ -316,41 +317,12 @@ export class PlayerOverlayController {
   }
 
   showToast(text: string) {
-    const existing = this.root.querySelector('.m115-toast')
-    existing?.remove()
-
-    const toast = document.createElement('div')
-    toast.className = 'm115-toast'
-    toast.textContent = text
-    toast.style.cssText = [
-      'position:absolute',
-      'top:60px',
-      'left:50%',
-      'transform:translateX(-50%) translateY(-8px)',
-      `z-index:${UI_LAYER.toast}`,
-      'padding:8px 20px',
-      'border-radius:999px',
-      'background:rgba(0,0,0,.85)',
-      'color:#fff',
-      'font-size:13px',
-      'font-weight:500',
-      'white-space:nowrap',
-      'pointer-events:none',
-      'opacity:0',
-      'transition:opacity .2s ease, transform .2s ease',
-      'backdrop-filter:blur(8px)',
-    ].join(';')
-    this.root.appendChild(toast)
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1'
-      toast.style.transform = 'translateX(-50%) translateY(0)'
+    showToast(document, text, {
+      container: this.root,
+      absolute: true,
+      topOffset: 60,
+      zIndex: UI_LAYER.toast,
     })
-    setTimeout(() => {
-      toast.style.opacity = '0'
-      toast.style.transform = 'translateX(-50%) translateY(-8px)'
-      setTimeout(() => toast.remove(), 200)
-    }, 1800)
   }
 
   private syncNavButton(button: HTMLButtonElement | null, enabled: boolean, title: string) {

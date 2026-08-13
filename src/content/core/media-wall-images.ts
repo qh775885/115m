@@ -4,6 +4,7 @@ import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } fro
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
 import { Icons } from '../../shared/icons'
+import { showToast } from '../../shared/ui/toast'
 import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemTitle } from './native-dom'
 
 function toOriginalImageUrl(url: string): string {
@@ -58,11 +59,10 @@ function preloadImage(url: string) {
 }
 
 function createToast(doc: Document, message: string) {
-  const toast = doc.createElement('div')
-  toast.className = 'm115-viewer-toast'
-  toast.textContent = message
-  doc.body.appendChild(toast)
-  window.setTimeout(() => toast.remove(), 1600)
+  showToast(doc, message, {
+    className: 'm115-viewer-toast',
+    duration: 1600,
+  })
 }
 
 function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof import('./runtime').sendRuntimeMessageSafe): LightboxController {
