@@ -18,7 +18,7 @@ import uiLayerCss from './core/ui-layer.css?inline'
 import playerMediaTrackCss from './core/css/player-media-track.css?inline'
 import playerSettingsMenuCss from './core/css/player-settings-menu.css?inline'
 import type { M3u8Item } from '../lib/types'
-import { buildArtplayerQuality, buildQualityOptions, getQualityDisplayName, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
+import { buildQualityOptions, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './core/player-quality'
 import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
@@ -30,7 +30,8 @@ import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
 import { runPlayerSmokeChecks } from './core/smoke'
 import { renderPlayerError } from './core/dom'
-import { createHlsInstance, isHlsSupported } from './core/hls'
+import { isHlsSupported } from './core/hls'
+import { HlsPlayerController } from './core/player-hls'
 import type { VideoPlaybackQualityLike } from './core/types'
 import { HoverPreviewController } from './core/hover-preview'
 import { bindPlayerEvents } from './core/events'
@@ -50,7 +51,7 @@ import {
   resolveOriginalPlaceholderUrl,
   syncPlaybackStateByUrl,
 } from './core/playback-state'
-import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe, sendTypedRuntimeMessageSafe } from './core/runtime'
+import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from './core/runtime'
 import {
   buildUpdatedMarkedUrl,
   readPathFromLocation,
@@ -63,7 +64,6 @@ import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
 import { primeThumbnailSourceUrl } from '../lib/videoThumbnail'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
-import { findVariantInMaster, normalizePlaylistUrl as normalizePlaylistUrlUtil } from './core/playlist-url'
 import { RotationManager } from './core/rotation-manager'
 import { SubtitleController } from './core/subtitle-controller'
 
@@ -89,8 +89,6 @@ function injectPlayerSkinStyles() {
 }
 
 injectPlayerSkinStyles()
-
-const HLS_STEADY_RECOVER_MAX = 3
 
 interface PlayerConfig {
   pickCode: string
@@ -138,7 +136,6 @@ class PlayerManager {
   private static readonly SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
   private static readonly VIDEO_SWITCH_COOLDOWN_MS = 1200
   private artplayer: Artplayer | null = null
-  private hlsInstance: HlsType | null = null
   private m3u8List: M3u8Item[] = []
   private currentPickCode: string
   private isNativeVideo = false
@@ -176,19 +173,10 @@ class PlayerManager {
   private subtitleController: SubtitleController | null = null
   private mediaTrackController: MediaTrackController | null = null
   private settingsMenuController: SettingsMenuController | null = null
-  private currentHlsSourceUrl: string | null = null
-  private currentHlsLogicalUrl: string | null = null
+  private hlsController = new HlsPlayerController()
   private isSwitchingVideo = false
   /** switchUrl/switchQuality 执行期间置位，用于 hls fatal 错误时打破 artplayer 内部 Promise 挂起 */
   private switchUrlInFlight = false
-  /** 当前 hls 实例是否已尝试过一次媒体错误恢复（每次 initHls 重置） */
-  private hlsMediaRecoverAttempted = false
-  /** HLS 初始化代次：每次 initHls 自增，用于废弃被新切换（切集/切画质）取代的旧加载流程 */
-  private hlsInitSeq = 0
-  /** 稳态播放期间 HLS 网络错误自动恢复（startLoad）次数，播放成功后清零 */
-  private hlsSteadyRecoverCount = 0
-  /** master 播放列表文本缓存：initHls 内 buildHlsPlaybackUrl 与 hydrateFromMasterPlaylist 共用，避免每次重复拉取 */
-  private masterTextCache: { pickCode: string, text: string, fetchedAt: number } | null = null
   private lastVideoSwitchStartedAt = 0
   private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
   private switchCooldownTimer: number | null = null
@@ -226,7 +214,6 @@ class PlayerManager {
     runPlayerSmokeChecks()
     this.init()
   }
-
   private perf(stage: string, extra?: Record<string, unknown>) {
     const now = performance.now()
     const payload = {
@@ -337,192 +324,24 @@ class PlayerManager {
     }
   }
 
+  /** 委托给 HlsPlayerController：初始化 HLS 实例 */
   private async initHls(video: HTMLVideoElement, url: string): Promise<HlsType | undefined> {
-    const seq = ++this.hlsInitSeq
-    if (this.hlsInstance) {
-      this.hlsInstance.destroy()
-      this.hlsInstance = null
-    }
-    if (this.currentHlsSourceUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(this.currentHlsSourceUrl)
-    }
-    this.currentHlsSourceUrl = null
-    this.currentHlsLogicalUrl = url
-    const sourceUrl = await this.buildHlsPlaybackUrl(url)
-    // 加载期间发生了新的切换（快速切集/切画质），本流程已过期：放弃，
-    // 避免旧流程继续创建实例并 attachMedia 到同一 video 元素，造成 bufferAppendError 等冲突
-    if (seq !== this.hlsInitSeq) {
-      if (sourceUrl !== url && sourceUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(sourceUrl)
-      }
-      return undefined
-    }
-    this.currentHlsSourceUrl = sourceUrl
-    const hls = await createHlsInstance(video, sourceUrl)
-    if (seq !== this.hlsInitSeq) {
-      hls.destroy()
-      return undefined
-    }
-    this.hlsInstance = hls
-    this.hlsMediaRecoverAttempted = false
-    this.hlsSteadyRecoverCount = 0
-
-    // HLS 源加载失败（签名 URL 失效等）时，hls.js 不会让 video 触发 canplay/error，
-    // artplayer 的 switchUrl 会永久挂起导致播放器卡死。切换流程中遇到 fatal 错误：
-    // - 媒体类错误（如 bufferAppendError 瞬时抖动）先 recover 一次，能自愈则继续播放；
-    // - 仍失败或其它类型错误，主动触发 video error 打破挂起，交由调用方 catch 提示。
-    hls.on('hlsError' as any, (_event: any, data: any) => {
-      if (!data?.fatal) return
-
-      if (!this.switchUrlInFlight) {
-        this.handleSteadyHlsFatalError(hls, data)
-        return
-      }
-
-      if (data.type === 'mediaError' && !this.hlsMediaRecoverAttempted) {
-        this.hlsMediaRecoverAttempted = true
-        playerDebug('[115m] HLS 媒体错误，尝试恢复:', data?.details ?? data?.type)
-        ;(hls as any).recoverMediaError?.()
-        return
-      }
-      console.error('[115m] HLS 源加载失败（切换中）:', data?.details ?? data?.type)
-      this.hlsInstance = null
-      hls.destroy()
-      this.failSwitchUrl('视频源加载失败')
-    })
-
-    hls.on('hlsAudioTracksUpdated' as any, () => {
-      this.audioManager?.syncFromHls()
-    })
-    hls.on('hlsAudioTrackSwitched' as any, () => {
-      this.audioManager?.syncFromHls()
-    })
-    hls.on('hlsManifestParsed' as any, () => {
-      this.audioManager?.syncFromHls()
-    })
-    this.audioManager?.scheduleSync()
-    void this.audioManager?.hydrateFromMasterPlaylist()
-    return hls
+    return await this.hlsController.init(video, url)
   }
 
-  /**
-   * 切换到非 m3u8 源（无损 mp4）前销毁旧 hls 实例。
-   * 该路径 artplayer 直接改 video.src，不经过 customType.m3u8，不会走 initHls 的销毁逻辑；
-   * 残留的 hls 实例会泄漏 worker/定时器，其 recoverMediaError 还可能重新 attachMedia
-   * 覆盖正在播放的原生流，并在后续切换中注入虚假错误。
-   */
+  /** 委托给 HlsPlayerController：销毁 HLS 实例（切到原生源前） */
   private disposeHlsInstance() {
-    this.hlsInitSeq += 1
-    if (this.hlsInstance) {
-      this.hlsInstance.destroy()
-      this.hlsInstance = null
-    }
-    if (this.currentHlsSourceUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(this.currentHlsSourceUrl)
-    }
-    this.currentHlsSourceUrl = null
-    this.currentHlsLogicalUrl = null
-    this.hlsMediaRecoverAttempted = false
+    this.hlsController.dispose()
   }
 
-  /**
-   * 稳态播放（非切源期间）的 HLS fatal 错误自愈。
-   * 此前只在 switchUrlInFlight 时处理 fatal，稳定播放中 hls.js 重试耗尽抛出的
-   * fatal 会被直接忽略，画面永久卡在加载态。此处限量自愈：
-   * - 网络错误：startLoad(-1) 从当前位置续载，最多 HLS_STEADY_RECOVER_MAX 次；
-   * - 媒体错误：recoverMediaError() 仅一次；
-   * 恢复次数在播放成功后清零（onPlaying）。自愈额度用尽时提示用户，避免无提示卡死。
-   */
+  /** 委托给 HlsPlayerController：稳态 HLS fatal 错误自愈 */
   private handleSteadyHlsFatalError(hls: HlsType, data: any) {
-    if (this.hlsInstance !== hls) return
-
-    if (data.type === 'networkError') {
-      if (this.hlsSteadyRecoverCount < HLS_STEADY_RECOVER_MAX) {
-        this.hlsSteadyRecoverCount += 1
-        console.warn('[115m] HLS 稳态网络错误，尝试续载恢复:', data?.details ?? data?.type, `(${this.hlsSteadyRecoverCount}/${HLS_STEADY_RECOVER_MAX})`)
-        try {
-          hls.startLoad(-1)
-        }
-        catch {
-          this.overlay?.showToast('播放网络异常，请重试')
-        }
-        return
-      }
-      console.error('[115m] HLS 稳态网络错误，自愈额度已用尽:', data?.details ?? data?.type)
-      this.overlay?.showToast('网络连接异常，加载失败')
-      return
-    }
-
-    if (data.type === 'mediaError') {
-      if (!this.hlsMediaRecoverAttempted) {
-        this.hlsMediaRecoverAttempted = true
-        console.warn('[115m] HLS 稳态媒体错误，尝试恢复:', data?.details ?? data?.type)
-        ;(hls as any).recoverMediaError?.()
-        return
-      }
-      console.error('[115m] HLS 稳态媒体错误，恢复失败:', data?.details ?? data?.type)
-      this.overlay?.showToast('播放异常，请刷新重试')
-      return
-    }
-
-    console.error('[115m] HLS 稳态致命错误（未处理类型）:', data?.details ?? data?.type)
-    this.overlay?.showToast('播放出错，请刷新重试')
+    this.hlsController.handleSteadyHlsFatalError(hls, data)
   }
 
-  private async fetchMasterPlaylistText(): Promise<string | null> {
-    const pickCode = this.currentPickCode
-    // 短 TTL 内存缓存：同一集内多次请求（buildHlsPlaybackUrl + hydrateFromMasterPlaylist）只拉一次；
-    // 切集后 pickCode 变化自然失效，避免每次都走一次消息往返
-    if (this.masterTextCache && this.masterTextCache.pickCode === pickCode && Date.now() - this.masterTextCache.fetchedAt < 30_000) {
-      return this.masterTextCache.text
-    }
-    try {
-      const res = await sendTypedRuntimeMessageSafe({
-        type: 'FETCH_M3U8_TEXT',
-        data: { pickCode },
-      }, 2, 500, 12000)
-      const text = res && 'text' in res && res.text ? res.text : null
-      if (text) {
-        this.masterTextCache = { pickCode, text, fetchedAt: Date.now() }
-      }
-      return text
-    }
-    catch {
-      return null
-    }
-  }
-
-  /** 归一化播放列表 URL，用于容错匹配（忽略协议/域名/查询串差异） */
-  private normalizePlaylistUrl(url: string): string {
-    return normalizePlaylistUrlUtil(url)
-  }
-
-  private async buildHlsPlaybackUrl(selectedUrl: string): Promise<string> {
-    const masterText = await this.fetchMasterPlaylistText()
-    if (!masterText || !/#EXT-X-MEDIA:TYPE=AUDIO/i.test(masterText)) {
-      return selectedUrl
-    }
-
-    const lines = masterText.split(/\r?\n/)
-    const audioTags = lines.filter(line => /#EXT-X-MEDIA:TYPE=AUDIO/i.test(line.trim()))
-    if (audioTags.length === 0) {
-      return selectedUrl
-    }
-
-    const { streamInf: matchedStreamInf, matchedUrl } = findVariantInMaster(masterText, selectedUrl)
-    let streamInf = matchedStreamInf
-
-    if (!streamInf.startsWith('#EXT-X-STREAM-INF')) {
-      const groupId = audioTags[0].match(/GROUP-ID="([^"]+)"/i)?.[1] || 'Audio-Group'
-      streamInf = `#EXT-X-STREAM-INF:BANDWIDTH=3000000,AUDIO="${groupId}",NAME="custom"`
-    }
-    else if (!/\bAUDIO=/i.test(streamInf)) {
-      const groupId = audioTags[0].match(/GROUP-ID="([^"]+)"/i)?.[1] || 'Audio-Group'
-      streamInf = `${streamInf},AUDIO="${groupId}"`
-    }
-
-    const wrapped = ['#EXTM3U', ...audioTags, streamInf, matchedUrl || selectedUrl].join('\n')
-    return URL.createObjectURL(new Blob([wrapped], { type: 'application/vnd.apple.mpegurl' }))
+  /** 委托给 HlsPlayerController：拉取 master 播放列表文本（带内存缓存） */
+  private fetchMasterPlaylistText(): Promise<string | null> {
+    return this.hlsController.fetchMasterPlaylistText()
   }
 
   private createArtplayer(videoUrl: string, type: 'native' | 'hls') {
@@ -554,6 +373,18 @@ class PlayerManager {
 
     this.settingsMenuController?.destroy()
     this.settingsMenuController = new SettingsMenuController()
+
+    this.hlsController.attach({
+      getArtplayer: () => this.artplayer,
+      getCurrentPickCode: () => this.currentPickCode,
+      getSwitchUrlInFlight: () => this.switchUrlInFlight,
+      failSwitchUrl: reason => this.failSwitchUrl(reason),
+      onShowToast: msg => this.overlay?.showToast(msg),
+      getAudioTrackLabel: () => this.audioManager?.currentTrackLabel || '音轨',
+      onAudioTracksUpdated: () => this.audioManager?.syncFromHls(),
+      onAudioScheduleSync: () => this.audioManager?.scheduleSync(),
+      onAudioHydrateFromMaster: () => void this.audioManager?.hydrateFromMasterPlaylist(),
+    })
 
     // YouTube-like idle delay: keep controls visible for a few seconds after mouse movement.
     Artplayer.CONTROL_HIDE_TIME = 6000
@@ -697,10 +528,10 @@ class PlayerManager {
     // 绑定音频管理器
     this.audioManager.attach({
       art: this.artplayer,
-      getHlsInstance: () => this.hlsInstance,
+      getHlsInstance: () => this.hlsController.instance,
       getCurrentPickCode: () => this.currentPickCode,
-      getCurrentHlsLogicalUrl: () => this.currentHlsLogicalUrl,
-      onRebuildHls: (params) => this.rebuildHlsForAudioTrack(params),
+      getCurrentHlsLogicalUrl: () => this.hlsController.logicalUrl,
+      onRebuildHls: (params) => this.hlsController.rebuildForAudioTrack(params),
       onShowToast: (msg) => this.overlay?.showToast(msg),
       onRenderRequest: () => this.mediaTrackController?.renderControl(),
       fetchMasterPlaylistText: () => this.fetchMasterPlaylistText(),
@@ -792,7 +623,7 @@ class PlayerManager {
         },
         onPlaying: () => {
           this.clearPlaybackEndState()
-          this.hlsSteadyRecoverCount = 0
+          this.hlsController.resetSteadyRecoverCount()
           this.nativeMonitor?.resetRetryCount()
           this.nativeMonitor?.onPlaying()
           this.perfMarks.playing = performance.now()
@@ -931,69 +762,6 @@ class PlayerManager {
     savePlaybackMode(mode)
     this.renderPlaybackModeControl()
     this.overlay?.showToast(`播放模式：${getPlaybackModeLabel(mode)}`)
-  }
-
-  private async rebuildHlsForAudioTrack(params: {
-    id: number
-    currentTime: number
-    shouldResume: boolean
-    track: any
-  }) {
-    if (!this.artplayer || !this.currentHlsLogicalUrl) {
-      this.overlay?.showToast('当前播放链路暂不支持切换音轨')
-      return
-    }
-
-    const video = this.artplayer.video as HTMLVideoElement
-    const targetUrl = this.currentHlsLogicalUrl
-
-    let restore: (() => void) | null = null
-    const detachRestore = () => {
-      if (this.artplayer && restore) {
-        this.artplayer.off('video:loadedmetadata', restore)
-        this.artplayer.off('video:canplay', restore)
-      }
-    }
-
-    try {
-      await this.initHls(video, targetUrl)
-      if (!this.hlsInstance) {
-        return
-      }
-
-      // 以 initHls 的代次为 token：一旦发生切集/切画质/再次重建音轨，
-      // hlsInitSeq 递增，旧 restore 会在触发时被作废并自动摘除，避免误 seek 到上一集
-      const token = this.hlsInitSeq
-      restore = () => {
-        detachRestore()
-        if (!this.artplayer || token !== this.hlsInitSeq) return
-        try {
-          this.artplayer.seek = params.currentTime
-        }
-        catch {
-          // ignore seek restore errors
-        }
-        if (params.shouldResume) {
-          safePlay(this.artplayer)
-        }
-      }
-
-      this.artplayer.on('video:loadedmetadata', restore)
-      this.artplayer.on('video:canplay', restore)
-
-      playerDebug('[115m][audio] rebuild track', {
-        id: params.id,
-        currentTime: params.currentTime,
-        track: params.track,
-        targetUrl,
-      })
-      this.overlay?.showToast(`已切换到${this.audioManager?.currentTrackLabel || '音轨'}`)
-    }
-    catch (error) {
-      detachRestore()
-      console.warn('[115m][audio] rebuild track failed', error)
-      this.overlay?.showToast('切换音轨失败，请重试')
-    }
   }
 
   private renderPlaybackNavControls() {
@@ -1824,15 +1592,7 @@ class PlayerManager {
     this.settingsMenuController = null
     this.mediaTrackController?.destroy()
     this.mediaTrackController = null
-    if (this.hlsInstance) {
-      this.hlsInstance.destroy()
-      this.hlsInstance = null
-    }
-    if (this.currentHlsSourceUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(this.currentHlsSourceUrl)
-    }
-    this.currentHlsSourceUrl = null
-    this.currentHlsLogicalUrl = null
+    this.hlsController.destroy()
     if (this.artplayer) {
       this.artplayer.destroy()
       this.artplayer = null
