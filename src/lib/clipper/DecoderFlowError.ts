@@ -1,6 +1,23 @@
 /**
  * DecoderFlow 错误类型
  */
+
+/** 把未知错误转为可读的字符串（提取 message / 序列化 / 类型兜底） */
+function formatErrorDetail(error: unknown): string {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message)
+  }
+  try {
+    return JSON.stringify(error)
+  }
+  catch {
+    return String(error)
+  }
+}
+
 export class DecoderFlowError extends Error {
   /** 超时错误 */
   static Timeout = class extends DecoderFlowError {
@@ -20,7 +37,7 @@ export class DecoderFlowError extends Error {
       readonly codec: string,
       readonly originalError: unknown,
     ) {
-      super(`Decoder configuration failed, codec: ${codec}`)
+      super(`Decoder configuration failed, codec: ${codec}, error: ${formatErrorDetail(originalError)}`)
       this.name = 'DecoderFlowDecoderConfiguration'
     }
   }
@@ -30,7 +47,7 @@ export class DecoderFlowError extends Error {
     constructor(
       readonly originalError: unknown,
     ) {
-      super('Decoder runtime error')
+      super(`Decoder runtime error: ${formatErrorDetail(originalError)}`)
       this.name = 'DecoderFlowDecoderRuntime'
     }
   }
@@ -41,7 +58,7 @@ export class DecoderFlowError extends Error {
       readonly segmentUrl: string,
       readonly originalError: unknown,
     ) {
-      super(`Data read failed, segmentUrl: ${segmentUrl}`)
+      super(`Data read failed, segmentUrl: ${segmentUrl}, error: ${formatErrorDetail(originalError)}`)
       this.name = 'DecoderFlowDataRead'
     }
   }
@@ -63,7 +80,7 @@ export class DecoderFlowError extends Error {
       readonly decoderState: string | undefined,
       readonly originalError: unknown,
     ) {
-      super('Decode failed')
+      super(`Decode failed, pts: ${pts ?? '-'}, ts: ${timestamp ?? '-'}, decoderState: ${decoderState ?? '-'}, error: ${formatErrorDetail(originalError)}`)
       this.name = 'DecoderFlowDecodeFailed'
     }
   }
