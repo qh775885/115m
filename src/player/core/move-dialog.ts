@@ -1,4 +1,4 @@
-import { UI_LAYER } from './ui-layer'
+import dialogCss from './move-dialog.css?inline'
 import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
 import { canUseRuntimeMessaging, getRuntimeApi } from './runtime'
@@ -28,236 +28,7 @@ const RECENT_MOVES_KEY = '115m_recent_moves'
 const MAX_RECENT = 8
 
 // ─── CSS Styles ───
-const DIALOG_STYLES = `
-  .move-dialog-mask {
-    position: fixed; inset: 0; z-index: ${UI_LAYER.modal};
-    background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    animation: mdFadeIn .2s ease;
-  }
-  @keyframes mdFadeIn { from { opacity: 0 } to { opacity: 1 } }
-  @keyframes mdSlideUp { from { opacity: 0; transform: translateY(20px) scale(.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
 
-  .move-dialog-box {
-    width: 640px; max-width: 92vw; max-height: 80vh;
-    background: #f7f8fa; border-radius: 16px;
-    box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
-    display: flex; flex-direction: column;
-    animation: mdSlideUp .25s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #1f2329;
-  }
-
-  .move-dialog-header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; padding: 18px 24px 12px; border-bottom: 1px solid rgba(15,23,42,.08);
-    flex-shrink: 0;
-  }
-  .move-dialog-header h3 {
-    margin: 0; font-size: 16px; font-weight: 600; color: #111827;
-  }
-  .move-dialog-header-side {
-    display: flex; align-items: center; gap: 12px; min-width: 0;
-  }
-  .move-dialog-close {
-    width: 32px; height: 32px; border-radius: 8px; border: none;
-    background: transparent; color: rgba(15,23,42,.45);
-    cursor: pointer; font-size: 20px; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .move-dialog-close:hover { background: rgba(15,23,42,.06); color: #111827; }
-
-  .move-dialog-toolbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 12px 24px 10px; flex-shrink: 0;
-  }
-  .move-dialog-toolbar-left {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .move-dialog-toolbar-tip {
-    font-size: 12px; color: rgba(15,23,42,.45); white-space: nowrap;
-  }
-  .move-dialog-search {
-    width: 220px; max-width: 32vw; height: 36px; border-radius: 999px;
-    border: 1px solid rgba(15,23,42,.1); background: rgba(255,255,255,.96);
-    padding: 0 14px; color: #111827; font-size: 13px;
-    outline: none; transition: border-color .15s; box-sizing: border-box;
-  }
-  .move-dialog-search::placeholder { color: rgba(15,23,42,.35); }
-  .move-dialog-search:focus { border-color: rgba(79,140,255,.6); }
-
-  .move-dialog-tbtn {
-    height: 36px; padding: 0 14px; border-radius: 8px; border: none;
-    background: #fff; color: rgba(15,23,42,.72);
-    font-size: 13px; cursor: pointer; white-space: nowrap;
-    display: flex; align-items: center; gap: 5px;
-    transition: all .15s; box-shadow: inset 0 0 0 1px rgba(15,23,42,.08);
-  }
-  .move-dialog-tbtn:hover { background: #fdfefe; color: #111827; box-shadow: inset 0 0 0 1px rgba(79,140,255,.28); }
-  .move-dialog-tbtn svg { width: 16px; height: 16px; }
-
-  .move-dialog-crumbs {
-    display: flex; align-items: center; gap: 2px;
-    padding: 0 24px 10px; flex-shrink: 0; flex-wrap: wrap;
-    font-size: 13px; min-height: 28px;
-  }
-  .move-dialog-crumb {
-    background: none; border: none; color: rgba(37,99,235,.92);
-    cursor: pointer; padding: 2px 6px; border-radius: 4px;
-    font-size: 13px; transition: all .12s;
-  }
-  .move-dialog-crumb:hover { background: rgba(79,140,255,.1); color: #2563eb; }
-  .move-dialog-crumb.current {
-    color: rgba(15,23,42,.56); cursor: default; pointer-events: none;
-  }
-  .move-dialog-crumb-sep { color: rgba(15,23,42,.24); font-size: 11px; margin: 0 1px; }
-
-  .move-dialog-list {
-    flex: 1; overflow-y: auto; padding: 0 16px 8px;
-    min-height: 200px; max-height: 50vh;
-    background: #fff; margin: 0 16px; border-radius: 12px;
-    box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
-  }
-  .move-dialog-list::-webkit-scrollbar { width: 5px; }
-  .move-dialog-list::-webkit-scrollbar-track { background: transparent; }
-  .move-dialog-list::-webkit-scrollbar-thumb { background: rgba(15,23,42,.12); border-radius: 4px; }
-
-  .move-dialog-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px; border-radius: 10px; cursor: pointer;
-    transition: background .12s; user-select: none;
-    border-bottom: 1px solid rgba(15,23,42,.06);
-  }
-  .move-dialog-item:last-child { border-bottom: none; }
-  .move-dialog-item:hover { background: rgba(37,99,235,.04); }
-  .move-dialog-item.selected { background: rgba(79,140,255,.12); }
-
-  .move-dialog-item-icon {
-    width: 36px; height: 36px; border-radius: 6px;
-    background: linear-gradient(180deg, #ffd35c 0%, #ffbf1a 100%);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(204,138,0,.14);
-  }
-  .move-dialog-item-icon svg { width: 20px; height: 20px; fill: #fff7d1; }
-
-  .move-dialog-item-name {
-    flex: 1; font-size: 14px; color: #111827;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .move-dialog-item-meta {
-    margin-top: 3px; font-size: 11px; color: rgba(15,23,42,.38);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .move-dialog-item-arrow {
-    color: rgba(15,23,42,.2); font-size: 16px; flex-shrink: 0;
-    transition: color .12s;
-  }
-  .move-dialog-item:hover .move-dialog-item-arrow { color: rgba(15,23,42,.42); }
-
-  .move-dialog-empty {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 48px 20px; color: rgba(15,23,42,.3); font-size: 14px; gap: 8px;
-  }
-  .move-dialog-loading {
-    display: flex; align-items: center; justify-content: center;
-    padding: 48px 20px; color: rgba(15,23,42,.4); font-size: 14px; gap: 8px;
-  }
-  .move-dialog-spinner {
-    width: 20px; height: 20px; border: 2px solid rgba(15,23,42,.12);
-    border-top-color: #5fa0ff; border-radius: 50%;
-    animation: mdSpin .7s linear infinite;
-  }
-  @keyframes mdSpin { to { transform: rotate(360deg) } }
-
-  .move-dialog-footer {
-    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
-    padding: 14px 24px 18px; border-top: 1px solid rgba(15,23,42,.08);
-    flex-shrink: 0;
-  }
-  .move-dialog-footer-tip {
-    margin-right: auto; font-size: 12px; color: rgba(15,23,42,.42);
-  }
-  .move-dialog-btn {
-    width: 116px; height: 38px; padding: 0 14px; border-radius: 8px; border: none;
-    font-size: 14px; cursor: pointer; font-weight: 500;
-    transition: all .15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 0 116px;
-    line-height: 38px;
-  }
-  .move-dialog-btn span {
-    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .move-dialog-btn.cancel {
-    background: #fff; color: rgba(15,23,42,.72); box-shadow: inset 0 0 0 1px rgba(15,23,42,.08);
-  }
-  .move-dialog-btn.cancel:hover { background: #f3f4f6; }
-  .move-dialog-btn.primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #fff; box-shadow: 0 2px 12px rgba(59,130,246,.3);
-  }
-  .move-dialog-btn.primary:hover {
-    box-shadow: 0 4px 20px rgba(59,130,246,.45); transform: translateY(-1px);
-  }
-  .move-dialog-btn.primary:disabled {
-    opacity: .4; cursor: not-allowed; transform: none;
-    box-shadow: none;
-  }
-
-  .move-dialog-newfolder {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 16px 12px; flex-shrink: 0;
-  }
-  .move-dialog-newfolder input {
-    flex: 1; height: 36px; border-radius: 8px;
-    border: 1px solid rgba(79,140,255,.4); background: #fff;
-    padding: 0 12px; color: #111827; font-size: 13px;
-    outline: none;
-  }
-  .move-dialog-newfolder input:focus { border-color: rgba(79,140,255,.7); }
-
-  .move-dialog-recent-header {
-    padding: 12px 12px 6px; font-size: 12px; color: rgba(15,23,42,.34);
-    text-transform: uppercase; letter-spacing: .5px;
-  }
-
-  @media (max-width: 720px) {
-    .move-dialog-header {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-    .move-dialog-header-side {
-      width: 100%;
-    }
-    .move-dialog-search {
-      width: 100%;
-      max-width: none;
-      flex: 1 1 auto;
-    }
-    .move-dialog-toolbar {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .move-dialog-toolbar-left {
-      width: 100%;
-      overflow-x: auto;
-    }
-    .move-dialog-toolbar-tip {
-      white-space: normal;
-    }
-    .move-dialog-footer {
-      flex-wrap: wrap;
-    }
-    .move-dialog-btn {
-      width: 104px;
-      flex-basis: 104px;
-    }
-    .move-dialog-footer-tip {
-      width: 100%;
-      margin-right: 0;
-    }
-  }
-`
 
 // ─── SVG Icons ───
 const ICON_FOLDER = Icons.FolderTree
@@ -323,7 +94,7 @@ export class MoveDialog {
 
   private injectStyles() {
     this.styleEl = document.createElement('style')
-    this.styleEl.textContent = DIALOG_STYLES
+    this.styleEl.textContent = dialogCss
     document.head.appendChild(this.styleEl)
   }
 
@@ -786,3 +557,4 @@ export class MoveDialog {
     return escapeHtml(str)
   }
 }
+
