@@ -1,7 +1,7 @@
 import { Icons } from '../../shared/icons'
 import type Artplayer from 'artplayer'
 import { escapeHtml } from '../../shared/utils'
-import { bindClickSelectorBehavior } from './player-selector'
+import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
 
 export const SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
 
@@ -28,6 +28,7 @@ export class SettingsMenuController {
   private deps: SettingsMenuControllerDeps | null = null
   private controlEl: HTMLElement | null = null
   private activeSubMenu: 'speed' | null = null
+  private observer: MutationObserver | null = null
 
   attach(deps: SettingsMenuControllerDeps) {
     this.art = deps.art
@@ -119,6 +120,22 @@ export class SettingsMenuController {
         </div>
       `,
       mounted: (el: HTMLElement) => {
+        this.teardownControl()
+        this.observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              if (!el.classList.contains('m115-selector-open') && this.activeSubMenu) {
+                this.activeSubMenu = null
+                const mainPanel = el.querySelector('.m115-settings-panel[data-menu="main"]') as HTMLElement
+                const speedPanel = el.querySelector('.m115-settings-panel[data-menu="speed"]') as HTMLElement
+                if (mainPanel && speedPanel) {
+                  mainPanel.style.display = 'flex'
+                  speedPanel.style.display = 'none'
+                }
+              }
+            }
+          })
+        })
         el.classList.add('m115-settings-menu-control')
         bindClickSelectorBehavior(el)
         this.controlEl = el
@@ -183,28 +200,22 @@ export class SettingsMenuController {
         })
 
         // 监听面板关闭，重置子菜单状态
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-              if (!el.classList.contains('m115-selector-open') && this.activeSubMenu) {
-                this.activeSubMenu = null
-                const mainPanel = el.querySelector('.m115-settings-panel[data-menu="main"]') as HTMLElement
-                const speedPanel = el.querySelector('.m115-settings-panel[data-menu="speed"]') as HTMLElement
-                if (mainPanel && speedPanel) {
-                  mainPanel.style.display = 'flex'
-                  speedPanel.style.display = 'none'
-                }
-              }
-            }
-          })
-        })
-        observer.observe(el, { attributes: true })
+        this.observer.observe(el, { attributes: true })
       }
     }
   }
 
-  destroy() {
+  private teardownControl() {
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
+    }
+    unbindClickSelectorBehavior(this.controlEl)
     this.controlEl = null
+  }
+
+  destroy() {
+    this.teardownControl()
     this.art = null
     this.deps = null
   }

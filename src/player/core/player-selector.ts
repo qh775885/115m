@@ -37,6 +37,14 @@ function ensureSharedListeners() {
   })
 }
 
+export function unbindClickSelectorBehavior(control: HTMLElement | null | undefined) {
+  if (!control) return
+  selectorControls.delete(control)
+  if ((control as any).__m115SelectorBound) {
+    ;(control as any).__m115SelectorBound = false
+  }
+}
+
 export function bindClickSelectorBehavior(control: HTMLElement) {
   if ((control as any).__m115SelectorBound) {
     return

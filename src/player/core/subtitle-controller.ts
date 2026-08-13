@@ -7,7 +7,7 @@ import { SubtitleManager } from './subtitle-manager'
 import type { SubtitleItem } from './subtitles'
 import { loadSubtitlePreference, saveSubtitlePreference } from './history'
 import { updateArtplayerControl } from './player-quality'
-import { bindClickSelectorBehavior } from './player-selector'
+import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
 import { sendRuntimeMessageSafe } from './runtime'
 
 function getSubtitleControlLabel(title: string, hasItems: boolean) {
@@ -74,6 +74,7 @@ export class SubtitleController {
   destroy() {
     this.subtitleManager?.destroy()
     this.subtitleManager = null
+    unbindClickSelectorBehavior(this.controlEl)
     this.controlEl = null
     this.art = null
     this.deps = null

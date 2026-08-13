@@ -1,7 +1,7 @@
 import { Icons } from '../../shared/icons'
 import type Artplayer from 'artplayer'
 import { escapeHtml } from '../../shared/utils'
-import { bindClickSelectorBehavior } from './player-selector'
+import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
 import type { SubtitleController } from './subtitle-controller'
 import type { AudioManager } from './audio-manager'
 
@@ -144,6 +144,7 @@ export class MediaTrackController {
   }
 
   destroy() {
+    unbindClickSelectorBehavior(this.controlEl)
     this.controlEl = null
     this.art = null
     this.deps = null

@@ -932,14 +932,26 @@ class PlayerManager {
     const video = this.artplayer.video as HTMLVideoElement
     const targetUrl = this.currentHlsLogicalUrl
 
+    let restore: (() => void) | null = null
+    const detachRestore = () => {
+      if (this.artplayer && restore) {
+        this.artplayer.off('video:loadedmetadata', restore)
+        this.artplayer.off('video:canplay', restore)
+      }
+    }
+
     try {
       await this.initHls(video, targetUrl)
       if (!this.hlsInstance) {
         return
       }
 
-      const restore = () => {
-        if (!this.artplayer) return
+      // 以 initHls 的代次为 token：一旦发生切集/切画质/再次重建音轨，
+      // hlsInitSeq 递增，旧 restore 会在触发时被作废并自动摘除，避免误 seek 到上一集
+      const token = this.hlsInitSeq
+      restore = () => {
+        detachRestore()
+        if (!this.artplayer || token !== this.hlsInitSeq) return
         try {
           this.artplayer.seek = params.currentTime
         }
@@ -951,8 +963,8 @@ class PlayerManager {
         }
       }
 
-      this.artplayer.once('video:loadedmetadata', restore)
-      this.artplayer.once('video:canplay', restore)
+      this.artplayer.on('video:loadedmetadata', restore)
+      this.artplayer.on('video:canplay', restore)
 
       playerDebug('[115m][audio] rebuild track', {
         id: params.id,
@@ -963,6 +975,7 @@ class PlayerManager {
       this.overlay?.showToast(`已切换到${this.audioManager?.currentTrackLabel || '音轨'}`)
     }
     catch (error) {
+      detachRestore()
       console.warn('[115m][audio] rebuild track failed', error)
       this.overlay?.showToast('切换音轨失败，请重试')
     }
@@ -1792,6 +1805,10 @@ class PlayerManager {
     }
     this.rotationManager?.destroy()
     this.rotationManager = null
+    this.settingsMenuController?.destroy()
+    this.settingsMenuController = null
+    this.mediaTrackController?.destroy()
+    this.mediaTrackController = null
     if (this.hlsInstance) {
       this.hlsInstance.destroy()
       this.hlsInstance = null
