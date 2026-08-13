@@ -12,7 +12,6 @@ function createController() {
   const getArtplayer = vi.fn(() => art)
   const getCurrentPickCode = vi.fn(() => 'pick-1')
   const isReady = vi.fn(() => false)
-  const getNativeUltraSupported = vi.fn(() => true)
   const getSwitchUrlInFlight = vi.fn(() => false)
   const setSwitchUrlInFlight = vi.fn()
   const withSwitchTimeout = vi.fn((p: Promise<unknown>, _ms?: number, _msg?: string) => p)
@@ -25,7 +24,6 @@ function createController() {
     getArtplayer,
     getCurrentPickCode,
     isReady,
-    getNativeUltraSupported,
     getSwitchUrlInFlight,
     setSwitchUrlInFlight,
     withSwitchTimeout: withSwitchTimeout as QualityControllerDeps['withSwitchTimeout'],
@@ -62,7 +60,7 @@ describe('PlayerQualityController', () => {
         currentQualityLabel: '超清',
         isNativeVideo: false,
       },
-    })
+    }, 'pick-1', true)
     expect(controller.m3u8ListValue).toHaveLength(2)
     expect(controller.currentQualityValue).toBe(1080)
     expect(controller.currentQualityLabelValue).toBe('超清')
@@ -98,7 +96,7 @@ describe('PlayerQualityController', () => {
         currentQualityLabel: '超清',
         isNativeVideo: false,
       },
-    })
+    }, 'pick-1', true)
     const opt = { url: 'https://example.com/ultra.mp4', label: '115原画', quality: 9999 }
     await controller.switchQuality(opt)
     expect(controller.isNativeVideoValue).toBe(true)
@@ -127,7 +125,7 @@ describe('PlayerQualityController', () => {
         currentQualityLabel: '超清',
         isNativeVideo: false,
       },
-    })
+    }, 'pick-1', true)
     // 原画占位符：无真实源则提示失败
     await controller.switchQuality({ url: '__ORIGINAL_PLACEHOLDER__', label: '115原画', quality: 9999 })
     // 若 m3u8 列表非空则能解析到 9999 或第一个源，这里验证不会报错
@@ -150,4 +148,6 @@ describe('PlayerQualityController', () => {
     expect(controller.isNativeVideoValue).toBe(false)
   })
 })
+
+
 

@@ -262,7 +262,7 @@ class PlayerManager {
       if (debugMode) this.debugLogToPage('calling resolvePlaybackForPickCode')
       const playback = await this.resolvePlaybackForPickCode(this.currentPickCode)
       if (debugMode) this.debugLogToPage(`resolvePlaybackForPickCode done: ultra=${!!playback.ultraUrl}, m3u8=${playback.m3u8List.length}, type=${playback.initialPlayback.type}`)
-      this.quality.applyResolvedPlayback(playback)
+      this.quality.applyResolvedPlayback(playback, this.currentPickCode, this.nativeUltraSupported)
 
       this.perfMarks.ultraReady = performance.now()
       this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.quality.m3u8ListValue.length })
@@ -355,7 +355,6 @@ class PlayerManager {
       getArtplayer: () => this.artplayer,
       getCurrentPickCode: () => this.currentPickCode,
       isReady: () => !!this.perfMarks.loadedmetadata,
-      getNativeUltraSupported: () => this.nativeUltraSupported,
       getSwitchUrlInFlight: () => this.switchUrlInFlight,
       setSwitchUrlInFlight: value => { this.switchUrlInFlight = value },
       withSwitchTimeout: <T>(promise: Promise<T>, timeoutMs?: number, message?: string) => this.withSwitchTimeout(promise, timeoutMs, message),
@@ -1025,7 +1024,7 @@ class PlayerManager {
       }
       this.artplayer.seek = 0
       
-      this.quality.applyResolvedPlayback(playback)
+      this.quality.applyResolvedPlayback(playback, this.currentPickCode, this.nativeUltraSupported)
       // 切到无损（原生）源时销毁上一集的 hls 实例，m3u8 源由 initHls 自行销毁旧实例
       if (this.quality.currentPlaybackTypeValue === 'native') {
         this.disposeHlsInstance()

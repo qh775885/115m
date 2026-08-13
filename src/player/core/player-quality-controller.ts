@@ -30,8 +30,6 @@ export interface QualityControllerDeps {
   getCurrentPickCode: () => string
   /** 是否已加载过（用于区分手动切换 vs 首次加载） */
   isReady: () => boolean
-  /** 当前 native 超清是否可用（用于构建画质选项） */
-  getNativeUltraSupported: () => boolean
   /** 读取 switchUrlInFlight */
   getSwitchUrlInFlight: () => boolean
   /** 设置 switchUrlInFlight */
@@ -255,15 +253,12 @@ export class PlayerQualityController {
   }
 
   /** 应用已解析的播放包（初始化/切集后设置源与画质状态） */
-  applyResolvedPlayback(playback: ResolvedPlaybackBundle) {
-    const deps = this.deps
-    if (!deps) return
-    deps.resetNativeRetry()
+  applyResolvedPlayback(playback: ResolvedPlaybackBundle, pickCode: string, nativeUltraSupported: boolean) {
+    this.deps?.resetNativeRetry()
     this.ultraUrl = playback.ultraUrl
     this.m3u8List = playback.m3u8List
     // 播放器已持有 m3u8 列表：预置缩略图源 URL，避免悬停预览首次打开时再走一次 getM3u8
     const thumbnailSource = [...playback.m3u8List].sort((a, b) => a.quality - b.quality)[0]
-    const pickCode = deps.getCurrentPickCode()
     if (thumbnailSource?.url && pickCode) {
       primeThumbnailSourceUrl(pickCode, thumbnailSource.url)
     }
@@ -273,7 +268,7 @@ export class PlayerQualityController {
     this.currentQualityLabel = playback.initialPlayback.currentQualityLabel
     this.qualityOptions = buildQualityOptions(
       '',
-      deps.getNativeUltraSupported() ? (playback.initialPlayback.type === 'native' ? playback.initialPlayback.url : playback.ultraUrl) : null,
+      nativeUltraSupported ? (playback.initialPlayback.type === 'native' ? playback.initialPlayback.url : playback.ultraUrl) : null,
       this.m3u8List,
       this.currentQuality,
       this.currentQualityLabel,
