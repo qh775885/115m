@@ -17,40 +17,31 @@ import playerVolumeCss from './core/player-volume.css?inline'
 import uiLayerCss from './core/ui-layer.css?inline'
 import playerMediaTrackCss from './core/css/player-media-track.css?inline'
 import playerSettingsMenuCss from './core/css/player-settings-menu.css?inline'
-import type { M3u8Item } from '../lib/types'
-import { buildQualityOptions, ORIGINAL_PLACEHOLDER_URL } from './core/quality'
-import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './core/player-quality'
+import { ORIGINAL_PLACEHOLDER_URL } from './core/quality'
+import { updateArtplayerControl } from './core/player-quality'
 import { AudioManager } from './core/audio-manager'
 import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
 import { loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
 import { buildNavControlItem, mountCenterCluster } from './core/player-center-controls'
 import { buildCustomVolumeControl } from './core/player-volume'
-import type { QualityOption } from './core/types'
 import { buildPlaybackModePlan, getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
 import { runPlayerSmokeChecks } from './core/smoke'
 import { renderPlayerError } from './core/dom'
 import { isHlsSupported } from './core/hls'
 import { HlsPlayerController } from './core/player-hls'
+import { PlayerQualityController } from './core/player-quality-controller'
 import type { VideoPlaybackQualityLike } from './core/types'
 import { HoverPreviewController } from './core/hover-preview'
 import { bindPlayerEvents } from './core/events'
 import { PlayerOverlayController, readOverlayMetaFromQuery, type OverlayPlaylistItem } from './core/overlay'
 import { getNextPlaylistItem, getPlaybackEndCountdownPlan, getPreviousPlaylistItem } from './core/player-navigation'
-import { fetchBreadcrumbPath, fetchPlaylistData, resolvePlaybackBundle, type ResolvedPlaybackBundle } from './core/player-services'
+import { fetchBreadcrumbPath, fetchPlaylistData, resolvePlaybackBundle } from './core/player-services'
 import { MediaTrackController } from './core/player-media-track'
 import { SettingsMenuController } from './core/player-settings-menu'
 import { buildOverlayMetaPatch, buildPlayerHistoryUrl, findPlaylistItemByPickCode } from './core/player-switch'
 import { MoveDialog } from './core/move-dialog'
-import {
-  applyFallbackToHlsState,
-  applySelectedQualityOption,
-  isOriginalPlaceholderOption,
-  type PlaybackState,
-  refreshPlaybackQualityState,
-  resolveOriginalPlaceholderUrl,
-  syncPlaybackStateByUrl,
-} from './core/playback-state'
+import { applyFallbackToHlsState } from './core/playback-state'
 import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from './core/runtime'
 import {
   buildUpdatedMarkedUrl,
@@ -61,7 +52,6 @@ import {
 import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './core/player-api'
 import { buildPlaybackNavState, getDeleteFallback, getPlaylistPosition } from './core/playlist-navigation'
 import { readTemporaryPlayerPlaylist } from '../shared/player-playlist-cache'
-import { primeThumbnailSourceUrl } from '../lib/videoThumbnail'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
 import { RotationManager } from './core/rotation-manager'
@@ -136,13 +126,8 @@ class PlayerManager {
   private static readonly SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
   private static readonly VIDEO_SWITCH_COOLDOWN_MS = 1200
   private artplayer: Artplayer | null = null
-  private m3u8List: M3u8Item[] = []
   private currentPickCode: string
-  private isNativeVideo = false
-  private ultraUrl: string | null = null
-  private qualityOptions: QualityOption[] = []
-  private currentQuality = 0
-  private currentQualityLabel = '加载中'
+  private quality = new PlayerQualityController()
   private infoMenuTimer: number | null = null
   private infoMenuEl: HTMLElement | null = null
   private hoverPreview: HoverPreviewController | null = null
@@ -163,7 +148,6 @@ class PlayerManager {
   private readonly nativeUltraSupported: boolean
   private readonly nativeUltraConservative: boolean
   private readonly title: string
-  private currentPlaybackType: 'native' | 'hls' = 'hls'
   private rotationManager: RotationManager | null = null
   private nativeMonitor: NativePlaybackMonitor | null = null
   private audioManager: AudioManager | null = null
@@ -285,10 +269,10 @@ class PlayerManager {
       if (debugMode) this.debugLogToPage('calling resolvePlaybackForPickCode')
       const playback = await this.resolvePlaybackForPickCode(this.currentPickCode)
       if (debugMode) this.debugLogToPage(`resolvePlaybackForPickCode done: ultra=${!!playback.ultraUrl}, m3u8=${playback.m3u8List.length}, type=${playback.initialPlayback.type}`)
-      this.applyResolvedPlayback(playback)
+      this.quality.applyResolvedPlayback(playback)
 
       this.perfMarks.ultraReady = performance.now()
-      this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.m3u8List.length })
+      this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.quality.m3u8ListValue.length })
 
       if (debugMode) this.debugLogToPage(`calling createArtplayer: type=${playback.initialPlayback.type}`)
       this.createArtplayer(playback.initialPlayback.url, playback.initialPlayback.type)
@@ -299,8 +283,8 @@ class PlayerManager {
       })
 
       const currentUrl = this.artplayer?.url || ''
-      this.refreshQualityState(currentUrl)
-      this.renderQualityPanel()
+      this.quality.refreshQualityState(currentUrl)
+      this.quality.renderQualityPanel()
       this.subtitleController?.renderControl()
       this.renderPlaybackNavControls()
       this.rotationManager?.renderControl()
@@ -352,7 +336,7 @@ class PlayerManager {
     // 记录初始 URL，用于区分初始化和用户手动切换
     this._initUrl = videoUrl
 
-    this.refreshQualityState(videoUrl)
+    this.quality.refreshQualityState(videoUrl)
 
     // 提前初始化管理器（控件构建依赖它们，attach 在 artplayer 创建后调用）
     this.rotationManager?.destroy()
@@ -373,6 +357,20 @@ class PlayerManager {
 
     this.settingsMenuController?.destroy()
     this.settingsMenuController = new SettingsMenuController()
+
+    this.quality.attach({
+      getArtplayer: () => this.artplayer,
+      getCurrentPickCode: () => this.currentPickCode,
+      isReady: () => !!this.perfMarks.loadedmetadata,
+      getNativeUltraSupported: () => this.nativeUltraSupported,
+      getSwitchUrlInFlight: () => this.switchUrlInFlight,
+      setSwitchUrlInFlight: value => { this.switchUrlInFlight = value },
+      withSwitchTimeout: <T>(promise: Promise<T>, timeoutMs?: number, message?: string) => this.withSwitchTimeout(promise, timeoutMs, message),
+      resetNativeRetry: () => this.nativeMonitor?.resetRetryCount(),
+      disposeHls: () => this.hlsController.dispose(),
+      onShowToast: msg => this.overlay?.showToast(msg),
+      onShowError: msg => this.showError(msg),
+    })
 
     this.hlsController.attach({
       getArtplayer: () => this.artplayer,
@@ -418,7 +416,7 @@ class PlayerManager {
         m3u8: async (video, url) => {
           try {
             if (url === ORIGINAL_PLACEHOLDER_URL) {
-              const resolvedUrl = await this.ensureOriginalSourceLoaded()
+              const resolvedUrl = await this.quality.ensureOriginalSourceLoaded()
               if (!resolvedUrl) {
                 this.showError('115原画加载失败，请稍后重试')
                 this.failSwitchUrl('115原画加载失败')
@@ -427,22 +425,20 @@ class PlayerManager {
               // 原画源加载成功后才记录偏好，避免源持续不可用时每次自动加载都带着失败偏好重试
               saveQualityPreference(this.currentPickCode, '115原画', 9999)
               // 立即更新内部状态，以便后续 UI 同步正常工作
-              const opt = this.qualityOptions.find(o => o.url === url)
+              const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
               if (opt) {
-                this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-                this.renderQualityPanel()
+                this.quality.applySelectedOption(opt)
               }
               url = resolvedUrl
             }
             else {
-              const opt = this.qualityOptions.find(o => o.url === url)
+              const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
               if (opt) {
                 // 只要是手动切换（非首次加载且已就绪），就记录偏好
                 if (this.perfMarks.loadedmetadata) {
                   saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
                 }
-                this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-                this.renderQualityPanel()
+                this.quality.applySelectedOption(opt)
               }
             }
 
@@ -478,13 +474,12 @@ class PlayerManager {
 
     this.artplayer.on('restart', (url) => {
       if (typeof url !== 'string' || url === ORIGINAL_PLACEHOLDER_URL) return
-      const opt = this.qualityOptions.find(o => o.url === url)
+      const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
       if (opt && this.perfMarks.loadedmetadata) {
         saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
-        this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-        this.renderQualityPanel()
+        this.quality.applySelectedOption(opt)
       }
-      this.setupProgressHoverPreview(url, this.currentPlaybackType)
+      this.setupProgressHoverPreview(url, this.quality.currentPlaybackTypeValue)
     })
 
     this.artplayer.on('video:pause', () => {
@@ -513,9 +508,9 @@ class PlayerManager {
     this.nativeMonitor = new NativePlaybackMonitor()
     this.nativeMonitor.attach({
       art: this.artplayer,
-      getIsNativeVideo: () => this.isNativeVideo,
-      getCurrentPlaybackType: () => this.currentPlaybackType,
-      getUltraUrl: () => this.ultraUrl,
+      getIsNativeVideo: () => this.quality.isNativeVideoValue,
+      getCurrentPlaybackType: () => this.quality.currentPlaybackTypeValue,
+      getUltraUrl: () => this.quality.ultraUrlValue,
       getTitle: () => this.title,
       getNativeUltraConservative: () => this.nativeUltraConservative,
       getPerfMarksPlaying: () => this.perfMarks.playing,
@@ -538,8 +533,7 @@ class PlayerManager {
     })
 
     if (type === 'native') {
-      this.currentQuality = 9999
-      this.currentQualityLabel = '无损'
+      this.quality.markNative()
       this.audioManager?.resetForNative()
     }
 
@@ -565,7 +559,7 @@ class PlayerManager {
     })
 
     // 添加合并后的右侧控件
-    this.artplayer.controls.add(this.buildQualityControlItem())
+    this.artplayer.controls.add(this.quality.buildQualityControlItem())
     if (this.mediaTrackController) {
       this.artplayer.controls.add(this.mediaTrackController.buildControl()!)
     }
@@ -585,9 +579,9 @@ class PlayerManager {
       }
       this.cleanupKeyboard = bindPlayerEvents({
         art: this.artplayer,
-        getType: () => this.currentPlaybackType,
+        getType: () => this.quality.currentPlaybackTypeValue,
         getPickCode: () => this.currentPickCode,
-        getQualityLabel: () => this.currentQualityLabel,
+        getQualityLabel: () => this.quality.currentQualityLabelValue,
         onPerf: (stage, extra) => this.perf(stage, extra),
         onReady: () => {
           this.safeRemoveContextmenuItem('playbackRate')
@@ -601,7 +595,7 @@ class PlayerManager {
             html: this.buildStatsHtml(),
             mounted: ($el: HTMLElement) => { this.infoMenuEl = $el },
           })
-          this.renderQualityPanel()
+          this.quality.renderQualityPanel()
           this.mediaTrackController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderPlaybackNavControls()
@@ -610,8 +604,8 @@ class PlayerManager {
         },
         onLoadedmetadata: () => {
           this.perfMarks.loadedmetadata = performance.now()
-          this.updateQualityByUrl(this.artplayer?.url || '')
-          this.renderQualityPanel()
+          this.quality.updateQualityByUrl(this.artplayer?.url || '')
+          this.quality.renderQualityPanel()
           this.mediaTrackController?.renderControl()
           this.renderPlaybackModeControl()
           this.renderSpeedControl()
@@ -640,7 +634,7 @@ class PlayerManager {
           this.handlePlaybackEnded()
         },
         onError: () => {
-          if (this.isNativeVideo) {
+          if (this.quality.isNativeVideoValue) {
             void this.nativeMonitor?.onError()
           }
         },
@@ -648,48 +642,6 @@ class PlayerManager {
     }
   }
 
-
-  private updateQualityByUrl(url: string) {
-    this.applyPlaybackStatePatch(syncPlaybackStateByUrl(this.getPlaybackState(), url))
-  }
-
-  private refreshQualityState(currentUrl: string) {
-    this.applyPlaybackStatePatch(refreshPlaybackQualityState(this.getPlaybackState(), currentUrl))
-  }
-
-  private getPlaybackState(): PlaybackState {
-    return {
-      ultraUrl: this.ultraUrl,
-      m3u8List: this.m3u8List,
-      qualityOptions: this.qualityOptions,
-      currentQuality: this.currentQuality,
-      currentQualityLabel: this.currentQualityLabel,
-      isNativeVideo: this.isNativeVideo,
-    }
-  }
-
-  private applyPlaybackStatePatch(state: Partial<PlaybackState>) {
-    Object.assign(this, state)
-    // isNativeVideo 与 currentPlaybackType 是同一事实的两个投影，patch 更新 isNativeVideo 时同步 playbackType，
-    // 避免 onError 用 isNativeVideo、nativeMonitor 用 currentPlaybackType 时两处判断不一致
-    if (state.isNativeVideo !== undefined) {
-      this.currentPlaybackType = state.isNativeVideo ? 'native' : 'hls'
-    }
-  }
-
-  private buildQualityControlItem(): any {
-    return buildQualityControlConfig({
-      controlName: PlayerManager.QUALITY_CONTROL_NAME,
-      currentQualityLabel: this.currentQualityLabel,
-      currentUrl: this.artplayer?.url || '',
-      qualityOptions: this.qualityOptions,
-      onSelect: async target => await this.switchQuality(target),
-    })
-  }
-
-  private renderQualityPanel() {
-    this.updateQualityControl()
-  }
 
   private buildPlaybackModeControlItem(): any {
     return buildPlaybackModeControlConfig({
@@ -772,55 +724,6 @@ class PlayerManager {
     mountCenterCluster(this.artplayer)
   }
 
-  private updateQualityControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.QUALITY_CONTROL_NAME, this.buildQualityControlItem())
-  }
-
-  private async switchQuality(opt: QualityOption) {
-    if (!this.artplayer) return
-
-    if (isOriginalPlaceholderOption(opt)) {
-      const resolvedUrl = await this.ensureOriginalSourceLoaded()
-      if (!resolvedUrl) {
-        this.showError('115原画加载失败，请稍后重试')
-        return
-      }
-      opt = { ...opt, url: resolvedUrl }
-    }
-
-    if (this.artplayer.url === opt.url) return
-
-    this.nativeMonitor?.resetRetryCount()
-    this.currentPlaybackType = !!this.ultraUrl && opt.url === this.ultraUrl ? 'native' : 'hls'
-
-    this.applyPlaybackStatePatch(applySelectedQualityOption(this.getPlaybackState(), opt))
-    this.renderQualityPanel()
-
-    // 记住用户手动选择的画质
-    saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
-
-    if (this.currentPlaybackType === 'native') {
-      this.disposeHlsInstance()
-    }
-
-    try {
-      this.switchUrlInFlight = true
-      try {
-        await this.withSwitchTimeout(this.artplayer.switchQuality(opt.url))
-      }
-      finally {
-        this.switchUrlInFlight = false
-      }
-    }
-    catch (error) {
-      if (!this.artplayer) return
-      this.updateQualityByUrl(this.artplayer.url || '')
-      this.renderQualityPanel()
-      this.overlay?.showToast(error instanceof Error ? error.message : '切换画质失败')
-    }
-  }
-
   private setupTopNav() {
     if (!this.artplayer) return
     this.overlay?.destroy()
@@ -884,7 +787,7 @@ class PlayerManager {
     if (!this.artplayer) return
 
     const currentUrl = previewSourceUrl || this.artplayer.url || ''
-    const fallbackThumbnailSource = [...this.m3u8List].sort((a, b) => a.quality - b.quality)[0]?.url
+    const fallbackThumbnailSource = [...this.quality.m3u8ListValue].sort((a, b) => a.quality - b.quality)[0]?.url
 
     this.hoverPreview?.destroy()
     this.hoverPreview = new HoverPreviewController(
@@ -951,7 +854,7 @@ class PlayerManager {
 
   private async fallbackToHls(reason = '播放失败', rememberOriginal = false) {
     this.nativeMonitor?.clearAll()
-    playerDebug('[115m] fallbackToHls triggered', { m3u8Count: this.m3u8List.length, reason })
+    playerDebug('[115m] fallbackToHls triggered', { m3u8Count: this.quality.m3u8ListValue.length, reason })
     
     if (!this.artplayer) {
       this.showError('播放失败，无可用的视频源')
@@ -959,26 +862,26 @@ class PlayerManager {
     }
 
     // 确保有 m3u8 列表
-    if (this.m3u8List.length === 0) {
+    if (this.quality.m3u8ListValue.length === 0) {
       playerDebug('[115m] m3u8List empty, fetching...')
       const fetched = await fetchM3u8WithRetry(this.currentPickCode).catch((e) => {
         console.error('[115m] fetchM3u8WithRetry failed:', e)
         return null
       })
       if (fetched && fetched.length > 0) {
-        this.m3u8List = fetched
+        this.quality.setM3u8List(fetched)
       }
     }
 
-    if (this.m3u8List.length === 0) {
+    if (this.quality.m3u8ListValue.length === 0) {
       console.error('[115m] fallbackToHls: no m3u8 sources available')
       this.showError('播放失败，无可用的视频源')
       return
     }
 
-    const { url: bestQualityUrl, patch } = applyFallbackToHlsState(this.getPlaybackState())
-    this.applyPlaybackStatePatch(patch)
-    this.currentPlaybackType = 'hls'
+    const { url: bestQualityUrl, patch } = applyFallbackToHlsState(this.quality.getPlaybackState())
+    this.quality.applyPlaybackStatePatch(patch)
+    this.quality.forceHlsType()
     if (rememberOriginal) {
       saveQualityPreference(this.currentPickCode, '115原画', 9999)
     }
@@ -988,7 +891,7 @@ class PlayerManager {
     }
     
     playerDebug('[115m] fallbackToHls: switching to HLS')
-    this.renderQualityPanel()
+    this.quality.renderQualityPanel()
     this.overlay?.showToast(`${reason}，已切换 115原画`)
     try {
       this.switchUrlInFlight = true
@@ -1009,29 +912,6 @@ class PlayerManager {
     this.nativeMonitor?.clearAll()
     this.audioManager?.clearSyncTimers()
   }
-
-  private async ensureOriginalSourceLoaded(): Promise<string | null> {
-    if (this.m3u8List.length === 0) {
-      try {
-        const list = await fetchM3u8WithRetry(this.currentPickCode)
-        if (list && list.length > 0) {
-          this.m3u8List = list
-        }
-      } catch (e) {
-        console.error('[115m] fetchM3u8WithRetry error:', e)
-      }
-    }
-
-    if (this.m3u8List.length === 0) {
-      return null
-    }
-
-    const currentUrl = this.artplayer?.url || ''
-    this.refreshQualityState(currentUrl)
-    this.renderQualityPanel()
-    return resolveOriginalPlaceholderUrl(this.getPlaybackState())
-  }
-
 
   private showError(message: string) {
     renderPlayerError(message)
@@ -1450,9 +1330,9 @@ class PlayerManager {
       }
       this.artplayer.seek = 0
       
-      this.applyResolvedPlayback(playback)
+      this.quality.applyResolvedPlayback(playback)
       // 切到无损（原生）源时销毁上一集的 hls 实例，m3u8 源由 initHls 自行销毁旧实例
-      if (this.currentPlaybackType === 'native') {
+      if (this.quality.currentPlaybackTypeValue === 'native') {
         this.disposeHlsInstance()
       }
       // 切换视频时重置倍速，避免上一集的倍速残留到下一集
@@ -1485,7 +1365,7 @@ class PlayerManager {
 
       this.setupProgressHoverPreview(playback.initialPlayback.url, playback.initialPlayback.type)
       this.subtitleController?.resetForNewVideo()
-      this.renderQualityPanel()
+      this.quality.renderQualityPanel()
       this.subtitleController?.renderControl()
       this.renderPlaybackNavControls()
 
@@ -1528,28 +1408,6 @@ class PlayerManager {
     })
 
     return playback
-  }
-
-  private applyResolvedPlayback(playback: ResolvedPlaybackBundle) {
-    this.nativeMonitor?.resetRetryCount()
-    this.ultraUrl = playback.ultraUrl
-    this.m3u8List = playback.m3u8List
-    // 播放器已持有 m3u8 列表：预置缩略图源 URL，避免悬停预览首次打开时再走一次 getM3u8
-    const thumbnailSource = [...playback.m3u8List].sort((a, b) => a.quality - b.quality)[0]
-    if (thumbnailSource?.url && this.currentPickCode) {
-      primeThumbnailSourceUrl(this.currentPickCode, thumbnailSource.url)
-    }
-    this.isNativeVideo = playback.initialPlayback.isNativeVideo
-    this.currentPlaybackType = playback.initialPlayback.type
-    this.currentQuality = playback.initialPlayback.currentQuality
-    this.currentQualityLabel = playback.initialPlayback.currentQualityLabel
-    this.qualityOptions = buildQualityOptions(
-      '',
-      this.nativeUltraSupported ? (playback.initialPlayback.type === 'native' ? playback.initialPlayback.url : playback.ultraUrl) : null,
-      this.m3u8List,
-      this.currentQuality,
-      this.currentQualityLabel,
-    )
   }
 
   private formatFileSize(size: number): string {
@@ -1637,3 +1495,5 @@ window.addEventListener('beforeunload', () => {
 })
 
 ;(window as any).playerManager = playerManager
+
+
