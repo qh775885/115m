@@ -18,14 +18,12 @@ import uiLayerCss from './core/ui-layer.css?inline'
 import playerMediaTrackCss from './core/css/player-media-track.css?inline'
 import playerSettingsMenuCss from './core/css/player-settings-menu.css?inline'
 import { ORIGINAL_PLACEHOLDER_URL } from './core/quality'
-import { updateArtplayerControl } from './core/player-quality'
 import { AudioManager } from './core/audio-manager'
-import { buildPlaybackModeControlItem as buildPlaybackModeControlConfig } from './core/player-playback-mode-control'
 import { fetchM3u8WithRetry } from './core/source'
 import { loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
-import { buildNavControlItem, mountCenterCluster } from './core/player-center-controls'
+import { mountCenterCluster } from './core/player-center-controls'
 import { buildCustomVolumeControl } from './core/player-volume'
-import { getPlaybackModeLabel, loadPlaybackMode, savePlaybackMode, type PlaybackMode } from './core/player-playback-mode'
+import { loadPlaybackMode, type PlaybackMode } from './core/player-playback-mode'
 import { runPlayerSmokeChecks } from './core/smoke'
 import { renderPlayerError } from './core/dom'
 import { isHlsSupported } from './core/hls'
@@ -34,6 +32,7 @@ import { PlayerQualityController } from './core/player-quality-controller'
 import { PlayerPlaylistController } from './core/player-playlist'
 import { PlayerActionsController } from './core/player-actions'
 import { PlayerSwitchController } from './core/player-video-switch'
+import { PlayerUIControlsController } from './core/player-ui-controls'
 import type { VideoPlaybackQualityLike } from './core/types'
 import { HoverPreviewController } from './core/hover-preview'
 import { bindPlayerEvents } from './core/events'
@@ -46,7 +45,6 @@ import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from 
 import {
   readPlayerBootstrapConfig,
 } from './core/player-query'
-import { buildPlaybackNavState, getPlaylistPosition } from './core/playlist-navigation'
 import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './core/native-playback'
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
 import { RotationManager } from './core/rotation-manager'
@@ -105,14 +103,6 @@ function playerDebug(...args: unknown[]) {
 bindInterruptedPlayRejectionGuard()
 
 class PlayerManager {
-  private static readonly QUALITY_CONTROL_NAME = 'm115-quality-control'
-  private static readonly SPEED_CONTROL_NAME = 'm115-speed-control'
-  private static readonly PLAYBACK_MODE_CONTROL_NAME = 'm115-playback-mode-control'
-  private static readonly PREV_CONTROL_NAME = 'm115-prev-control'
-  private static readonly NEXT_CONTROL_NAME = 'm115-next-control'
-  private static readonly MEDIA_TRACK_CONTROL_NAME = 'm115-media-track-control'
-  private static readonly SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
-  private static readonly VIDEO_SWITCH_COOLDOWN_MS = 1200
   private artplayer: Artplayer | null = null
   private currentPickCode: string
   private quality = new PlayerQualityController()
@@ -123,6 +113,7 @@ class PlayerManager {
   private playlist = new PlayerPlaylistController()
   private actions = new PlayerActionsController()
   private switchController = new PlayerSwitchController()
+  private uiControls = new PlayerUIControlsController()
   private traceId = ''
   private clickTs = 0
   private initStartTs = 0
@@ -269,9 +260,9 @@ class PlayerManager {
       this.quality.refreshQualityState(currentUrl)
       this.quality.renderQualityPanel()
       this.subtitleController?.renderControl()
-      this.renderPlaybackNavControls()
+      this.uiControls.renderPlaybackNavControls()
       this.rotationManager?.renderControl()
-      this.renderSpeedControl()
+      this.uiControls.renderSpeedControl()
 
       const initPickCode = this.currentPickCode
       void loadPlayHistoryWhenReady(
@@ -360,7 +351,7 @@ class PlayerManager {
       getPlaylistToken: () => this.playlistToken,
       getIsSwitchingVideo: () => this.isSwitchingVideo,
       getCurrentPlaybackMode: () => this.currentPlaybackMode,
-      onRenderPlaybackNavControls: () => this.renderPlaybackNavControls(),
+      onRenderPlaybackNavControls: () => this.uiControls.renderPlaybackNavControls(),
       navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.switchController.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
       updatePlaybackNav: state => this.overlay?.updatePlaybackNav(state),
       updateCurrentPlaylistProgress: (pickCode, progressSec, duration) => this.overlay?.updateCurrentPlaylistProgress(pickCode, progressSec, duration),
@@ -396,7 +387,7 @@ class PlayerManager {
       resetPlaybackRate: () => this.applyPlaybackRate(1),
       setupProgressHoverPreview: (url, type) => this.setupProgressHoverPreview(url, type),
       renderQualityPanel: () => this.quality.renderQualityPanel(),
-      renderPlaybackNavControls: () => this.renderPlaybackNavControls(),
+      renderPlaybackNavControls: () => this.uiControls.renderPlaybackNavControls(),
       applyResolvedPlayback: (playback, pickCode, nativeUltraSupported) => this.quality.applyResolvedPlayback(playback, pickCode, nativeUltraSupported),
       getCurrentPlaybackType: () => this.quality.currentPlaybackTypeValue,
       getNativeUltraSupported: () => this.nativeUltraSupported,
@@ -423,6 +414,21 @@ class PlayerManager {
       withSwitchTimeout: <T>(promise: Promise<T>, timeoutMs?: number, message?: string) => this.withSwitchTimeout(promise, timeoutMs, message),
       resetPerfMarks: () => { this.perfMarks = { init: performance.now() } },
       resetFirstPlaying: () => { this.firstPlayingReported = false },
+    })
+
+    this.uiControls.attach({
+      getArtplayer: () => this.artplayer,
+      getCurrentPickCode: () => this.currentPickCode,
+      getIsSwitchingVideo: () => this.isSwitchingVideo,
+      getPlaylist: () => ({
+        items: this.playlist.items,
+        playPrevious: () => void this.playlist.playPrevious(),
+        playNext: () => void this.playlist.playNext(),
+      }),
+      getCurrentPlaybackMode: () => this.currentPlaybackMode,
+      onPlaybackModeSelected: mode => { this.currentPlaybackMode = mode },
+      renderSpeedControl: () => this.settingsMenuController?.renderControl(),
+      onShowToast: msg => this.overlay?.showToast(msg),
     })
 
     this.hlsController.attach({
@@ -452,8 +458,8 @@ class PlayerManager {
       setting: false,
       hotkey: false,
       controls: [
-        this.buildPrevControlItem(),
-        this.buildNextControlItem(),
+        this.uiControls.buildPrevControlItem(),
+        this.uiControls.buildNextControlItem(),
         buildCustomVolumeControl(),
       ],
       loop: false,
@@ -616,7 +622,7 @@ class PlayerManager {
     if (this.mediaTrackController) {
       this.artplayer.controls.add(this.mediaTrackController.buildControl()!)
     }
-    this.artplayer.controls.add(this.buildPlaybackModeControlItem())
+    this.artplayer.controls.add(this.uiControls.buildPlaybackModeControlItem())
     this.artplayer.controls.add(this.rotationManager.buildControl())
     if (this.settingsMenuController) {
       this.artplayer.controls.add(this.settingsMenuController.buildControl()!)
@@ -650,18 +656,18 @@ class PlayerManager {
           })
           this.quality.renderQualityPanel()
           this.mediaTrackController?.renderControl()
-          this.renderPlaybackModeControl()
-          this.renderPlaybackNavControls()
+          this.uiControls.renderPlaybackModeControl()
+          this.uiControls.renderPlaybackNavControls()
           this.rotationManager?.renderControl()
-          this.renderSpeedControl()
+          this.uiControls.renderSpeedControl()
         },
         onLoadedmetadata: () => {
           this.perfMarks.loadedmetadata = performance.now()
           this.quality.updateQualityByUrl(this.artplayer?.url || '')
           this.quality.renderQualityPanel()
           this.mediaTrackController?.renderControl()
-          this.renderPlaybackModeControl()
-          this.renderSpeedControl()
+          this.uiControls.renderPlaybackModeControl()
+          this.uiControls.renderSpeedControl()
           this.rotationManager?.apply()
           this.hoverPreview?.updateSize()
         },
@@ -696,22 +702,6 @@ class PlayerManager {
   }
 
 
-  private buildPlaybackModeControlItem(): any {
-    return buildPlaybackModeControlConfig({
-      controlName: PlayerManager.PLAYBACK_MODE_CONTROL_NAME,
-      currentPlaybackMode: this.currentPlaybackMode,
-      onSelectPlaybackMode: mode => this.applyPlaybackModeSelection(mode),
-    })
-  }
-
-  private renderPlaybackModeControl() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.PLAYBACK_MODE_CONTROL_NAME, this.buildPlaybackModeControlItem())
-  }
-
-  private renderSpeedControl() {
-    this.settingsMenuController?.renderControl()
-  }
 
   private safeRemoveContextmenuItem(name: string) {
     try {
@@ -722,31 +712,6 @@ class PlayerManager {
     }
   }
 
-  private buildPrevControlItem(): any {
-    const state = buildPlaybackNavState(getPlaylistPosition(this.playlist.items, this.currentPickCode))
-    const enabled = state.hasPrevious && !this.isSwitchingVideo
-    return buildNavControlItem({
-      controlName: PlayerManager.PREV_CONTROL_NAME,
-      direction: 'prev',
-      index: 9,
-      enabled,
-      title: this.isSwitchingVideo ? '正在切换视频' : (state.previousTitle ? `上一集：${state.previousTitle}` : '没有上一集'),
-      onClick: () => { void this.playlist.playPrevious() },
-    })
-  }
-
-  private buildNextControlItem(): any {
-    const state = buildPlaybackNavState(getPlaylistPosition(this.playlist.items, this.currentPickCode))
-    const enabled = state.hasNext && !this.isSwitchingVideo
-    return buildNavControlItem({
-      controlName: PlayerManager.NEXT_CONTROL_NAME,
-      direction: 'next',
-      index: 11,
-      enabled,
-      title: this.isSwitchingVideo ? '正在切换视频' : (state.nextTitle ? `下一集：${state.nextTitle}` : '没有下一集'),
-      onClick: () => { void this.playlist.playNext() },
-    })
-  }
 
   private applyPlaybackRate(value: number) {
     this.currentPlaybackRate = value
@@ -759,22 +724,7 @@ class PlayerManager {
         // Fallback to direct video playbackRate when the public setter is unavailable.
       }
     }
-    this.renderSpeedControl()
-  }
-
-  private applyPlaybackModeSelection(mode: PlaybackMode) {
-    this.currentPlaybackMode = mode
-    savePlaybackMode(mode)
-    this.renderPlaybackModeControl()
-    this.overlay?.showToast(`播放模式：${getPlaybackModeLabel(mode)}`)
-  }
-
-  private renderPlaybackNavControls() {
-    if (!this.artplayer) return
-    updateArtplayerControl(this.artplayer, PlayerManager.PREV_CONTROL_NAME, this.buildPrevControlItem())
-    updateArtplayerControl(this.artplayer, PlayerManager.NEXT_CONTROL_NAME, this.buildNextControlItem())
-    // controls.update 会把重建的控件插回左侧容器，需重新搬进居中簇
-    mountCenterCluster(this.artplayer)
+    this.uiControls.renderSpeedControl()
   }
 
   private setupTopNav() {
@@ -1084,6 +1034,8 @@ window.addEventListener('beforeunload', () => {
 })
 
 ;(window as any).playerManager = playerManager
+
+
 
 
 
