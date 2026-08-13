@@ -33,7 +33,13 @@ function mapFolderItem(item: FolderApiItem, fallbackPid: string): FolderItem {
   }
 }
 
-export async function apiFetchFolders(cid: string): Promise<{ folders: FolderItem[], path: BreadcrumbItem[] }> {
+export interface FetchFoldersResult {
+  folders: FolderItem[]
+  path: BreadcrumbItem[]
+  error?: string
+}
+
+export async function apiFetchFolders(cid: string): Promise<FetchFoldersResult> {
   const params = new URLSearchParams({
     aid: '1', cid, offset: '0', limit: '500',
     show_dir: '1', qid: '0', type: '0',
@@ -48,11 +54,11 @@ export async function apiFetchFolders(cid: string): Promise<{ folders: FolderIte
     data: { url },
   })
 
-  if (!res?.ok || !res.text) return { folders: [], path: [] }
+  if (!res?.ok || !res.text) return { folders: [], path: [], error: '网络请求失败' }
 
   try {
     const json = JSON.parse(res.text) as { state?: boolean, data?: FolderApiItem[], path?: FolderPathApiItem[] }
-    if (!json.state) return { folders: [], path: [] }
+    if (!json.state) return { folders: [], path: [], error: '接口返回异常' }
 
     const folders = (json.data ?? [])
       .filter(item => item.cid !== undefined && !item.sha && !item.ico)
@@ -66,7 +72,7 @@ export async function apiFetchFolders(cid: string): Promise<{ folders: FolderIte
     return { folders, path }
   }
   catch {
-    return { folders: [], path: [] }
+    return { folders: [], path: [], error: '解析返回数据失败' }
   }
 }
 

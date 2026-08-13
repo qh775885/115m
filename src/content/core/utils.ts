@@ -105,33 +105,6 @@ export function findScrollContainer(element: HTMLElement): HTMLElement | Window 
   return window
 }
 
-export function createScrollStopDetector(target: HTMLElement | Window, delay = 120, onStop?: () => void) {
-  let timer: number | undefined
-
-  const trigger = () => {
-    if (typeof timer === 'number') {
-      window.clearTimeout(timer)
-    }
-    timer = window.setTimeout(() => {
-      timer = undefined
-      onStop?.()
-    }, delay)
-  }
-
-  const eventTarget = target === window ? window : target
-  eventTarget.addEventListener('scroll', trigger, { passive: true })
-
-  return {
-    destroy: () => {
-      if (typeof timer === 'number') {
-        window.clearTimeout(timer)
-        timer = undefined
-      }
-      eventTarget.removeEventListener('scroll', trigger)
-    },
-  }
-}
-
 /**
  * 创建可见性检测器
  * @param element 目标元素

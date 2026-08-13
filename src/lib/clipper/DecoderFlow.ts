@@ -54,6 +54,11 @@ export class DecoderFlow {
   /** 已找到帧后，允许继续逼近 targetTime 的宽限期（毫秒）。
    *  避免大分片/慢网下精确模式每次都拖满超时（5s）才返回帧 */
   static readonly FRAME_GRACE_MS = 1500
+  /** 空闲轮询间隔（毫秒）。样本队列/解码队列为空时不再 setTimeout(0) 忙等，
+   *  解码推进由 WebCodecs 回调（ondequeue/output）驱动，轮询仅做兜底检查 */
+  static readonly IDLE_POLL_MS = 30
+  /** samplesProcessed 保留条数上限（调试/状态统计用，超出后丢弃最旧的） */
+  static readonly MAX_KEPT_SAMPLES = 64
   protected logger = appLogger.sub(DecoderFlow.LOGGER_NAME)
   private videoDecoder: VideoDecoder | undefined
   private demuxer: DemuxerTsNew | undefined
@@ -177,6 +182,19 @@ export class DecoderFlow {
         }
         else if (Date.now() - frameFoundAt > DecoderFlow.FRAME_GRACE_MS) {
           this.logger.debug(`有帧后宽限期结束, 返回当前帧, 已耗时: ${Date.now() - startTime}ms`)
+          this._stop()
+          const frameTime = this.frameTime ?? this._getFrameRealTime(this.frame.timestamp)
+          return {
+            videoFrame: this.frame.clone(),
+            frameTime,
+            seekTime: this.targetTime,
+            consumedTime: Date.now() - startTime,
+          }
+        }
+        // 已找到帧、无待处理样本/在途读取/未完成解码时，数据已耗尽，
+        // 无需再空等宽限期，立即返回当前帧
+        else if (this._hasPendingWork() === false) {
+          this.logger.debug(`已找到帧且数据耗尽, 提前返回, 已耗时: ${Date.now() - startTime}ms`)
           this._stop()
           const frameTime = this.frameTime ?? this._getFrameRealTime(this.frame.timestamp)
           return {
@@ -541,20 +559,29 @@ export class DecoderFlow {
     )
   }
 
+  /** 是否还有待处理的工作（未解码样本、在途读取、未完成解码队列） */
+  private _hasPendingWork(): boolean {
+    return Boolean(
+      this.sampleQueue.length > 0
+      || this.readChunkInFlight
+      || (this.videoDecoder?.decodeQueueSize ?? 0) > 0,
+    )
+  }
+
   /**
    * 处理样本队列
    * @returns Promise<void>
    */
   private async _processSampleQueue(): Promise<void> {
     if (this.sampleQueue.length === 0) {
-      await promiseDelay(0)
+      await promiseDelay(DecoderFlow.IDLE_POLL_MS)
       return
     }
 
     const sample = this.sampleQueue.shift()
     if (sample && this.videoDecoder) {
       try {
-        this.samplesProcessed.push(sample)
+        this._rememberProcessedSample(sample)
         this.videoDecoder.decode(sample.encodedChunk)
       }
       catch (error) {
@@ -573,7 +600,18 @@ export class DecoderFlow {
           },
           decoderState: this.videoDecoder?.state,
         })
+        // 同步异常说明解码器已无法继续（如配置/数据损坏），
+        // 置 error 并停止循环，交由 waitForFrame 上抛，避免静默空转至超时
+        this.error = decodeError
+        this._stop()
       }
+    }
+  }
+
+  private _rememberProcessedSample(sample: SampleQueueItem): void {
+    this.samplesProcessed.push(sample)
+    if (this.samplesProcessed.length > DecoderFlow.MAX_KEPT_SAMPLES) {
+      this.samplesProcessed.shift()
     }
   }
 

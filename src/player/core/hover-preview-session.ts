@@ -29,6 +29,8 @@ interface HoverPreviewSessionOptions {
 const PRECISE_COVER_BUCKET = 0.5
 const PRECISE_COVER_DEBOUNCE = 50
 const MIN_COARSE_COVER_COUNT = 24
+/** 精确封面缓存条数上限（每张为 dataURL 抽帧，超限后淘汰最久写入的 bucket，避免长时间悬停累积数十 MB） */
+export const MAX_PRECISE_COVERS = 200
 export const THUMBNAIL_PREVIEW_ENABLED = true
 
 function mergeCovers(covers: HoverCover[]): HoverCover[] {
@@ -66,6 +68,7 @@ export class HoverPreviewSession {
   private pendingPreciseBucketTime: number | null = null
   private lastDebugHoverBucketTime: number | null = null
   private thumbnailDuration: number | null = null
+  private thumbnailGeneration = 0
   private destroyed = false
 
   constructor(options: HoverPreviewSessionOptions) {
@@ -251,11 +254,12 @@ export class HoverPreviewSession {
       return
     }
 
+    const generation = this.thumbnailGeneration
     this.thumbnailDuration = duration
     this.thumbnailsLoading = true
     try {
       const timelineCovers = await getTimelineCovers(this.pickCode)
-      if (this.destroyed) return
+      if (this.destroyed || generation !== this.thumbnailGeneration) return
       if (timelineCovers.length > 0) {
         this.onDebug('timeline cache hit', {
           pickCode: this.pickCode,
@@ -272,7 +276,7 @@ export class HoverPreviewSession {
 
       const initialCoverCount = this.getInitialCoverCount(duration)
       const covers = await getVideoCovers(this.pickCode, duration, initialCoverCount)
-      if (this.destroyed) return
+      if (this.destroyed || generation !== this.thumbnailGeneration) return
       this.onDebug('coarse covers ready', {
         pickCode: this.pickCode,
         duration,
@@ -299,7 +303,9 @@ export class HoverPreviewSession {
       })
     }
     finally {
-      this.thumbnailsLoading = false
+      if (generation === this.thumbnailGeneration) {
+        this.thumbnailsLoading = false
+      }
     }
   }
 
@@ -324,6 +330,7 @@ export class HoverPreviewSession {
     this.pendingPreciseBucketTime = null
     this.latestHoverTime = null
     this.hoverRequestVersion += 1
+    this.thumbnailGeneration += 1
     this.lastHoverBucketTime = null
     this.lastDebugHoverBucketTime = null
     this.thumbnailDuration = null
@@ -403,9 +410,10 @@ export class HoverPreviewSession {
 
   private async runBackgroundRefinement(duration: number, refineCount: number) {
     if (this.destroyed) return
+    const generation = this.thumbnailGeneration
     try {
       const covers = await getVideoCovers(this.pickCode, duration, refineCount)
-      if (this.destroyed) return
+      if (this.destroyed || generation !== this.thumbnailGeneration) return
       if (covers.length === 0) {
         return
       }
@@ -520,6 +528,7 @@ export class HoverPreviewSession {
       return
     }
 
+    const generation = this.thumbnailGeneration
     const requestKey = `${this.pickCode}:${bucketTime}`
     if (this.preciseCovers.has(bucketTime)) {
       return
@@ -536,7 +545,7 @@ export class HoverPreviewSession {
     const requestStart = Date.now()
     try {
       const cover = await this.loadFallbackPreciseCover(bucketTime)
-      if (this.destroyed) return
+      if (this.destroyed || generation !== this.thumbnailGeneration) return
       if (!cover) {
         this.onDebug('precise request empty', { bucketTime })
         return
@@ -548,6 +557,12 @@ export class HoverPreviewSession {
       }
 
       this.preciseCovers.set(bucketTime, preciseCover)
+      if (this.preciseCovers.size > MAX_PRECISE_COVERS) {
+        const oldest = this.preciseCovers.keys().next().value
+        if (oldest !== undefined) {
+          this.preciseCovers.delete(oldest)
+        }
+      }
       this.onDebug('precise request done', {
         bucketTime,
         frameTime: preciseCover.time,
@@ -568,10 +583,13 @@ export class HoverPreviewSession {
         this.preciseCoverRequestKey = null
       }
 
-      const nextBucketTime = this.pendingPreciseBucketTime ?? this.preciseQueue.shift()
-      this.pendingPreciseBucketTime = null
-      if (!this.destroyed && nextBucketTime != null && nextBucketTime !== bucketTime) {
-        void this.loadPreciseCover(nextBucketTime)
+      // generation 已变化（duration 重置）时不消费新队列，避免旧请求驱动新状态
+      if (generation === this.thumbnailGeneration) {
+        const nextBucketTime = this.pendingPreciseBucketTime ?? this.preciseQueue.shift()
+        this.pendingPreciseBucketTime = null
+        if (!this.destroyed && nextBucketTime != null && nextBucketTime !== bucketTime) {
+          void this.loadPreciseCover(nextBucketTime)
+        }
       }
     }
   }

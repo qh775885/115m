@@ -473,14 +473,35 @@ export class MoveDialog {
     this.selectedCid = null
     this.showLoading()
 
-    const { folders, path } = await apiFetchFolders(cid)
+    const { folders, path, error } = await apiFetchFolders(cid)
     this.folders = folders
     if (path.length > 0) {
       this.breadcrumbs = path
     }
     this.renderBreadcrumbs()
+    if (error) {
+      this.renderLoadError(error)
+      return
+    }
     this.renderFolders()
     this.updateMoveButtonLabel()
+  }
+
+  private renderLoadError(message: string) {
+    this.listEl.innerHTML = ''
+    const wrap = document.createElement('div')
+    wrap.className = 'move-dialog-error'
+    wrap.innerHTML = `
+      <span style="font-size:32px">⚠️</span>
+      <span>加载失败：${this.escapeHtml(message)}</span>
+    `
+    const retryBtn = document.createElement('button')
+    retryBtn.className = 'move-dialog-btn cancel'
+    retryBtn.textContent = '重试'
+    retryBtn.style.marginTop = '12px'
+    retryBtn.addEventListener('click', () => this.loadFolder(this.currentCid))
+    wrap.appendChild(retryBtn)
+    this.listEl.appendChild(wrap)
   }
 
   private renderBreadcrumbs() {
