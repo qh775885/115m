@@ -15,6 +15,7 @@ import {
 } from '../platform/115/file-actions'
 import { executeInMainWorld } from './helpers'
 import { query115Tabs } from '../platform/115/main-world'
+import { fetchWithTimeout } from '../lib/promise'
 
 /** 播放列表缓存 TTL：同一文件夹在短时间内重复进入播放器/刷新时复用，避免每次全量拉取 */
 const PLAYLIST_CACHE_TTL_MS = 10_000
@@ -67,13 +68,13 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
     }
 
     // 备用 fallback: 直接在 background fetch
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       credentials: 'include',
       headers: {
         'Accept': 'application/json, text/javascript, */*; q=0.01',
         'X-Requested-With': 'XMLHttpRequest',
       },
-    })
+    }, 15000)
 
     const text = await res.text()
     const result = parseJsonOrNull(text)

@@ -105,6 +105,7 @@ export class PlayerOverlayController {
   private endPanelSubTextEl: HTMLDivElement | null = null
   private endPanelNextBtnEl: HTMLButtonElement | null = null
   private visibleTimer: number | null = null
+  private lastVisibleShowAt = 0
   private overlayVisible = false
   private isPointerInsideOverlay = false
   private isPointerOnProgress = false
@@ -174,6 +175,7 @@ export class PlayerOverlayController {
       window.clearTimeout(this.visibleTimer)
       this.visibleTimer = null
     }
+    this.lastVisibleShowAt = 0
     this.root.removeEventListener('mousemove', this.handleMouseMove)
     this.root.removeEventListener('mouseenter', this.handleMouseMove)
     this.root.removeEventListener('mouseleave', this.handleMouseLeave)
@@ -742,6 +744,13 @@ export class PlayerOverlayController {
   // ── Event handlers ──
 
   private showTemporarily() {
+    // mousemove 高频触发：已可见且定时器刚刷新过（50ms 内）则跳过重复的 setVisible 写入，
+    // 减少无谓的样式/DOM 操作
+    const now = Date.now()
+    if (this.lastVisibleShowAt && now - this.lastVisibleShowAt < 50) {
+      return
+    }
+    this.lastVisibleShowAt = now
     this.setVisible(true)
     if (this.visibleTimer) {
       window.clearTimeout(this.visibleTimer)

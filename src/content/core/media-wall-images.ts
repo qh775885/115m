@@ -181,6 +181,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let wheelGestureTriggered = false
   let wheelGestureTimer = 0
   let thumbButtons: HTMLButtonElement[] = []
+  let preloadVersion = 0
 
   const DRAG_THRESHOLD = 6
   const EDGE_RESISTANCE = 0.5
@@ -296,9 +297,17 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   const preloadNeighbors = () => {
-    ;[-2, -1, 1, 2].forEach((offset) => {
+    // 快速翻页时递增版本号，丢弃尚未加载的过期预载请求，避免原图网络/内存风暴
+    const version = ++preloadVersion
+    const offsets = [1, -1, 2, -2]
+    offsets.forEach((offset, index) => {
       const item = items[currentIndex + offset]
-      if (item) preloadImage(item.originalUrl)
+      if (!item) return
+      // 最近邻优先加载，远邻延后错峰，减少瞬时并发
+      window.setTimeout(() => {
+        if (version !== preloadVersion) return
+        preloadImage(item.originalUrl)
+      }, index * 120)
     })
   }
 
@@ -627,11 +636,16 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     mediaFrame.classList.remove('is-dragging')
     if (!isDragging) return
     isDragging = false
+    // 先计算一次惯性落点，再交给 snapBackToBounds 的 settle 动画独占收敛，
+    // 避免 drag RAF 与 settle RAF 双循环同时写 transform 造成抖动
     translateX = targetTranslateX + velocityX * INERTIA_FACTOR
     translateY = targetTranslateY + velocityY * INERTIA_FACTOR
     targetTranslateX = translateX
     targetTranslateY = translateY
-    scheduleDragFrame()
+    if (dragAnimationFrame) {
+      window.cancelAnimationFrame(dragAnimationFrame)
+      dragAnimationFrame = 0
+    }
     snapBackToBounds()
     event.preventDefault()
     event.stopPropagation()

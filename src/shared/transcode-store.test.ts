@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   getTranscodeStatusByFileId,
   getTranscodeStatusByPickCode,
+  MAX_STORE_RECORDS,
   saveTranscodeStatus,
   subscribeTranscodeStatus,
 } from './transcode-store'
@@ -137,6 +138,31 @@ describe('transcode-store (chrome.storage.session)', () => {
     unsub()
     await saveTranscodeStatus('P1', { ok: true, state: 'queued' })
     expect(cb).not.toHaveBeenCalled()
+  })
+
+  it('store 超过上限后淘汰最久未更新的记录', async () => {
+    const now = Date.now()
+    // 预置 MAX_STORE_RECORDS + 5 条记录，时间戳递增（越早写入越旧）
+    const prefill: Record<string, unknown> = {}
+    for (let i = 0; i < MAX_STORE_RECORDS + 5; i += 1) {
+      prefill[`P${i}`] = {
+        pickCode: `P${i}`,
+        status: { ok: true, state: 'queued' },
+        updatedAt: now - (MAX_STORE_RECORDS + 5 - i) * 1000,
+      }
+    }
+    mock.data.set('m115_transcode_status_store', prefill)
+
+    await saveTranscodeStatus('NEW', { ok: true, state: 'queued' }, undefined, true)
+
+    const stored = mock.data.get('m115_transcode_status_store') as Record<string, unknown>
+    const keys = Object.keys(stored)
+    expect(keys.length).toBe(MAX_STORE_RECORDS)
+    // 最新的 NEW 一定保留
+    expect(stored['NEW']).toBeDefined()
+    // 最旧的 5 条（P0-P4，updatedAt 最小）被淘汰
+    expect(stored['P0']).toBeUndefined()
+    expect(stored['P4']).toBeUndefined()
   })
 })
 

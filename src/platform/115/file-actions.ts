@@ -57,11 +57,15 @@ export async function deleteFileIn115Page(tabId: number, payload: { fileId: stri
           pid: data.parentId,
           'fid[0]': data.fileId,
         })
+        const signal = typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function'
+          ? (AbortSignal as any).timeout(15_000)
+          : undefined
         const res = await fetch(`${location.protocol}//webapi.115.com/rb/delete`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body.toString(),
+          signal,
         })
         const text = await res.text()
         const parsed = text ? JSON.parse(text) : null

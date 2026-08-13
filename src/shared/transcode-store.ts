@@ -8,6 +8,8 @@ import type { RuntimeTranscodeResponse } from './messages'
 const STORAGE_KEY = 'm115_transcode_status_store'
 const EVENT_NAME = 'm115-transcode-status-updated'
 const SELF_WRITE_WINDOW_MS = 5000
+/** store 最大记录条数（pickCode + fid: 双索引各算一条）。超出后淘汰最久未更新的记录，防止长会话单调增长 */
+export const MAX_STORE_RECORDS = 300
 
 // 本上下文最近一次写入的 store 快照与其写入时刻。
 // 用于在 chrome.storage.onChanged 中识别「由本上下文自身写入」触发的变更，避免自我触发循环。
@@ -58,6 +60,38 @@ export async function getTranscodeStatusStore(): Promise<TranscodeStoreData> {
   }
 }
 
+function trimStoreToLimit(store: TranscodeStoreData): TranscodeStoreData {
+  const entries = Object.entries(store)
+  if (entries.length <= MAX_STORE_RECORDS) {
+    return store
+  }
+  // 按 updatedAt 升序排列，淘汰最旧的记录；同文件的双索引（pickCode/fid）视为同一文件，一起淘汰
+  const sorted = entries
+    .map(([key, record]) => ({ key, record }))
+    .sort((a, b) => a.record.updatedAt - b.record.updatedAt)
+  const toRemove = new Set<string>()
+  let overflow = entries.length - MAX_STORE_RECORDS
+  for (const { key, record } of sorted) {
+    if (overflow <= 0) break
+    toRemove.add(key)
+    overflow -= 1
+    // 同文件另一条索引一并淘汰
+    const companion = record.fileId
+      ? (key === record.pickCode ? `fid:${record.fileId}` : record.pickCode)
+      : null
+    if (companion && store[companion] && store[companion].updatedAt === record.updatedAt) {
+      toRemove.add(companion)
+    }
+  }
+  const next: TranscodeStoreData = {}
+  for (const [key, record] of entries) {
+    if (!toRemove.has(key)) {
+      next[key] = record
+    }
+  }
+  return next
+}
+
 export async function saveTranscodeStatus(
   pickCode: string,
   status: RuntimeTranscodeResponse,
@@ -78,16 +112,17 @@ export async function saveTranscodeStatus(
     if (fileId) {
       store[`fid:${fileId}`] = record
     }
+    const trimmed = trimStoreToLimit(store)
 
     const area = getSessionArea()
     if (area) {
-      lastLocalWriteStore = store
+      lastLocalWriteStore = trimmed
       lastLocalWriteAt = Date.now()
-      await area.set({ [STORAGE_KEY]: store })
+      await area.set({ [STORAGE_KEY]: trimmed })
     }
     else {
       const storage = getWindowStorage()
-      storage?.setItem(STORAGE_KEY, JSON.stringify(store))
+      storage?.setItem(STORAGE_KEY, JSON.stringify(trimmed))
     }
 
     if (typeof window !== 'undefined' && !skipBroadcast) {

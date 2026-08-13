@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../../lib/promise'
+
 export interface SubtitleItem {
   sid: string
   title: string
@@ -81,10 +83,10 @@ export async function fetchSubtitleList(sendMessage: <T = unknown>(message: unkn
 }
 
 export async function fetchSubtitleText(url: string) {
-  const response = await fetch(url, { credentials: 'include' })
+  const response = await fetchWithTimeout(url, { credentials: 'include' }, 15000)
   if (!response.ok) {
     // 尝试直接获取（处理部分 115 地址可能存在的 CORS 或鉴权差异）
-    const retryRes = await fetch(url).catch(() => null)
+    const retryRes = await fetchWithTimeout(url, undefined, 15000).catch(() => null)
     if (retryRes && retryRes.ok) return await retryRes.text()
     throw new Error(`字幕下载失败：${response.status}`)
   }

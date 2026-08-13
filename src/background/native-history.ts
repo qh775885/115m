@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../lib/promise'
+
 export interface NativePlayHistoryRecord {
   pickCode: string
   currentTime: number
@@ -47,9 +49,9 @@ function parseNativeRecord(data: NativeHistoryApiData | undefined, fallbackPickC
 export async function getNativeHistory(pickCode: string, shareId?: string): Promise<NativePlayHistoryRecord | null> {
   if (!pickCode) return null
 
-  const response = await fetch(buildHistoryUrl(pickCode, shareId), {
+  const response = await fetchWithTimeout(buildHistoryUrl(pickCode, shareId), {
     credentials: 'include',
-  })
+  }, 15000)
   if (!response.ok) return null
 
   const json = await response.json() as NativeHistoryApiResponse
@@ -114,14 +116,14 @@ export async function setNativeHistory(params: {
     share_id: normalizeShareId(params.shareId),
   })
 
-  const response = await fetch(NATIVE_HISTORY_API_URL, {
+  const response = await fetchWithTimeout(NATIVE_HISTORY_API_URL, {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     },
     body,
-  })
+  }, 15000)
   if (!response.ok) return false
 
   const json = await response.json() as NativeHistoryApiResponse

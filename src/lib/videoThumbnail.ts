@@ -4,6 +4,7 @@ import { M3U8ClipperNew } from './clipper/m3u8Clipper'
 import { getImageResize } from './image'
 import { BoundedCache, ByteBudgetCache } from './cache'
 import { CACHE_VERSION } from './cache-schema'
+import { fetchWithTimeout } from './promise'
 
 /**
  * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
@@ -214,7 +215,7 @@ async function coverToStorableDataUrl(cover: VideoThumbnail): Promise<VideoThumb
     return cover
   }
 
-  const response = await fetch(cover.imgUrl)
+  const response = await fetchWithTimeout(cover.imgUrl, undefined, 15000)
   const blob = await response.blob()
   const imgUrl = await blobToDataUrl(blob)
   return { ...cover, imgUrl }
