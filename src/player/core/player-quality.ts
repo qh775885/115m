@@ -4,7 +4,7 @@ import type { QualityOption } from './types'
 import { bindClickSelectorBehavior } from './player-selector'
 
 function getQualityIcon() {
-  return Icons.Quality
+  return Icons.Quality()
 }
 
 export function buildQualityControlItem(params: {
@@ -76,3 +76,4 @@ export function updateArtplayerControl(
     controlsApi.add(nextItem)
   }
 }
+

@@ -69,7 +69,7 @@ export function applyRotationToVideo(params: {
 }
 
 function buildRotateSvg() {
-  return Icons.RotateCw
+  return Icons.RotateCw()
 }
 
 export function buildRotateControlItem(params: {
@@ -107,3 +107,4 @@ export function buildRotateControlItem(params: {
     },
   }
 }
+

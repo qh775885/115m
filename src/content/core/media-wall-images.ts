@@ -87,7 +87,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const closeBtn = doc.createElement('button')
   closeBtn.type = 'button'
   closeBtn.className = 'm115-viewer-tool-btn is-icon'
-  closeBtn.innerHTML = Icons.Close
+  closeBtn.innerHTML = Icons.Close()
   closeBtn.title = '关闭'
   closeBtn.setAttribute('aria-label', '关闭')
 
@@ -108,12 +108,12 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const prevBtn = doc.createElement('button')
   prevBtn.type = 'button'
   prevBtn.className = 'm115-viewer-nav m115-viewer-prev'
-  prevBtn.innerHTML = Icons.ChevronLeft
+  prevBtn.innerHTML = Icons.ChevronLeft()
 
   const nextBtn = doc.createElement('button')
   nextBtn.type = 'button'
   nextBtn.className = 'm115-viewer-nav m115-viewer-next'
-  nextBtn.innerHTML = Icons.ChevronRight
+  nextBtn.innerHTML = Icons.ChevronRight()
 
   const mediaFrame = doc.createElement('div')
   mediaFrame.className = 'm115-viewer-frame'
@@ -121,7 +121,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const deleteBtn = doc.createElement('button')
   deleteBtn.type = 'button'
   deleteBtn.className = 'm115-viewer-frame-delete'
-  deleteBtn.innerHTML = Icons.Trash
+  deleteBtn.innerHTML = Icons.Trash()
   deleteBtn.title = '删除当前图片'
   deleteBtn.setAttribute('aria-label', '删除当前图片')
 
@@ -140,7 +140,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const thumbsToggle = doc.createElement('button')
   thumbsToggle.type = 'button'
   thumbsToggle.className = 'm115-viewer-thumbs-toggle'
-  thumbsToggle.innerHTML = Icons.ChevronDown
+  thumbsToggle.innerHTML = Icons.ChevronDown()
   thumbsToggle.title = '收起缩略图'
   thumbsToggle.setAttribute('aria-label', '收起缩略图')
 
@@ -191,7 +191,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const WHEEL_GESTURE_RESET_DELAY = 120
 
   const updateThumbsToggle = () => {
-    thumbsToggle.innerHTML = thumbsCollapsed ? Icons.Minus : Icons.ChevronDown
+    thumbsToggle.innerHTML = thumbsCollapsed ? Icons.Minus() : Icons.ChevronDown()
     thumbsToggle.title = thumbsCollapsed ? '展开缩略图' : '收起缩略图'
     thumbsToggle.setAttribute('aria-label', thumbsToggle.title)
     thumbsWrap.classList.toggle('is-collapsed', thumbsCollapsed)
@@ -762,7 +762,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
       selection.type = 'button'
       selection.className = 'm115-folder-selection'
       selection.setAttribute('aria-label', '选择图片')
-      selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check}</span>`
+      selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check()}</span>`
       selection.addEventListener('mousedown', (event) => {
         if (event.button !== 0) return
         event.preventDefault()
@@ -824,3 +824,4 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
     renderImagesSection,
   }
 }
+

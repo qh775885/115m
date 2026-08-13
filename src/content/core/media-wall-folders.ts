@@ -162,7 +162,7 @@ function syncStarButtonState(starBtn: HTMLButtonElement, active: boolean) {
   starBtn.title = active ? '取消星标' : '星标'
   starBtn.setAttribute('aria-label', active ? '取消星标' : '星标')
   const starIcon = starBtn.querySelector<HTMLElement>('.m115-folder-icon')
-  if (starIcon) starIcon.innerHTML = active ? Icons.StarFilled : Icons.Star
+  if (starIcon) starIcon.innerHTML = active ? Icons.StarFilled() : Icons.Star()
 }
 
 function scheduleFolderStarSync(
@@ -278,7 +278,7 @@ export function renderFoldersSection(
     selection.type = 'button'
     selection.className = 'm115-folder-selection'
     selection.setAttribute('aria-label', '选择文件夹')
-    selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check}</span>`
+    selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check()}</span>`
     selection.addEventListener('mousedown', (event) => {
       if (event.button !== 0) return
       event.preventDefault()
@@ -307,7 +307,7 @@ export function renderFoldersSection(
     const starIcon = doc.createElement('span')
     starIcon.className = 'm115-folder-icon'
     starIcon.setAttribute('aria-hidden', 'true')
-    starIcon.innerHTML = folder.isStarred ? Icons.StarFilled : Icons.Star
+    starIcon.innerHTML = folder.isStarred ? Icons.StarFilled() : Icons.Star()
     starBtn.appendChild(starIcon)
     starBtn.addEventListener('click', (event) => {
       event.preventDefault()
@@ -373,3 +373,4 @@ export function renderFoldersSection(
   section.appendChild(grid)
   return section
 }
+

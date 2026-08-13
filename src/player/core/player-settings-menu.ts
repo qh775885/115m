@@ -6,15 +6,15 @@ import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player
 export const SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
 
 function getSettingsIcon() {
-  return Icons.Settings
+  return Icons.Settings()
 }
 
 function getFullscreenIcon() {
-  return Icons.Fullscreen
+  return Icons.Fullscreen()
 }
 
 function getSpeedIcon() {
-  return Icons.Speed
+  return Icons.Speed()
 }
 
 export interface SettingsMenuControllerDeps {
@@ -61,7 +61,7 @@ export class SettingsMenuController {
           <span class="m115-settings-item-icon">${getSpeedIcon()}</span>
           <span class="m115-settings-item-label">播放速度</span>
           <span class="m115-settings-item-value">${this.deps.currentPlaybackRate === 1 ? '正常' : this.deps.currentPlaybackRate + 'x'}</span>
-          <span class="m115-settings-item-arrow">${Icons.ChevronRight}</span>
+          <span class="m115-settings-item-arrow">${Icons.ChevronRight()}</span>
         </button>
         <div class="m115-settings-divider"></div>
         <button type="button" class="m115-settings-item" data-action="fullscreen">
@@ -77,14 +77,14 @@ export class SettingsMenuController {
       <div class="m115-settings-panel" data-menu="speed" style="display: ${this.activeSubMenu === 'speed' ? 'flex' : 'none'}">
         <div class="m115-settings-header">
           <button type="button" class="m115-settings-back" data-action="back">
-            ${Icons.ChevronLeft}
+            ${Icons.ChevronLeft()}
           </button>
           <span class="m115-settings-title">播放速度</span>
         </div>
         ${speedOptions.map(rate => `
           <button type="button" class="m115-settings-option ${rate === this.deps!.currentPlaybackRate ? 'is-active' : ''}" data-action="set-speed" data-value="${rate}">
             <span class="m115-settings-check">
-              ${rate === this.deps!.currentPlaybackRate ? Icons.Check : ''}
+              ${rate === this.deps!.currentPlaybackRate ? Icons.Check() : ''}
             </span>
             ${rate === 1 ? '正常' : rate + 'x'}
           </button>
@@ -220,3 +220,4 @@ export class SettingsMenuController {
     this.deps = null
   }
 }
+

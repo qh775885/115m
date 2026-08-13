@@ -7,9 +7,9 @@ export const CUSTOM_VOLUME_CONTROL_NAME = 'm115-custom-volume-control'
 
 function getVolumeIconSvg(volume: number, muted: boolean) {
   if (muted || volume === 0) {
-    return Icons.VolumeX
+    return Icons.VolumeX()
   }
-  return Icons.Volume2
+  return Icons.Volume2()
 }
 
 export function buildCustomVolumeControl() {
@@ -163,3 +163,4 @@ export function buildCustomVolumeControl() {
     },
   }
 }
+

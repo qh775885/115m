@@ -31,9 +31,9 @@ const MAX_RECENT = 8
 
 
 // ─── SVG Icons ───
-const ICON_FOLDER = Icons.FolderTree
-const ICON_FOLDER_PLUS = Icons.FolderPlus
-const ICON_CLOCK = Icons.Clock
+const ICON_FOLDER = Icons.FolderTree()
+const ICON_FOLDER_PLUS = Icons.FolderPlus()
+const ICON_CLOCK = Icons.Clock()
 
 // ─── Recent Moves Storage ───
 function getRecentMoves(): RecentMoveRecord[] {
@@ -557,4 +557,5 @@ export class MoveDialog {
     return escapeHtml(str)
   }
 }
+
 

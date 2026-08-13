@@ -6,12 +6,12 @@ import { bindClickSelectorBehavior } from './player-selector'
 function getPlaybackModeIcon(mode: PlaybackMode) {
   switch (mode) {
     case 'repeat':
-      return Icons.Repeat
+      return Icons.Repeat()
     case 'stop':
-      return Icons.Stop
+      return Icons.Stop()
     case 'next':
     default:
-      return Icons.SkipForward
+      return Icons.SkipForward()
   }
 }
 
@@ -61,3 +61,4 @@ export function buildPlaybackModeControlItem(params: {
     },
   }
 }
+

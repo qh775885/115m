@@ -48,8 +48,8 @@ export function buildNavControlItem(params: {
   onClick: () => void
 }) {
   const svgIcon = params.direction === 'next'
-    ? Icons.SkipForward
-    : Icons.SkipBack
+    ? Icons.SkipForward()
+    : Icons.SkipBack()
 
   return {
     name: params.controlName,
@@ -82,3 +82,4 @@ export function buildNavControlItem(params: {
     },
   }
 }
+

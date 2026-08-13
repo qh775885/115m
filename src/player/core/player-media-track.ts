@@ -8,7 +8,7 @@ import type { AudioManager } from './audio-manager'
 export const MEDIA_TRACK_CONTROL_NAME = 'm115-media-track-control'
 
 function getMediaTrackIcon() {
-  return Icons.MediaTrack
+  return Icons.MediaTrack()
 }
 
 export interface MediaTrackControllerDeps {
@@ -150,3 +150,4 @@ export class MediaTrackController {
     this.deps = null
   }
 }
+

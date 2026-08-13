@@ -18,7 +18,7 @@ export function createHeaderActionButton(title: string, icon: string) {
 }
 
 export function getFavoriteButtonIcon(marked: boolean) {
-  return marked ? Icons.StarFilled : Icons.Star
+  return marked ? Icons.StarFilled() : Icons.Star()
 }
 
 export function createOverlayHeaderScaffold() {
@@ -61,7 +61,7 @@ export function createOverlayHeaderScaffold() {
     'cursor:pointer',
     'flex-shrink:0',
   ].join(';')
-  back.innerHTML = Icons.Back
+  back.innerHTML = Icons.Back()
 
   const info = document.createElement('div')
   info.className = 'm115-header-info'
@@ -168,3 +168,4 @@ export function createOverlayHeaderScaffold() {
     pillGroup,
   }
 }
+
