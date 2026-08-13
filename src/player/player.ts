@@ -33,6 +33,7 @@ import { HlsPlayerController } from './core/player-hls'
 import { PlayerQualityController } from './core/player-quality-controller'
 import { PlayerPlaylistController } from './core/player-playlist'
 import { PlayerActionsController } from './core/player-actions'
+import { PlayerSwitchController } from './core/player-video-switch'
 import type { VideoPlaybackQualityLike } from './core/types'
 import { HoverPreviewController } from './core/hover-preview'
 import { bindPlayerEvents } from './core/events'
@@ -40,7 +41,6 @@ import { PlayerOverlayController, readOverlayMetaFromQuery } from './core/overla
 import { resolvePlaybackBundle } from './core/player-services'
 import { MediaTrackController } from './core/player-media-track'
 import { SettingsMenuController } from './core/player-settings-menu'
-import { buildOverlayMetaPatch, buildPlayerHistoryUrl, findPlaylistItemByPickCode } from './core/player-switch'
 import { applyFallbackToHlsState } from './core/playback-state'
 import { ensureServiceWorkerReady, getRuntimeApi, sendRuntimeMessageSafe } from './core/runtime'
 import {
@@ -96,13 +96,6 @@ function bindInterruptedPlayRejectionGuard() {
   })
 }
 
-function safePlay(art: Artplayer | null) {
-  if (!art) return
-  void art.play().catch(() => {
-    // Ignore native play promise rejections during source switches and transient media reloads.
-  })
-}
-
 function playerDebug(...args: unknown[]) {
   if (localStorage.getItem('115m-player-debug') === '1') {
     console.debug(...args)
@@ -129,7 +122,7 @@ class PlayerManager {
   private overlay: PlayerOverlayController | null = null
   private playlist = new PlayerPlaylistController()
   private actions = new PlayerActionsController()
-  private switchVideoRequestId = 0
+  private switchController = new PlayerSwitchController()
   private traceId = ''
   private clickTs = 0
   private initStartTs = 0
@@ -154,9 +147,6 @@ class PlayerManager {
   private isSwitchingVideo = false
   /** switchUrl/switchQuality 执行期间置位，用于 hls fatal 错误时打破 artplayer 内部 Promise 挂起 */
   private switchUrlInFlight = false
-  private lastVideoSwitchStartedAt = 0
-  private pendingVideoSwitch: { pickCode: string, keepPlaylistOpen: boolean, autoPlay: boolean } | null = null
-  private switchCooldownTimer: number | null = null
   private readonly handleRuntimeMessage = (message: any) => {
     if (message?.type === 'MOVE_REFRESHED') {
       void this.actions.refreshBreadcrumbs().catch(error => {
@@ -371,7 +361,7 @@ class PlayerManager {
       getIsSwitchingVideo: () => this.isSwitchingVideo,
       getCurrentPlaybackMode: () => this.currentPlaybackMode,
       onRenderPlaybackNavControls: () => this.renderPlaybackNavControls(),
-      navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
+      navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.switchController.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
       updatePlaybackNav: state => this.overlay?.updatePlaybackNav(state),
       updateCurrentPlaylistProgress: (pickCode, progressSec, duration) => this.overlay?.updateCurrentPlaylistProgress(pickCode, progressSec, duration),
       updateBreadcrumbs: path => this.overlay?.updateBreadcrumbs(path),
@@ -386,12 +376,53 @@ class PlayerManager {
       getCurrentPickCode: () => this.currentPickCode,
       getPlaylist: () => this.playlist,
       getKeepPlaylistOpenOnInit: () => this.keepPlaylistOpenOnInit,
-      navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
+      navigateToVideo: (pickCode, keepPlaylistOpen, autoPlay) => this.switchController.navigateToVideo(pickCode, keepPlaylistOpen, autoPlay),
       updatePlaylist: items => this.overlay?.updatePlaylist(items),
       updateBreadcrumbs: path => this.overlay?.updateBreadcrumbs(path),
       updateFavoriteStatus: isMarked => this.overlay?.updateFavoriteStatus(isMarked),
       isPlaylistExpanded: () => this.overlay?.isPlaylistExpanded() === true,
       onShowToast: msg => this.overlay?.showToast(msg),
+    })
+
+    this.switchController.attach({
+      getArtplayer: () => this.artplayer,
+      getCurrentPickCode: () => this.currentPickCode,
+      setCurrentPickCode: pickCode => { this.currentPickCode = pickCode },
+      getIsSwitchingVideo: () => this.isSwitchingVideo,
+      setIsSwitchingVideo: value => { this.isSwitchingVideo = value },
+      setSwitchUrlInFlight: value => { this.switchUrlInFlight = value },
+      clearTransientPlaybackWatchers: () => this.clearTransientPlaybackWatchers(),
+      disposeHls: () => this.hlsController.dispose(),
+      resetPlaybackRate: () => this.applyPlaybackRate(1),
+      setupProgressHoverPreview: (url, type) => this.setupProgressHoverPreview(url, type),
+      renderQualityPanel: () => this.quality.renderQualityPanel(),
+      renderPlaybackNavControls: () => this.renderPlaybackNavControls(),
+      applyResolvedPlayback: (playback, pickCode, nativeUltraSupported) => this.quality.applyResolvedPlayback(playback, pickCode, nativeUltraSupported),
+      getCurrentPlaybackType: () => this.quality.currentPlaybackTypeValue,
+      getNativeUltraSupported: () => this.nativeUltraSupported,
+      playlist: {
+        clearPlaybackEndState: () => this.playlist.clearPlaybackEndState(),
+        resetProgressSyncBase: () => this.playlist.resetProgressSyncBase(),
+        items: this.playlist.items,
+        syncOverlayPlaybackNav: () => this.playlist.syncOverlayPlaybackNav(),
+      },
+      actions: {
+        fetchBreadcrumbs: pickCode => this.actions.fetchBreadcrumbs(pickCode),
+        fetchFileFavoriteStatus: fileId => this.actions.fetchFileFavoriteStatus(fileId),
+      },
+      onVideoSwitched: pickCode => {
+        this.rotationManager?.switchVideo(pickCode)
+        this.subtitleController?.resetPreferenceFlag()
+        this.audioManager?.resetPreferenceFlag()
+      },
+      updateOverlayMeta: patch => this.overlay?.updateMeta(patch),
+      updateHistoryUrl: url => window.history.replaceState(null, '', url),
+      updatePlaylist: items => this.overlay?.updatePlaylist(items),
+      onShowToast: msg => this.overlay?.showToast(msg),
+      resolvePlaybackForPickCode: pickCode => this.resolvePlaybackForPickCode(pickCode),
+      withSwitchTimeout: <T>(promise: Promise<T>, timeoutMs?: number, message?: string) => this.withSwitchTimeout(promise, timeoutMs, message),
+      resetPerfMarks: () => { this.perfMarks = { init: performance.now() } },
+      resetFirstPlaying: () => { this.firstPlayingReported = false },
     })
 
     this.hlsController.attach({
@@ -766,7 +797,7 @@ class PlayerManager {
       },
       onPlaylistPlay: (pickCode, keepPlaylistOpen) => {
         if (pickCode && pickCode !== this.currentPickCode) {
-          this.navigateToVideo(pickCode, keepPlaylistOpen)
+          this.switchController.navigateToVideo(pickCode, keepPlaylistOpen)
         }
       },
       onPlaylistMove: async item => await this.actions.movePlaylistVideo(item),
@@ -921,48 +952,6 @@ class PlayerManager {
     this.audioManager?.clearSyncTimers()
   }
 
-  private showError(message: string) {
-    renderPlayerError(message)
-  }
-
-    private navigateToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
-    if (!pickCode || pickCode === this.currentPickCode) return
-
-    this.playlist.clearPlaybackEndState()
-    this.pendingVideoSwitch = { pickCode, keepPlaylistOpen, autoPlay }
-    this.schedulePendingVideoSwitch()
-  }
-
-  private schedulePendingVideoSwitch() {
-    if (this.isSwitchingVideo || !this.pendingVideoSwitch) return
-
-    const elapsed = Date.now() - this.lastVideoSwitchStartedAt
-    const delay = Math.max(0, PlayerManager.VIDEO_SWITCH_COOLDOWN_MS - elapsed)
-
-    if (this.switchCooldownTimer != null) {
-      window.clearTimeout(this.switchCooldownTimer)
-      this.switchCooldownTimer = null
-    }
-
-    if (delay > 0) {
-      this.switchCooldownTimer = window.setTimeout(() => {
-        this.switchCooldownTimer = null
-        this.schedulePendingVideoSwitch()
-      }, delay)
-      return
-    }
-
-    const next = this.pendingVideoSwitch
-    this.pendingVideoSwitch = null
-    void this.switchToVideo(next.pickCode, next.keepPlaylistOpen, next.autoPlay)
-  }
-
-  private setVideoSwitching(switching: boolean) {
-    if (this.isSwitchingVideo === switching) return
-    this.isSwitchingVideo = switching
-    this.playlist.syncOverlayPlaybackNav()
-  }
-
   /**
    * 给 artplayer.switchUrl/switchQuality 增加超时兜底。
    * artplayer 内部 switchUrl 依赖 video:canplay resolve / video:error reject，
@@ -995,101 +984,10 @@ class PlayerManager {
     video.dispatchEvent(new ErrorEvent('error', { message: reason }))
   }
 
-  private async switchToVideo(pickCode: string, keepPlaylistOpen = false, autoPlay = false) {
-    if (!this.artplayer || !pickCode || pickCode === this.currentPickCode) return
-
-    const requestId = ++this.switchVideoRequestId
-    const targetItem = findPlaylistItemByPickCode(this.playlist.items, pickCode)
-
-    this.playlist.clearPlaybackEndState()
-    this.clearTransientPlaybackWatchers()
-    this.lastVideoSwitchStartedAt = Date.now()
-    this.setVideoSwitching(true)
-
-    try {
-      const playback = await this.resolvePlaybackForPickCode(pickCode)
-      if (requestId !== this.switchVideoRequestId || !this.artplayer) return
-
-      this.currentPickCode = pickCode
-      this.rotationManager?.switchVideo(pickCode)
-      this.subtitleController?.resetPreferenceFlag()
-      this.audioManager?.resetPreferenceFlag()
-      this.perfMarks = { init: performance.now() }
-      this.firstPlayingReported = false
-      this.playlist.resetProgressSyncBase()
-      
-      // 切换前强制重置进度为 0，防止复用 video 元素时继承上一集的进度
-      if (this.artplayer.video) {
-        this.artplayer.video.currentTime = 0
-      }
-      this.artplayer.seek = 0
-      
-      this.quality.applyResolvedPlayback(playback, this.currentPickCode, this.nativeUltraSupported)
-      // 切到无损（原生）源时销毁上一集的 hls 实例，m3u8 源由 initHls 自行销毁旧实例
-      if (this.quality.currentPlaybackTypeValue === 'native') {
-        this.disposeHlsInstance()
-      }
-      // 切换视频时重置倍速，避免上一集的倍速残留到下一集
-      this.applyPlaybackRate(1)
-      const metaPatch = buildOverlayMetaPatch(targetItem)
-      if (metaPatch) {
-        this.overlay?.updateMeta(metaPatch)
-      }
-      window.history.replaceState(null, '', buildPlayerHistoryUrl({
-        pathname: window.location.pathname,
-        search: window.location.search,
-        pickCode,
-        targetItem,
-        keepPlaylistOpen,
-      }))
-      this.playlist.syncOverlayPlaybackNav()
-      this.overlay?.updatePlaylist(this.playlist.items)
-      this.switchUrlInFlight = true
-      try {
-        await this.withSwitchTimeout(this.artplayer.switchUrl(playback.initialPlayback.url))
-      }
-      finally {
-        this.switchUrlInFlight = false
-      }
-      if (requestId !== this.switchVideoRequestId || !this.artplayer) return
-      
-      // 切换 URL 后再次重置，防止内部状态污染
-      this.artplayer.seek = 0
-      if (this.artplayer.video) this.artplayer.video.currentTime = 0
-
-      this.setupProgressHoverPreview(playback.initialPlayback.url, playback.initialPlayback.type)
-      this.subtitleController?.resetForNewVideo()
-      this.quality.renderQualityPanel()
-      this.subtitleController?.renderControl()
-      this.renderPlaybackNavControls()
-
-      if (autoPlay) {
-        safePlay(this.artplayer)
-      }
-
-      void loadPlayHistoryWhenReady(
-        pickCode,
-        () => requestId === this.switchVideoRequestId && this.artplayer ? this.artplayer.video as HTMLVideoElement : null,
-        () => requestId === this.switchVideoRequestId && this.currentPickCode === pickCode,
-      )
-
-      void this.actions.fetchBreadcrumbs(pickCode)
-
-      if (targetItem?.fileId) {
-        void this.actions.fetchFileFavoriteStatus(targetItem.fileId)
-      }
-    }
-    catch (error) {
-      if (requestId !== this.switchVideoRequestId) return
-      this.overlay?.showToast(error instanceof Error ? error.message : '切换视频失败')
-    }
-    finally {
-      if (requestId === this.switchVideoRequestId) {
-        this.setVideoSwitching(false)
-        this.schedulePendingVideoSwitch()
-      }
-    }
+  private showError(message: string) {
+    renderPlayerError(message)
   }
+
 
   private async resolvePlaybackForPickCode(pickCode: string) {
     const playback = await resolvePlaybackBundle(sendRuntimeMessageSafe, pickCode, this.nativeUltraSupported)
@@ -1117,10 +1015,7 @@ class PlayerManager {
     this.nativeMonitor = null
     this.audioManager?.destroy()
     this.audioManager = null
-    if (this.switchCooldownTimer != null) {
-      window.clearTimeout(this.switchCooldownTimer)
-      this.switchCooldownTimer = null
-    }
+    this.switchController.destroy()
     const runtime = getRuntimeApi()
     runtime?.onMessage?.removeListener(this.handleRuntimeMessage)
     this.overlay?.destroy()
@@ -1189,6 +1084,7 @@ window.addEventListener('beforeunload', () => {
 })
 
 ;(window as any).playerManager = playerManager
+
 
 
 
