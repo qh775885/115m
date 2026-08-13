@@ -128,4 +128,28 @@ describe('PreviewObserverRegistry', () => {
 
     expect(removeEventListener).toHaveBeenCalled()
   })
+
+  it('clearDocument disposes all items and observers for a document', () => {
+    const { doc, item } = makeDoc()
+    const registry = new PreviewObserverRegistry()
+    const dispose = vi.fn()
+
+    registry.registerItem(item, dispose)
+    expect(TestMutationObserver.instances.length).toBe(1)
+
+    registry.clearDocument(doc)
+
+    expect(dispose).toHaveBeenCalledTimes(1)
+    expect(TestMutationObserver.instances[0]?.disconnected).toBe(true)
+    // 再次注册同文档 item 会新建 observer（原注册表已清空）
+    const second = doc.createElement('div')
+    registry.registerItem(second, vi.fn())
+    expect(TestMutationObserver.instances.length).toBe(2)
+  })
+
+  it('clearDocument is safe for unregistered documents', () => {
+    const { doc } = makeDoc()
+    const registry = new PreviewObserverRegistry()
+    expect(() => registry.clearDocument(doc)).not.toThrow()
+  })
 })

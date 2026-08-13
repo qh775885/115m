@@ -4,7 +4,7 @@ import { openPlayer } from './core/player-open'
 import { injectActionButtons } from './core/action-buttons'
 import { addDownloadIntercept } from './core/download-intercept'
 
-import { renderPreview } from './core/preview'
+import { renderPreview, previewObserverRegistry } from './core/preview'
 import { renderMediaWall } from './core/media-wall'
 import { initSidebar, injectSidebarPrehide } from './core/sidebar'
 import { sendRuntimeMessageSafe } from './core/runtime'
@@ -17,24 +17,25 @@ import { HomeScrollBinder } from './core/home-scroll-binder'
 class HomeController {
   private boundDocs = new Set<Document>()
   private scannedPickCodes = new Set<string>()
-  private observers = new Map<Document, MutationObserver>()
-  private scanFrames = new Map<Document, number>()
-  private unarchiveCleanups = new Map<Document, () => void>()
-  private unarchiveActionCleanups = new Map<Document, () => void>()
+  private observers = new WeakMap<Document, MutationObserver>()
+  private scanFrames = new WeakMap<Document, number>()
+  private unarchiveCleanups = new WeakMap<Document, () => void>()
+  private unarchiveActionCleanups = new WeakMap<Document, () => void>()
   private playBinder = new HomePlayBinder((file, playlist) => openPlayer(file!, playlist))
   private scrollBinder = new HomeScrollBinder()
   private stopWatchFrame: (() => void) | null = null
 
   init() {
     this.bindDocument(document)
-    this.stopWatchFrame = watchWangpanFrame(doc => this.bindDocument(doc))
+    this.stopWatchFrame = watchWangpanFrame(
+      doc => this.bindDocument(doc),
+      doc => this.unbindDocument(doc),
+    )
     globalThis.chrome?.runtime?.onMessage?.addListener(this.handleRuntimeMessage)
   }
 
   destroy() {
     [...this.boundDocs].forEach(doc => this.unbindDocument(doc))
-    this.scanFrames.forEach(frame => window.cancelAnimationFrame(frame))
-    this.scanFrames.clear()
     this.stopWatchFrame?.()
     this.stopWatchFrame = null
     globalThis.chrome?.runtime?.onMessage?.removeListener(this.handleRuntimeMessage)
@@ -97,6 +98,7 @@ class HomeController {
     this.unarchiveActionCleanups.get(doc)?.()
     this.unarchiveActionCleanups.delete(doc)
     this.scrollBinder.unbind(doc)
+    previewObserverRegistry.clearDocument(doc)
   }
 
   private scheduleScanAndRender(doc: Document) {
@@ -124,36 +126,61 @@ class HomeController {
   }
 
   private scanAndRender(doc: Document) {
-    const list = doc.querySelector('.list-contents')
-    if (!list) return
+    try {
+      const list = doc.querySelector('.list-contents')
+      if (!list) return
 
-    renderMediaWall(doc)
-    setupUnarchiveActions(doc)
-
-    const items = list.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
-    items.forEach((node) => {
-      const item = node as HTMLElement
-      if (!this.isWangpanFileItem(item)) return
-
-      const file = extractFileInfo(item)
-      if (!file) return
-
-      // 按 pickCode 去重而非 DOM 节点：即使 115 复用同一 li 展示新文件也能正确扫描
-      if (this.scannedPickCodes.has(file.pickCode)) return
-      if (this.scannedPickCodes.size >= 10000) {
-        this.scannedPickCodes.clear()
+      try {
+        renderMediaWall(doc)
       }
-      this.scannedPickCodes.add(file.pickCode)
+      catch (error) {
+        console.warn('[115m] media wall render failed:', error)
+      }
 
-      addDownloadIntercept(item, file)
-      injectUnarchiveButton(item, file)
+      try {
+        setupUnarchiveActions(doc)
+      }
+      catch (error) {
+        console.warn('[115m] unarchive actions setup failed:', error)
+      }
 
-      if (!file.isVideo) return
+      const items = list.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
+      items.forEach((node) => {
+        try {
+          this.scanItem(node, doc)
+        }
+        catch (error) {
+          console.warn('[115m] scan item failed:', error)
+        }
+      })
+    }
+    catch (error) {
+      console.warn('[115m] scanAndRender failed:', error)
+    }
+  }
 
-      this.playBinder.bindItemPlay(item)
-      injectActionButtons(item, file)
-      renderPreview(item, file)
-    })
+  private scanItem(node: Element, doc: Document) {
+    const item = node as HTMLElement
+    if (!this.isWangpanFileItem(item)) return
+
+    const file = extractFileInfo(item)
+    if (!file) return
+
+    // 按 pickCode 去重而非 DOM 节点：即使 115 复用同一 li 展示新文件也能正确扫描
+    if (this.scannedPickCodes.has(file.pickCode)) return
+    if (this.scannedPickCodes.size >= 10000) {
+      this.scannedPickCodes.clear()
+    }
+    this.scannedPickCodes.add(file.pickCode)
+
+    addDownloadIntercept(item, file)
+    injectUnarchiveButton(item, file)
+
+    if (!file.isVideo) return
+
+    this.playBinder.bindItemPlay(item)
+    injectActionButtons(item, file)
+    renderPreview(item, file)
   }
 }
 

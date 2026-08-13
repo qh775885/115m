@@ -51,4 +51,52 @@ describe('watchWangpanFrame', () => {
 
     expect(TestMutationObserver.instances[0]?.disconnected).toBe(true)
   })
+
+  it('detaches the previous document before binding a new one', () => {
+    const firstDocument = {} as Document
+    const secondDocument = {} as Document
+    let loadListener: (() => void) | undefined
+    const frame = {
+      contentDocument: firstDocument,
+      addEventListener: vi.fn((type: string, listener: () => void) => {
+        if (type === 'load') loadListener = listener
+      }),
+    }
+    vi.stubGlobal('document', {
+      documentElement: {},
+      querySelector: vi.fn(() => frame),
+    })
+    vi.stubGlobal('MutationObserver', TestMutationObserver)
+
+    const onReady = vi.fn()
+    const onDetached = vi.fn()
+    watchWangpanFrame(onReady, onDetached)
+
+    frame.contentDocument = secondDocument
+    loadListener?.()
+
+    expect(onDetached).toHaveBeenCalledWith(firstDocument)
+    expect(onReady).toHaveBeenLastCalledWith(secondDocument)
+  })
+
+  it('detaches the current document on stop', () => {
+    const firstDocument = {} as Document
+    const frame = {
+      contentDocument: firstDocument,
+      addEventListener: vi.fn(),
+    }
+    vi.stubGlobal('document', {
+      documentElement: {},
+      querySelector: vi.fn(() => frame),
+    })
+    vi.stubGlobal('MutationObserver', TestMutationObserver)
+
+    const onReady = vi.fn()
+    const onDetached = vi.fn()
+    const stop = watchWangpanFrame(onReady, onDetached)
+
+    stop()
+
+    expect(onDetached).toHaveBeenCalledWith(firstDocument)
+  })
 })

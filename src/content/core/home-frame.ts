@@ -1,7 +1,9 @@
 export function watchWangpanFrame(
   onDocumentReady: (doc: Document) => void,
+  onDocumentDetached?: (doc: Document) => void,
 ) {
   const boundFrames = new WeakSet<HTMLIFrameElement>()
+  let currentDoc: Document | null = null
 
   const bindFrame = () => {
     const frame = document.querySelector('iframe[name="wangpan"]') as HTMLIFrameElement | null
@@ -11,6 +13,12 @@ export function watchWangpanFrame(
     }
     const doc = frame?.contentDocument
     if (!doc) return
+    if (doc === currentDoc) return
+    // wangpan 页面内部导航会替换 contentDocument，旧文档先解除绑定避免注册表累积
+    if (currentDoc) {
+      onDocumentDetached?.(currentDoc)
+    }
+    currentDoc = doc
     onDocumentReady(doc)
   }
 
@@ -21,5 +29,9 @@ export function watchWangpanFrame(
 
   return () => {
     observer.disconnect()
+    if (currentDoc) {
+      onDocumentDetached?.(currentDoc)
+      currentDoc = null
+    }
   }
 }

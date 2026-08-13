@@ -333,9 +333,22 @@ export class PreviewObserverRegistry {
       }
     }
   }
+
+  /** 文档被整体替换/销毁时，强制清理该文档下的全部预览资源与观察器 */
+  clearDocument(doc: Document) {
+    const items = this.registeredItemsByDoc.get(doc)
+    if (items) {
+      items.forEach(onDispose => onDispose())
+      items.clear()
+      this.registeredItemsByDoc.delete(doc)
+    }
+    this.removalObservers.get(doc)?.disconnect()
+    this.removalObservers.delete(doc)
+  }
 }
 
 const previewObserverRegistry = new PreviewObserverRegistry()
+export { previewObserverRegistry }
 
 /**
  * 渲染预览图（带可见性检测和滚动优化）

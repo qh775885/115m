@@ -16,6 +16,10 @@ import {
 import { executeInMainWorld } from './helpers'
 import { query115Tabs } from '../platform/115/main-world'
 
+/** 播放列表缓存 TTL：同一文件夹在短时间内重复进入播放器/刷新时复用，避免每次全量拉取 */
+const PLAYLIST_CACHE_TTL_MS = 10_000
+const playlistCache = new Map<string, { ts: number, list: unknown[], path: unknown[] }>()
+
 function parseJsonOrNull(text: string): unknown | null {
   try {
     return JSON.parse(text)
@@ -107,15 +111,22 @@ export async function handleFetchPlaylist(message: MsgFetchPlaylist) {
     }
 
     if (!cid) return { error: 'no cid provided', list: [], path: [] }
+
+    const cacheKey = `playlist:${cid}`
+    const cached = playlistCache.get(cacheKey)
+    if (cached && Date.now() - cached.ts <= PLAYLIST_CACHE_TTL_MS) {
+      return { list: cached.list, path: cached.path }
+    }
+
     const result = await fetchPlaylistIn115Page(tabId, cid) as any
     if (!result?.state) {
       return { error: result?.error || 'API error', list: [], path: [] }
     }
 
-    return {
-      list: result.data ?? [],
-      path: result.path ?? [],
-    }
+    const list = result.data ?? []
+    const path = result.path ?? []
+    playlistCache.set(cacheKey, { ts: Date.now(), list, path })
+    return { list, path }
   }
   catch (e) {
     return { error: String(e), list: [], path: [] }
