@@ -1,5 +1,6 @@
 import type { MediaWallImageItem, LightboxController } from './media-wall-types'
 import { isImageExtension, readAttr } from '../../shared/utils'
+import { NeighborPreloader } from './media-wall-preload'
 import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './media-wall-folders'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
@@ -181,7 +182,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let wheelGestureTriggered = false
   let wheelGestureTimer = 0
   let thumbButtons: HTMLButtonElement[] = []
-  let preloadVersion = 0
+  const preloader = new NeighborPreloader(url => preloadImage(url))
 
   const DRAG_THRESHOLD = 6
   const EDGE_RESISTANCE = 0.5
@@ -297,18 +298,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   const preloadNeighbors = () => {
-    // 快速翻页时递增版本号，丢弃尚未加载的过期预载请求，避免原图网络/内存风暴
-    const version = ++preloadVersion
-    const offsets = [1, -1, 2, -2]
-    offsets.forEach((offset, index) => {
-      const item = items[currentIndex + offset]
-      if (!item) return
-      // 最近邻优先加载，远邻延后错峰，减少瞬时并发
-      window.setTimeout(() => {
-        if (version !== preloadVersion) return
-        preloadImage(item.originalUrl)
-      }, index * 120)
-    })
+    preloader.schedule(currentIndex, index => items[index]?.originalUrl ?? null)
   }
 
   const zoomAtPoint = (nextScale: number, clientX: number, clientY: number) => {
