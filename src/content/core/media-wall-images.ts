@@ -21,6 +21,7 @@ import {
   settleStep,
 } from './viewer-transform'
 import { isRuntimeContextInvalidatedResult } from './runtime'
+import { createWheelGestureState, pushWheelGesture } from './viewer-wheel'
 import { Icons } from '../../shared/icons'
 import { showToast } from '../../shared/ui/toast'
 import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemParentId, getItemTitle } from './native-dom'
@@ -150,7 +151,12 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const imageEl = doc.createElement('img')
   imageEl.className = 'm115-viewer-image'
 
+  const loadingEl = doc.createElement('div')
+  loadingEl.className = 'm115-viewer-loading'
+  loadingEl.textContent = '加载中…'
+
   mediaFrame.appendChild(imageEl)
+  mediaFrame.appendChild(loadingEl)
   mediaFrame.appendChild(deleteBtn)
   stage.appendChild(prevBtn)
   stage.appendChild(mediaFrame)
@@ -197,18 +203,18 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let lastPointerX = 0
   let lastPointerY = 0
   let thumbsCollapsed = false
-  let wheelGestureAccumulated = 0
-  let wheelGestureTriggered = false
-  let wheelGestureTimer = 0
   let thumbButtons: HTMLButtonElement[] = []
+  const wheelGesture = createWheelGestureState()
   const preloader = new NeighborPreloader((url, release) => preloadImage(url, release))
 
   const DRAG_THRESHOLD = 6
   const EDGE_RESISTANCE = 0.5
   const INERTIA_FACTOR = 60
   const SETTLE_LERP = 0.34
-  const WHEEL_GESTURE_STEP = 70
-  const WHEEL_GESTURE_RESET_DELAY = 120
+  const LOADING_DELAY_MS = 120
+
+  let renderVersion = 0
+  let loadingTimer = 0
 
   const updateThumbsToggle = () => {
     thumbsToggle.innerHTML = thumbsCollapsed ? Icons.Minus() : Icons.ChevronDown()
@@ -413,14 +419,61 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     applyZoom()
   }
 
+  const showLoading = () => {
+    loadingEl.classList.add('is-visible')
+  }
+
+  const hideLoading = () => {
+    loadingEl.classList.remove('is-visible')
+  }
+
+  const scheduleLoading = () => {
+    if (loadingTimer) window.clearTimeout(loadingTimer)
+    loadingTimer = window.setTimeout(showLoading, LOADING_DELAY_MS)
+  }
+
+  const cancelLoading = () => {
+    if (loadingTimer) {
+      window.clearTimeout(loadingTimer)
+      loadingTimer = 0
+    }
+    hideLoading()
+  }
+
+  /**
+   * 切换当前图片：旧图保持显示直到新图加载完成，再瞬间替换。
+   * 不做 opacity 过渡（避免闪烁/图裂），只以 loading 兜底等待期。
+   */
+  const switchImage = (url: string, alt: string) => {
+    const version = ++renderVersion
+    const probe = new Image()
+    const commit = () => {
+      if (version !== renderVersion) return
+      cancelLoading()
+      imageEl.src = url
+      imageEl.alt = alt
+      clampTranslate()
+      applyZoom()
+    }
+    probe.onload = commit
+    probe.onerror = () => {
+      if (version !== renderVersion) return
+      cancelLoading()
+      imageEl.src = url
+      imageEl.alt = alt
+      clampTranslate()
+      applyZoom()
+    }
+    scheduleLoading()
+    probe.src = url
+  }
+
   const render = (previousIndex = currentIndex) => {
     const current = items[currentIndex]
     if (!current) return
     const shortTitle = current.title.length > 26 ? `${current.title.slice(0, 26)}…` : current.title
     titleEl.textContent = `${shortTitle} · ${currentIndex + 1} / ${items.length}`
     titleEl.title = current.title
-    imageEl.src = current.originalUrl
-    imageEl.alt = current.title
     resetZoom()
     if (thumbButtons.length !== items.length) {
       syncThumbs()
@@ -429,6 +482,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
       updateActiveThumb(currentIndex, previousIndex)
     }
     preloadNeighbors()
+    switchImage(current.originalUrl, current.title)
   }
 
   const move = (step: number) => {
@@ -440,24 +494,9 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     return true
   }
 
-  const consumeWheelGesture = (deltaY: number) => {
-    if (!deltaY || wheelGestureTriggered) return
-    wheelGestureAccumulated += deltaY
-    if (wheelGestureTimer) {
-      window.clearTimeout(wheelGestureTimer)
-    }
-    wheelGestureTimer = window.setTimeout(() => {
-      wheelGestureAccumulated = 0
-      wheelGestureTriggered = false
-      wheelGestureTimer = 0
-    }, WHEEL_GESTURE_RESET_DELAY)
-
-    if (Math.abs(wheelGestureAccumulated) < WHEEL_GESTURE_STEP) return
-
-    const direction = wheelGestureAccumulated > 0 ? 1 : -1
-    wheelGestureTriggered = true
-    wheelGestureAccumulated = 0
-    move(direction)
+  const consumeWheelGesture = (deltaY: number, deltaMode: number) => {
+    const { shouldMove, direction } = pushWheelGesture(wheelGesture, deltaY, deltaMode)
+    if (shouldMove) move(direction)
   }
 
   imageEl.addEventListener('load', () => {
@@ -477,13 +516,10 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
 
   const close = () => {
     overlay.classList.remove('active')
+    renderVersion++
+    cancelLoading()
     imageEl.src = ''
-    if (wheelGestureTimer) {
-      window.clearTimeout(wheelGestureTimer)
-      wheelGestureTimer = 0
-    }
-    wheelGestureAccumulated = 0
-    wheelGestureTriggered = false
+    wheelGesture.accumulated = 0
     resetZoom()
   }
 
@@ -577,7 +613,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     }
 
     if (!event.deltaY) return
-    consumeWheelGesture(event.deltaY)
+    consumeWheelGesture(event.deltaY, event.deltaMode)
   }, { passive: false })
 
   imageEl.addEventListener('pointerdown', (event) => {
@@ -684,12 +720,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     open(nextItems, startIndex) {
       items = [...nextItems]
       thumbButtons = []
-      wheelGestureAccumulated = 0
-      wheelGestureTriggered = false
-      if (wheelGestureTimer) {
-        window.clearTimeout(wheelGestureTimer)
-        wheelGestureTimer = 0
-      }
+      wheelGesture.accumulated = 0
       currentIndex = Math.max(0, Math.min(startIndex, items.length - 1))
       overlay.classList.add('active')
       render()

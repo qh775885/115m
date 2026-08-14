@@ -185,4 +185,73 @@ describe('图片查看器交互', () => {
 
     expect(overlay.classList.contains('active')).toBe(false)
   })
+
+  it('切图时旧图保持直到新图加载完成再瞬间替换', async () => {
+    const instances: Array<{ onload: (() => void) | null, src: string }> = []
+    class MockImage {
+      onload: (() => void) | null = null
+      src = ''
+      constructor() {
+        instances.push(this)
+      }
+    }
+    vi.stubGlobal('Image', MockImage)
+    try {
+      const { doc, overlay } = openLightbox(document)
+      const imageEl = doc.querySelector<HTMLElement>('.m115-viewer-image')
+
+      // 首图 probe 落地
+      instances[0].onload?.()
+      expect(imageEl?.getAttribute('src')).toContain('0_0.jpg')
+
+      // 滚一次切到第 2 张
+      overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+
+      // 新图未加载完成：imageEl 保持旧图（第 1 张），不替换
+      expect(imageEl?.getAttribute('src')).toContain('0_0.jpg')
+
+      const probe = instances[instances.length - 1]
+      expect(probe.src).toContain('1_0.jpg')
+      probe.onload?.()
+
+      // 加载完成后瞬间替换为新图
+      expect(imageEl?.getAttribute('src')).toContain('1_0.jpg')
+    }
+    finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('快速连滚时旧图加载回调不落地（版本保护）', async () => {
+    const instances: Array<{ onload: (() => void) | null, src: string }> = []
+    class MockImage {
+      onload: (() => void) | null = null
+      src = ''
+      constructor() {
+        instances.push(this)
+      }
+    }
+    vi.stubGlobal('Image', MockImage)
+    try {
+      const { doc, overlay } = openLightbox(document)
+      const imageEl = doc.querySelector<HTMLElement>('.m115-viewer-image')
+
+      // 首图 probe 落地
+      instances[0].onload?.()
+      expect(imageEl?.getAttribute('src')).toContain('0_0.jpg')
+
+      // 连续滚两次：第 2 次 render 使第 1 次的 probe 过期
+      overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+      overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+
+      const staleProbe = instances[instances.length - 2]
+      staleProbe.onload?.()
+
+      // 过期 probe 不应触发落地（imageEl 仍保持最初第 1 张，而非显示第 2 张）
+      expect(imageEl?.getAttribute('src')).toContain('0_0.jpg')
+    }
+    finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

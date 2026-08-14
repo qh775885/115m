@@ -182,7 +182,7 @@
   position: absolute;
   right: 16px;
   bottom: 16px;
-  z-index: 3;
+  z-index: 4;
   width: 34px;
   height: 34px;
   padding: 0;
@@ -246,6 +246,49 @@
   object-fit: contain;
   z-index: 1;
   transition: transform .12s ease;
+}
+
+.m115-viewer-loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.42);
+  color: rgba(255,255,255,.88);
+  font-size: 12px;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .15s ease, visibility .15s ease;
+  pointer-events: none;
+}
+
+.m115-viewer-loading.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.m115-viewer-loading::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  animation: m115-viewer-spin .7s linear infinite;
+}
+
+@keyframes m115-viewer-spin {
+  to { transform: rotate(360deg); }
 }
 
 .m115-viewer-image.is-draggable {
