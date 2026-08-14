@@ -1,7 +1,7 @@
 import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
 import { getVideoCovers } from '../../lib/videoThumbnail'
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
 
 const esc = escapeHtml
 const PLAYLIST_COVER_FEATURE_ENABLED = true

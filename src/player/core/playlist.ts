@@ -1,5 +1,5 @@
 import type { FileItem } from '../../lib/api/types'
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
 
 type RawPlaylistItem = FileItem & {
   pc?: string

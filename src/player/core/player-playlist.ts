@@ -11,7 +11,7 @@ import { fetchPlaylistData } from './player-services'
 import { buildPlaybackNavState, getPlaylistPosition } from './playlist-navigation'
 import { buildPlaybackModePlan, type PlaybackMode } from './player-playback-mode'
 import { sendRuntimeMessageSafe } from './runtime'
-import type { OverlayPathItem, OverlayPlaybackNavState, OverlayPlaylistItem } from './overlay'
+import type { OverlayPathItem, OverlayPlaybackNavState, OverlayPlaylistItem } from './overlay-types'
 
 export interface PlaylistControllerDeps {
   /** 获取当前 artplayer 实例 */

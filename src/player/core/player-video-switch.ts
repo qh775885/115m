@@ -7,8 +7,8 @@ import type Artplayer from 'artplayer'
 import type { ResolvedPlaybackBundle } from './player-services'
 import { findPlaylistItemByPickCode, buildOverlayMetaPatch, buildPlayerHistoryUrl } from './player-switch'
 import { loadPlayHistoryWhenReady } from './history'
-import type { OverlayPlaylistItem } from './overlay'
-import type { PlayerOverlayMeta } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
+import type { PlayerOverlayMeta } from './overlay-types'
 
 const VIDEO_SWITCH_COOLDOWN_MS = 1200
 

@@ -12,34 +12,9 @@ import {
   lazyLoadPlaylistCovers,
   scrollActivePlaylistNodeIntoView,
 } from './overlay-playlist'
+import type { OverlayPathItem, OverlayPlaybackEndState, OverlayPlaybackNavState, OverlayPlaylistItem, PlayerOverlayMeta } from './overlay-types'
 
-export interface OverlayPathItem {
-  cid: string
-  name: string
-}
-
-export interface OverlayPlaylistItem {
-  pickCode: string
-  fileId: string
-  name: string
-  size?: string
-  isMarked?: boolean
-  duration?: number
-  sha?: string
-  cid?: string
-  progressSec?: number
-  progressPercent?: number
-}
-
-export interface PlayerOverlayMeta {
-  title: string
-  fileSize: string
-  fileId: string
-  cid: string
-  parentId: string
-  isMarked: boolean
-  path: OverlayPathItem[]
-}
+export type { OverlayPathItem, OverlayPlaylistItem, PlayerOverlayMeta, OverlayPlaybackNavState, OverlayPlaybackEndState } from './overlay-types'
 
 export interface PlayerOverlayOptions {
   art: Artplayer
@@ -57,21 +32,6 @@ export interface PlayerOverlayOptions {
   onReplay: () => void
   getCurrentPickCode: () => string
   shouldKeepPlaylistOpen: () => boolean
-}
-
-export interface OverlayPlaybackNavState {
-  hasPrevious: boolean
-  hasNext: boolean
-  previousTitle?: string
-  nextTitle?: string
-  currentIndex?: number
-  totalCount?: number
-}
-
-export interface OverlayPlaybackEndState {
-  mode: 'autoplay-next' | 'ended'
-  nextTitle?: string
-  countdownSec?: number
 }
 
 export function readOverlayMetaFromQuery(): PlayerOverlayMeta {

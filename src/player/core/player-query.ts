@@ -1,4 +1,4 @@
-import type { OverlayPathItem } from './overlay'
+import type { OverlayPathItem } from './overlay-types'
 
 export interface PlayerBootstrapConfig {
   pickCode: string | null

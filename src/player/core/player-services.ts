@@ -4,7 +4,7 @@ import { buildPlaylistProgressSnapshot, loadNativePlayHistoryMap, loadQualityPre
 import { resolveInitialPlayback, type InitialPlaybackPlan } from './startup'
 import { fetchPlaylistResponse } from './player-api'
 import { normalizePlaylistItems } from './playlist'
-import type { OverlayPathItem, OverlayPlaylistItem } from './overlay'
+import type { OverlayPathItem, OverlayPlaylistItem } from './overlay-types'
 import { fetchM3u8WithRetry } from './source'
 
 /** 调试辅助：在页面内显示日志 */

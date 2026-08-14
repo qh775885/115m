@@ -1,4 +1,4 @@
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
 import { getPlaylistPosition } from './playlist-navigation'
 
 export function getPreviousPlaylistItem(items: OverlayPlaylistItem[], pickCode: string) {

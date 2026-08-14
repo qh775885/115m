@@ -1,4 +1,4 @@
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
 import { buildNavigateToVideoUrl } from './player-query'
 
 export function findPlaylistItemByPickCode(items: OverlayPlaylistItem[], pickCode: string) {

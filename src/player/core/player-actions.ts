@@ -13,7 +13,8 @@ import {
   readPathFromLocation,
   readPlaylistCidFromLocation,
 } from './player-query'
-import { readOverlayMetaFromQuery, type OverlayPathItem, type OverlayPlaylistItem } from './overlay'
+import { readOverlayMetaFromQuery } from './overlay'
+import type { OverlayPathItem, OverlayPlaylistItem } from './overlay-types'
 import type { PlayerPlaylistController } from './player-playlist'
 
 export interface ActionsControllerDeps {

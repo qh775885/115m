@@ -1,7 +1,7 @@
 import type { MediaWallImageItem, LightboxController } from './media-wall-types'
 import { isImageExtension, readAttr } from '../../shared/utils'
 import { NeighborPreloader } from './media-wall-preload'
-import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './media-wall-folders'
+import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './native-interact'
 import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
 import { isRuntimeContextInvalidatedResult } from './runtime'
 import { Icons } from '../../shared/icons'

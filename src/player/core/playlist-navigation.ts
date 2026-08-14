@@ -1,5 +1,5 @@
-import type { OverlayPlaybackNavState } from './overlay'
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaybackNavState } from './overlay-types'
+import type { OverlayPlaylistItem } from './overlay-types'
 
 export interface PlaylistPosition {
   index: number

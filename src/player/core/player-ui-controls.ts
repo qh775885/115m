@@ -9,7 +9,7 @@ import { buildNavControlItem, mountCenterCluster } from './player-center-control
 import { updateArtplayerControl } from './player-quality'
 import { buildPlaybackNavState, getPlaylistPosition } from './playlist-navigation'
 import { getPlaybackModeLabel, savePlaybackMode, type PlaybackMode } from './player-playback-mode'
-import type { OverlayPlaylistItem } from './overlay'
+import type { OverlayPlaylistItem } from './overlay-types'
 
 const PREV_CONTROL_NAME = 'm115-prev-control'
 const NEXT_CONTROL_NAME = 'm115-next-control'
