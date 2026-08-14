@@ -88,3 +88,35 @@ export function getSelectionTarget(item: HTMLElement): HTMLElement {
 export function getItemCheckboxes(item: HTMLElement): HTMLInputElement[] {
   return Array.from(item.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'))
 }
+
+/** 当前处于选中/激活/悬停状态的文件节点集合（去重，按文档顺序） */
+export function getSelectedItems(doc: Document): HTMLElement[] {
+  const nodes = new Set<HTMLElement>()
+  const selectors = [
+    '.list-contents li.selected[pick_code],.list-contents li.selected[pickcode]',
+    '.list-contents li.cur[pick_code],.list-contents li.cur[pickcode]',
+    '.list-contents [rel="item"].selected[pick_code],.list-contents [rel="item"].selected[pickcode]',
+    '.list-contents input:checked',
+  ]
+  for (const selector of selectors) {
+    doc.querySelectorAll<HTMLElement>(selector).forEach((node) => {
+      const item = node instanceof HTMLInputElement
+        ? node.closest<HTMLElement>('[rel="item"][pick_code],[rel="item"][pickcode]')
+        : node
+      if (item) nodes.add(item)
+    })
+  }
+  return Array.from(nodes)
+}
+
+/** 文件节点的 pickCode（兼容 pick_code / pickcode 两种属性名） */
+export function getItemPickCode(item: HTMLElement): string {
+  return item.getAttribute('pick_code') || item.getAttribute('pickcode') || ''
+}
+
+/** 文件节点的名称（title 属性优先，回退 .file-name .name 文本） */
+export function getItemName(item: HTMLElement): string {
+  return item.getAttribute('title')
+    || item.querySelector(NAME_SELECTOR)?.textContent?.trim()
+    || ''
+}

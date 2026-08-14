@@ -2,6 +2,7 @@ import type { FileInfo } from './types'
 import { wait } from '../../shared/utils'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
 import { isArchiveFileName, isSecondaryVolume, stripArchiveExtension } from '../../shared/archive'
+import { getItemName, getItemPickCode, getSelectedItems } from './native-dom'
 
 const MAX_PROGRESS_CHECKS = 120
 const PROGRESS_DELAY_MS = 1500
@@ -219,25 +220,10 @@ function showToast(doc: Document, text: string, timeout = 5000) {
 }
 
 function collectSelectedArchiveFiles(doc: Document): FileInfo[] {
-  const selectors = [
-    '.list-contents li.selected[pick_code],.list-contents li.selected[pickcode]',
-    '.list-contents li.cur[pick_code],.list-contents li.cur[pickcode]',
-    '.list-contents [rel="item"].selected[pick_code],.list-contents [rel="item"].selected[pickcode]',
-    '.list-contents input:checked',
-  ]
-  const nodes = new Set<HTMLElement>()
-  for (const selector of selectors) {
-    doc.querySelectorAll(selector).forEach((node) => {
-      const item = node instanceof HTMLInputElement ? node.closest<HTMLElement>('[rel="item"][pick_code],[rel="item"][pickcode]') : node as HTMLElement
-      if (item) nodes.add(item)
-    })
-  }
-
-  return Array.from(nodes).map((item) => {
-    const fileName = item.getAttribute('title') || item.querySelector('.file-name .name')?.textContent?.trim() || ''
+  return getSelectedItems(doc).map((item) => {
     return {
-      pickCode: item.getAttribute('pick_code') || item.getAttribute('pickcode') || '',
-      fileName,
+      pickCode: getItemPickCode(item),
+      fileName: getItemName(item),
       duration: 0,
       isVideo: false,
       fileId: item.getAttribute('file_id') || undefined,

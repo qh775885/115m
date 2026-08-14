@@ -2,8 +2,8 @@ import { readAttr } from '../../shared/utils'
 import { sendRuntimeMessageSafe } from './runtime'
 import { buildFolderItem, renderFoldersSection } from './media-wall-folders'
 import { createImageModule } from './media-wall-images'
+import { forwardNativeContextMenu as forwardNativeContextMenuImpl } from './native-interact'
 import {
-  getContextMenuAnchor,
   getFileItems,
   getFileListContainer,
   getHasDesc,
@@ -58,40 +58,7 @@ function clearWall(list: HTMLElement) {
 }
 
 function forwardNativeContextMenu(sourceItem: HTMLElement, event: MouseEvent) {
-  const anchor = getContextMenuAnchor(sourceItem)
-  sourceItem.classList.remove(HIDDEN_CLASS)
-
-  const previousStyle = sourceItem.getAttribute('style') || ''
-  sourceItem.style.setProperty('position', 'fixed', 'important')
-  sourceItem.style.setProperty('left', `${event.clientX}px`, 'important')
-  sourceItem.style.setProperty('top', `${event.clientY}px`, 'important')
-  sourceItem.style.setProperty('width', '1px', 'important')
-  sourceItem.style.setProperty('height', '1px', 'important')
-  sourceItem.style.setProperty('overflow', 'hidden', 'important')
-  sourceItem.style.setProperty('opacity', '0', 'important')
-  sourceItem.style.setProperty('pointer-events', 'none', 'important')
-
-  const init: MouseEventInit = {
-    bubbles: true,
-    cancelable: true,
-    view: window,
-    button: 2,
-    buttons: 2,
-    clientX: event.clientX,
-    clientY: event.clientY,
-    screenX: event.screenX,
-    screenY: event.screenY,
-  }
-
-  anchor.dispatchEvent(new MouseEvent('mousedown', init))
-  anchor.dispatchEvent(new MouseEvent('mouseup', init))
-  anchor.dispatchEvent(new MouseEvent('contextmenu', init))
-
-  window.setTimeout(() => {
-    if (previousStyle) sourceItem.setAttribute('style', previousStyle)
-    else sourceItem.removeAttribute('style')
-    sourceItem.classList.add(HIDDEN_CLASS)
-  }, 0)
+  forwardNativeContextMenuImpl(sourceItem, HIDDEN_CLASS, event)
 }
 
 function renderImagesSection(doc: Document, images: MediaWallImageItem[]) {

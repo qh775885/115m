@@ -1,6 +1,7 @@
 import type { FileInfo } from './types'
 import { readAttr } from '../../shared/utils'
 import { parseDuration } from './utils'
+import { getItemName, getItemPickCode } from './native-dom'
 
 export function isPlayIntentTarget(target: HTMLElement): boolean {
   if (target.closest('.file-opr,.m115-cover-container,input[type="checkbox"],.checkbox')) return false
@@ -9,12 +10,12 @@ export function isPlayIntentTarget(target: HTMLElement): boolean {
 }
 
 export function extractFileInfo(item: HTMLElement): FileInfo | null {
-  const pickCode = item.getAttribute('pick_code') || item.getAttribute('pickcode') || ''
+  const pickCode = getItemPickCode(item)
   if (!pickCode) return null
 
   const durationNode = item.querySelector('.duration') as HTMLElement | null
   const durationRaw = durationNode?.getAttribute('duration') || durationNode?.textContent?.trim() || ''
-  const fileName = item.getAttribute('title') || item.querySelector('.file-name .name')?.textContent?.trim() || '视频'
+  const fileName = getItemName(item) || '视频'
   const fileSize = item.querySelector('.size,.file-size,.meta-size,.list-size')?.textContent?.trim() || ''
   const fileId = readAttr(item, ['file_id', 'fid', 'fileid'])
   const parentId = readAttr(item, ['cid', 'parent_id', 'pid']) || new URLSearchParams(window.location.search).get('cid') || ''

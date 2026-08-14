@@ -1,4 +1,5 @@
 import { ARCHIVE_EXTENSIONS, isArchiveFileName, stripArchiveExtension } from '../../shared/archive'
+import { getItemName } from './native-dom'
 
 const LAST_ARCHIVE_NAME_KEY = 'm115:last-unarchive-name'
 
@@ -48,10 +49,7 @@ function getSelectedArchiveName(doc: Document): string | null {
     const node = doc.querySelector<HTMLElement>(selector)
     if (!node) continue
 
-    const name = node?.getAttribute('title')
-      || node?.querySelector('.file-name .name')?.textContent?.trim()
-      || node?.querySelector('.file-name')?.textContent?.trim()
-      || ''
+    const name = getItemName(node) || node.querySelector('.file-name')?.textContent?.trim() || ''
 
     const icon = (node.getAttribute('ico') || '').toLowerCase()
     const isArchive = isArchiveFileName(name)
