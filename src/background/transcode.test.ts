@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickTranscodeTab } from './transcode'
+import { pickTranscodeTab } from './transcode-api'
 
 describe('pickTranscodeTab', () => {
   it('prefers the active tab over others', () => {
