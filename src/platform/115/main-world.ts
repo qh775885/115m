@@ -24,11 +24,11 @@ function withVodQueueTimeout(promise: Promise<MainWorldTextResponse>, ms: number
 
 /**
  * 构造注入 MAIN world 的 fetch 函数体。
- * 注入函数必须完全自包含（不能引用外部变量），故用工厂消除三处重复的字面量实现。
- * @param withHeaders 是否附加 Accept / X-Requested-With 请求头
+ * 注入函数必须完全自包含：chrome.scripting.executeScript 会序列化函数体并注入执行，
+ * 闭包变量不会保留，故所有依赖（含 withHeaders）都必须作为函数参数随 args 传入。
  */
-function createMainWorldFetchFunc(withHeaders: boolean) {
-  return async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
+function createMainWorldFetchFunc() {
+  return async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number, withHeaders: boolean) => {
     try {
       const isPost = fetchBody.length > 0
       const options: RequestInit = {
@@ -64,11 +64,24 @@ function createMainWorldFetchFunc(withHeaders: boolean) {
 
 export type VodFetchMode = 'auto' | 'direct' | 'main_world' | 'page'
 
-interface VodFrameSession {
-  tabId: number
-  frameId: number
-  pickCode: string
-  expiresAt: number
+export type VodFetchStep = 'direct' | 'main_world' | 'page'
+
+/**
+ * 解析指定模式下应依次尝试的取流步骤（纯逻辑，可独立测试）。
+ * - auto：direct 优先，body 为空时追加 main_world（POST 走 page 更稳）
+ * - direct / main_world / page：仅对应单一步骤（page 在 auto 后兜底）
+ * @param isEmptyBody 请求体是否为空（GET 无 body）
+ */
+export function resolveVodFetchModeSteps(mode: VodFetchMode, isEmptyBody: boolean): VodFetchStep[] {
+  if (mode === 'direct') return ['direct']
+  if (mode === 'main_world') return ['main_world']
+  if (mode === 'page') return ['page']
+
+  const steps: VodFetchStep[] = ['direct']
+  if (isEmptyBody) {
+    steps.push('main_world')
+  }
+  return steps
 }
 
 const MATCH_115_PAGE_URLS = [
@@ -88,7 +101,6 @@ const MATCH_115VOD_PAGE_URLS = [
 
 let extensionCreated115VodTabId: number | undefined
 let vodRequestQueue: Promise<MainWorldTextResponse> = Promise.resolve({ ok: true, text: '' })
-const vodFrameSessions = new Map<string, VodFrameSession>()
 
 async function queryTabsByUrls(urls: string[]) {
   const groups = await Promise.all(urls.map(url => chrome.tabs.query({ url })))
@@ -272,8 +284,8 @@ export async function fetchTextIn115MainWorld(
   try {
     const result = await runIn115MainWorld({
       sender,
-      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded', VOD_FETCH_TIMEOUT_MS],
-      func: createMainWorldFetchFunc(false),
+      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded', VOD_FETCH_TIMEOUT_MS, false],
+      func: createMainWorldFetchFunc(),
     })
 
     if (!result) {
@@ -291,53 +303,12 @@ export async function query115Tabs() {
   return await queryTabsByUrls(MATCH_115_PAGE_URLS)
 }
 
-export async function register115VodFrameSession(sender: chrome.runtime.MessageSender | undefined, pickCode: string) {
-  const tabId = sender?.tab?.id
-  if (!tabId) return { ok: false, error: 'no sender tab' }
-
-  for (let i = 0; i < 40; i++) {
-    const frames = await chrome.webNavigation.getAllFrames({ tabId }).catch(() => null)
-    const frame = frames?.find(item => item.frameId !== 0 && /^https:\/\/([^/]+\.)?115vod\.com\//.test(item.url || ''))
-    if (frame) {
-      vodFrameSessions.set(pickCode, { tabId, frameId: frame.frameId, pickCode, expiresAt: Date.now() + 60_000 })
-      return { ok: true, frameId: frame.frameId }
-    }
-    await new Promise(resolve => setTimeout(resolve, 250))
+async function get115VodTabId(sender: chrome.runtime.MessageSender | undefined): Promise<number | undefined> {
+  let tabId = await find115VodTabId(sender)
+  if (!tabId) {
+    tabId = await ensure115VodTabId()
   }
-
-  return { ok: false, error: '115vod iframe not found' }
-}
-
-export async function close115VodFrameSession(pickCode: string) {
-  const session = vodFrameSessions.get(pickCode)
-  vodFrameSessions.delete(pickCode)
-  if (!session) return
-
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: session.tabId },
-      world: 'ISOLATED',
-      args: [pickCode],
-      func: (targetPickCode: string) => {
-        const frame = document.querySelector(`iframe[data-115m-transcode-frame="${targetPickCode}"]`)
-        frame?.remove()
-      },
-    })
-  }
-  catch {
-    // tab may be closed or script injection may fail
-  }
-}
-
-async function get115VodFrameSession(pickCode?: string) {
-  if (!pickCode) return undefined
-  const session = vodFrameSessions.get(pickCode)
-  if (!session) return undefined
-  if (Date.now() > session.expiresAt) {
-    vodFrameSessions.delete(pickCode)
-    return undefined
-  }
-  return session
+  return tabId
 }
 
 export async function fetchTextIn115VodMainWorld(
@@ -395,17 +366,20 @@ async function fetchTextIn115VodMainWorldQueued(
   const safeBody = body ?? ''
 
   try {
-    if (mode === 'direct' || mode === 'auto') {
-      const direct = await fetchTextDirectVod(url, body, contentType)
-      if (direct.ok || mode === 'direct') {
-        return direct
-      }
-    }
+    const steps = resolveVodFetchModeSteps(mode, safeBody.length === 0)
 
-    if (mode === 'main_world' || (mode === 'auto' && safeBody.length === 0)) {
-      const mainWorld = await fetchTextIn115MainWorld(undefined, url, body, contentType)
-      if (mainWorld.ok || mode === 'main_world') {
-        return mainWorld
+    for (const step of steps) {
+      if (step === 'direct') {
+        const direct = await fetchTextDirectVod(url, body, contentType)
+        if (direct.ok || mode === 'direct') {
+          return direct
+        }
+      }
+      else if (step === 'main_world') {
+        const mainWorld = await fetchTextIn115MainWorld(undefined, url, body, contentType)
+        if (mainWorld.ok || mode === 'main_world') {
+          return mainWorld
+        }
       }
     }
 
@@ -413,20 +387,15 @@ async function fetchTextIn115VodMainWorldQueued(
       return { ok: false, text: '', error: '115vod page mode disabled' }
     }
 
-    const frameSession = await get115VodFrameSession(pickCode)
-    let tabId = frameSession?.tabId ?? await find115VodTabId(sender)
-    if (!tabId) {
-      tabId = await ensure115VodTabId(pickCode)
-    }
+    const tabId = await get115VodTabId(sender)
     if (!tabId) {
       return { ok: false, text: '', error: 'no 115vod.com tab found' }
     }
 
     const result = await runIn115MainWorld({
       tabId,
-      ...(frameSession ? { frameId: frameSession.frameId } : {}),
-      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS],
-      func: createMainWorldFetchFunc(true),
+      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS, true],
+      func: createMainWorldFetchFunc(),
     })
 
     return result as MainWorldTextResponse
