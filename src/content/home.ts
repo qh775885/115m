@@ -17,7 +17,7 @@ import { HomeScrollBinder } from './core/home-scroll-binder'
 
 class HomeController {
   private boundDocs = new Set<Document>()
-  private scannedPickCodes = new Set<string>()
+  private processedItemPickCodes = new WeakMap<HTMLElement, string>()
   private observers = new WeakMap<Document, MutationObserver>()
   private scanFrames = new WeakMap<Document, number>()
   private unarchiveCleanups = new WeakMap<Document, () => void>()
@@ -167,12 +167,16 @@ class HomeController {
     const file = extractFileInfo(item)
     if (!file) return
 
-    // 按 pickCode 去重而非 DOM 节点：即使 115 复用同一 li 展示新文件也能正确扫描
-    if (this.scannedPickCodes.has(file.pickCode)) return
-    if (this.scannedPickCodes.size >= 10000) {
-      this.scannedPickCodes.clear()
+    // 以「DOM 节点 + pickCode」去重，替代全局 pickCode 去重：
+    // - 同一 li 复用展示新文件（pickCode 变化）→ 重新处理
+    // - 115 排序/重绘重建 li 节点 → 新节点未记录 → 重新处理
+    // - li 内部被 115 重写导致预览容器丢失 → 重新处理
+    // - 内容未变 → 跳过，避免高频 MutationObserver 反复销毁重建预览
+    if (this.processedItemPickCodes.get(item) === file.pickCode) {
+      const previewLost = file.isVideo && !item.querySelector('.m115-cover-container')
+      if (!previewLost) return
     }
-    this.scannedPickCodes.add(file.pickCode)
+    this.processedItemPickCodes.set(item, file.pickCode)
 
     addDownloadIntercept(item, file)
     injectUnarchiveButton(item, file)
