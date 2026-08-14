@@ -255,19 +255,6 @@ export function saveVideoRotation(pickCode: string, rotation: number) {
   writeVideoRotationMap(rotations)
 }
 
-export async function loadPlayHistory(pickCode: string, onRestore: (time: number) => void) {
-  try {
-    const response = await loadNativePlayHistory(pickCode)
-
-    if (response && shouldRestorePlayHistory(response.currentTime, response.duration, response.watchEnd)) {
-      setTimeout(() => onRestore(response.currentTime), 500)
-    }
-  }
-  catch {
-    // ignore history errors
-  }
-}
-
 export async function loadPlayHistoryWhenReady(
   pickCode: string,
   getTarget: () => PlayHistoryRestoreTarget | null,
