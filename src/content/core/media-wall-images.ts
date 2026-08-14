@@ -213,7 +213,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   const SETTLE_LERP = 0.34
   const LOADING_DELAY_MS = 120
 
-  let renderVersion = 0
   let loadingTimer = 0
 
   const updateThumbsToggle = () => {
@@ -441,31 +440,14 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   /**
-   * 切换当前图片：旧图保持显示直到新图加载完成，再瞬间替换。
-   * 不做 opacity 过渡（避免闪烁/图裂），只以 loading 兜底等待期。
+   * 切换当前图片：直接设置 imageEl.src，浏览器立即开始加载（秒出图）。
+   * 弱网时由 imageEl 的 load 事件延迟驱动的 loading 兜底（120ms 后才显示），
+   * 图片就绪即取消。不做任何额外预载门控，避免双重加载导致性能倒退。
    */
   const switchImage = (url: string, alt: string) => {
-    const version = ++renderVersion
-    const probe = new Image()
-    const commit = () => {
-      if (version !== renderVersion) return
-      cancelLoading()
-      imageEl.src = url
-      imageEl.alt = alt
-      clampTranslate()
-      applyZoom()
-    }
-    probe.onload = commit
-    probe.onerror = () => {
-      if (version !== renderVersion) return
-      cancelLoading()
-      imageEl.src = url
-      imageEl.alt = alt
-      clampTranslate()
-      applyZoom()
-    }
+    imageEl.src = url
+    imageEl.alt = alt
     scheduleLoading()
-    probe.src = url
   }
 
   const render = (previousIndex = currentIndex) => {
@@ -500,8 +482,13 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   imageEl.addEventListener('load', () => {
+    cancelLoading()
     clampTranslate()
     applyZoom()
+  })
+
+  imageEl.addEventListener('error', () => {
+    cancelLoading()
   })
 
   imageEl.addEventListener('dblclick', (event) => {
@@ -516,7 +503,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
 
   const close = () => {
     overlay.classList.remove('active')
-    renderVersion++
     cancelLoading()
     imageEl.src = ''
     wheelGesture.accumulated = 0
