@@ -13,6 +13,7 @@ import {
   scrollActivePlaylistNodeIntoView,
 } from './overlay-playlist'
 import type { OverlayPathItem, OverlayPlaybackEndState, OverlayPlaybackNavState, OverlayPlaylistItem, PlayerOverlayMeta } from './overlay-types'
+import { debugLog } from './debug'
 
 export type { OverlayPathItem, OverlayPlaylistItem, PlayerOverlayMeta, OverlayPlaybackNavState, OverlayPlaybackEndState } from './overlay-types'
 
@@ -36,12 +37,6 @@ export interface PlayerOverlayOptions {
 
 export function readOverlayMetaFromQuery(): PlayerOverlayMeta {
   return readOverlayMetaQuery(window.location.search)
-}
-
-function overlayDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
 }
 
 export class PlayerOverlayController {
@@ -127,7 +122,7 @@ export class PlayerOverlayController {
       this.setPlaylistOpen(true)
     }
     catch (error) {
-      overlayDebug('[115m] restore playlist open failed:', error)
+      debugLog('[115m] restore playlist open failed:', error)
     }
   }
 
@@ -591,7 +586,7 @@ export class PlayerOverlayController {
       console.warn('[115m] #playlist-sidebar not found in DOM')
       return
     }
-    overlayDebug('[115m] mountSidebarContent: sidebar found, setting up content')
+    debugLog('[115m] mountSidebarContent: sidebar found, setting up content')
 
     this.sidebarEl.innerHTML = ''
     this.sidebarEl.style.cssText = 'width:0;min-width:0;flex:0 0 0;overflow:hidden;transition:width .25s ease, flex-basis .25s ease;background:#0a0a0a;border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;box-sizing:border-box;height:100%;pointer-events:none;'
@@ -656,7 +651,7 @@ export class PlayerOverlayController {
       this.sidebarEl.style.pointerEvents = open ? 'auto' : 'none'
 
       const computed = window.getComputedStyle(this.sidebarEl)
-      overlayDebug('[115m] setPlaylistOpen:', {
+      debugLog('[115m] setPlaylistOpen:', {
         open,
         sidebarEl: true,
         inlineWidth: this.sidebarEl.style.width,
@@ -748,15 +743,15 @@ export class PlayerOverlayController {
 
   private handlePlaylistToggle = async () => {
     const nextOpen = !this.playlistOpen
-    overlayDebug('[115m] handlePlaylistToggle:', { nextOpen, sidebarEl: !!this.sidebarEl, playlistListEl: !!this.playlistListEl })
+    debugLog('[115m] handlePlaylistToggle:', { nextOpen, sidebarEl: !!this.sidebarEl, playlistListEl: !!this.playlistListEl })
     if (nextOpen) {
       try {
         const items = await this.options.onPlaylistToggle(true)
-        overlayDebug('[115m] playlist items received:', items.length)
+        debugLog('[115m] playlist items received:', items.length)
         this.renderPlaylist(items)
       }
       catch (error) {
-        overlayDebug('[115m] playlist toggle failed:', error)
+        debugLog('[115m] playlist toggle failed:', error)
       }
     }
     this.setPlaylistOpen(nextOpen)

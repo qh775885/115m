@@ -6,30 +6,11 @@ import { fetchPlaylistResponse } from './player-api'
 import { normalizePlaylistItems } from './playlist'
 import type { OverlayPathItem, OverlayPlaylistItem } from './overlay-types'
 import { fetchM3u8WithRetry } from './source'
-
-/** 调试辅助：在页面内显示日志 */
-function debugLogToPage(msg: string) {
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') !== '1') return
-  if (typeof document === 'undefined') return
-  let el = document.getElementById('m115-debug-log')
-  if (!el) {
-    el = document.createElement('div')
-    el.id = 'm115-debug-log'
-    el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
-    document.body.appendChild(el)
-  }
-  el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
-}
+import { debugLog, debugLogToPage, isPlayerDebugEnabled } from './debug'
 
 type RuntimeSender = <T = unknown>(message: unknown, retries?: number, delay?: number, timeoutMs?: number) => Promise<T | null>
 
 const PLAYBACK_SOURCE_TIMEOUT_MS = 12000
-
-function playerServiceDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
-}
 
 export interface ResolvedPlaybackBundle {
   qualityPreference: QualityPreference | null
@@ -43,7 +24,7 @@ export async function resolvePlaybackBundle(
   pickCode: string,
   canUseNativeUltraSource = true,
 ): Promise<ResolvedPlaybackBundle> {
-  const debugMode = typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') === '1'
+  const debugMode = isPlayerDebugEnabled()
   if (debugMode) debugLogToPage(`resolvePlaybackBundle start: ${pickCode}`)
   const qualityPreference = await loadQualityPreference(pickCode)
   let m3u8Error: unknown = null
@@ -68,7 +49,7 @@ export async function resolvePlaybackBundle(
   const ultraUrl = downloadResult?.url?.url || null
   const resolvedM3u8List = Array.isArray(m3u8List) ? m3u8List : []
 
-  playerServiceDebug('[115m][preview] playback sources', {
+  debugLog('[115m][preview] playback sources', {
     ultraAvailable: !!ultraUrl,
     m3u8Count: resolvedM3u8List.length,
     m3u8Qualities: resolvedM3u8List.map(item => ({ quality: item.quality, name: item.name })),
@@ -79,14 +60,14 @@ export async function resolvePlaybackBundle(
     console.warn('[115m] fetchM3u8WithRetry failed:', m3u8Error)
   }
   else if (m3u8Error) {
-    playerServiceDebug('[115m] m3u8 unavailable, fallback to ultra source')
+    debugLog('[115m] m3u8 unavailable, fallback to ultra source')
   }
 
   if (ultraError && resolvedM3u8List.length === 0) {
     console.warn('[115m] fetchUltraSource failed:', ultraError)
   }
   else if (ultraError) {
-    playerServiceDebug('[115m] ultra source unavailable, fallback to m3u8 source')
+    debugLog('[115m] ultra source unavailable, fallback to m3u8 source')
   }
 
   if (downloadResult?.url?.auth_cookie) {

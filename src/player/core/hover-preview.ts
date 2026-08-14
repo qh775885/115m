@@ -2,16 +2,14 @@ import type Artplayer from 'artplayer'
 import { createHoverPreviewElements, findProgressElement } from './dom'
 import { clamp, formatTimeLabel } from './hover-utils'
 import { HoverPreviewSession, THUMBNAIL_PREVIEW_ENABLED, type HoverCover } from './hover-preview-session'
+import { debugLog } from './debug'
 
 function previewDebug(label: string, payload?: Record<string, unknown>) {
-  if (localStorage.getItem('115m-player-debug') !== '1') {
-    return
-  }
   if (payload) {
-    console.debug(`[115m][preview] ${label}`, payload)
+    debugLog(`[115m][preview] ${label}`, payload)
     return
   }
-  console.debug(`[115m][preview] ${label}`)
+  debugLog(`[115m][preview] ${label}`)
 }
 
 export class HoverPreviewController {

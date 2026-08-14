@@ -7,28 +7,9 @@ import {
   isContextInvalidated,
   showContextInvalidatedTip,
 } from '../../shared/runtime-utils'
-
-/** 调试辅助：在页面内显示日志 */
-function debugLogToPage(msg: string) {
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') !== '1') return
-  if (typeof document === 'undefined') return
-  let el = document.getElementById('m115-debug-log')
-  if (!el) {
-    el = document.createElement('div')
-    el.id = 'm115-debug-log'
-    el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
-    document.body.appendChild(el)
-  }
-  el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
-}
+import { debugLog, debugLogToPage, isPlayerDebugEnabled } from './debug'
 
 export { getRuntimeApi, canUseRuntimeMessaging }
-
-function runtimeDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
-}
 
 /**
  * 确保 Service Worker 已就绪
@@ -36,9 +17,9 @@ function runtimeDebug(...args: unknown[]) {
  * 通过发送一个简单的 ping 消息来唤醒 SW
  */
 export async function ensureServiceWorkerReady(maxRetries = 5, delay = 500): Promise<void> {
-  const debugMode = typeof localStorage !== 'undefined' && localStorage.getItem('115m-player-debug') === '1'
+  const debugMode = isPlayerDebugEnabled()
   if (debugMode) debugLogToPage(`ensureServiceWorkerReady start (canUseRuntime=${canUseRuntimeMessaging()})`)
-  runtimeDebug('[115m] ensureServiceWorkerReady: starting...')
+  debugLog('[115m] ensureServiceWorkerReady: starting...')
   if (!canUseRuntimeMessaging()) {
     console.warn('[115m] ensureServiceWorkerReady skipped: runtime unavailable')
     if (debugMode) debugLogToPage('runtime messaging unavailable')
@@ -61,7 +42,7 @@ export async function ensureServiceWorkerReady(maxRetries = 5, delay = 500): Pro
         })
       })
       if (debugMode) debugLogToPage(`PING success on attempt ${i + 1}`)
-      runtimeDebug('[115m] ensureServiceWorkerReady: PING response', result)
+      debugLog('[115m] ensureServiceWorkerReady: PING response', result)
       if (result) return
     }
     catch (e) {
@@ -70,7 +51,7 @@ export async function ensureServiceWorkerReady(maxRetries = 5, delay = 500): Pro
         showContextInvalidatedTip()
         return
       }
-      runtimeDebug('[115m] ensureServiceWorkerReady: PING error, retrying...', i, e)
+      debugLog('[115m] ensureServiceWorkerReady: PING error, retrying...', i, e)
     }
     if (i < maxRetries - 1) {
       await new Promise(resolve => setTimeout(resolve, delay))
@@ -109,7 +90,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
         return result
       }
       // result 为 undefined 时重试（可能由于 Service Worker 尚未就绪导致没有响应）
-      runtimeDebug('[115m] sendMessage got undefined, retrying...', i, formatRuntimeMessage(message))
+      debugLog('[115m] sendMessage got undefined, retrying...', i, formatRuntimeMessage(message))
     }
     catch (e) {
       if (isContextInvalidated(e)) {
@@ -117,7 +98,7 @@ export async function sendRuntimeMessageSafe<T = unknown>(
         showContextInvalidatedTip()
         return null
       }
-      runtimeDebug('[115m] sendMessage error, retrying...', i, formatRuntimeMessage(message), e)
+      debugLog('[115m] sendMessage error, retrying...', i, formatRuntimeMessage(message), e)
     }
     if (i < retries) {
       await new Promise(resolve => setTimeout(resolve, delay))

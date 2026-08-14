@@ -4,8 +4,10 @@
  */
 
 import type Artplayer from 'artplayer'
+import { safePlay } from './media'
 import type HlsType from 'hls.js'
 import { createHlsInstance } from './hls'
+import { debugLog } from './debug'
 import { findVariantInMaster } from './playlist-url'
 import { sendTypedRuntimeMessageSafe } from './runtime'
 
@@ -30,19 +32,6 @@ export interface HlsPlayerDeps {
   onAudioScheduleSync: () => void
   /** 从 master playlist 预解析音轨标签 */
   onAudioHydrateFromMaster: () => void
-}
-
-function hlsDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
-}
-
-function safePlay(art: Artplayer | null) {
-  if (!art) return
-  void art.play().catch(() => {
-    // Ignore native play promise rejections during source switches and transient media reloads.
-  })
 }
 
 export class HlsPlayerController {
@@ -125,7 +114,7 @@ export class HlsPlayerController {
 
       if (data.type === 'mediaError' && !this.hlsMediaRecoverAttempted) {
         this.hlsMediaRecoverAttempted = true
-        hlsDebug('[115m] HLS 媒体错误，尝试恢复:', data?.details ?? data?.type)
+        debugLog('[115m] HLS 媒体错误，尝试恢复:', data?.details ?? data?.type)
         ;(hls as any).recoverMediaError?.()
         return
       }
@@ -301,7 +290,7 @@ export class HlsPlayerController {
       art.on('video:loadedmetadata', restore)
       art.on('video:canplay', restore)
 
-      hlsDebug('[115m][audio] rebuild track', {
+      debugLog('[115m][audio] rebuild track', {
         id: params.id,
         currentTime: params.currentTime,
         track: params.track,

@@ -49,6 +49,7 @@ import { canUseNativeUltraSource, isConservativeNativeUltraExtension } from './c
 import { NativePlaybackMonitor } from './core/native-playback-monitor'
 import { RotationManager } from './core/rotation-manager'
 import { SubtitleController } from './core/subtitle-controller'
+import { debugLog, debugLogToPage, isPlayerDebugEnabled } from './core/debug'
 
 function injectPlayerSkinStyles() {
   const style = document.createElement('style')
@@ -92,12 +93,6 @@ function bindInterruptedPlayRejectionGuard() {
       event.preventDefault()
     }
   })
-}
-
-function playerDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
 }
 
 bindInterruptedPlayRejectionGuard()
@@ -182,7 +177,7 @@ class PlayerManager {
       initCostMs: Math.round(now - this.initStartTs),
       ...extra,
     }
-    playerDebug('[115m][Perf]', payload)
+    debugLog('[115m][Perf]', payload)
   }
 
   private reportFirstFrameSummary() {
@@ -197,7 +192,7 @@ class PlayerManager {
     const metaToPlay = p.loadedmetadata ? Math.round(p.playing - p.loadedmetadata) : -1
     const initToPlay = Math.round(p.playing - p.init)
 
-    playerDebug('[115m][首播耗时]', {
+    debugLog('[115m][首播耗时]', {
       traceId: this.traceId,
       pickCode: this.currentPickCode,
       clickToPlayMs: clickToPlay,
@@ -208,22 +203,9 @@ class PlayerManager {
     })
   }
 
-  /** 调试辅助：在页面内显示日志 */
-  private debugLogToPage(msg: string) {
-    if (localStorage.getItem('115m-player-debug') !== '1') return
-    let el = document.getElementById('m115-debug-log')
-    if (!el) {
-      el = document.createElement('div')
-      el.id = 'm115-debug-log'
-      el.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:rgba(0,0,0,.85);color:#0f0;font-size:12px;font-family:monospace;padding:10px;max-height:300px;overflow:auto;white-space:pre-wrap;'
-      document.body.appendChild(el)
-    }
-    el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`
-  }
-
   private async init() {
-    const debugMode = localStorage.getItem('115m-player-debug') === '1'
-    if (debugMode) this.debugLogToPage('init() called')
+    const debugMode = isPlayerDebugEnabled()
+    if (debugMode) debugLogToPage('init() called')
     try {
       this.perf('player-init-start')
 
@@ -232,25 +214,25 @@ class PlayerManager {
         loadingTextEl.textContent = '正在初始化...'
       }
 
-      if (debugMode) this.debugLogToPage('calling ensureServiceWorkerReady')
+      if (debugMode) debugLogToPage('calling ensureServiceWorkerReady')
       await ensureServiceWorkerReady(10, 1000)
-      if (debugMode) this.debugLogToPage('ensureServiceWorkerReady done')
+      if (debugMode) debugLogToPage('ensureServiceWorkerReady done')
 
       if (loadingTextEl) {
         loadingTextEl.textContent = '正在获取播放源...'
       }
 
-      if (debugMode) this.debugLogToPage('calling resolvePlaybackForPickCode')
+      if (debugMode) debugLogToPage('calling resolvePlaybackForPickCode')
       const playback = await this.resolvePlaybackForPickCode(this.currentPickCode)
-      if (debugMode) this.debugLogToPage(`resolvePlaybackForPickCode done: ultra=${!!playback.ultraUrl}, m3u8=${playback.m3u8List.length}, type=${playback.initialPlayback.type}`)
+      if (debugMode) debugLogToPage(`resolvePlaybackForPickCode done: ultra=${!!playback.ultraUrl}, m3u8=${playback.m3u8List.length}, type=${playback.initialPlayback.type}`)
       this.quality.applyResolvedPlayback(playback, this.currentPickCode, this.nativeUltraSupported)
 
       this.perfMarks.ultraReady = performance.now()
       this.perf('ultra-source-ready', { ok: !!playback.ultraUrl, m3u8Count: this.quality.m3u8ListValue.length })
 
-      if (debugMode) this.debugLogToPage(`calling createArtplayer: type=${playback.initialPlayback.type}`)
+      if (debugMode) debugLogToPage(`calling createArtplayer: type=${playback.initialPlayback.type}`)
       this.createArtplayer(playback.initialPlayback.url, playback.initialPlayback.type)
-      if (debugMode) this.debugLogToPage(`createArtplayer done: hasArtplayer=${!!this.artplayer}`)
+      if (debugMode) debugLogToPage(`createArtplayer done: hasArtplayer=${!!this.artplayer}`)
       this.perf(playback.initialPlayback.type === 'native' ? 'create-player-native' : 'create-player-hls', {
         label: playback.initialPlayback.currentQualityLabel,
         hasPreference: !!playback.qualityPreference,
@@ -272,11 +254,11 @@ class PlayerManager {
       )
     }
     catch (error) {
-      if (debugMode) this.debugLogToPage(`ERROR: ${error instanceof Error ? error.message : String(error)}`)
+      if (debugMode) debugLogToPage(`ERROR: ${error instanceof Error ? error.message : String(error)}`)
       this.showError(`播放器初始化失败: ${error instanceof Error ? error.message : String(error)}`)
     }
     finally {
-      if (debugMode) this.debugLogToPage('finally block - hiding loading')
+      if (debugMode) debugLogToPage('finally block - hiding loading')
       const loadingEl = document.getElementById('loading')
       if (loadingEl) loadingEl.style.display = 'none'
     }
@@ -843,7 +825,7 @@ class PlayerManager {
 
   private async fallbackToHls(reason = '播放失败', rememberOriginal = false) {
     this.nativeMonitor?.clearAll()
-    playerDebug('[115m] fallbackToHls triggered', { m3u8Count: this.quality.m3u8ListValue.length, reason })
+    debugLog('[115m] fallbackToHls triggered', { m3u8Count: this.quality.m3u8ListValue.length, reason })
     
     if (!this.artplayer) {
       this.showError('播放失败，无可用的视频源')
@@ -852,7 +834,7 @@ class PlayerManager {
 
     // 确保有 m3u8 列表
     if (this.quality.m3u8ListValue.length === 0) {
-      playerDebug('[115m] m3u8List empty, fetching...')
+      debugLog('[115m] m3u8List empty, fetching...')
       const fetched = await fetchM3u8WithRetry(this.currentPickCode).catch((e) => {
         console.error('[115m] fetchM3u8WithRetry failed:', e)
         return null
@@ -879,7 +861,7 @@ class PlayerManager {
       return
     }
     
-    playerDebug('[115m] fallbackToHls: switching to HLS')
+    debugLog('[115m] fallbackToHls: switching to HLS')
     this.quality.renderQualityPanel()
     this.overlay?.showToast(`${reason}，已切换 115原画`)
     try {
@@ -942,7 +924,7 @@ class PlayerManager {
   private async resolvePlaybackForPickCode(pickCode: string) {
     const playback = await resolvePlaybackBundle(sendRuntimeMessageSafe, pickCode, this.nativeUltraSupported)
 
-    playerDebug('[115m] Source fetch result:', {
+    debugLog('[115m] Source fetch result:', {
       ultraOk: !!playback.ultraUrl,
       m3u8Ok: playback.m3u8List.length > 0,
       m3u8Count: playback.m3u8List.length,

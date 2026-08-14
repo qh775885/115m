@@ -4,8 +4,10 @@
  */
 
 import type Artplayer from 'artplayer'
+import { safePlay } from './media'
 import { readTemporaryPlayerPlaylist } from '../../shared/player-playlist-cache'
 import { readPlaylistCidFromLocation } from './player-query'
+import { debugLog } from './debug'
 import { getNextPlaylistItem, getPlaybackEndCountdownPlan, getPreviousPlaylistItem } from './player-navigation'
 import { fetchPlaylistData } from './player-services'
 import { buildPlaybackNavState, getPlaylistPosition } from './playlist-navigation'
@@ -46,19 +48,6 @@ export interface PlaylistControllerDeps {
   formatFileSize: (size: number) => string
 }
 
-function playlistDebug(...args: unknown[]) {
-  if (localStorage.getItem('115m-player-debug') === '1') {
-    console.debug(...args)
-  }
-}
-
-function safePlay(art: Artplayer | null) {
-  if (!art) return
-  void art.play().catch(() => {
-    // Ignore native play promise rejections during source switches and transient media reloads.
-  })
-}
-
 export class PlayerPlaylistController {
   private deps: PlaylistControllerDeps | null = null
 
@@ -84,7 +73,7 @@ export class PlayerPlaylistController {
       this.syncOverlayPlaybackNav()
     }
     catch (error) {
-      playlistDebug('[115m] prefetchPlaylistItems failed:', error)
+      debugLog('[115m] prefetchPlaylistItems failed:', error)
     }
   }
 

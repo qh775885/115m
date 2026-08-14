@@ -4,6 +4,7 @@
  */
 
 import type Artplayer from 'artplayer'
+import { safePlay } from './media'
 import type { ResolvedPlaybackBundle } from './player-services'
 import { findPlaylistItemByPickCode, buildOverlayMetaPatch, buildPlayerHistoryUrl } from './player-switch'
 import { loadPlayHistoryWhenReady } from './history'
@@ -11,13 +12,6 @@ import type { OverlayPlaylistItem } from './overlay-types'
 import type { PlayerOverlayMeta } from './overlay-types'
 
 const VIDEO_SWITCH_COOLDOWN_MS = 1200
-
-function safePlay(art: Artplayer | null) {
-  if (!art) return
-  void art.play().catch(() => {
-    // Ignore native play promise rejections during source switches and transient media reloads.
-  })
-}
 
 export interface SwitchControllerDeps {
   /** 获取当前 artplayer 实例 */
