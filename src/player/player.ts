@@ -966,6 +966,10 @@ class PlayerManager {
     this.audioManager?.destroy()
     this.audioManager = null
     this.switchController.destroy()
+    this.playlist.destroy()
+    this.actions.destroy()
+    this.uiControls.destroy()
+    this.quality.destroy()
     const runtime = getRuntimeApi()
     runtime?.onMessage?.removeListener(this.handleRuntimeMessage)
     this.overlay?.destroy()

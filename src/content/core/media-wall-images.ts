@@ -53,9 +53,13 @@ export function buildImageItem(item: HTMLElement): MediaWallImageItem | null {
   }
 }
 
-function preloadImage(url: string) {
-  if (!url) return
+function preloadImage(url: string, release: () => void) {
+  if (!url) {
+    release()
+    return
+  }
   const img = new Image()
+  img.onload = img.onerror = () => release()
   img.src = url
 }
 
@@ -180,7 +184,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let wheelGestureTriggered = false
   let wheelGestureTimer = 0
   let thumbButtons: HTMLButtonElement[] = []
-  const preloader = new NeighborPreloader(url => preloadImage(url))
+  const preloader = new NeighborPreloader((url, release) => preloadImage(url, release))
 
   const DRAG_THRESHOLD = 6
   const EDGE_RESISTANCE = 0.5

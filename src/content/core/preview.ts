@@ -315,9 +315,19 @@ export class PreviewObserverRegistry {
       this.registeredItemsByDoc.set(doc, items)
 
       const observer = new MutationObserver(() => {
-        items?.forEach((onDispose, registeredItem) => {
-          if (!registeredItem.isConnected) onDispose()
+        const map = this.registeredItemsByDoc.get(doc)
+        if (!map) return
+        map.forEach((onDispose, registeredItem) => {
+          if (!registeredItem.isConnected) {
+            map.delete(registeredItem)
+            onDispose()
+          }
         })
+        if (map.size === 0) {
+          observer.disconnect()
+          this.removalObservers.delete(doc)
+          this.registeredItemsByDoc.delete(doc)
+        }
       })
       observer.observe(doc.documentElement, { childList: true, subtree: true })
       this.removalObservers.set(doc, observer)
@@ -600,15 +610,12 @@ function showTranscodeButton(container: HTMLElement, pickCode: string, fileId?: 
     }
   })
 
-  // 元素销毁时解除事件监听和轮询
-  const observer = new MutationObserver(() => {
-    if (!container.isConnected) {
-      unsubscribe()
-      stopPolling()
-      observer.disconnect()
-    }
+  // 元素销毁时解除事件监听和轮询（doc 级共享 observer，避免每按钮一个 body 级 observer）
+  const unregisterTranscodeItem = previewObserverRegistry.registerItem(container, () => {
+    unsubscribe()
+    stopPolling()
+    unregisterTranscodeItem()
   })
-  observer.observe(doc.body, { childList: true, subtree: true })
 
   const stopPolling = () => {
     if (typeof pollTimer === 'number') {

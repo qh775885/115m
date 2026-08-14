@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { renderPreview } from './preview'
+import { renderPreview, previewObserverRegistry } from './preview'
 import type { FileInfo } from './types'
 
 vi.mock('../../lib/videoThumbnail', () => ({
@@ -97,5 +97,23 @@ describe('renderPreview 列表项复用清理', () => {
     ;(getVideoCovers as unknown as ReturnType<typeof vi.fn>).mock.calls.forEach((call) => {
       expect(call[0]).toMatch(/^[AB]$/)
     })
+  })
+})
+
+describe('previewObserverRegistry 注册清理', () => {
+  it('断连的注册项触发 dispose 并从注册表移除', async () => {
+    vi.useFakeTimers()
+    const item = document.createElement('div')
+    document.body.appendChild(item)
+
+    const dispose = vi.fn()
+    previewObserverRegistry.registerItem(item, dispose)
+
+    // 移除节点，触发共享 observer 检查
+    item.remove()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(dispose).toHaveBeenCalledTimes(1)
+    expect(previewObserverRegistry.clearDocument(document)).toBeUndefined()
   })
 })

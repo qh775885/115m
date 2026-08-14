@@ -22,7 +22,7 @@ export class NeighborPreloader {
   private maxConcurrent: number
 
   constructor(
-    private loadImage: (url: string) => void,
+    private loadImage: (url: string, release: () => void) => void,
     options: NeighborPreloadOptions = {},
   ) {
     this.offsets = options.offsets ?? [1, -1, 2, -2]
@@ -33,6 +33,7 @@ export class NeighborPreloader {
   /**
    * 调度当前索引的邻居预载。
    * 每次调用递增版本号，使上一轮尚未执行的预载作废（快速翻页时不累积网络/内存风暴）。
+   * loadImage 收到第二个参数 release：图片加载完成/失败后必须调用以释放并发额度。
    */
   schedule(currentIndex: number, getUrl: (index: number) => string | null) {
     const version = ++this.version
@@ -44,10 +45,7 @@ export class NeighborPreloader {
         if (version !== this.version) return
         if (this.inflight >= this.maxConcurrent) return
         this.inflight += 1
-        this.loadImage(url)
-        // 简单限流：单张加载完成信号由外部控制时用 acquire/release；
-        // 此处默认一次性触发，release 由调用方在图片加载完成时调用
-        this.inflight -= 1
+        this.loadImage(url, () => this.release())
       }, order * this.staggerMs)
       this.pendingTimers += 1
     })
