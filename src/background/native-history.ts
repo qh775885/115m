@@ -1,11 +1,6 @@
 import { fetchWithTimeout } from '../lib/promise'
 import { mapWithConcurrency } from '../shared/utils'
-
-export interface NativePlayHistoryRecord {
-  pickCode: string
-  currentTime: number
-  watchEnd?: boolean
-}
+import type { NativePlayHistoryRecord } from '../shared/messages'
 
 interface NativeHistoryApiData {
   pick_code?: string
@@ -35,7 +30,7 @@ function buildHistoryUrl(pickCode: string, shareId?: string) {
   return `${NATIVE_HISTORY_API_URL}?${params}`
 }
 
-function parseNativeRecord(data: NativeHistoryApiData | undefined, fallbackPickCode: string): NativePlayHistoryRecord | null {
+export function parseNativeRecord(data: NativeHistoryApiData | undefined, fallbackPickCode: string): NativePlayHistoryRecord | null {
   if (!data) return null
   const currentTime = Number(data.time || 0)
   if (!Number.isFinite(currentTime)) return null

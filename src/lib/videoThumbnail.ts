@@ -6,6 +6,7 @@ import { BoundedCache, ByteBudgetCache } from './cache'
 import { CACHE_VERSION } from './cache-schema'
 import { fetchWithTimeout } from './promise'
 import { mapWithConcurrency } from '../shared/utils'
+import { isContextInvalidated } from '../shared/runtime-utils'
 
 /**
  * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
@@ -96,10 +97,6 @@ function resolveCoverOptions(options: VideoCoverOptions = {}) {
     ...defaultCoverOptions,
     ...options,
   }
-}
-
-function isContextInvalidatedError(error: unknown): boolean {
-  return String(error).includes('Extension context invalidated')
 }
 
 function getStorageArea(): chrome.storage.StorageArea | null {
@@ -417,7 +414,7 @@ async function readTimelineCovers(pickCode: string): Promise<VideoThumbnail[]> {
     }
   }
   catch (error) {
-    if (!isContextInvalidatedError(error)) {
+    if (!isContextInvalidated(error)) {
       console.warn('[115m] 读取时间轴缓存失败:', error)
     }
   }
@@ -447,7 +444,7 @@ async function writeTimelineCovers(pickCode: string, covers: VideoThumbnail[]): 
     }
   }
   catch (error) {
-    if (!isContextInvalidatedError(error)) {
+    if (!isContextInvalidated(error)) {
       console.warn('[115m] 读取时间轴缓存失败:', error)
     }
   }
@@ -540,7 +537,7 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
     }
   }
   catch (error) {
-    if (isContextInvalidatedError(error)) {
+    if (isContextInvalidated(error)) {
       return inMemory
     }
     console.warn('[115m] 读取缓存失败:', error)
@@ -579,7 +576,7 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
             }
           }
           catch (error) {
-            if (!isContextInvalidatedError(error)) {
+            if (!isContextInvalidated(error)) {
               console.warn('[115m] 读取缓存失败:', error)
             }
           }
@@ -593,7 +590,7 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
 
       if (resolvedOptions.deferCacheWrite) {
         void writeCache().catch((error) => {
-          if (!isContextInvalidatedError(error)) {
+          if (!isContextInvalidated(error)) {
             console.warn('[115m] 写入缓存失败:', error)
           }
         })
@@ -603,7 +600,7 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
       }
     }
     catch (error) {
-      if (isContextInvalidatedError(error)) {
+      if (isContextInvalidated(error)) {
         return results
       }
       console.warn('[115m] 写入缓存失败:', error)

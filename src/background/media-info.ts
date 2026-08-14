@@ -16,19 +16,11 @@ import {
 import { executeInMainWorld } from './helpers'
 import { query115Tabs } from '../platform/115/main-world'
 import { fetchWithTimeout } from '../lib/promise'
+import { parseJsonText } from '../shared/utils'
 
 /** 播放列表缓存 TTL：同一文件夹在短时间内重复进入播放器/刷新时复用，避免每次全量拉取 */
 const PLAYLIST_CACHE_TTL_MS = 10_000
 const playlistCache = new Map<string, { ts: number, list: unknown[], path: unknown[] }>()
-
-function parseJsonOrNull(text: string): unknown | null {
-  try {
-    return JSON.parse(text)
-  }
-  catch {
-    return null
-  }
-}
 
 export async function handleFetchM3u8(message: MsgFetchM3u8) {
   try {
@@ -59,7 +51,7 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
     try {
       const mainWorldResult = await executeInMainWorld(sender, url)
       if (mainWorldResult?.ok && mainWorldResult.text) {
-        const parsed = parseJsonOrNull(mainWorldResult.text)
+        const parsed = parseJsonText(mainWorldResult.text)
 
         if (parsed) return parsed
       }
@@ -77,7 +69,7 @@ export async function handleFetchSubtitles(message: MsgFetchSubtitles, sender?: 
     }, 15000)
 
     const text = await res.text()
-    const result = parseJsonOrNull(text)
+    const result = parseJsonText(text)
 
     if (result) {
       return result

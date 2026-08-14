@@ -4,6 +4,7 @@
  */
 import { fetchTextIn115VodMainWorld, query115Tabs } from '../platform/115/main-world'
 import { fetchVideoInfoByPickCode } from '../platform/115/file-actions'
+import { parseJsonText } from '../shared/utils'
 
 export interface TranscodeCheckResult {
   result?: number
@@ -27,16 +28,6 @@ export interface IsTranscodedResult {
   code?: number
   data?: string[]
   count?: number
-}
-
-function parseJsonText<T>(text: string): T | null {
-  if (!text) return null
-  try {
-    return JSON.parse(text) as T
-  }
-  catch {
-    return null
-  }
 }
 
 export async function checkTranscodeJob(sha1: string, pickCode: string, priority?: number): Promise<TranscodeCheckResult | null> {
