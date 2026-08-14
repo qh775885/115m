@@ -1,4 +1,6 @@
-import type { FetchIO } from './FetchIO'
+export interface ChunkIoLike {
+  fetchBufferRange(url: string, start: number, end?: number): Promise<Response>
+}
 
 /**
  * 分块读取器
@@ -7,7 +9,7 @@ export class ChunkReader {
   static readonly DEFAULT_LIMIT = 188 * 1024 * 2
   private offset: number = 0
   private limit: number = 0
-  private io: FetchIO
+  private io: ChunkIoLike
   private url: string
   private count: number = 0
   private stoped: boolean = false
@@ -17,7 +19,7 @@ export class ChunkReader {
 
   constructor(
     url: string,
-    io: FetchIO,
+    io: ChunkIoLike,
     offset: number,
     limit: number = ChunkReader.DEFAULT_LIMIT,
     endOffset?: number,
