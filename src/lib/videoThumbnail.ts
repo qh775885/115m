@@ -5,6 +5,7 @@ import { getImageResize } from './image'
 import { BoundedCache, ByteBudgetCache } from './cache'
 import { CACHE_VERSION } from './cache-schema'
 import { fetchWithTimeout } from './promise'
+import { mapWithConcurrency } from '../shared/utils'
 
 /**
  * M3U8 源不可用，通常表示视频尚未转码、服务端未生成 HLS 流
@@ -360,26 +361,6 @@ async function generateAccurateCover(
   }
 
   return null
-}
-
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  worker: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let cursor = 0
-
-  async function runWorker() {
-    while (cursor < items.length) {
-      const current = cursor++
-      results[current] = await worker(items[current], current)
-    }
-  }
-
-  const workerCount = Math.max(1, Math.min(limit, items.length))
-  await Promise.all(Array.from({ length: workerCount }, () => runWorker()))
-  return results
 }
 
 function sortAndDedupeCovers(covers: VideoThumbnail[]): VideoThumbnail[] {

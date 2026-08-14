@@ -37,3 +37,24 @@ export function isImageExtension(name: string): boolean {
   if (!ext) return false
   return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'svg', 'tif', 'tiff', 'avif', 'heic', 'heif'].includes(ext)
 }
+
+/** 并发受限的 map：按 limit 分派 worker 逐个消费 items，保持结果顺序 */
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let cursor = 0
+
+  async function runWorker() {
+    while (cursor < items.length) {
+      const current = cursor++
+      results[current] = await worker(items[current], current)
+    }
+  }
+
+  const workerCount = Math.max(1, Math.min(limit, items.length))
+  await Promise.all(Array.from({ length: workerCount }, () => runWorker()))
+  return results
+}

@@ -4,6 +4,7 @@ import { escapeHtml } from '../../shared/utils'
 import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
 import type { SubtitleController } from './subtitle-controller'
 import type { AudioManager } from './audio-manager'
+import { updateArtplayerControl } from './player-quality'
 
 export const MEDIA_TRACK_CONTROL_NAME = 'm115-media-track-control'
 
@@ -29,18 +30,10 @@ export class MediaTrackController {
 
   renderControl() {
     if (!this.art) return
-    const controlsApi = this.art.controls
-    if (!controlsApi) return
-
     const nextItem = this.buildControl()
     if (!nextItem) return
 
-    if (typeof controlsApi.update === 'function') {
-      controlsApi.update(nextItem)
-    } else {
-      controlsApi.remove(MEDIA_TRACK_CONTROL_NAME)
-      controlsApi.add(nextItem)
-    }
+    updateArtplayerControl(this.art, MEDIA_TRACK_CONTROL_NAME, nextItem)
   }
 
   buildControl(): any {

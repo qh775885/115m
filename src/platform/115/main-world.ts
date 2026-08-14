@@ -22,6 +22,46 @@ function withVodQueueTimeout(promise: Promise<MainWorldTextResponse>, ms: number
   })
 }
 
+/**
+ * 构造注入 MAIN world 的 fetch 函数体。
+ * 注入函数必须完全自包含（不能引用外部变量），故用工厂消除三处重复的字面量实现。
+ * @param withHeaders 是否附加 Accept / X-Requested-With 请求头
+ */
+function createMainWorldFetchFunc(withHeaders: boolean) {
+  return async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
+    try {
+      const isPost = fetchBody.length > 0
+      const options: RequestInit = {
+        method: isPost ? 'POST' : 'GET',
+        credentials: 'include',
+      }
+      if (withHeaders) {
+        options.headers = {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          'X-Requested-With': 'XMLHttpRequest',
+        }
+      }
+      if (isPost) {
+        options.headers = {
+          ...(options.headers as Record<string, string>),
+          'Content-Type': requestContentType,
+        }
+        options.body = fetchBody
+      }
+      if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
+        options.signal = (AbortSignal as any).timeout(fetchTimeoutMs)
+      }
+
+      const res = await fetch(fetchUrl, options)
+      const text = await res.text()
+      return { ok: res.ok, text, status: res.status }
+    }
+    catch (error) {
+      return { ok: false, text: '', status: 0, error: String(error) }
+    }
+  }
+}
+
 export type VodFetchMode = 'auto' | 'direct' | 'main_world' | 'page'
 
 interface VodFrameSession {
@@ -233,29 +273,7 @@ export async function fetchTextIn115MainWorld(
     const result = await runIn115MainWorld({
       sender,
       args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded', VOD_FETCH_TIMEOUT_MS],
-      func: async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
-        try {
-          const isPost = fetchBody.length > 0
-          const options: RequestInit = {
-            method: isPost ? 'POST' : 'GET',
-            credentials: 'include',
-          }
-          if (isPost) {
-            options.headers = { 'Content-Type': requestContentType }
-            options.body = fetchBody
-          }
-          if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
-            options.signal = (AbortSignal as any).timeout(fetchTimeoutMs)
-          }
-
-          const res = await fetch(fetchUrl, options)
-          const text = await res.text()
-          return { ok: res.ok, text, status: res.status }
-        }
-        catch (error) {
-          return { ok: false, text: '', status: 0, error: String(error) }
-        }
-      },
+      func: createMainWorldFetchFunc(false),
     })
 
     if (!result) {
@@ -408,36 +426,7 @@ async function fetchTextIn115VodMainWorldQueued(
       tabId,
       ...(frameSession ? { frameId: frameSession.frameId } : {}),
       args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS],
-      func: async (fetchUrl: string, fetchBody: string, requestContentType: string, fetchTimeoutMs: number) => {
-        try {
-          const isPost = fetchBody.length > 0
-          const options: RequestInit = {
-            method: isPost ? 'POST' : 'GET',
-            credentials: 'include',
-            headers: {
-              Accept: 'application/json, text/javascript, */*; q=0.01',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-          }
-          if (isPost) {
-            options.headers = {
-              ...options.headers,
-              'Content-Type': requestContentType,
-            }
-            options.body = fetchBody
-          }
-          if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as any).timeout === 'function') {
-            options.signal = (AbortSignal as any).timeout(fetchTimeoutMs)
-          }
-
-          const res = await fetch(fetchUrl, options)
-          const text = await res.text()
-          return { ok: res.ok, text, status: res.status }
-        }
-        catch (error) {
-          return { ok: false, text: '', status: 0, error: String(error) }
-        }
-      },
+      func: createMainWorldFetchFunc(true),
     })
 
     return result as MainWorldTextResponse

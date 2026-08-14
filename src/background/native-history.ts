@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from '../lib/promise'
+import { mapWithConcurrency } from '../shared/utils'
 
 export interface NativePlayHistoryRecord {
   pickCode: string
@@ -58,26 +59,6 @@ export async function getNativeHistory(pickCode: string, shareId?: string): Prom
   if (!json.state || Array.isArray(json.data)) return null
 
   return parseNativeRecord(json.data, pickCode)
-}
-
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let index = 0
-
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (index < items.length) {
-      const current = index
-      index += 1
-      results[current] = await fn(items[current])
-    }
-  })
-
-  await Promise.all(workers)
-  return results
 }
 
 export async function getNativeHistoryMap(pickCodes: string[], shareId?: string): Promise<Record<string, NativePlayHistoryRecord>> {

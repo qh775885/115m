@@ -1,6 +1,7 @@
 import { Icons } from '../../shared/icons'
 import type Artplayer from 'artplayer'
 import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
+import { updateArtplayerControl } from './player-quality'
 
 export const SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'
 
@@ -36,18 +37,10 @@ export class SettingsMenuController {
 
   renderControl() {
     if (!this.art) return
-    const controlsApi = this.art.controls
-    if (!controlsApi) return
-
     const nextItem = this.buildControl()
     if (!nextItem) return
 
-    if (typeof controlsApi.update === 'function') {
-      controlsApi.update(nextItem)
-    } else {
-      controlsApi.remove(SETTINGS_MENU_CONTROL_NAME)
-      controlsApi.add(nextItem)
-    }
+    updateArtplayerControl(this.art, SETTINGS_MENU_CONTROL_NAME, nextItem)
   }
 
   buildControl(): any {
