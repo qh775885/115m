@@ -48,7 +48,7 @@ export interface SwitchControllerDeps {
   playlist: {
     clearPlaybackEndState: () => void
     resetProgressSyncBase: () => void
-    items: OverlayPlaylistItem[]
+    items: () => OverlayPlaylistItem[]
     syncOverlayPlaybackNav: () => void
   }
   /** actions 控制器操作 */
@@ -148,7 +148,7 @@ export class PlayerSwitchController {
     if (!art || !pickCode || pickCode === deps.getCurrentPickCode()) return
 
     const requestId = ++this.switchVideoRequestId
-    const targetItem = findPlaylistItemByPickCode(deps.playlist.items, pickCode)
+    const targetItem = findPlaylistItemByPickCode(deps.playlist.items(), pickCode)
 
     deps.playlist.clearPlaybackEndState()
     deps.clearTransientPlaybackWatchers()
@@ -190,7 +190,7 @@ export class PlayerSwitchController {
         keepPlaylistOpen,
       }))
       deps.playlist.syncOverlayPlaybackNav()
-      deps.updatePlaylist(deps.playlist.items)
+      deps.updatePlaylist(deps.playlist.items())
       deps.setSwitchUrlInFlight(true)
       try {
         await deps.withSwitchTimeout(currentArt.switchUrl(playback.initialPlayback.url))

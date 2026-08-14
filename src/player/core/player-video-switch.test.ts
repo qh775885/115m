@@ -28,7 +28,7 @@ function createController() {
   const playlist = {
     clearPlaybackEndState: vi.fn(),
     resetProgressSyncBase: vi.fn(),
-    items: [
+    items: () => [
       { pickCode: 'pick-1', fileId: 'f1', name: '第一集', type: 'video' as const },
       { pickCode: 'pick-2', fileId: 'f2', name: '第二集', type: 'video' as const },
     ],

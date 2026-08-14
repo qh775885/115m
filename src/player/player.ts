@@ -375,7 +375,7 @@ class PlayerManager {
       playlist: {
         clearPlaybackEndState: () => this.playlist.clearPlaybackEndState(),
         resetProgressSyncBase: () => this.playlist.resetProgressSyncBase(),
-        items: this.playlist.items,
+        items: () => this.playlist.items,
         syncOverlayPlaybackNav: () => this.playlist.syncOverlayPlaybackNav(),
       },
       actions: {
