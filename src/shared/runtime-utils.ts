@@ -8,6 +8,7 @@
 /** 检测是否为扩展上下文失效错误（扩展更新/重载后旧页面的连接会断开） */
 export function isContextInvalidated(error: unknown): boolean {
   return error instanceof Error && /Extension context invalidated/i.test(error.message)
+    || /Extension context invalidated/i.test(String(error))
 }
 
 /** 扩展上下文失效时，提示用户刷新页面 */

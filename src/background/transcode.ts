@@ -9,7 +9,7 @@ import type {
 } from '../shared/messages'
 import { handleFetchM3u8 } from './media-info'
 import { isTransientFrameError, wait } from '../shared/utils'
-import { acquireExtension115VodTabScope, close115VodFrameSession, releaseExtension115VodTabScope } from '../platform/115/main-world'
+import { acquireExtension115VodTabScope, releaseExtension115VodTabScope } from '../platform/115/main-world'
 import {
   buildQueuedResponse,
   checkIsTranscoded,
@@ -315,7 +315,6 @@ export async function handleTranscode(message: MsgTranscode, sender?: chrome.run
     return { ok: false, state: 'failed', error: e?.message || String(e) }
   }
   finally {
-    await close115VodFrameSession(pickCodeForCooldown)
     await releaseExtension115VodTabScope()
   }
 }

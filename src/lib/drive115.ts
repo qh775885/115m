@@ -2,7 +2,7 @@
  * 115 Drive API 核心 - 从原项目移植，适配扩展环境
  */
 import {
-  NORMAL_URL, WEB_API_URL, VOD_URL, DL_URL,
+  NORMAL_URL, WEB_API_URL, VOD_URL,
 } from './constants'
 import type { M3u8Item } from './types'
 import { parseM3u8Text } from './m3u8-parser'
@@ -189,24 +189,6 @@ export class Drive115 {
    */
   async getM3u8(pickcode: string): Promise<M3u8Item[]> {
     return this.getM3u8Info(pickcode)
-  }
-
-  /**
-   * 设置下载 cookie（用于播放鉴权）
-   */
-  async setDownloadCookie(cookie: NonNullable<DownloadResult['url']['auth_cookie']>): Promise<void> {
-    if (typeof chrome !== 'undefined' && chrome.cookies) {
-      await chrome.cookies.set({
-        url: DL_URL,
-        name: cookie.name,
-        value: cookie.value,
-        path: cookie.path,
-        domain: '.115cdn.net',
-        secure: true,
-        expirationDate: Number(cookie.expire),
-        sameSite: 'no_restriction',
-      })
-    }
   }
 }
 

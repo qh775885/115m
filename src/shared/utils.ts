@@ -58,3 +58,22 @@ export async function mapWithConcurrency<T, R>(
   await Promise.all(Array.from({ length: workerCount }, () => runWorker()))
   return results
 }
+
+/** JSON.parse 的安全包装：解析失败或空串返回 null */
+export function parseJsonText<T>(text: string): T | null {
+  if (!text) return null
+  try {
+    return JSON.parse(text) as T
+  }
+  catch {
+    return null
+  }
+}
+
+/** 文件大小格式化：B / KB / MB / GB */
+export function formatFileSize(size: number): string {
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`
+  if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(2)} MB`
+  return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`
+}

@@ -71,37 +71,11 @@ export function openNativeFolder(sourceItem: HTMLElement, hiddenClass: string) {
     sourceItem.style.setProperty('top', '0', 'important')
     sourceItem.style.setProperty('pointer-events', 'none', 'important')
 
+    const init = buildMouseInit()
     dispatchMouseSequence(anchor, [
-      {
-        type: 'mousedown',
-        init: {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          button: 0,
-          buttons: 1,
-        },
-      },
-      {
-        type: 'mouseup',
-        init: {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          button: 0,
-          buttons: 1,
-        },
-      },
-      {
-        type: 'click',
-        init: {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          button: 0,
-          buttons: 1,
-        },
-      },
+      { type: 'mousedown', init },
+      { type: 'mouseup', init },
+      { type: 'click', init },
     ])
   })
 }
@@ -135,45 +109,4 @@ export function openNativeFolderContextMenu(sourceItem: HTMLElement, hiddenClass
       },
     ])
   })
-}
-
-/**
- * 通用原生右键菜单转发：对已隐藏的源元素临时显示并定位到光标处，派发右键序列后恢复。
- * 供媒体墙等场景复用（区别于 openNativeFolderContextMenu 使用打开锚点，这里使用右键菜单锚点）。
- */
-export function forwardNativeContextMenu(sourceItem: HTMLElement, hiddenClass: string, event: MouseEvent) {
-  const anchor = getContextMenuAnchor(sourceItem)
-  sourceItem.classList.remove(hiddenClass)
-
-  const previousStyle = sourceItem.getAttribute('style') || ''
-  sourceItem.style.setProperty('position', 'fixed', 'important')
-  sourceItem.style.setProperty('left', `${event.clientX}px`, 'important')
-  sourceItem.style.setProperty('top', `${event.clientY}px`, 'important')
-  sourceItem.style.setProperty('width', '1px', 'important')
-  sourceItem.style.setProperty('height', '1px', 'important')
-  sourceItem.style.setProperty('overflow', 'hidden', 'important')
-  sourceItem.style.setProperty('opacity', '0', 'important')
-  sourceItem.style.setProperty('pointer-events', 'none', 'important')
-
-  const init: MouseEventInit = {
-    bubbles: true,
-    cancelable: true,
-    view: window,
-    button: 2,
-    buttons: 2,
-    clientX: event.clientX,
-    clientY: event.clientY,
-    screenX: event.screenX,
-    screenY: event.screenY,
-  }
-
-  anchor.dispatchEvent(new MouseEvent('mousedown', init))
-  anchor.dispatchEvent(new MouseEvent('mouseup', init))
-  anchor.dispatchEvent(new MouseEvent('contextmenu', init))
-
-  window.setTimeout(() => {
-    if (previousStyle) sourceItem.setAttribute('style', previousStyle)
-    else sourceItem.removeAttribute('style')
-    sourceItem.classList.add(hiddenClass)
-  }, 0)
 }

@@ -1,5 +1,13 @@
 import type { MediaWallFolderItem } from './media-wall-types'
-import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
+import { WALL_HIDDEN_CLASS } from './media-wall-types'
+import {
+  createWallSelectionButton,
+  installWallDragSelection,
+  scheduleSelectionSync,
+  syncWallSelectionState,
+  SELECT_SYNC_AFTER_ACTION,
+  SELECT_SYNC_INITIAL,
+} from './media-wall-selection'
 import { Icons } from '../../shared/icons'
 import { selectNativeFolder, openNativeFolder, openNativeFolderContextMenu } from './native-interact'
 import {
@@ -60,16 +68,15 @@ export function buildFolderItem(item: HTMLElement): MediaWallFolderItem | null {
     hasRemark: isRemarkVisible(item),
     starAction,
     remarkAction,
-    open: () => openNativeFolder(item, 'm115-wall-hidden-item'),
-    select: (event?: MouseEvent) => selectNativeFolder(item, 'm115-wall-hidden-item', event),
-    contextMenu: (event: MouseEvent) => openNativeFolderContextMenu(item, 'm115-wall-hidden-item', event),
+    open: () => openNativeFolder(item, WALL_HIDDEN_CLASS),
+    select: (event?: MouseEvent) => selectNativeFolder(item, WALL_HIDDEN_CLASS, event),
+    contextMenu: (event: MouseEvent) => openNativeFolderContextMenu(item, WALL_HIDDEN_CLASS, event),
   }
 }
 
 export function renderFoldersSection(
   doc: Document,
   folders: MediaWallFolderItem[],
-  forwardNativeContextMenu: (sourceItem: HTMLElement, event: MouseEvent) => void,
   scheduleMediaWallRefresh: (doc: Document) => void,
 ) {
   const section = doc.createElement('section')
@@ -83,13 +90,7 @@ export function renderFoldersSection(
   const grid = doc.createElement('div')
   grid.className = 'm115-folder-grid'
 
-  const syncSelectionState = () => {
-    folders.forEach((folder) => {
-      const card = grid.querySelector<HTMLElement>(`.m115-folder-card[data-folder-id="${CSS.escape(folder.id)}"]`)
-      if (!card) return
-      card.classList.toggle('is-selected', isWallSourceItemSelected(folder.sourceItem))
-    })
-  }
+  const syncSelectionState = () => syncWallSelectionState(grid, '.m115-folder-card', folders, 'data-folder-id')
 
   folders.forEach((folder) => {
     const card = doc.createElement('button')
@@ -132,25 +133,7 @@ export function renderFoldersSection(
     shellFront.appendChild(footer)
     card.appendChild(shellFront)
 
-    const selection = doc.createElement('button')
-    selection.type = 'button'
-    selection.className = 'm115-folder-selection'
-    selection.setAttribute('aria-label', '选择文件夹')
-    selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check()}</span>`
-    selection.addEventListener('mousedown', (event) => {
-      if (event.button !== 0) return
-      event.preventDefault()
-      event.stopPropagation()
-      folder.select(event)
-      window.setTimeout(syncSelectionState, 0)
-      window.setTimeout(syncSelectionState, 60)
-    })
-    selection.addEventListener('click', (event) => {
-      event.preventDefault()
-      event.stopPropagation()
-      window.setTimeout(syncSelectionState, 0)
-      window.setTimeout(syncSelectionState, 60)
-    })
+    const selection = createWallSelectionButton(doc, '选择文件夹', folder.select, syncSelectionState)
     card.appendChild(selection)
 
     const actions = doc.createElement('span')
@@ -201,8 +184,7 @@ export function renderFoldersSection(
       if (event.defaultPrevented) return
       if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
         folder.select(event)
-        window.setTimeout(syncSelectionState, 0)
-        window.setTimeout(syncSelectionState, 60)
+        scheduleSelectionSync(syncSelectionState, SELECT_SYNC_AFTER_ACTION)
         return
       }
       folder.open()
@@ -224,8 +206,7 @@ export function renderFoldersSection(
   )
 
   syncSelectionState()
-  window.setTimeout(syncSelectionState, 0)
-  window.setTimeout(syncSelectionState, 80)
+  scheduleSelectionSync(syncSelectionState, SELECT_SYNC_INITIAL)
 
   section.addEventListener('DOMNodeRemoved', stopDragSelection, { once: true })
   section.appendChild(grid)

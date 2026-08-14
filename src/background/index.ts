@@ -7,7 +7,6 @@ import type { RuntimeMessage } from '../shared/messages'
 import { executeInMainWorld } from './helpers'
 import { assertAllowedOpenTabUrl } from './tab-allowlist'
 import { getNativeHistory, getNativeHistoryMap, setNativeHistory } from './native-history'
-import { register115VodFrameSession } from '../platform/115/main-world'
 import {
   handleTranscode,
   handleTranscodeNativeFallback,
@@ -60,7 +59,8 @@ function readSenderUrl(sender?: chrome.runtime.MessageSender) {
   return sender?.url || sender?.tab?.url || ''
 }
 
-function isTrustedSender(sender?: chrome.runtime.MessageSender) {
+/** 校验消息发送方是否为受信来源（115 域名 / 扩展自身 / 本地开发） */
+export function isTrustedSender(sender?: chrome.runtime.MessageSender) {
   const rawUrl = readSenderUrl(sender)
   if (!rawUrl) return false
 
@@ -82,7 +82,8 @@ function assertTrustedSender(sender: chrome.runtime.MessageSender | undefined, t
   }
 }
 
-function assertAllowedMainWorldUrl(rawUrl: string) {
+/** 校验 MAIN world fetch 目标 URL 是否在白名单内（仅 https + 已登记的 115 路径） */
+export function assertAllowedMainWorldUrl(rawUrl: string) {
   const url = new URL(rawUrl)
   if (url.protocol !== 'https:') throw new Error('MAIN world URL must use https')
 
@@ -92,7 +93,8 @@ function assertAllowedMainWorldUrl(rawUrl: string) {
   if (!allowed) throw new Error('MAIN world URL is not allowed')
 }
 
-function normalizeCookieDomain(domain: string) {
+/** 校验 cookie 域名仅限 115CDN 下载域 */
+export function normalizeCookieDomain(domain: string) {
   const normalized = domain.trim().toLowerCase()
   if (normalized !== '.115cdn.net' && normalized !== 'dl.115cdn.net') {
     throw new Error('Cookie domain is not allowed')
@@ -113,9 +115,6 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
     case 'MAIN_WORLD_GET':
       assertAllowedMainWorldUrl(message.data.url)
       return executeInMainWorld(sender, message.data.url)
-
-    case 'TRANSCODE_FRAME_READY':
-      return register115VodFrameSession(sender, message.data.pickCode)
 
     case 'OPEN_TAB': {
       assertAllowedOpenTabUrl(message.url)

@@ -1,3 +1,6 @@
+/** 媒体墙隐藏源 item 的 class（渲染卡片后隐藏原生列表项） */
+export const WALL_HIDDEN_CLASS = 'm115-wall-hidden-item'
+
 export interface MediaWallFolderItem {
   id: string
   title: string

@@ -1,7 +1,7 @@
 import type { FileInfo } from './types'
 import { readAttr } from '../../shared/utils'
 import { parseDuration } from './utils'
-import { getItemName, getItemPickCode } from './native-dom'
+import { getItemParentId, getItemPickCode, getItemTitle } from './native-dom'
 
 export function isPlayIntentTarget(target: HTMLElement): boolean {
   if (target.closest('.file-opr,.m115-cover-container,input[type="checkbox"],.checkbox')) return false
@@ -15,10 +15,10 @@ export function extractFileInfo(item: HTMLElement): FileInfo | null {
 
   const durationNode = item.querySelector('.duration') as HTMLElement | null
   const durationRaw = durationNode?.getAttribute('duration') || durationNode?.textContent?.trim() || ''
-  const fileName = getItemName(item) || '视频'
+  const fileName = getItemTitle(item) || '视频'
   const fileSize = item.querySelector('.size,.file-size,.meta-size,.list-size')?.textContent?.trim() || ''
   const fileId = readAttr(item, ['file_id', 'fid', 'fileid'])
-  const parentId = readAttr(item, ['cid', 'parent_id', 'pid']) || new URLSearchParams(window.location.search).get('cid') || ''
+  const parentId = getItemParentId(item, '')
   const isMarked = !!item.querySelector('.icon-star,.isstar,.file-mark .selected,.file-opr .icon-operate-fav.active')
 
   return {

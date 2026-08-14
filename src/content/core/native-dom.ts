@@ -26,10 +26,6 @@ export function getFolderId(item: HTMLElement): string {
   return item.getAttribute('cate_id') || ''
 }
 
-export function getItemTitle(item: HTMLElement): string {
-  return item.getAttribute('title') || item.querySelector(NAME_SELECTOR)?.textContent?.trim() || ''
-}
-
 export function getFolderCoverUrl(item: HTMLElement): string {
   return item.getAttribute('img_url') || ''
 }
@@ -109,14 +105,25 @@ export function getSelectedItems(doc: Document): HTMLElement[] {
   return Array.from(nodes)
 }
 
+/** 文件节点的名称（title 属性优先，回退 .file-name .name 文本） */
+export function getItemTitle(item: HTMLElement): string {
+  return item.getAttribute('title')
+    || item.querySelector(NAME_SELECTOR)?.textContent?.trim()
+    || ''
+}
+
 /** 文件节点的 pickCode（兼容 pick_code / pickcode 两种属性名） */
 export function getItemPickCode(item: HTMLElement): string {
   return item.getAttribute('pick_code') || item.getAttribute('pickcode') || ''
 }
 
-/** 文件节点的名称（title 属性优先，回退 .file-name .name 文本） */
-export function getItemName(item: HTMLElement): string {
-  return item.getAttribute('title')
-    || item.querySelector(NAME_SELECTOR)?.textContent?.trim()
-    || ''
+/** 文件节点的父目录 cid（兼容 cate_id/cid/pid/p_id/parent_id，兜底当前 URL 的 cid 参数） */
+export function getItemParentId(item: HTMLElement, fallback = '0'): string {
+  return item.getAttribute('cate_id')
+    || item.getAttribute('cid')
+    || item.getAttribute('parent_id')
+    || item.getAttribute('pid')
+    || item.getAttribute('p_id')
+    || new URLSearchParams(window.location.search).get('cid')
+    || fallback
 }

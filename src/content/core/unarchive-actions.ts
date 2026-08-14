@@ -2,7 +2,8 @@ import type { FileInfo } from './types'
 import { wait } from '../../shared/utils'
 import { isRuntimeContextInvalidatedResult, sendRuntimeMessageSafe } from './runtime'
 import { isArchiveFileName, isSecondaryVolume, stripArchiveExtension } from '../../shared/archive'
-import { getItemName, getItemPickCode, getSelectedItems } from './native-dom'
+import { getItemPickCode, getItemTitle, getSelectedItems } from './native-dom'
+import { WEB_API_URL } from '../../lib/constants'
 
 const MAX_PROGRESS_CHECKS = 120
 const PROGRESS_DELAY_MS = 1500
@@ -63,7 +64,7 @@ async function listFolders(parentCid: string): Promise<Set<string>> {
     cur: '1',
     natsort: '1',
   })
-  const json = await requestJson<{ data?: Array<{ n?: string }> }>(`https://webapi.115.com/files?${params}`)
+  const json = await requestJson<{ data?: Array<{ n?: string }> }>(`${WEB_API_URL}/files?${params}`)
   return new Set((json.data || []).map(item => item.n || '').filter(Boolean))
 }
 
@@ -77,7 +78,7 @@ async function createUniqueFolder(parentCid: string, baseName: string) {
   }
 
   const body = new URLSearchParams({ pid: parentCid, cname: name })
-  const json = await requestJson<{ cid?: string, file_id?: string, file_name?: string }>('https://webapi.115.com/files/add', body)
+  const json = await requestJson<{ cid?: string, file_id?: string, file_name?: string }>(`${WEB_API_URL}/files/add`, body)
   const cid = json.cid || json.file_id
   if (!cid) throw new Error('创建文件夹失败')
   return { cid, name }
@@ -92,12 +93,12 @@ async function deleteEmptyFolder(parentCid: string, folderCid: string) {
     show_dir: '1',
     format: 'json',
   })
-  const list = await requestJson<{ count?: number, data?: unknown[] }>(`https://webapi.115.com/files?${params}`)
+  const list = await requestJson<{ count?: number, data?: unknown[] }>(`${WEB_API_URL}/files?${params}`)
   if ((list.count || list.data?.length || 0) > 0) return
 
   const body = new URLSearchParams({ pid: parentCid })
   body.append('fid[0]', folderCid)
-  await requestJson('https://webapi.115.com/rb/delete', body)
+  await requestJson(`${WEB_API_URL}/rb/delete`, body)
 }
 
 async function readArchiveEntries(pickCode: string): Promise<ExtractEntry[]> {
@@ -107,7 +108,7 @@ async function readArchiveEntries(pickCode: string): Promise<ExtractEntry[]> {
     paths: '文件',
     page_count: '999',
   })
-  const json = await requestJson<{ data?: { list?: ExtractEntry[] } }>(`https://webapi.115.com/files/extract_info?${params}`)
+  const json = await requestJson<{ data?: { list?: ExtractEntry[] } }>(`${WEB_API_URL}/files/extract_info?${params}`)
   const list = json.data?.list || []
   if (!list.length) throw new Error('压缩包内容为空或无法读取')
   return list
@@ -118,10 +119,10 @@ async function unlockArchiveIfNeeded(file: FileInfo, error: unknown) {
   if (!password) throw error instanceof Error ? error : new Error(String(error))
 
   const body = new URLSearchParams({ pick_code: file.pickCode, secret: password })
-  await requestJson('https://webapi.115.com/files/push_extract', body)
+  await requestJson(`${WEB_API_URL}/files/push_extract`, body)
 
   for (let i = 0; i < MAX_PROGRESS_CHECKS; i++) {
-    const json = await requestJson<{ data?: { extract_status?: { unzip_status?: number, progress?: number } } }>(`https://webapi.115.com/files/push_extract?pick_code=${encodeURIComponent(file.pickCode)}`)
+    const json = await requestJson<{ data?: { extract_status?: { unzip_status?: number, progress?: number } } }>(`${WEB_API_URL}/files/push_extract?pick_code=${encodeURIComponent(file.pickCode)}`)
     const status = json.data?.extract_status?.unzip_status
     const progress = json.data?.extract_status?.progress || 0
     if (status === 4 || progress >= 100) return
@@ -155,7 +156,7 @@ async function submitExtract(file: FileInfo, targetCid: string, entries: Extract
     body.append(isDir ? 'extract_dir[]' : 'extract_file[]', name)
   }
 
-  const json = await requestJson<{ data?: { extract_id?: number | string } }>('https://webapi.115.com/files/add_extract_file', body)
+  const json = await requestJson<{ data?: { extract_id?: number | string } }>(`${WEB_API_URL}/files/add_extract_file`, body)
   const extractId = json.data?.extract_id
   if (!extractId) throw new Error('提交解压任务失败')
   return String(extractId)
@@ -163,7 +164,7 @@ async function submitExtract(file: FileInfo, targetCid: string, entries: Extract
 
 async function waitExtractDone(extractId: string, onProgress?: (percent: number) => void) {
   for (let i = 0; i < MAX_PROGRESS_CHECKS; i++) {
-    const json = await requestJson<{ data?: { percent?: number } }>(`https://webapi.115.com/files/add_extract_file?extract_id=${encodeURIComponent(extractId)}`)
+    const json = await requestJson<{ data?: { percent?: number } }>(`${WEB_API_URL}/files/add_extract_file?extract_id=${encodeURIComponent(extractId)}`)
     const percent = json.data?.percent || 0
     onProgress?.(percent)
     if (percent >= 100) return '解压完成'
@@ -223,7 +224,7 @@ function collectSelectedArchiveFiles(doc: Document): FileInfo[] {
   return getSelectedItems(doc).map((item) => {
     return {
       pickCode: getItemPickCode(item),
-      fileName: getItemName(item),
+      fileName: getItemTitle(item),
       duration: 0,
       isVideo: false,
       fileId: item.getAttribute('file_id') || undefined,

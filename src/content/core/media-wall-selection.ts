@@ -1,6 +1,61 @@
+import { Icons } from '../../shared/icons'
+
 export type MediaWallSelectableItem = {
   sourceItem: HTMLElement
   select: (event?: MouseEvent) => void
+}
+
+/** 选择状态同步延迟（ms）：点击/拖选后原生 DOM 选中态是异步渲染的，需多次延迟重读 */
+export const SELECT_SYNC_AFTER_ACTION: readonly number[] = [0, 60]
+export const SELECT_SYNC_INITIAL: readonly number[] = [0, 80]
+export const SELECT_SYNC_AFTER_DRAG_SELECT: readonly number[] = [90, 160]
+export const SELECT_SYNC_IMAGE_INITIAL_EXTRA = 180
+
+export function scheduleSelectionSync(sync: () => void, delays: readonly number[]) {
+  for (const delay of delays) {
+    window.setTimeout(sync, delay)
+  }
+}
+
+/** 构建卡片上的选择按钮（勾选框），点击时调用 item.select 并异步同步选中态 */
+export function createWallSelectionButton(
+  doc: Document,
+  ariaLabel: string,
+  select: (event?: MouseEvent) => void,
+  syncSelectionState: () => void,
+): HTMLButtonElement {
+  const selection = doc.createElement('button')
+  selection.type = 'button'
+  selection.className = 'm115-folder-selection'
+  selection.setAttribute('aria-label', ariaLabel)
+  selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check()}</span>`
+  selection.addEventListener('mousedown', (event) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    select(event)
+    scheduleSelectionSync(syncSelectionState, SELECT_SYNC_AFTER_ACTION)
+  })
+  selection.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    scheduleSelectionSync(syncSelectionState, SELECT_SYNC_AFTER_ACTION)
+  })
+  return selection
+}
+
+/** 将网格卡片选中态与源 item 的选中态对齐（folders/images 通用） */
+export function syncWallSelectionState(
+  grid: HTMLElement,
+  selector: string,
+  items: Array<{ id: string, sourceItem: HTMLElement }>,
+  idAttr: string,
+) {
+  items.forEach((item) => {
+    const card = grid.querySelector<HTMLElement>(`${selector}[${idAttr}="${CSS.escape(item.id)}"]`)
+    if (!card) return
+    card.classList.toggle('is-selected', isWallSourceItemSelected(item.sourceItem))
+  })
 }
 
 export function isWallSourceItemSelected(sourceItem: HTMLElement): boolean {
@@ -86,8 +141,7 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
 
   const syncSoon = () => {
     syncSelectionState()
-    window.setTimeout(syncSelectionState, 0)
-    window.setTimeout(syncSelectionState, 80)
+    scheduleSelectionSync(syncSelectionState, SELECT_SYNC_INITIAL)
   }
 
   const selectElement = (element: HTMLElement) => {
@@ -95,10 +149,7 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
     if (!item || selectedDuringDrag.has(item.sourceItem) || isWallSourceItemSelected(item.sourceItem)) return false
     selectedDuringDrag.add(item.sourceItem)
     item.select(buildDragSelectEvent(latestEvent))
-    window.setTimeout(() => {
-      syncSelectionState()
-    }, 90)
-    window.setTimeout(syncSelectionState, 160)
+    scheduleSelectionSync(syncSelectionState, SELECT_SYNC_AFTER_DRAG_SELECT)
     return true
   }
 

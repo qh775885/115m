@@ -48,10 +48,6 @@ export interface RuntimeTranscodeResponse {
   batchFileIds?: string[]
 }
 
-export type RuntimeTranscodeFrameReadyResponse =
-  | { ok: true, frameId: number }
-  | { ok: false, error: string }
-
 export interface FetchM3u8Response {
   list?: M3u8Item[]
   error?: string
@@ -149,11 +145,6 @@ export interface MsgMainWorldGet {
   data: { url: string }
 }
 
-export interface MsgTranscodeFrameReady {
-  type: 'TRANSCODE_FRAME_READY'
-  data: { pickCode: string }
-}
-
 export interface MsgFetchPlaylist {
   type: 'FETCH_PLAYLIST'
   data: { cid: string, pickCode?: string }
@@ -221,7 +212,6 @@ export type RuntimeMessage =
   | MsgFetchSubtitles
   | MsgMainWorldFetch
   | MsgMainWorldGet
-  | MsgTranscodeFrameReady
   | MsgFetchPlaylist
   | MsgDeleteFile
   | MsgPing
@@ -248,7 +238,6 @@ export interface RuntimeMessageResponseMap {
   MAIN_WORLD_FETCH: RuntimeMainWorldResponse
   MAIN_WORLD_GET: RuntimeMainWorldResponse
   DELETE_FILE: RuntimeDeleteFileResponse
-  TRANSCODE_FRAME_READY: RuntimeTranscodeFrameReadyResponse
   TRANSCODE_ACCELERATE: RuntimeTranscodeResponse
   TRANSCODE_STATUS: RuntimeTranscodeResponse
   TRANSCODE_NATIVE_FALLBACK: RuntimeTranscodeResponse

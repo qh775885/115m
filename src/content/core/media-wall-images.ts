@@ -1,12 +1,29 @@
 import type { MediaWallImageItem, LightboxController } from './media-wall-types'
+import { WALL_HIDDEN_CLASS } from './media-wall-types'
 import { isImageExtension, readAttr } from '../../shared/utils'
 import { NeighborPreloader } from './media-wall-preload'
 import { openNativeFolder, openNativeFolderContextMenu, selectNativeFolder } from './native-interact'
-import { installWallDragSelection, isWallSourceItemSelected } from './media-wall-selection'
+import {
+  createWallSelectionButton,
+  installWallDragSelection,
+  scheduleSelectionSync,
+  syncWallSelectionState,
+  SELECT_SYNC_AFTER_ACTION,
+  SELECT_SYNC_INITIAL,
+  SELECT_SYNC_IMAGE_INITIAL_EXTRA,
+} from './media-wall-selection'
+import {
+  applyEdgeResistance as edgeResist,
+  clampScale,
+  clampToBounds,
+  computeDragBounds,
+  computeZoomAtPoint,
+  settleStep,
+} from './viewer-transform'
 import { isRuntimeContextInvalidatedResult } from './runtime'
 import { Icons } from '../../shared/icons'
 import { showToast } from '../../shared/ui/toast'
-import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemTitle } from './native-dom'
+import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemParentId, getItemTitle } from './native-dom'
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')
@@ -44,12 +61,12 @@ export function buildImageItem(item: HTMLElement): MediaWallImageItem | null {
     thumbUrl,
     originalUrl: toOriginalImageUrl(thumbUrl),
     fileId: readAttr(item, ['file_id', 'fid', 'fileid']),
-    parentId: readAttr(item, ['p_id', 'pid', 'parent_id', 'cid']) || new URLSearchParams(location.search).get('cid') || '0',
+    parentId: getItemParentId(item),
     pickCode: readAttr(item, ['pick_code', 'pickcode']),
     sourceItem: item,
-    open: () => openNativeFolder(item, 'm115-wall-hidden-item'),
-    select: (event?: MouseEvent) => selectNativeFolder(item, 'm115-wall-hidden-item', event),
-    contextMenu: (event: MouseEvent) => openNativeFolderContextMenu(item, 'm115-wall-hidden-item', event),
+    open: () => openNativeFolder(item, WALL_HIDDEN_CLASS),
+    select: (event?: MouseEvent) => selectNativeFolder(item, WALL_HIDDEN_CLASS, event),
+    contextMenu: (event: MouseEvent) => openNativeFolderContextMenu(item, WALL_HIDDEN_CLASS, event),
   }
 }
 
@@ -200,29 +217,28 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     thumbsWrap.classList.toggle('is-collapsed', thumbsCollapsed)
   }
 
-  const getDragBounds = () => {
+  const readFrameMetrics = () => {
     const frameRect = mediaFrame.getBoundingClientRect()
-    const naturalWidth = imageEl.naturalWidth || frameRect.width || 1
-    const naturalHeight = imageEl.naturalHeight || frameRect.height || 1
-    const fitScale = Math.min(frameRect.width / naturalWidth, frameRect.height / naturalHeight, 1)
-    const renderedWidth = naturalWidth * fitScale * zoomScale
-    const renderedHeight = naturalHeight * fitScale * zoomScale
     return {
-      maxOffsetX: Math.max(0, (renderedWidth - frameRect.width) / 2),
-      maxOffsetY: Math.max(0, (renderedHeight - frameRect.height) / 2),
+      frameRect,
+      naturalWidth: imageEl.naturalWidth || frameRect.width || 1,
+      naturalHeight: imageEl.naturalHeight || frameRect.height || 1,
     }
   }
 
+  const getDragBounds = () => {
+    const { frameRect, naturalWidth, naturalHeight } = readFrameMetrics()
+    return computeDragBounds(naturalWidth, naturalHeight, frameRect, zoomScale)
+  }
+
   const applyEdgeResistance = (value: number, min: number, max: number) => {
-    if (value < min) return min + (value - min) * EDGE_RESISTANCE
-    if (value > max) return max + (value - max) * EDGE_RESISTANCE
-    return value
+    return edgeResist(value, min, max, EDGE_RESISTANCE)
   }
 
   const clampTranslate = () => {
     const { maxOffsetX, maxOffsetY } = getDragBounds()
-    translateX = Math.max(-maxOffsetX, Math.min(maxOffsetX, translateX))
-    translateY = Math.max(-maxOffsetY, Math.min(maxOffsetY, translateY))
+    translateX = clampToBounds(translateX, -maxOffsetX, maxOffsetX)
+    translateY = clampToBounds(translateY, -maxOffsetY, maxOffsetY)
   }
 
   const updateZoomUi = () => {
@@ -304,28 +320,22 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   const zoomAtPoint = (nextScale: number, clientX: number, clientY: number) => {
-    const frameRect = mediaFrame.getBoundingClientRect()
-    const naturalWidth = imageEl.naturalWidth || frameRect.width || 1
-    const naturalHeight = imageEl.naturalHeight || frameRect.height || 1
-    const fitScale = Math.min(frameRect.width / naturalWidth, frameRect.height / naturalHeight, 1)
-    const baseWidth = naturalWidth * fitScale
-    const baseHeight = naturalHeight * fitScale
+    const { frameRect, naturalWidth, naturalHeight } = readFrameMetrics()
     const currentScale = zoomScale
-    const frameX = clientX - frameRect.left - frameRect.width / 2
-    const frameY = clientY - frameRect.top - frameRect.height / 2
-    const imagePointX = (frameX - translateX) / currentScale
-    const imagePointY = (frameY - translateY) / currentScale
+    const next = computeZoomAtPoint(
+      { zoomScale, translateX, translateY },
+      nextScale,
+      naturalWidth,
+      naturalHeight,
+      frameRect,
+      clientX,
+      clientY,
+    )
 
-    zoomScale = nextScale
-    translateX = frameX - imagePointX * nextScale
-    translateY = frameY - imagePointY * nextScale
-
-    if (!Number.isFinite(translateX)) translateX = 0
-    if (!Number.isFinite(translateY)) translateY = 0
-    if (!baseWidth || !baseHeight || nextScale === 1) {
-      translateX = 0
-      translateY = 0
-    }
+    zoomScale = next.zoomScale
+    translateX = next.translateX
+    translateY = next.translateY
+    void currentScale
 
     if (zoomScale === 1) {
       targetTranslateX = 0
@@ -341,19 +351,17 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     if (settleAnimationFrame) window.cancelAnimationFrame(settleAnimationFrame)
 
     const { maxOffsetX, maxOffsetY } = getDragBounds()
-    targetTranslateX = Math.max(-maxOffsetX, Math.min(maxOffsetX, targetTranslateX))
-    targetTranslateY = Math.max(-maxOffsetY, Math.min(maxOffsetY, targetTranslateY))
+    targetTranslateX = clampToBounds(targetTranslateX, -maxOffsetX, maxOffsetX)
+    targetTranslateY = clampToBounds(targetTranslateY, -maxOffsetY, maxOffsetY)
 
     const tick = () => {
-      const nextX = translateX + (targetTranslateX - translateX) * SETTLE_LERP
-      const nextY = translateY + (targetTranslateY - translateY) * SETTLE_LERP
-      const doneX = Math.abs(targetTranslateX - nextX) < 0.5
-      const doneY = Math.abs(targetTranslateY - nextY) < 0.5
-      translateX = doneX ? targetTranslateX : nextX
-      translateY = doneY ? targetTranslateY : nextY
+      const xStep = settleStep(translateX, targetTranslateX, SETTLE_LERP)
+      const yStep = settleStep(translateY, targetTranslateY, SETTLE_LERP)
+      translateX = xStep.next
+      translateY = yStep.next
       imageEl.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${zoomScale})`
       updateZoomUi()
-      if (doneX && doneY) {
+      if (xStep.done && yStep.done) {
         translateX = targetTranslateX
         translateY = targetTranslateY
         imageEl.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${zoomScale})`
@@ -387,7 +395,7 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 
   const adjustZoom = (delta: number, clientX?: number, clientY?: number) => {
-    const next = Math.max(1, Math.min(4, zoomScale + delta))
+    const next = clampScale(zoomScale + delta)
     if (next === zoomScale) return
     if (typeof clientX === 'number' && typeof clientY === 'number') {
       zoomAtPoint(next, clientX, clientY)
@@ -717,13 +725,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
     const lightbox = getLightboxController(doc)
     const stopSyncList: Array<() => void> = []
 
-    const syncSelectionState = () => {
-      images.forEach((image) => {
-        const card = grid.querySelector<HTMLElement>(`.m115-image-card[data-image-id="${CSS.escape(image.id)}"]`)
-        if (!card) return
-        card.classList.toggle('is-selected', isWallSourceItemSelected(image.sourceItem))
-      })
-    }
+    const syncSelectionState = () => syncWallSelectionState(grid, '.m115-image-card', images, 'data-image-id')
 
     images.forEach((image, index) => {
       const button = doc.createElement('button')
@@ -748,32 +750,13 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
       thumbWrap.appendChild(thumb)
       button.appendChild(thumbWrap)
       button.appendChild(name)
-      const selection = doc.createElement('button')
-      selection.type = 'button'
-      selection.className = 'm115-folder-selection'
-      selection.setAttribute('aria-label', '选择图片')
-      selection.innerHTML = `<span class="m115-folder-selection-box">${Icons.Check()}</span>`
-      selection.addEventListener('mousedown', (event) => {
-        if (event.button !== 0) return
-        event.preventDefault()
-        event.stopPropagation()
-        image.select(event)
-        window.setTimeout(syncSelectionState, 0)
-        window.setTimeout(syncSelectionState, 60)
-      })
-      selection.addEventListener('click', (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        window.setTimeout(syncSelectionState, 0)
-        window.setTimeout(syncSelectionState, 60)
-      })
+      const selection = createWallSelectionButton(doc, '选择图片', image.select, syncSelectionState)
       button.appendChild(selection)
       button.addEventListener('click', (event) => {
         if (event.defaultPrevented) return
         if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
           image.select(event)
-          window.setTimeout(syncSelectionState, 0)
-          window.setTimeout(syncSelectionState, 60)
+          scheduleSelectionSync(syncSelectionState, SELECT_SYNC_AFTER_ACTION)
           return
         }
         lightbox.open(images, index)
@@ -796,9 +779,8 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
     )
 
     syncSelectionState()
-    window.setTimeout(syncSelectionState, 0)
-    window.setTimeout(syncSelectionState, 80)
-    window.setTimeout(syncSelectionState, 180)
+    scheduleSelectionSync(syncSelectionState, SELECT_SYNC_INITIAL)
+    window.setTimeout(syncSelectionState, SELECT_SYNC_IMAGE_INITIAL_EXTRA)
 
     section.addEventListener('DOMNodeRemoved', () => {
       stopDragSelection()

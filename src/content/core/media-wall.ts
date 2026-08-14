@@ -2,7 +2,6 @@ import { readAttr } from '../../shared/utils'
 import { sendRuntimeMessageSafe } from './runtime'
 import { buildFolderItem, renderFoldersSection } from './media-wall-folders'
 import { createImageModule } from './media-wall-images'
-import { forwardNativeContextMenu as forwardNativeContextMenuImpl } from './native-interact'
 import {
   getFileItems,
   getFileListContainer,
@@ -11,6 +10,7 @@ import {
   isRemarkVisible,
 } from './native-dom'
 import type { MediaWallFolderItem, MediaWallImageItem } from './media-wall-types'
+import { WALL_HIDDEN_CLASS } from './media-wall-types'
 
 interface MediaWallState {
   listEl: HTMLElement | null
@@ -22,7 +22,6 @@ const stateByDoc = new WeakMap<Document, MediaWallState>()
 const refreshTimersByDoc = new WeakMap<Document, number[]>()
 const imageModule = createImageModule(sendRuntimeMessageSafe)
 
-const HIDDEN_CLASS = 'm115-wall-hidden-item'
 const WALL_ID = 'm115-media-wall'
 
 function getFolderStateSignature(item: HTMLElement): string {
@@ -54,11 +53,7 @@ function buildSignature(items: HTMLElement[], folders: MediaWallFolderItem[], im
 
 function clearWall(list: HTMLElement) {
   list.querySelector(`#${WALL_ID}`)?.remove()
-  list.querySelectorAll<HTMLElement>(`.${HIDDEN_CLASS}`).forEach((item) => item.classList.remove(HIDDEN_CLASS))
-}
-
-function forwardNativeContextMenu(sourceItem: HTMLElement, event: MouseEvent) {
-  forwardNativeContextMenuImpl(sourceItem, HIDDEN_CLASS, event)
+  list.querySelectorAll<HTMLElement>(`.${WALL_HIDDEN_CLASS}`).forEach((item) => item.classList.remove(WALL_HIDDEN_CLASS))
 }
 
 function renderImagesSection(doc: Document, images: MediaWallImageItem[]) {
@@ -83,8 +78,8 @@ function ensureWallContainer(list: HTMLElement): HTMLElement {
 }
 
 function hideSourceItems(folders: MediaWallFolderItem[], images: MediaWallImageItem[]) {
-  folders.forEach(folder => folder.sourceItem.classList.add(HIDDEN_CLASS))
-  images.forEach(image => image.sourceItem.classList.add(HIDDEN_CLASS))
+  folders.forEach(folder => folder.sourceItem.classList.add(WALL_HIDDEN_CLASS))
+  images.forEach(image => image.sourceItem.classList.add(WALL_HIDDEN_CLASS))
 }
 
 function sameItemsRef(a: HTMLElement[] | null, b: HTMLElement[]): boolean {
@@ -127,7 +122,7 @@ export function renderMediaWall(doc: Document, force = false) {
   const wall = ensureWallContainer(list)
   wall.innerHTML = ''
 
-  if (folders.length) wall.appendChild(renderFoldersSection(doc, folders, forwardNativeContextMenu, scheduleMediaWallRefresh))
+  if (folders.length) wall.appendChild(renderFoldersSection(doc, folders, scheduleMediaWallRefresh))
   if (images.length) wall.appendChild(renderImagesSection(doc, images))
 
   hideSourceItems(folders, images)
