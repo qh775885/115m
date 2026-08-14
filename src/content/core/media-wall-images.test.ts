@@ -117,4 +117,72 @@ describe('图片查看器交互', () => {
 
     expect(overlay.classList.contains('active')).toBe(false)
   })
+
+  it('滚轮向下翻页', () => {
+    const { doc, overlay } = openLightbox(document)
+
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+
+    expect(overlay.classList.contains('active')).toBe(true)
+    const titleEl = doc.querySelector<HTMLElement>('.m115-viewer-title')
+    expect(titleEl?.textContent).toContain('图 2')
+  })
+
+  it('滚轮向上翻上一张', async () => {
+    const { doc, overlay } = openLightbox(document)
+
+    // 先翻到第二张
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    let titleEl = doc.querySelector<HTMLElement>('.m115-viewer-title')
+    expect(titleEl?.textContent).toContain('图 2')
+
+    // 等手势重置后再向上滚回第一张
+    await new Promise(resolve => setTimeout(resolve, 130))
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }))
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    titleEl = doc.querySelector<HTMLElement>('.m115-viewer-title')
+    expect(titleEl?.textContent).toContain('图 1')
+  })
+
+  it('缩略图面板折叠后再展开', () => {
+    const { doc, overlay } = openLightbox(document)
+
+    const thumbsToggle = doc.querySelector<HTMLElement>('.m115-viewer-thumbs-toggle')
+    thumbsToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    const thumbsWrap = doc.querySelector<HTMLElement>('.m115-viewer-thumbs-wrap')
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(true)
+
+    thumbsToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(false)
+    expect(overlay.classList.contains('active')).toBe(true)
+  })
+
+  it('删除当前图片后缩略图与标题同步', async () => {
+    const { doc, overlay } = openLightbox(document)
+
+    const deleteBtn = doc.querySelector<HTMLElement>('.m115-viewer-frame-delete')
+    deleteBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    const titleEl = doc.querySelector<HTMLElement>('.m115-viewer-title')
+    // 删除第 1 张后，当前应校正为原第 2 张
+    expect(titleEl?.textContent).toContain('图 2')
+    const thumbs = doc.querySelectorAll<HTMLElement>('.m115-viewer-thumb')
+    expect(thumbs.length).toBe(2)
+    expect(overlay.classList.contains('active')).toBe(true)
+  })
+
+  it('删除最后一张后关闭查看器', async () => {
+    const { doc, overlay } = openLightbox(document)
+
+    // 依次删除三张
+    for (let i = 0; i < 3; i++) {
+      const deleteBtn = doc.querySelector<HTMLElement>('.m115-viewer-frame-delete')
+      deleteBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      await new Promise(resolve => setTimeout(resolve, 10))
+    }
+
+    expect(overlay.classList.contains('active')).toBe(false)
+  })
 })
