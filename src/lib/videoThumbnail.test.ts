@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CACHE_VERSION } from './cache-schema'
-import { getTimelineCovers, getVideoCovers } from './videoThumbnail'
+import { calculateTimes, clampTime, getTimelineCovers, getVideoCovers, selectCoverSet, sortAndDedupeCovers } from './videoThumbnail'
 
 vi.mock('./drive115', () => ({
   drive115: {
@@ -65,5 +65,38 @@ describe('videoThumbnail 时间轴封顶', () => {
 
   it('getVideoCovers 无 m3u8 源时抛出 M3u8UnavailableError', async () => {
     await expect(getVideoCovers('pick-no-m3u8', 600, 5)).rejects.toThrow(/m3u8 not found/i)
+  })
+})
+
+describe('videoThumbnail 纯函数', () => {
+  it('clampTime 夹取到有效区间', () => {
+    expect(clampTime(-5, 100)).toBe(0.2)
+    expect(clampTime(50, 100)).toBe(50)
+    expect(clampTime(999, 100)).toBe(99.8)
+    expect(clampTime(30, 0)).toBe(30)
+  })
+
+  it('calculateTimes 均匀分布采样点', () => {
+    expect(calculateTimes(100, 5)).toEqual([10, 30, 50, 70, 90])
+    expect(calculateTimes(100, 1)).toEqual([50])
+  })
+
+  it('sortAndDedupeCovers 排序并按时间+图去重', () => {
+    const covers = [
+      { imgUrl: 'b', width: 1, height: 1, time: 30 },
+      { imgUrl: 'a', width: 1, height: 1, time: 10 },
+      { imgUrl: 'a', width: 1, height: 1, time: 10.2 },
+      { imgUrl: 'a', width: 1, height: 1, time: 20 },
+    ]
+    const result = sortAndDedupeCovers(covers)
+    // 相邻且时间差 <0.5 且同图 → 去重（time 10.2 的 a 被合并）
+    expect(result.map(c => c.time)).toEqual([10, 20, 30])
+  })
+
+  it('selectCoverSet 选取最接近目标时间的封面', () => {
+    const covers = makeCovers(10)
+    const result = selectCoverSet(covers, 100, 3)
+    expect(result.length).toBe(3)
+    expect(result.map(c => c.time).sort((a, b) => a - b)).toEqual([20, 50, 80])
   })
 })

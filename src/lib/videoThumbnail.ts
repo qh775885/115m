@@ -107,7 +107,7 @@ function getStorageArea(): chrome.storage.StorageArea | null {
   return area ?? null
 }
 
-function clampTime(time: number, duration?: number): number {
+export function clampTime(time: number, duration?: number): number {
   const min = 0.2
   const max = duration ? Math.max(min, duration - 0.2) : Number.POSITIVE_INFINITY
   return Math.max(min, Math.min(max, time))
@@ -192,7 +192,7 @@ export interface VideoThumbnail {
   time: number
 }
 
-function calculateTimes(duration: number, count = 5): number[] {
+export function calculateTimes(duration: number, count = 5): number[] {
   if (count <= 1) {
     return [Math.round(clampTime(duration / 2, duration) * 10) / 10]
   }
@@ -363,7 +363,7 @@ async function generateAccurateCover(
   return null
 }
 
-function sortAndDedupeCovers(covers: VideoThumbnail[]): VideoThumbnail[] {
+export function sortAndDedupeCovers(covers: VideoThumbnail[]): VideoThumbnail[] {
   const sorted = [...covers].sort((a, b) => a.time - b.time)
   return sorted.filter((cover, index) => {
     const prev = sorted[index - 1]
@@ -374,7 +374,7 @@ function sortAndDedupeCovers(covers: VideoThumbnail[]): VideoThumbnail[] {
   })
 }
 
-function selectCoverSet(covers: VideoThumbnail[], duration: number, coverNum: number): VideoThumbnail[] {
+export function selectCoverSet(covers: VideoThumbnail[], duration: number, coverNum: number): VideoThumbnail[] {
   if (covers.length <= coverNum) {
     return covers
   }
