@@ -136,4 +136,61 @@ describe('DecoderFlow waitForFrame 忙等优化', () => {
     const result = await Promise.race([waitPromise, new Promise(resolve => setTimeout(() => resolve('pending'), 100))])
     expect(result).toBeUndefined()
   })
+
+  it('超时且未找到帧时抛出 Timeout', async () => {
+    // 超时判定基于真实 Date.now()，此用例切回真实时钟并设短超时
+    vi.useRealTimers()
+    const reader = {
+      get isDoned() {
+        return false // 永不耗尽，持续供数触发超时分支
+      },
+      next: vi.fn(async () => new Uint8Array([1, 2, 3, 4])),
+    }
+    const io = {
+      createChunkReader: vi.fn(() => reader),
+    } as never
+    const flow = new DecoderFlow({
+      targetTime: 50,
+      baseTime: 0,
+      segmentUrl: 'https://x/seg.ts',
+      firstFramePriority: false,
+      io,
+      logger: {
+        sub: () => ({ debug: () => {}, warn: () => {}, error: () => {}, info: () => {} }),
+      } as never,
+    })
+    flow.initialize()
+
+    const waitPromise = flow.waitForFrame(150)
+    const result = await Promise.race([
+      waitPromise.then(() => 'resolved', (e: unknown) => e),
+      new Promise(resolve => setTimeout(() => resolve('pending'), 1000)),
+    ])
+    expect(result).not.toBe('pending')
+    expect(result).toBeInstanceOf(Error)
+    vi.useFakeTimers()
+  })
+
+  it('超时但已找到帧时返回当前帧而非抛错', async () => {
+    const { flow } = createFlow()
+    const internal = flow as unknown as {
+      videoDecoder: { decode: ReturnType<typeof vi.fn> }
+    }
+    internal.videoDecoder.decode.mockImplementation((chunk: unknown) => {
+      void chunk
+      const frame = new MockVideoFrame(0)
+      flow['_processFrame'](frame as unknown as VideoFrame)
+    })
+
+    // 先让循环跑起来并注入关键帧，再以极短超时触发"超时但有帧"分支
+    const waitPromise = flow.waitForFrame(30)
+    await vi.advanceTimersByTimeAsync(5)
+    emitKeyframe()
+    await vi.advanceTimersByTimeAsync(100)
+
+    const result = await Promise.race([waitPromise, new Promise(resolve => setTimeout(() => resolve('pending'), 100))])
+    expect(result).not.toBe('pending')
+    const frameResult = result as { videoFrame: unknown }
+    expect(frameResult?.videoFrame).toBeDefined()
+  })
 })
