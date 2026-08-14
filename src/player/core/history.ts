@@ -62,11 +62,44 @@ export interface PlaylistProgressSnapshot {
   progressPercent: number
 }
 
+/**
+ * 泛型 localStorage map 读写：消除多组同构偏好存储的重复实现。
+ */
+function createStorageMap<T>(storageKey: string) {
+  const read = (): Record<string, T> => {
+    try {
+      const raw = localStorage.getItem(storageKey)
+      if (!raw) return {}
+      const parsed = JSON.parse(raw) as Record<string, T>
+      return parsed && typeof parsed === 'object' ? parsed : {}
+    }
+    catch {
+      return {}
+    }
+  }
+
+  const write = (map: Record<string, T>) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(map))
+    }
+    catch {
+      // ignore storage errors
+    }
+  }
+
+  return { read, write }
+}
+
 const QUALITY_PREF_STORAGE_KEY = '115m-quality-preferences'
 const SUBTITLE_PREF_STORAGE_KEY = '115m-subtitle-preferences'
 const AUDIO_TRACK_PREF_STORAGE_KEY = '115m-audio-track-preferences'
 const VIDEO_ROTATION_STORAGE_KEY = '115m-video-rotations'
 const VOLUME_PREF_STORAGE_KEY = '115m-volume-preference'
+
+const qualityPrefs = createStorageMap<QualityPreference>(QUALITY_PREF_STORAGE_KEY)
+const subtitlePrefs = createStorageMap<SubtitlePreference>(SUBTITLE_PREF_STORAGE_KEY)
+const audioTrackPrefs = createStorageMap<AudioTrackPreference>(AUDIO_TRACK_PREF_STORAGE_KEY)
+const videoRotations = createStorageMap<number>(VIDEO_ROTATION_STORAGE_KEY)
 const DEFAULT_VOLUME_PREFERENCE: VolumePreference = {
   volume: 0.6,
   muted: false,
@@ -90,89 +123,14 @@ function normalizeVolumePreference(value: unknown): VolumePreference {
   return { volume, muted }
 }
 
-function readQualityPreferenceMap(): Record<string, QualityPreference> {
-  try {
-    const raw = localStorage.getItem(QUALITY_PREF_STORAGE_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as Record<string, QualityPreference>
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  }
-  catch {
-    return {}
-  }
-}
-
-function writeQualityPreferenceMap(map: Record<string, QualityPreference>) {
-  try {
-    localStorage.setItem(QUALITY_PREF_STORAGE_KEY, JSON.stringify(map))
-  }
-  catch {
-    // ignore storage errors
-  }
-}
-
-function readSubtitlePreferenceMap(): Record<string, SubtitlePreference> {
-  try {
-    const raw = localStorage.getItem(SUBTITLE_PREF_STORAGE_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as Record<string, SubtitlePreference>
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  }
-  catch {
-    return {}
-  }
-}
-
-function writeSubtitlePreferenceMap(map: Record<string, SubtitlePreference>) {
-  try {
-    localStorage.setItem(SUBTITLE_PREF_STORAGE_KEY, JSON.stringify(map))
-  }
-  catch {
-    // ignore storage errors
-  }
-}
-
-function readAudioTrackPreferenceMap(): Record<string, AudioTrackPreference> {
-  try {
-    const raw = localStorage.getItem(AUDIO_TRACK_PREF_STORAGE_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as Record<string, AudioTrackPreference>
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  }
-  catch {
-    return {}
-  }
-}
-
-function writeAudioTrackPreferenceMap(map: Record<string, AudioTrackPreference>) {
-  try {
-    localStorage.setItem(AUDIO_TRACK_PREF_STORAGE_KEY, JSON.stringify(map))
-  }
-  catch {
-    // ignore storage errors
-  }
-}
-
-function readVideoRotationMap(): Record<string, number> {
-  try {
-    const raw = localStorage.getItem(VIDEO_ROTATION_STORAGE_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as Record<string, number>
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  }
-  catch {
-    return {}
-  }
-}
-
-function writeVideoRotationMap(map: Record<string, number>) {
-  try {
-    localStorage.setItem(VIDEO_ROTATION_STORAGE_KEY, JSON.stringify(map))
-  }
-  catch {
-    // ignore storage errors
-  }
-}
+const readQualityPreferenceMap = qualityPrefs.read
+const writeQualityPreferenceMap = qualityPrefs.write
+const readSubtitlePreferenceMap = subtitlePrefs.read
+const writeSubtitlePreferenceMap = subtitlePrefs.write
+const readAudioTrackPreferenceMap = audioTrackPrefs.read
+const writeAudioTrackPreferenceMap = audioTrackPrefs.write
+const readVideoRotationMap = videoRotations.read
+const writeVideoRotationMap = videoRotations.write
 
 export function loadVolumePreference(): VolumePreference {
   try {

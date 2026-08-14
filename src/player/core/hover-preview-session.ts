@@ -1,6 +1,17 @@
 import type Artplayer from 'artplayer'
 import { getTimelineCovers, getVideoCoverAt, getVideoCovers } from '../../lib/videoThumbnail'
 import { blurTime, findNearestCover } from './hover-utils'
+import {
+  getBackgroundRefineCoverCount,
+  getCoarseSamplingInterval,
+  getInitialCoverCount,
+  getMaxCoarseCoverCount,
+  getPreciseMinDelta,
+  getPrecisePrefetchRange,
+  getPrecisePrefetchStep,
+  PRECISE_COVER_BUCKET,
+  MIN_COARSE_COVER_COUNT,
+} from './hover-preview-policy'
 
 export interface HoverCover {
   time: number
@@ -26,9 +37,7 @@ interface HoverPreviewSessionOptions {
   onDebug: (label: string, payload?: Record<string, unknown>) => void
 }
 
-const PRECISE_COVER_BUCKET = 0.5
 const PRECISE_COVER_DEBOUNCE = 50
-const MIN_COARSE_COVER_COUNT = 24
 /** 精确封面缓存条数上限（每张为 dataURL 抽帧，超限后淘汰最久写入的 bucket，避免长时间悬停累积数十 MB） */
 export const MAX_PRECISE_COVERS = 200
 export const THUMBNAIL_PREVIEW_ENABLED = true
@@ -167,7 +176,7 @@ export class HoverPreviewSession {
     const coarseCover = findNearestCover(
       this.covers,
       hoverTime,
-      Math.max(2, Math.min(8, this.getCoarseSamplingInterval(this.art.duration) * 1.5)),
+      Math.max(2, Math.min(8, getCoarseSamplingInterval(this.art.duration) * 1.5)),
     )
     const nearest = preciseCover ?? coarseCover
 
@@ -218,7 +227,7 @@ export class HoverPreviewSession {
       return
     }
 
-    if (nearest && Math.abs(nearest.time - hoverTime) < this.getPreciseMinDelta(this.art.duration)) {
+    if (nearest && Math.abs(nearest.time - hoverTime) < getPreciseMinDelta(this.art.duration)) {
       return
     }
 
@@ -274,7 +283,7 @@ export class HoverPreviewSession {
         this.onDisplayRefreshRequested()
       }
 
-      const initialCoverCount = this.getInitialCoverCount(duration)
+      const initialCoverCount = getInitialCoverCount(duration)
       const covers = await getVideoCovers(this.pickCode, duration, initialCoverCount)
       if (this.destroyed || generation !== this.thumbnailGeneration) return
       this.onDebug('coarse covers ready', {
@@ -282,7 +291,7 @@ export class HoverPreviewSession {
         duration,
         requestedCount: initialCoverCount,
         actualCount: covers.length,
-        coarseInterval: this.getCoarseSamplingInterval(duration),
+        coarseInterval: getCoarseSamplingInterval(duration),
       })
       if (covers.length === 0) return
 
@@ -339,63 +348,17 @@ export class HoverPreviewSession {
     this.onCoversChanged([], this.art.duration || 0)
   }
 
-  private getCoarseSamplingInterval(duration: number): number {
-    if (duration <= 5 * 60) {
-      return 8
-    }
-    if (duration <= 10 * 60) {
-      return 10
-    }
-    if (duration <= 20 * 60) {
-      return 15
-    }
-    if (duration <= 40 * 60) {
-      return 24
-    }
-    if (duration <= 90 * 60) {
-      return 36
-    }
-    if (duration <= 180 * 60) {
-      return 45
-    }
-    return 60
-  }
 
-  private getMaxCoarseCoverCount(duration: number): number {
-    if (duration <= 20 * 60) {
-      return 72
-    }
-    if (duration <= 90 * 60) {
-      return 120
-    }
-    if (duration <= 180 * 60) {
-      return 150
-    }
-    return 180
-  }
 
-  private getInitialCoverCount(duration: number): number {
-    const targetInterval = this.getCoarseSamplingInterval(duration)
-    const count = Math.ceil(duration / targetInterval)
-    return Math.max(MIN_COARSE_COVER_COUNT, Math.min(count, this.getMaxCoarseCoverCount(duration)))
-  }
 
-  private getBackgroundRefineCoverCount(duration: number): number {
-    if (duration <= 5 * 60) {
-      return 48
-    }
-    if (duration <= 8 * 60) {
-      return 60
-    }
-    if (duration <= 12 * 60) {
-      return 72
-    }
-    return 0
-  }
+
+
+
+
 
   private scheduleBackgroundRefinement(duration: number) {
-    const refineCount = this.getBackgroundRefineCoverCount(duration)
-    if (!refineCount || refineCount <= this.getInitialCoverCount(duration)) {
+    const refineCount = getBackgroundRefineCoverCount(duration)
+    if (!refineCount || refineCount <= getInitialCoverCount(duration)) {
       return
     }
 
@@ -440,35 +403,11 @@ export class HoverPreviewSession {
     }
   }
 
-  private getPreciseMinDelta(duration: number): number {
-    if (duration <= 20 * 60) {
-      return 1.5
-    }
-    if (duration <= 90 * 60) {
-      return 1
-    }
-    return 0.75
-  }
 
-  private getPrecisePrefetchRange(duration: number): number {
-    if (duration <= 20 * 60) {
-      return 1
-    }
-    if (duration <= 90 * 60) {
-      return 2
-    }
-    return 3
-  }
 
-  private getPrecisePrefetchStep(duration: number): number {
-    if (duration <= 20 * 60) {
-      return PRECISE_COVER_BUCKET
-    }
-    if (duration <= 90 * 60) {
-      return 2
-    }
-    return 3
-  }
+
+
+
 
   private getPreciseBucketTime(hoverTime: number): number {
     return blurTime(hoverTime, PRECISE_COVER_BUCKET, this.art.duration || hoverTime)
@@ -513,8 +452,8 @@ export class HoverPreviewSession {
       return
     }
 
-    const range = this.getPrecisePrefetchRange(duration)
-    const step = this.getPrecisePrefetchStep(duration)
+    const range = getPrecisePrefetchRange(duration)
+    const step = getPrecisePrefetchStep(duration)
     for (let offset = 1; offset <= range; offset += 1) {
       const previousBucket = this.getPreciseBucketTime(Math.max(0, bucketTime - offset * step))
       const nextBucket = this.getPreciseBucketTime(Math.min(duration, bucketTime + offset * step))

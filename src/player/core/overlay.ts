@@ -14,6 +14,7 @@ import {
 } from './overlay-playlist'
 import type { OverlayPathItem, OverlayPlaybackEndState, OverlayPlaybackNavState, OverlayPlaylistItem, PlayerOverlayMeta } from './overlay-types'
 import { debugLog } from './debug'
+import { getPlaylistSidebarWidth, shouldHideOverlayOnLeave, shouldHideOverlayOnTimer } from './overlay-visibility'
 
 export type { OverlayPathItem, OverlayPlaylistItem, PlayerOverlayMeta, OverlayPlaybackNavState, OverlayPlaybackEndState } from './overlay-types'
 
@@ -683,18 +684,18 @@ export class PlayerOverlayController {
       window.clearTimeout(this.visibleTimer)
     }
     this.visibleTimer = window.setTimeout(() => {
-      if (!this.isPointerInsideOverlay && !this.playlistOpen && !this.isPointerOnProgress) {
+      if (shouldHideOverlayOnTimer({
+        isPointerInsideOverlay: this.isPointerInsideOverlay,
+        isPointerOnProgress: this.isPointerOnProgress,
+        playlistOpen: this.playlistOpen,
+      })) {
         this.setVisible(false)
       }
     }, 1000)
   }
 
   private getPlaylistSidebarWidth() {
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0
-    if (viewportWidth <= 640) {
-      return Math.min(320, Math.max(240, viewportWidth - 32))
-    }
-    return Math.min(360, Math.max(260, Math.round(viewportWidth * 0.32)))
+    return getPlaylistSidebarWidth(window.innerWidth || document.documentElement.clientWidth || 0)
   }
 
   private handleBack = () => {
@@ -707,7 +708,11 @@ export class PlayerOverlayController {
   }
 
   private handleMouseLeave = () => {
-    if (!this.playlistOpen && !this.isPointerInsideOverlay && !this.isPointerOnProgress) {
+    if (shouldHideOverlayOnLeave({
+      isPointerInsideOverlay: this.isPointerInsideOverlay,
+      isPointerOnProgress: this.isPointerOnProgress,
+      playlistOpen: this.playlistOpen,
+    })) {
       this.setVisible(false)
     }
   }
