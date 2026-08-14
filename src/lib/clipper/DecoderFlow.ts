@@ -64,7 +64,6 @@ export class DecoderFlow {
   private demuxer: DemuxerTsNew | undefined
   private sampleQueue: SampleQueueItem[] = []
   private samplesProcessed: SampleQueueItem[] = []
-  private decodedFramesTimes: number[] = []
   private frame: VideoFrame | undefined
   private frameTime: number | undefined
   private isRunning: boolean = true
@@ -137,14 +136,6 @@ export class DecoderFlow {
       }
     }
     this.demuxer.push(buffer, done ? { done: true } : undefined)
-  }
-
-  /**
-   * 检查是否已找到帧
-   * @returns 是否已找到帧
-   */
-  hasFrame(): boolean {
-    return !!this.frame
   }
 
   /**
@@ -427,7 +418,6 @@ export class DecoderFlow {
    */
   private _processFrame(videoFrame: VideoFrame): void {
     const frameTime = this._getFrameRealTime(videoFrame.timestamp)
-    this.decodedFramesTimes.push(frameTime)
 
     if (this.firstFramePriority) {
       if (!this.frame) {

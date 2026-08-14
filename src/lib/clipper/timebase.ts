@@ -14,27 +14,11 @@ export const microsecTimebase: Rational = {
 }
 
 /**
- * 毫秒时间基
- */
-export const millisecTimebase: Rational = {
-  num: 1,
-  den: 1_000,
-}
-
-/**
  * 秒时间基
  */
 export const secTimebase: Rational = {
   num: 1,
   den: 1,
-}
-
-/**
- * 90kHz时间基
- */
-export const ninetykHzTimebase: Rational = {
-  num: 1,
-  den: 90_000,
 }
 
 /**
@@ -52,22 +36,4 @@ export function timebaseConvert(
     (((value * fromTimebase.num) / fromTimebase.den) * toTimebase.den)
     / toTimebase.num
   )
-}
-
-/**
- * 微秒转换为毫秒
- * @param microsec 微秒
- * @returns 毫秒
- */
-export function microsecToMillisec(microsec: number): number {
-  return timebaseConvert(microsec, microsecTimebase, millisecTimebase)
-}
-
-/**
- * 毫秒转换为微秒
- * @param millisec 毫秒
- * @returns 微秒
- */
-export function millisecToMicrosec(millisec: number): number {
-  return timebaseConvert(millisec, millisecTimebase, microsecTimebase)
 }

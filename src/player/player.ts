@@ -536,8 +536,6 @@ class PlayerManager {
       this.nativeMonitor?.onSeeked()
     })
 
-    this.artplayer.on('video:play', () => {})
-
     this.artplayer.on('video:timeupdate', () => {
       this.playlist.syncCurrentPlaylistProgress()
     })
@@ -1019,7 +1017,9 @@ window.addEventListener('beforeunload', () => {
   playerManager?.destroy()
 })
 
-;(window as any).playerManager = playerManager
+if (isPlayerDebugEnabled()) {
+  ;(window as any).playerManager = playerManager
+}
 
 
 

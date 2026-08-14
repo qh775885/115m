@@ -80,9 +80,6 @@ export class M3U8ClipperNew {
       logger.error('seek error', error)
       throw error
     }
-    finally {
-      logger.clearLogs()
-    }
   }
 
   /**

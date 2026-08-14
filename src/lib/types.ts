@@ -10,24 +10,8 @@ export const qualityCodeMap: Record<string, number> = {
   'YH': 9999,
 }
 
-export const qualityNumMap: Record<number, string> = {
-  360: '360P',
-  480: '480P',
-  720: '720P',
-  1080: '1080P',
-  2160: '4K',
-  9999: '原画',
-}
-
 export interface M3u8Item {
   name: string
   quality: number
   url: string
-}
-
-export interface VideoSource {
-  name: string
-  url: string
-  type: 'auto' | 'hls'
-  displayQuality: string
 }

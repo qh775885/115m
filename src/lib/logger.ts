@@ -25,6 +25,5 @@ export class Logger {
   error(...args: any[]) {
     console.error(`[${this.name}]`, ...args)
   }
-  clearLogs() {}
 }
 export const appLogger = new Logger('115m')
