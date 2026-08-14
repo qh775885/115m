@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { renderPreview, previewObserverRegistry } from './preview'
+import { renderPreview } from './preview'
+import { previewObserverRegistry } from './observer-registry'
 import type { FileInfo } from './types'
 
 vi.mock('../../lib/videoThumbnail', () => ({
@@ -8,7 +9,7 @@ vi.mock('../../lib/videoThumbnail', () => ({
   primeThumbnailSourceUrl: vi.fn(),
 }))
 
-vi.mock('../../shared/transcode-store', () => ({
+vi.mock('./transcode-store', () => ({
   getTranscodeStatusByPickCode: vi.fn().mockResolvedValue(null),
   getTranscodeStatusByFileId: vi.fn().mockResolvedValue(null),
   saveTranscodeStatus: vi.fn().mockResolvedValue(undefined),
