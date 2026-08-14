@@ -451,7 +451,7 @@ async function refreshNativeList(doc: Document) {
   return !!refreshBtn
 }
 
-function formatExtractStatus(percent: number) {
+export function formatExtractStatus(percent: number) {
   if (percent >= 100) return '正在收尾，即将完成'
   if (percent > 0) return `云端处理中 ${Math.round(percent)}%`
   return '云端已接收任务，正在处理'

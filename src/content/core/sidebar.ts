@@ -23,7 +23,7 @@ const NAV_ITEMS: SidebarNavItem[] = [
   { id: 'share', title: '链接分享', icon: `${ICON_BASE}/storage/channel_link_share.svg`, href: '//115.com/?mode=share_save', dataNav: 'share_save', defaultEnabled: false },
 ]
 
-function getSortedItems(items: SidebarNavItem[]): SidebarNavItem[] {
+export function getSortedItems(items: SidebarNavItem[]): SidebarNavItem[] {
   const specialOrder = ['receive', 'upload', 'recyclebin']
   const specialItems: SidebarNavItem[] = []
   const normalItems: SidebarNavItem[] = []
