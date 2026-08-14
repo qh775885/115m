@@ -47,7 +47,7 @@ describe('handleFetchPlaylist 缓存', () => {
     expect(first.list).toHaveLength(2)
     expect(fetchPlaylistIn115Page).toHaveBeenCalledTimes(1)
 
-    const second = await handleFetchPlaylist({ type: 'FETCH_PLAYLIST', data: { cid: 'C9' } } as never)
+    await handleFetchPlaylist({ type: 'FETCH_PLAYLIST', data: { cid: 'C9' } } as never)
     expect(fetchPlaylistIn115Page).toHaveBeenCalledTimes(1)
   })
 })

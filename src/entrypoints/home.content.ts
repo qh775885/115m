@@ -4,7 +4,7 @@ export default defineContentScript({
   allFrames: true,
   matchAboutBlank: true,
   cssInjectionMode: "ui",
-  main(ctx) {
+  main(_ctx) {
     if (/\/web\/lixian\/master\/video\//.test(window.location.pathname)) return
     void import('../content/home.ts')
   },

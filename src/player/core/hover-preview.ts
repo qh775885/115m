@@ -171,14 +171,14 @@ export class HoverPreviewController {
     progress.addEventListener('mouseleave', this.handleProgressMouseLeave)
     progress.addEventListener('click', this.handleProgressClick, true)
 
-    this.createHoverReticle(progress)
+    this.createHoverReticle()
 
     const root = this.art.template.$player as HTMLElement
     root.addEventListener('mousemove', this.handleRootMouseMove)
     root.addEventListener('mouseleave', this.handleRootMouseLeave)
   }
 
-  private createHoverReticle(progress: HTMLElement) {
+  private createHoverReticle() {
     if (this.hoverReticle) return
 
     const reticle = document.createElement('div')
@@ -306,7 +306,7 @@ export class HoverPreviewController {
     }
   }
 
-  private handleCoversChanged = (covers: HoverCover[], duration: number) => {
+  private handleCoversChanged = (covers: HoverCover[], _duration: number) => {
     this.covers = covers
   }
 

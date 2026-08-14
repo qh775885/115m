@@ -18,12 +18,6 @@ export interface BindPlayerEventsOptions {
   onError: () => void
 }
 
-function safePlay(art: Artplayer) {
-  void art.play().catch(() => {
-    // Ignore autoplay/source-switch play rejections; player error events handle real failures.
-  })
-}
-
 export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
   const {
     art,
@@ -40,7 +34,6 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
     onError,
   } = options
   const root = art.template.$player as HTMLDivElement
-  const mask = art.template.$mask as HTMLDivElement
 
   /** 点击目标是否位于播放器容器内 */
   const isInsidePlayer = (target: EventTarget | null): boolean =>

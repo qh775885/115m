@@ -1,9 +1,7 @@
 import type { RuntimeMessage, RuntimeMessageResponse } from '../../shared/messages'
 import { recordRuntimeFailure } from '../../shared/telemetry'
 import {
-  canUseRuntimeMessaging,
   formatRuntimeMessage,
-  getRuntimeApi,
   isContextInvalidated,
   showContextInvalidatedTip,
 } from '../../shared/runtime-utils'

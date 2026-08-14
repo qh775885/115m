@@ -1,6 +1,5 @@
 import { Icons } from '../../shared/icons'
 import { saveVolumePreference } from './history'
-import { bindClickSelectorBehavior } from './player-selector'
 import type Artplayer from 'artplayer'
 
 export const CUSTOM_VOLUME_CONTROL_NAME = 'm115-custom-volume-control'

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canUseNativeUltraSource, isConservativeNativeUltraExtension, shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
+import { canUseNativeUltraSource, shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
 
 const HAVE_CURRENT_DATA = 2
 const HAVE_FUTURE_DATA = 3

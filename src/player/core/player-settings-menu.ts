@@ -1,6 +1,5 @@
 import { Icons } from '../../shared/icons'
 import type Artplayer from 'artplayer'
-import { escapeHtml } from '../../shared/utils'
 import { bindClickSelectorBehavior, unbindClickSelectorBehavior } from './player-selector'
 
 export const SETTINGS_MENU_CONTROL_NAME = 'm115-settings-menu-control'

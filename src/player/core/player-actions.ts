@@ -183,7 +183,7 @@ export class PlayerActionsController {
     })
   }
 
-  async fetchFileFavoriteStatus(fileId: string): Promise<void> {
+  async fetchFileFavoriteStatus(_fileId: string): Promise<void> {
     const deps = this.deps
     if (!deps) return
     const requestPickCode = deps.getCurrentPickCode()

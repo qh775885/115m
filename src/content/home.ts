@@ -159,7 +159,7 @@ class HomeController {
     }
   }
 
-  private scanItem(node: Element, doc: Document) {
+  private scanItem(node: Element, _doc: Document) {
     const item = node as HTMLElement
     if (!this.isWangpanFileItem(item)) return
 

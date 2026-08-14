@@ -103,16 +103,12 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
   }
 
   const applyDragSelection = (rect: DOMRect, event: MouseEvent) => {
-    let hitCount = 0
-    let selectedCount = 0
     host.querySelectorAll<HTMLElement>(itemSelector).forEach((element) => {
       if (!intersectsRect(rect, element.getBoundingClientRect()) && !intersectsRect(rect, getElementCenterRect(element))) return
-      hitCount += 1
-      if (selectElement(element)) selectedCount += 1
+      selectElement(element)
     })
     const pointedElement = doc.elementFromPoint(event.clientX, event.clientY)?.closest(itemSelector) as HTMLElement | null
-    const pointerSelected = pointedElement ? selectElement(pointedElement) : false
-    if (pointerSelected) selectedCount += 1
+    if (pointedElement) selectElement(pointedElement)
     syncSoon()
   }
 

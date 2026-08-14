@@ -772,7 +772,7 @@ class PlayerManager {
   }
 
 
-  private setupProgressHoverPreview(previewSourceUrl?: string, previewSourceType?: 'native' | 'hls') {
+  private setupProgressHoverPreview(previewSourceUrl?: string, _previewSourceType?: 'native' | 'hls') {
     if (!this.artplayer) return
 
     const currentUrl = previewSourceUrl || this.artplayer.url || ''

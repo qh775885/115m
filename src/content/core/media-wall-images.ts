@@ -164,8 +164,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   let pointerId: number | null = null
   let pointerDownX = 0
   let pointerDownY = 0
-  let dragStartX = 0
-  let dragStartY = 0
   let dragOriginX = 0
   let dragOriginY = 0
   let targetTranslateX = 0
@@ -577,8 +575,6 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
     pointerDownY = event.clientY
     lastPointerX = event.clientX
     lastPointerY = event.clientY
-    dragStartX = translateX
-    dragStartY = translateY
     dragOriginX = translateX
     dragOriginY = translateY
     targetTranslateX = translateX

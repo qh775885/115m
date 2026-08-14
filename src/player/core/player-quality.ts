@@ -1,11 +1,6 @@
-import { Icons } from '../../shared/icons'
 import { buildArtplayerQuality } from './quality'
 import type { QualityOption } from './types'
 import { bindClickSelectorBehavior } from './player-selector'
-
-function getQualityIcon() {
-  return Icons.Quality()
-}
 
 export function buildQualityControlItem(params: {
   controlName: string

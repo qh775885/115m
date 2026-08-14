@@ -4,7 +4,7 @@ vi.mock('../../lib/videoThumbnail', () => ({
   getVideoCovers: vi.fn(),
 }))
 
-import { buildPlaylistHtml, bindPlaylistInteractions, formatPlaylistSeconds } from './overlay-playlist'
+import { buildPlaylistHtml, formatPlaylistSeconds } from './overlay-playlist'
 
 describe('overlay playlist helpers', () => {
   it('formats seconds to mm:ss', () => {

@@ -4,7 +4,7 @@ import { renderPreview } from './preview'
 import type { FileInfo } from './types'
 
 vi.mock('../../lib/videoThumbnail', () => ({
-  getVideoCovers: vi.fn(), // eslint-disable-line @typescript-eslint/no-unsafe-return
+  getVideoCovers: vi.fn(),
   primeThumbnailSourceUrl: vi.fn(),
 }))
 
@@ -52,7 +52,7 @@ describe('renderPreview 列表项复用清理', () => {
     list.className = 'list-contents'
     document.body.innerHTML = ''
     document.body.appendChild(list)
-    ;(getVideoCovers as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (pickCode: string) => {
+    ;(getVideoCovers as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (_pickCode: string) => {
       generatedCount += 1
       return []
     })

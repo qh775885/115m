@@ -8,7 +8,6 @@ import { shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, should
 const AUDIO_PROBE_DELAY_MS = 4500
 const STALL_CHECK_INTERVAL_MS = 1000
 const STALL_TIME_THRESHOLD_MS = 3000
-const STALL_MIN_BUFFER_AHEAD_SEC = 6
 const STALL_MAX_TIME_DRIFT_SEC = 0.12
 const SEEK_LONG_JUMP_SEC = 45
 const SEEK_RECOVERY_WINDOW_MS = 6000
@@ -222,7 +221,6 @@ export class NativePlaybackMonitor {
     const totalFrames = this.getTotalVideoFrames(video)
     const timeDrift = Math.abs(currentTime - this.stallLastTime)
     const frameDrift = Math.abs(totalFrames - this.stallLastFrameCount)
-    const hasEnoughBuffer = bufferedAhead >= STALL_MIN_BUFFER_AHEAD_SEC
     const mediaLikelyStalled = video.readyState <= HTMLMediaElement.HAVE_CURRENT_DATA
     const inSeekRecovery = this.seekRecoveryUntil > Date.now()
     

@@ -2,7 +2,6 @@ import type { AVCFrame } from '@cbingbing/demuxer'
 import {
   Events,
   getAVCConfig,
-  NaluTypes,
   TSDemux,
 } from '@cbingbing/demuxer'
 import { appLogger } from '../logger'

@@ -6,7 +6,7 @@
 import type Artplayer from 'artplayer'
 import type { M3u8Item } from '../../lib/types'
 import { fetchM3u8WithRetry } from './source'
-import { buildQualityOptions, ORIGINAL_PLACEHOLDER_URL } from './quality'
+import { buildQualityOptions } from './quality'
 import { saveQualityPreference } from './history'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './player-quality'
 import type { QualityOption } from './types'
