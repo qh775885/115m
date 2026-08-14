@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blurTime, clamp, findNearestCover, formatTimeLabel, formatVttTime, type HoverCover } from './hover-utils'
+import { blurTime, clamp, findNearestCover, formatCompactTime, formatTimeLabel, type HoverCover } from './hover-utils'
 
 describe('formatTimeLabel', () => {
   it('格式化为 mm:ss', () => {
@@ -18,10 +18,10 @@ describe('formatTimeLabel', () => {
   })
 })
 
-describe('formatVttTime', () => {
-  it('格式化为 hh:mm:ss.mmm', () => {
-    expect(formatVttTime(65.5)).toBe('00:01:05.500')
-    expect(formatVttTime(0)).toBe('00:00:00.000')
+describe('formatCompactTime', () => {
+  it('格式化为 mm:ss（小时位不补零）', () => {
+    expect(formatCompactTime(125)).toBe('2:05')
+    expect(formatCompactTime(3723)).toBe('1:02:03')
   })
 })
 

@@ -20,7 +20,7 @@ import playerSettingsMenuCss from './core/css/player-settings-menu.css?inline'
 import { ORIGINAL_PLACEHOLDER_URL } from './core/quality'
 import { AudioManager } from './core/audio-manager'
 import { fetchM3u8WithRetry } from './core/source'
-import { loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference, saveVolumePreference } from './core/history'
+import { loadPlayHistoryWhenReady, loadVolumePreference, saveQualityPreference } from './core/history'
 import { mountCenterCluster } from './core/player-center-controls'
 import { buildCustomVolumeControl } from './core/player-volume'
 import { loadPlaybackMode, type PlaybackMode } from './core/player-playback-mode'
@@ -342,7 +342,6 @@ class PlayerManager {
       hidePlaybackEndPanel: () => this.overlay?.hidePlaybackEndPanel(),
       isPlaylistExpanded: () => this.overlay?.isPlaylistExpanded() === true,
       onShowToast: msg => this.overlay?.showToast(msg),
-      formatFileSize: size => this.formatFileSize(size),
     })
 
     this.actions.attach({
@@ -456,35 +455,15 @@ class PlayerManager {
       customType: {
         m3u8: async (video, url) => {
           try {
-            if (url === ORIGINAL_PLACEHOLDER_URL) {
-              const resolvedUrl = await this.quality.ensureOriginalSourceLoaded()
-              if (!resolvedUrl) {
-                this.showError('115原画加载失败，请稍后重试')
-                this.failSwitchUrl('115原画加载失败')
-                return
-              }
-              // 原画源加载成功后才记录偏好，避免源持续不可用时每次自动加载都带着失败偏好重试
-              saveQualityPreference(this.currentPickCode, '115原画', 9999)
-              // 立即更新内部状态，以便后续 UI 同步正常工作
-              const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
-              if (opt) {
-                this.quality.applySelectedOption(opt)
-              }
-              url = resolvedUrl
-            }
-            else {
-              const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
-              if (opt) {
-                // 只要是手动切换（非首次加载且已就绪），就记录偏好
-                if (this.perfMarks.loadedmetadata) {
-                  saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
-                }
-                this.quality.applySelectedOption(opt)
-              }
+            const resolvedUrl = await this.quality.resolveQualityPlayback(url)
+            if (!resolvedUrl) {
+              // 原画占位解析失败
+              this.failSwitchUrl('115原画加载失败')
+              return
             }
 
             if (this.artplayer && await isHlsSupported()) {
-              await this.initHls(video as HTMLVideoElement, url)
+              await this.initHls(video as HTMLVideoElement, resolvedUrl)
             }
             else {
               this.showError('您的浏览器不支持 HLS 播放')
@@ -515,11 +494,7 @@ class PlayerManager {
 
     this.artplayer.on('restart', (url) => {
       if (typeof url !== 'string' || url === ORIGINAL_PLACEHOLDER_URL) return
-      const opt = this.quality.qualityOptionsValue.find(o => o.url === url)
-      if (opt && this.perfMarks.loadedmetadata) {
-        saveQualityPreference(this.currentPickCode, opt.label, opt.quality)
-        this.quality.applySelectedOption(opt)
-      }
+      void this.quality.resolveQualityPlayback(url)
       this.setupProgressHoverPreview(url, this.quality.currentPlaybackTypeValue)
     })
 
@@ -661,13 +636,6 @@ class PlayerManager {
           this.nativeMonitor?.onPlaying()
           this.perfMarks.playing = performance.now()
           this.reportFirstFrameSummary()
-        },
-        onVolumeChange: () => {
-          if (!this.artplayer) return
-          saveVolumePreference({
-            volume: this.artplayer.video.volume, // changed to this.artplayer.video.volume
-            muted: this.artplayer.video.muted,
-          })
         },
         onEnded: () => {
           this.playlist.handlePlaybackEnded()
@@ -932,13 +900,6 @@ class PlayerManager {
     return playback
   }
 
-  private formatFileSize(size: number): string {
-    if (size < 1024) return `${size} B`
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`
-    if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(2)} MB`
-    return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`
-  }
-
   destroy() {
     this.playlist.clearPlaybackEndState()
     this.nativeMonitor?.destroy()
@@ -1004,6 +965,10 @@ function initPlayer() {
   }
 
   playerManager = new PlayerManager({ pickCode, traceId, clickTs, keepPlaylistOpen, playlistToken })
+
+  if (isPlayerDebugEnabled()) {
+    ;(window as any).playerManager = playerManager
+  }
 }
 
 // content script 暴露 initPlayer 供 video-page.ts 的 init() 调用
@@ -1016,10 +981,6 @@ if (document.getElementById('loading-text')) {
 window.addEventListener('beforeunload', () => {
   playerManager?.destroy()
 })
-
-if (isPlayerDebugEnabled()) {
-  ;(window as any).playerManager = playerManager
-}
 
 
 

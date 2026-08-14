@@ -3,15 +3,15 @@ import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
 import { showToast } from '../../shared/ui/toast'
 import { UI_LAYER } from './ui-layer'
-import { readOverlayMetaQuery } from './player-query'
+import { readOverlayMetaFromQuery } from './player-query'
 import { createHeaderActionButton, createOverlayHeaderScaffold, getFavoriteButtonIcon } from './overlay-header'
 import {
   bindPlaylistInteractions,
   buildPlaylistHtml,
-  formatPlaylistSeconds,
   lazyLoadPlaylistCovers,
   scrollActivePlaylistNodeIntoView,
 } from './overlay-playlist'
+import { formatCompactTime } from './hover-utils'
 import type { OverlayPathItem, OverlayPlaybackEndState, OverlayPlaybackNavState, OverlayPlaylistItem, PlayerOverlayMeta } from './overlay-types'
 import { debugLog } from './debug'
 import { getPlaylistSidebarWidth, shouldHideOverlayOnLeave, shouldHideOverlayOnTimer } from './overlay-visibility'
@@ -36,9 +36,7 @@ export interface PlayerOverlayOptions {
   shouldKeepPlaylistOpen: () => boolean
 }
 
-export function readOverlayMetaFromQuery(): PlayerOverlayMeta {
-  return readOverlayMetaQuery(window.location.search)
-}
+export { readOverlayMetaFromQuery } from './player-query'
 
 export class PlayerOverlayController {
   private readonly root: HTMLElement
@@ -233,7 +231,7 @@ export class PlayerOverlayController {
       bar.style.width = `${Math.max(2, Math.min(100, progressPercent))}%`
     }
     if (text) {
-      text.textContent = formatPlaylistSeconds(progressSec)
+      text.textContent = formatCompactTime(progressSec)
       text.style.display = 'inline'
     }
   }

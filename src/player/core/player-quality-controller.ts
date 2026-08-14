@@ -6,7 +6,7 @@
 import type Artplayer from 'artplayer'
 import type { M3u8Item } from '../../lib/types'
 import { fetchM3u8WithRetry } from './source'
-import { buildQualityOptions } from './quality'
+import { ORIGINAL_PLACEHOLDER_URL, buildQualityOptions } from './quality'
 import { saveQualityPreference } from './history'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './player-quality'
 import type { QualityOption } from './types'
@@ -173,6 +173,43 @@ export class PlayerQualityController {
   forceHlsType() {
     this.currentPlaybackType = 'hls'
     this.isNativeVideo = false
+  }
+
+  /**
+   * 解析播放 URL 对应的画质状态（供 customType.m3u8 回调等播放器加载入口复用）：
+   * - 原画占位符：先解析真实源，成功后才记录偏好，避免源不可用时带失败偏好重试
+   * - 普通画质：手动切换（已就绪）时记录偏好
+   * 返回实际应播放的 URL；占位符解析失败时返回 null。
+   */
+  async resolveQualityPlayback(url: string): Promise<string | null> {
+    const deps = this.deps
+    if (!deps) return url
+
+    if (url === ORIGINAL_PLACEHOLDER_URL) {
+      const resolvedUrl = await this.ensureOriginalSourceLoaded()
+      if (!resolvedUrl) {
+        deps.onShowError('115原画加载失败，请稍后重试')
+        return null
+      }
+      // 原画源加载成功后才记录偏好，避免源持续不可用时每次自动加载都带着失败偏好重试
+      saveQualityPreference(deps.getCurrentPickCode(), '115原画', 9999)
+      // 立即更新内部状态，以便后续 UI 同步正常工作
+      const opt = this.qualityOptionsValue.find(o => o.url === url)
+      if (opt) {
+        this.applySelectedOption(opt)
+      }
+      return resolvedUrl
+    }
+
+    const opt = this.qualityOptionsValue.find(o => o.url === url)
+    if (opt) {
+      // 只要是手动切换（非首次加载且已就绪），就记录偏好
+      if (deps.isReady()) {
+        saveQualityPreference(deps.getCurrentPickCode(), opt.label, opt.quality)
+      }
+      this.applySelectedOption(opt)
+    }
+    return url
   }
 
   /**

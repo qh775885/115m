@@ -44,8 +44,6 @@ export interface PlaylistControllerDeps {
   isPlaylistExpanded: () => boolean
   /** 展示 toast */
   onShowToast: (msg: string) => void
-  /** 格式化文件大小 */
-  formatFileSize: (size: number) => string
 }
 
 export class PlayerPlaylistController {
@@ -268,7 +266,6 @@ export class PlayerPlaylistController {
       sendMessage: sendRuntimeMessageSafe,
       cid,
       pickCode: deps.getCurrentPickCode(),
-      formatFileSize: size => deps.formatFileSize(size),
       onPath: path => deps.updateBreadcrumbs(path),
     })
   }

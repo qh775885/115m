@@ -10,6 +10,28 @@ import { updateArtplayerControl } from './player-quality'
 
 const AUDIO_CONTROL_NAME = 'm115-audio-control'
 
+/** 生成音轨展示标签：语言归一化（chi/zh/zho → 中文）+ stereo 特判 + 序号兜底 */
+export function buildAudioTrackLabel(name: string, lang: string, index: number): string {
+  const normalizedLang = lang.toLowerCase()
+  const languageLabel = normalizedLang === 'chi' || normalizedLang === 'zh' || normalizedLang === 'zho'
+    ? '中文'
+    : (lang || '未知语言')
+
+  if (name.toLowerCase() === 'stereo') {
+    return `${languageLabel}${index + 1}`
+  }
+
+  if (name && languageLabel) {
+    return `${name}（${languageLabel}）`
+  }
+
+  if (name) {
+    return `${name} ${index + 1}`
+  }
+
+  return `${languageLabel}${index + 1}`
+}
+
 export interface AudioManagerDeps {
   art: Artplayer
   getHlsInstance: () => HlsType | null
@@ -126,14 +148,7 @@ export class AudioManager {
       const fallbackTracks: AudioTrackOption[] = tags.map((tag, index) => {
         const name = tag.match(/NAME="([^"]+)"/i)?.[1] || ''
         const lang = tag.match(/LANGUAGE="([^"]+)"/i)?.[1] || ''
-        const normalizedLang = lang.toLowerCase()
-        const languageLabel = normalizedLang === 'chi' || normalizedLang === 'zh' || normalizedLang === 'zho'
-          ? '中文'
-          : (lang || '未知语言')
-        const label = name.toLowerCase() === 'stereo'
-          ? `${languageLabel}${index + 1}`
-          : (name ? `${name}（${languageLabel}）` : `${languageLabel}${index + 1}`)
-        return { id: index, label }
+        return { id: index, label: buildAudioTrackLabel(name, lang, index) }
       })
 
       if (this.audioTrackOptions.length === 0) {
@@ -231,24 +246,7 @@ export class AudioManager {
   private getTrackLabel(track: any, index: number): string {
     const name = String(track?.name || '').trim()
     const lang = String(track?.lang || track?.attrs?.LANGUAGE || '').trim()
-    const normalizedLang = lang.toLowerCase()
-    const languageLabel = normalizedLang === 'chi' || normalizedLang === 'zh' || normalizedLang === 'zho'
-      ? '中文'
-      : (lang || '未知语言')
-
-    if (name.toLowerCase() === 'stereo') {
-      return `${languageLabel}${index + 1}`
-    }
-
-    if (name && languageLabel) {
-      return `${name}（${languageLabel}）`
-    }
-
-    if (name) {
-      return `${name} ${index + 1}`
-    }
-
-    return `${languageLabel}${index + 1}`
+    return buildAudioTrackLabel(name, lang, index)
   }
 
   private restorePreference() {

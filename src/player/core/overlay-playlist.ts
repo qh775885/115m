@@ -1,6 +1,7 @@
 import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
 import { getVideoCovers } from '../../lib/videoThumbnail'
+import { formatCompactTime } from './hover-utils'
 import type { OverlayPlaylistItem } from './overlay-types'
 
 const esc = escapeHtml
@@ -28,21 +29,10 @@ function runPlaylistCoverTask<T>(task: () => Promise<T>): Promise<T> {
   })
 }
 
-export function formatPlaylistSeconds(sec: number) {
-  const total = Math.max(0, Math.floor(sec))
-  const hours = Math.floor(total / 3600)
-  const minutes = Math.floor((total % 3600) / 60)
-  const seconds = total % 60
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-  }
-  return `${minutes}:${String(seconds).padStart(2, '0')}`
-}
-
 export function renderPlaylistProgress(item: OverlayPlaylistItem, active: boolean) {
   const visible = !!item.progressPercent && item.progressPercent > 0
   const progressText = typeof item.progressSec === 'number' && item.progressSec > 0
-    ? formatPlaylistSeconds(item.progressSec)
+    ? formatCompactTime(item.progressSec)
     : ''
 
   return `

@@ -117,7 +117,6 @@ export async function fetchPlaylistData(params: {
   sendMessage: RuntimeSender
   cid: string
   pickCode: string
-  formatFileSize: (size: number) => string
   onPath?: (items: OverlayPathItem[]) => void
 }): Promise<OverlayPlaylistItem[]> {
   const response = await fetchPlaylistResponse(params.sendMessage, params.cid, params.pickCode)
@@ -126,7 +125,7 @@ export async function fetchPlaylistData(params: {
   }
 
   const list = response?.list || []
-  const items = normalizePlaylistItems(list, params.formatFileSize)
+  const items = normalizePlaylistItems(list)
   return await attachPlaylistProgress(items)
 }
 

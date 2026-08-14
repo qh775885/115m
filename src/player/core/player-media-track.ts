@@ -40,10 +40,9 @@ export class MediaTrackController {
     if (!this.deps) return null
 
     // 1. 获取字幕列表和当前选中状态
-    const subtitleCtrl = this.deps.subtitleController as any
-    const subtitleManager = subtitleCtrl.subtitleManager
-    const subtitleItems: any[] = subtitleManager?.getItems() || []
-    const selectedSid = subtitleManager?.getSelectedSid() || ''
+    const subtitleController = this.deps.subtitleController
+    const subtitleItems = subtitleController.getSubtitleItems()
+    const selectedSid = subtitleController.getSelectedSubtitleSid()
 
     // 2. 获取音轨列表和当前选中状态
     const audioMgr = this.deps.audioManager
@@ -119,7 +118,7 @@ export class MediaTrackController {
 
             if (type === 'subtitle') {
               el.classList.remove('m115-selector-open')
-              void subtitleCtrl.applySelection(value, true)
+              void subtitleController.applySelection(value, true)
             } else if (type === 'audio') {
               const trackId = Number(value)
               if (Number.isFinite(trackId)) {

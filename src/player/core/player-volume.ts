@@ -135,11 +135,6 @@ export function buildCustomVolumeControl() {
           if (v > 0 && this.video.muted) {
             this.video.muted = false
           }
-          // 主动保存音量
-          saveVolumePreference({
-            volume: this.video.volume,
-            muted: this.video.muted,
-          })
         }
       })
 
@@ -151,11 +146,6 @@ export function buildCustomVolumeControl() {
         } else {
           this.video.muted = true
         }
-        // 主动保存音量
-        saveVolumePreference({
-          volume: this.video.volume,
-          muted: this.video.muted,
-        })
       })
 
       updateUI()

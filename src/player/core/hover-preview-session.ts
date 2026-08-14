@@ -1,6 +1,6 @@
 import type Artplayer from 'artplayer'
 import { getTimelineCovers, getVideoCoverAt, getVideoCovers } from '../../lib/videoThumbnail'
-import { blurTime, findNearestCover } from './hover-utils'
+import { blurTime, findNearestCover, type HoverCover } from './hover-utils'
 import {
   getBackgroundRefineCoverCount,
   getCoarseSamplingInterval,
@@ -13,12 +13,7 @@ import {
   MIN_COARSE_COVER_COUNT,
 } from './hover-preview-policy'
 
-export interface HoverCover {
-  time: number
-  imgUrl: string
-  width?: number
-  height?: number
-}
+export type { HoverCover }
 
 export interface HoverPreviewDisplayState {
   hoverTime: number

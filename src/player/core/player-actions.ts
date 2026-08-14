@@ -10,10 +10,10 @@ import { MoveDialog } from './move-dialog'
 import { sendRuntimeMessageSafe } from './runtime'
 import {
   buildUpdatedMarkedUrl,
+  readOverlayMetaFromQuery,
   readPathFromLocation,
   readPlaylistCidFromLocation,
 } from './player-query'
-import { readOverlayMetaFromQuery } from './overlay'
 import type { OverlayPathItem, OverlayPlaylistItem } from './overlay-types'
 import type { PlayerPlaylistController } from './player-playlist'
 

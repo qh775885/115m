@@ -1,4 +1,5 @@
 import type { FileItem } from '../../lib/api/types'
+import { formatFileSize } from '../../shared/utils'
 import type { OverlayPlaylistItem } from './overlay-types'
 
 type RawPlaylistItem = FileItem & {
@@ -11,7 +12,6 @@ type RawPlaylistItem = FileItem & {
 
 export function normalizePlaylistItems(
   list: RawPlaylistItem[],
-  formatFileSize: (size: number) => string,
 ): OverlayPlaylistItem[] {
   return list
     .filter(item => !!(item.pc || item.pick_code))

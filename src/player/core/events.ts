@@ -12,7 +12,7 @@ export interface BindPlayerEventsOptions {
   onLoadedmetadata: () => void
   onCanplay: () => void
   onPlaying: () => void
-  onVolumeChange: () => void
+  onVolumeChange?: () => void
   onEnded: () => void
   onReady: () => void
   onError: () => void
@@ -82,7 +82,9 @@ export function bindPlayerEvents(options: BindPlayerEventsOptions): () => void {
     onPlaying()
   })
 
-  art.on('video:volumechange', onVolumeChange)
+  art.on('video:volumechange', () => {
+    onVolumeChange?.()
+  })
 
   art.on('video:ended', () => {
     resetPlayHistory({

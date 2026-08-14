@@ -50,6 +50,16 @@ export class SubtitleController {
     this.setup()
   }
 
+  /** 当前字幕列表（供媒体轨控件读取；无管理器时为空） */
+  getSubtitleItems() {
+    return this.subtitleManager?.getItems() || []
+  }
+
+  /** 当前选中字幕 sid（供媒体轨控件读取） */
+  getSelectedSubtitleSid() {
+    return this.subtitleManager?.getSelectedSid() || ''
+  }
+
   /** 视频切换时重置字幕 */
   resetForNewVideo() {
     this.subtitleManager?.clearTrack()

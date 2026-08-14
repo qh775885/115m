@@ -4,17 +4,9 @@ vi.mock('../../lib/videoThumbnail', () => ({
   getVideoCovers: vi.fn(),
 }))
 
-import { buildPlaylistHtml, formatPlaylistSeconds } from './overlay-playlist'
+import { buildPlaylistHtml } from './overlay-playlist'
 
 describe('overlay playlist helpers', () => {
-  it('formats seconds to mm:ss', () => {
-    expect(formatPlaylistSeconds(125)).toBe('2:05')
-  })
-
-  it('formats seconds to hh:mm:ss when needed', () => {
-    expect(formatPlaylistSeconds(3723)).toBe('1:02:03')
-  })
-
   it('builds playlist html with active item', () => {
     const html = buildPlaylistHtml([
       { pickCode: 'pc1', fileId: '1', name: 'Test', size: '1 MB' },

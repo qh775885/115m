@@ -4,7 +4,7 @@
  */
 
 import type Artplayer from 'artplayer'
-import { safePlay } from './media'
+import { resetVideoProgress, safePlay } from './media'
 import type { ResolvedPlaybackBundle } from './player-services'
 import { findPlaylistItemByPickCode, buildOverlayMetaPatch, buildPlayerHistoryUrl } from './player-switch'
 import { loadPlayHistoryWhenReady } from './history'
@@ -169,10 +169,7 @@ export class PlayerSwitchController {
       if (!currentArt) return
 
       // 切换前强制重置进度为 0，防止复用 video 元素时继承上一集的进度
-      if (currentArt.video) {
-        currentArt.video.currentTime = 0
-      }
-      currentArt.seek = 0
+      resetVideoProgress(currentArt)
 
       deps.applyResolvedPlayback(playback, pickCode, deps.getNativeUltraSupported())
       // 切到无损（原生）源时销毁上一集的 hls 实例，m3u8 源由 initHls 自行销毁旧实例
@@ -204,8 +201,7 @@ export class PlayerSwitchController {
       if (requestId !== this.switchVideoRequestId || !deps.getArtplayer()) return
 
       // 切换 URL 后再次重置，防止内部状态污染
-      currentArt.seek = 0
-      if (currentArt.video) currentArt.video.currentTime = 0
+      resetVideoProgress(currentArt)
 
       deps.setupProgressHoverPreview(playback.initialPlayback.url, playback.initialPlayback.type)
       deps.renderQualityPanel()

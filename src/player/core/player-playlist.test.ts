@@ -24,7 +24,6 @@ function createController() {
   const hidePlaybackEndPanel = vi.fn()
   const isPlaylistExpanded = vi.fn(() => false)
   const onShowToast = vi.fn()
-  const formatFileSize = vi.fn((size: number) => `${size}B`)
 
   const deps: PlaylistControllerDeps = {
     getArtplayer,
@@ -41,7 +40,6 @@ function createController() {
     hidePlaybackEndPanel,
     isPlaylistExpanded,
     onShowToast,
-    formatFileSize,
   }
   const controller = new PlayerPlaylistController()
   controller.attach(deps)

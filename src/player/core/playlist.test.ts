@@ -19,12 +19,12 @@ describe('normalizePlaylistItems', () => {
         play_long: 100,
         sha: 'sha1',
       },
-    ], size => `${size}B`)).toEqual([
+    ])).toEqual([
       {
         pickCode: 'pc1',
         fileId: '1',
         name: '视频A',
-        size: '2048B',
+        size: '2.00 KB',
         isMarked: true,
         duration: 100,
         sha: 'sha1',

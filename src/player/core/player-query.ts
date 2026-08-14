@@ -74,6 +74,10 @@ export function readOverlayMetaQuery(search: string): OverlayMetaQuery {
   }
 }
 
+export function readOverlayMetaFromQuery(): OverlayMetaQuery {
+  return readOverlayMetaQuery(window.location.search)
+}
+
 export function buildNavigateToVideoUrl(pathname: string, search: string, pickCode: string, options: NavigateToVideoOptions = {}): string {
   const params = new URLSearchParams(search)
   params.set('pick_code', pickCode)

@@ -9,3 +9,14 @@ export function safePlay(art: Artplayer | null) {
     // Ignore native play promise rejections during source switches and transient media reloads.
   })
 }
+
+/**
+ * 重置播放进度：同时清 video.currentTime 与 art.seek，防止复用 video 元素时继承上一集进度。
+ */
+export function resetVideoProgress(art: Artplayer | null) {
+  if (!art) return
+  if (art.video) {
+    art.video.currentTime = 0
+  }
+  art.seek = 0
+}
