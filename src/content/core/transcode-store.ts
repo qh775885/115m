@@ -3,7 +3,7 @@
  * 跨标签共享：优先 chrome.storage.session（扩展级会话存储），降级 sessionStorage。
  * 广播：同页用 window 自定义事件，跨标签用 chrome.storage.onChanged。
  */
-import type { RuntimeTranscodeResponse } from './messages'
+import type { RuntimeTranscodeResponse } from '../../shared/messages'
 
 const STORAGE_KEY = 'm115_transcode_status_store'
 const EVENT_NAME = 'm115-transcode-status-updated'
