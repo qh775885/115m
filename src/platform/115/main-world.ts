@@ -68,8 +68,8 @@ export type VodFetchStep = 'direct' | 'main_world' | 'page'
 
 /**
  * 解析指定模式下应依次尝试的取流步骤（纯逻辑，可独立测试）。
- * - auto：direct 优先，body 为空时追加 main_world（POST 走 page 更稳）
- * - direct / main_world / page：仅对应单一步骤（page 在 auto 后兜底）
+ * - auto：direct 优先，body 为空时追加 main_world；两者均失败时由调用方兜底 page（115vod 播放页同源 fetch）
+ * - direct / main_world / page：仅对应单一步骤
  * @param isEmptyBody 请求体是否为空（GET 无 body）
  */
 export function resolveVodFetchModeSteps(mode: VodFetchMode, isEmptyBody: boolean): VodFetchStep[] {
@@ -182,6 +182,19 @@ export async function ensure115VodTabId(pickCode?: string): Promise<number | und
   if (!tab.id) return undefined
   extensionCreated115VodTabId = tab.id
   await waitForTabComplete(tab.id)
+  // 115vod 未登录时会 302 重定向到登录页（passport/115.com），此时页面不在 115vod 域内，
+  // MAIN world 再 fetch 115vod.com 会因跨源被拦截报 "Failed to fetch"。提前识别并复用登录态 tab 或放弃。
+  try {
+    const current = await chrome.tabs.get(tab.id)
+    if (current.id && !/^https:\/\/([^/]+\.)?115vod\.com\//.test(current.url || '')) {
+      extensionCreated115VodTabId = undefined
+      await chrome.tabs.remove(tab.id).catch(() => {})
+      return undefined
+    }
+  }
+  catch {
+    // tab may already be closed or inaccessible
+  }
   return tab.id
 }
 
@@ -303,12 +316,48 @@ export async function query115Tabs() {
   return await queryTabsByUrls(MATCH_115_PAGE_URLS)
 }
 
-async function get115VodTabId(sender: chrome.runtime.MessageSender | undefined): Promise<number | undefined> {
+async function get115VodTabId(
+  sender: chrome.runtime.MessageSender | undefined,
+  pickCode?: string,
+): Promise<number | undefined> {
   let tabId = await find115VodTabId(sender)
   if (!tabId) {
-    tabId = await ensure115VodTabId()
+    // 必须带 pickCode 打开 115vod 播放页：裸首页（115vod.com/）无有效会话，
+    // 只有带 pickcode 的播放页加载后才会建立 115vod 会话，否则同源 fetch 会被 302 到登录页
+    tabId = await ensure115VodTabId(pickCode)
   }
   return tabId
+}
+
+/**
+ * 在 115vod 播放页的 MAIN world 内同源 fetch。
+ * 页面加载后具备有效 115vod 会话，是 push/batch 等接口最可靠的执行环境。
+ */
+async function fetch115VodPageMode(
+  sender: chrome.runtime.MessageSender | undefined,
+  url: string,
+  safeBody: string,
+  contentType?: string,
+  pickCode?: string,
+): Promise<MainWorldTextResponse | null> {
+  const tabId = await get115VodTabId(sender, pickCode)
+  if (!tabId) {
+    return null
+  }
+
+  const result = await runIn115MainWorld({
+    tabId,
+    args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS, true],
+    func: createMainWorldFetchFunc(),
+  }) as MainWorldTextResponse
+
+  if (!result?.ok && /failed to fetch|load failed/i.test(result?.error || '')) {
+    // MAIN world fetch 跨源被拦截（115vod 会话失效跳转到登录页时最常见），
+    // 转成可操作的提示，避免把裸 "TypeError: Failed to fetch" 抛给 UI
+    return { ok: false, text: '', error: '115vod 页面请求失败（可能 115vod 未登录或会话已过期），请先访问 115vod.com 登录后重试' }
+  }
+
+  return result
 }
 
 export async function fetchTextIn115VodMainWorld(
@@ -383,22 +432,18 @@ async function fetchTextIn115VodMainWorldQueued(
       }
     }
 
+    // direct/main_world 均不可用时（常见于浏览器无 115vod 会话 cookie，接口被 302 到登录页），
+    // 兜底走 115vod 播放页内同源 fetch：页面加载后建立有效会话，接口即可正常调用。
+    const pageResult = await fetch115VodPageMode(sender, url, safeBody, contentType, pickCode)
+    if (pageResult) {
+      return pageResult
+    }
+
     if (mode !== 'page') {
       return { ok: false, text: '', error: '115vod page mode disabled' }
     }
 
-    const tabId = await get115VodTabId(sender)
-    if (!tabId) {
-      return { ok: false, text: '', error: 'no 115vod.com tab found' }
-    }
-
-    const result = await runIn115MainWorld({
-      tabId,
-      args: [url, safeBody, contentType ?? 'application/x-www-form-urlencoded; charset=UTF-8', VOD_FETCH_TIMEOUT_MS, true],
-      func: createMainWorldFetchFunc(),
-    })
-
-    return result as MainWorldTextResponse
+    return { ok: false, text: '', error: '115vod 未登录或页面加载失败，请先访问 115vod.com 登录后重试' }
   }
   catch (error) {
     return { ok: false, text: '', error: String(error) }

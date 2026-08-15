@@ -16,6 +16,10 @@ export const MAX_STORE_RECORDS = 300
 let lastLocalWriteStore: TranscodeStoreData | null = null
 let lastLocalWriteAt = 0
 
+// 本上下文内 chrome.storage.session 是否已被确认不可用（如 about:blank 等受限 context 会抛
+// "Access to storage is not allowed from this context"）。确认后后续读写直接降级 sessionStorage。
+let sessionStorageFallback = false
+
 export interface TranscodeStatusRecord {
   pickCode: string
   fileId?: string
@@ -26,6 +30,7 @@ export interface TranscodeStatusRecord {
 type TranscodeStoreData = Record<string, TranscodeStatusRecord>
 
 function getSessionArea(): chrome.storage.StorageArea | null {
+  if (sessionStorageFallback) return null
   const c = globalThis.chrome
   return c?.storage?.session ?? null
 }
@@ -45,7 +50,7 @@ export async function getTranscodeStatusStore(): Promise<TranscodeStoreData> {
       return (got?.[STORAGE_KEY] as TranscodeStoreData | undefined) ?? {}
     }
     catch {
-      return {}
+      sessionStorageFallback = true
     }
   }
   try {
@@ -114,13 +119,23 @@ export async function saveTranscodeStatus(
     }
     const trimmed = trimStoreToLimit(store)
 
+    let wrote = false
     const area = getSessionArea()
     if (area) {
       lastLocalWriteStore = trimmed
       lastLocalWriteAt = Date.now()
-      await area.set({ [STORAGE_KEY]: trimmed })
+      try {
+        await area.set({ [STORAGE_KEY]: trimmed })
+        wrote = true
+      }
+      catch (error) {
+        // 受限 context（如 about:blank iframe）访问 chrome.storage.session 会被拒绝，
+        // 降级到 sessionStorage，保证本页功能可用
+        sessionStorageFallback = true
+        console.warn('[115m] chrome.storage.session 不可用，降级 sessionStorage:', error)
+      }
     }
-    else {
+    if (!wrote) {
       const storage = getWindowStorage()
       storage?.setItem(STORAGE_KEY, JSON.stringify(trimmed))
     }
@@ -195,8 +210,20 @@ export function subscribeTranscodeStatus(
         }
       }
     }
-    c.storage.onChanged.addListener(listener)
-    unsubs.push(() => c.storage.onChanged.removeListener(listener))
+    try {
+      c.storage.onChanged.addListener(listener)
+      unsubs.push(() => {
+        try {
+          c.storage.onChanged.removeListener(listener)
+        }
+        catch {
+          // listener may already be removed when context is invalidated
+        }
+      })
+    }
+    catch {
+      // 受限 context（如 about:blank iframe）无法监听跨标签变更，仅保留同页广播
+    }
   }
 
   return () => {

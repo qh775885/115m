@@ -183,6 +183,25 @@ describe('transcode-store fallback (sessionStorage)', () => {
     expect((await getTranscodeStatusByPickCode('P1'))?.status.state).toBe('no_task')
   })
 
+  it('chrome.storage.session 存在但被拒绝访问（受限 context）时降级 sessionStorage', async () => {
+    const failingSession = {
+      async get(): Promise<Record<string, unknown>> {
+        throw new Error('Access to storage is not allowed from this context.')
+      },
+      async set(): Promise<void> {
+        throw new Error('Access to storage is not allowed from this context.')
+      },
+    }
+    vi.stubGlobal('chrome', { storage: { session: failingSession } })
+    sessionStorage.clear()
+
+    await saveTranscodeStatus('P1', { ok: true, state: 'queued' }, 'F1', true)
+    const raw = sessionStorage.getItem('m115_transcode_status_store')
+    expect(raw).toContain('P1')
+    // 降级后读写对称，get 也应从 sessionStorage 读到
+    expect((await getTranscodeStatusByPickCode('P1'))?.status.state).toBe('queued')
+  })
+
   it('降级时跨标签订阅退订安全返回', () => {
     const unsub = subscribeTranscodeStatus(() => {})
     unsub()

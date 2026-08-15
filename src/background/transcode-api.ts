@@ -30,6 +30,15 @@ export interface IsTranscodedResult {
   count?: number
 }
 
+/** 把底层的裸 fetch 错误转成用户可操作的提示，避免 "TypeError: Failed to fetch" 直接上屏 */
+export function normalizeTranscodeError(rawError: string, fallback: string): string {
+  if (!rawError) return fallback
+  if (/failed to fetch|load failed/i.test(rawError)) {
+    return '115vod 网络请求失败（可能 115vod 未登录或网络异常），请先访问 115vod.com 登录后重试'
+  }
+  return rawError
+}
+
 export async function checkTranscodeJob(sha1: string, pickCode: string, priority?: number): Promise<TranscodeCheckResult | null> {
   const params = new URLSearchParams({ sha1, priority: '100' })
   const body = priority === undefined ? JSON.stringify({ fid: sha1 }) : JSON.stringify({ fid: sha1, priority })
@@ -41,7 +50,7 @@ export async function checkTranscodeJob(sha1: string, pickCode: string, priority
     pickCode,
   )
   if (!response.ok) {
-    throw new Error(response.error || 'check transcode job failed')
+    throw new Error(normalizeTranscodeError(response.error || '', 'check transcode job failed'))
   }
   const parsed = parseJsonText<TranscodeCheckResult>(response.text)
   if (!parsed) throw new Error('check transcode job parse failed')
@@ -63,7 +72,7 @@ export async function pushVipTranscode(sha1: string, pickCode: string): Promise<
     'page', // Force 'page' mode to avoid CORS issues on redirection
   )
   if (!response.ok) {
-    throw new Error(response.error || 'vip push request failed')
+    throw new Error(normalizeTranscodeError(response.error || '', 'vip push request failed'))
   }
   const parsed = parseJsonText<TranscodePushResult>(response.text)
   if (!parsed) throw new Error('vip push parse failed')
@@ -82,7 +91,7 @@ export async function checkIsTranscoded(pickCode: string): Promise<IsTranscodedR
     pickCode,
   )
   if (!response.ok) {
-    throw new Error(response.error || 'is_transcoded request failed')
+    throw new Error(normalizeTranscodeError(response.error || '', 'is_transcoded request failed'))
   }
   const parsed = parseJsonText<IsTranscodedResult>(response.text)
   if (!parsed) throw new Error('is_transcoded parse failed')
@@ -104,7 +113,7 @@ export async function pushBatchTranscode(fileIds: string[], pickCode: string): P
     'page', // Force 'page' mode
   )
   if (!response.ok) {
-    throw new Error(response.error || 'batch push request failed')
+    throw new Error(normalizeTranscodeError(response.error || '', 'batch push request failed'))
   }
   const parsed = parseJsonText<TranscodePushResult>(response.text)
   if (!parsed) throw new Error('batch push parse failed')
