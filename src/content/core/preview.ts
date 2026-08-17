@@ -20,16 +20,20 @@ const coverScheduler = new Scheduler(3)
 /**
  * 通过 background FETCH_M3U8 获取可靠的 M3U8 源 URL
  * background 有 cookie 和扩展上下文，比 content script 直连可靠
- * 返回 { ok: false } 表示视频确实需要转码（M3U8 流不存在）
+ * 返回 { ok: false, reason: 'not_transcoded' } 表示视频确实需要转码（M3U8 流不存在）
+ * 返回 { ok: false, reason: 'unavailable' } 表示后台不可达/上下文失效，不能判定为需要转码
  * 返回 { ok: true, url } 表示 M3U8 可用，url 为最低画质源地址
  */
-async function fetchM3u8ViaBackground(pickCode: string): Promise<{ ok: true, url: string } | { ok: false }> {
+async function fetchM3u8ViaBackground(pickCode: string): Promise<{ ok: true, url: string } | { ok: false, reason: 'not_transcoded' | 'unavailable' }> {
   const res = await sendTypedRuntimeMessageSafe({
     type: 'FETCH_M3U8',
     data: { pickCode },
   })
-  if (isRuntimeContextInvalidatedResult(res) || !res || res.error || !res.list || res.list.length === 0) {
-    return { ok: false }
+  if (isRuntimeContextInvalidatedResult(res) || !res) {
+    return { ok: false, reason: 'unavailable' }
+  }
+  if (res.error || !res.list || res.list.length === 0) {
+    return { ok: false, reason: 'not_transcoded' }
   }
   // 取最低画质用于封面抽帧
   const source = res.list.sort((a, b) => a.quality - b.quality)[0]
@@ -115,6 +119,12 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         const m3u8Result = await fetchM3u8ViaBackground(file.pickCode)
         if (state.disposed || !item.isConnected) return
         if (!m3u8Result.ok) {
+          if (m3u8Result.reason === 'unavailable') {
+            // 后台不可达/上下文失效：不能据此判定"需要转码"，避免误标
+            showPreviewUnavailable(container, '扩展后台未就绪，暂无法预览')
+            state.isLoaded = true
+            return
+          }
           // 检查是否有本地/会话保存的转码状态
           const savedRecord = await getTranscodeStatusByPickCode(file.pickCode) || (file.fileId ? await getTranscodeStatusByFileId(file.fileId) : null)
           showTranscodeButton(container, file.pickCode, file.fileId, savedRecord?.status)
