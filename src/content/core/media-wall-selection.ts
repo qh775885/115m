@@ -217,7 +217,8 @@ export function installWallDragSelection<T extends MediaWallSelectableItem>(
     const target = event.target as HTMLElement | null
     if (!target || target.closest('.m115-folder-actions,.m115-folder-action-btn')) return
     const pointedElement = doc.elementFromPoint(event.clientX, event.clientY)
-    const inWall = !!target.closest('.m115-media-wall,.list-contents') || !!pointedElement?.closest('.m115-media-wall,.list-contents')
+    // 仅限媒体墙容器内触发框选；不得覆盖原生列表行（左侧拖拽手柄移动文件等原生交互需保留）
+    const inWall = !!target.closest('.m115-media-wall') || !!pointedElement?.closest('.m115-media-wall')
     if (!inWall) return
     startDragTracking(event)
   }
