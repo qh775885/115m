@@ -77,6 +77,9 @@ export class DecoderFlow {
   private firstPts: number | undefined
   private reader: ChunkReader | undefined
   private error: Error | undefined
+  /** 解码器在 configure()/flush() 后必须收到关键帧才能 decode，
+   *  此标记为 true 时跳过 delta 帧直到关键帧到达 */
+  private awaitingKeyFrame: boolean = true
   constructor(
     options: DecoderFlowOptions,
   ) {
@@ -333,6 +336,7 @@ export class DecoderFlow {
       },
       onDone: () => {
         this.logger.debug('解复用完成, 刷新解码器')
+        this.awaitingKeyFrame = true
         if (this.videoDecoder) {
           this.videoDecoder.flush()
         }
@@ -355,6 +359,7 @@ export class DecoderFlow {
       this.videoDecoder.configure({
         codec,
       })
+      this.awaitingKeyFrame = true
       this.logger.debug(`解码器配置成功, 状态: ${this.videoDecoder.state}`)
     }
     catch (error) {
@@ -570,6 +575,13 @@ export class DecoderFlow {
 
     const sample = this.sampleQueue.shift()
     if (sample && this.videoDecoder) {
+      // configure()/flush() 之后解码器必须先收到关键帧，否则 decode 会抛
+      // DataError: A key frame is required after configure() or flush()
+      if (this.awaitingKeyFrame && !sample.avcFrame.keyframe) {
+        this.logger.debug(`等待关键帧, 跳过 delta 样本, pts: ${sample.avcFrame.pts}`)
+        return
+      }
+      this.awaitingKeyFrame = false
       try {
         this._rememberProcessedSample(sample)
         this.videoDecoder.decode(sample.encodedChunk)

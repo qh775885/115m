@@ -171,6 +171,37 @@ describe('DecoderFlow waitForFrame 忙等优化', () => {
     vi.useFakeTimers()
   })
 
+  it('configure 后首个 delta 帧被跳过，等待关键帧才 decode', async () => {
+    const { flow } = createFlow()
+    const internal = flow as unknown as {
+      videoDecoder: { decode: ReturnType<typeof vi.fn> }
+    }
+    internal.videoDecoder.decode.mockImplementation((chunk: unknown) => {
+      void chunk
+      const frame = new MockVideoFrame(0)
+      flow['_processFrame'](frame as unknown as VideoFrame)
+    })
+
+    const waitPromise = flow.waitForFrame(5000)
+    await vi.advanceTimersByTimeAsync(20)
+
+    // 配置解码器后先来一个 delta 帧（不应喂给 decode）
+    demuxerCallbacks.onConfig?.({ codec: 'avc1.4d401f', width: 1280, height: 720 })
+    const deltaFrame: AVCFrame = { pts: 0, duration: 40, keyframe: false } as AVCFrame
+    demuxerCallbacks.onAvcFrameData?.({ avcFrame: deltaFrame, rawData: new Uint8Array([0, 0, 0, 1, 104]) })
+    await vi.advanceTimersByTimeAsync(50)
+    expect(internal.videoDecoder.decode).not.toHaveBeenCalled()
+
+    // 关键帧到达后正常解码
+    emitKeyframe()
+    await vi.advanceTimersByTimeAsync(200)
+
+    const result = await Promise.race([waitPromise, new Promise(resolve => setTimeout(() => resolve('pending'), 100))])
+    expect(result).not.toBe('pending')
+    const frameResult = result as { videoFrame: unknown } | undefined
+    expect(frameResult?.videoFrame).toBeDefined()
+  })
+
   it('超时但已找到帧时返回当前帧而非抛错', async () => {
     const { flow } = createFlow()
     const internal = flow as unknown as {
