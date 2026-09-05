@@ -121,8 +121,13 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (!m3u8Result.ok) {
           if (m3u8Result.reason === 'unavailable') {
             // 后台不可达/上下文失效：不能据此判定"需要转码"，避免误标
+            // 不设 isLoaded，允许后续重试（Chrome 更新/重启后 SW 可能稍后恢复）
             showPreviewUnavailable(container, '扩展后台未就绪，暂无法预览')
-            state.isLoaded = true
+            state.isLoading = false
+            // 5 秒后自动重试，无需用户手动滚动
+            if (!state.disposed && item.isConnected && state.isVisible) {
+              setTimeout(() => loadCovers(), 5000)
+            }
             return
           }
           // 检查是否有本地/会话保存的转码状态
