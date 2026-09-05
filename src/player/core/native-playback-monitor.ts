@@ -3,7 +3,7 @@
  */
 import type Artplayer from 'artplayer'
 import type { VideoPlaybackQualityLike } from './types'
-import { shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
+import { shouldFallbackNativeBlackVideo, shouldFallbackNativeDroppedFrames, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
 
 const AUDIO_PROBE_DELAY_MS = 4500
 const STALL_CHECK_INTERVAL_MS = 1000
@@ -296,6 +296,29 @@ export class NativePlaybackMonitor {
     }
 
     const totalFrames = this.getTotalVideoFrames(video)
+    const quality = (video.getVideoPlaybackQuality?.() || {}) as VideoPlaybackQualityLike
+    const droppedFrames = quality.droppedVideoFrames ?? 0
+
+    // 丢帧率检测：硬解失败（如竖屏超高分辨率）会导致 CPU 软解严重丢帧
+    if (shouldFallbackNativeDroppedFrames({
+      currentTime: video.currentTime || 0,
+      totalVideoFrames: totalFrames,
+      droppedVideoFrames: droppedFrames,
+    })) {
+      this.stallFallbackInFlight = true
+      const dropRate = totalFrames > 0 ? Math.round(droppedFrames / totalFrames * 100) : 0
+      console.warn('[115m][native] excessive frame drop detected, fallback to HLS', {
+        currentTime: video.currentTime,
+        totalFrames,
+        droppedFrames,
+        dropRate: `${dropRate}%`,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+      })
+      await this.deps.onFallbackToHls(`无损播放丢帧严重(${dropRate}%)，已改用 115原画`, true)
+      return
+    }
+
     const shouldFallback = shouldFallbackNativeBlackVideo({
       currentTime: video.currentTime || 0,
       readyState: video.readyState,
@@ -305,7 +328,8 @@ export class NativePlaybackMonitor {
     })
     if (!shouldFallback) {
       // 片头阶段（<3s）未解码出帧可能只是加载未完成，继续观察，避免黑屏降级链断裂
-      if ((video.currentTime || 0) < 3) {
+      // 丢帧检测也需要持续观察，因此扩展到 <10s 仍继续调度
+      if ((video.currentTime || 0) < 10) {
         this.scheduleVideoProbe()
       }
       return

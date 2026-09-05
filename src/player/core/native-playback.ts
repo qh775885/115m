@@ -58,6 +58,24 @@ export function isConservativeNativeUltraExtension(title: string, ultraUrl: stri
   return false
 }
 
+/**
+ * 丢帧率过高时应降级：播放已推进一定时间且总帧数足够后，
+ * 若 droppedVideoFrames / totalVideoFrames 超阈值则判定硬解失败（典型场景：
+ * 竖屏 2160×3840 超出显卡硬解高度上限，被踢到 CPU 软解导致严重丢帧）。
+ */
+const DROP_FRAME_RATIO_THRESHOLD = 0.15
+const DROP_FRAME_MIN_TOTAL_FRAMES = 60
+
+export function shouldFallbackNativeDroppedFrames(params: {
+  currentTime: number
+  totalVideoFrames: number
+  droppedVideoFrames: number
+}) {
+  if (params.currentTime < 2) return false
+  if (params.totalVideoFrames < DROP_FRAME_MIN_TOTAL_FRAMES) return false
+  return params.droppedVideoFrames / params.totalVideoFrames > DROP_FRAME_RATIO_THRESHOLD
+}
+
 export function shouldFallbackNativeSilentAudio(params: {
   title: string
   ultraUrl: string | null

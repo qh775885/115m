@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canUseNativeUltraSource, shouldFallbackNativeBlackVideo, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
+import { canUseNativeUltraSource, shouldFallbackNativeBlackVideo, shouldFallbackNativeDroppedFrames, shouldFallbackNativeSilentAudio, shouldRetryNativePlayback } from './native-playback'
 
 const HAVE_CURRENT_DATA = 2
 const HAVE_FUTURE_DATA = 3
@@ -58,6 +58,42 @@ describe('shouldRetryNativePlayback', () => {
       videoWidth: 1920,
       videoHeight: 1080,
       totalVideoFrames: 120,
+    })).toBe(false)
+  })
+})
+
+describe('shouldFallbackNativeDroppedFrames', () => {
+  it('triggers fallback when drop rate exceeds 15% after enough frames', () => {
+    // 120 total, 20 dropped = 16.7% → fallback
+    expect(shouldFallbackNativeDroppedFrames({
+      currentTime: 3,
+      totalVideoFrames: 120,
+      droppedVideoFrames: 20,
+    })).toBe(true)
+  })
+
+  it('does not trigger fallback when drop rate is within threshold', () => {
+    // 120 total, 10 dropped = 8.3% → ok
+    expect(shouldFallbackNativeDroppedFrames({
+      currentTime: 3,
+      totalVideoFrames: 120,
+      droppedVideoFrames: 10,
+    })).toBe(false)
+  })
+
+  it('does not trigger fallback too early (currentTime < 2)', () => {
+    expect(shouldFallbackNativeDroppedFrames({
+      currentTime: 1,
+      totalVideoFrames: 120,
+      droppedVideoFrames: 60,
+    })).toBe(false)
+  })
+
+  it('does not trigger fallback with too few frames', () => {
+    expect(shouldFallbackNativeDroppedFrames({
+      currentTime: 3,
+      totalVideoFrames: 30,
+      droppedVideoFrames: 15,
     })).toBe(false)
   })
 })
