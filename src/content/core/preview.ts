@@ -64,6 +64,7 @@ interface PreviewState {
   error: boolean
   isVisible: boolean
   disposed: boolean
+  unavailableRetries?: number
   cancelTask?: () => void
   visibilityObserver?: { destroy: () => void }
   scrollObserver?: { destroy: () => void }
@@ -121,12 +122,20 @@ export function renderPreview(item: HTMLElement, file: FileInfo) {
         if (!m3u8Result.ok) {
           if (m3u8Result.reason === 'unavailable') {
             // 后台不可达/上下文失效：不能据此判定"需要转码"，避免误标
-            // 不设 isLoaded，允许后续重试（Chrome 更新/重启后 SW 可能稍后恢复）
-            showPreviewUnavailable(container, '扩展后台未就绪，暂无法预览')
-            state.isLoading = false
-            // 5 秒后自动重试，无需用户手动滚动
-            if (!state.disposed && item.isConnected && state.isVisible) {
-              setTimeout(() => loadCovers(), 5000)
+            // 限制自动重试次数（最多 1 次，6 秒后），避免后台失联时所有节点无限死循环重试
+            const retries = state.unavailableRetries ?? 0
+            if (retries < 1) {
+              state.unavailableRetries = retries + 1
+              showPreviewUnavailable(container, '扩展后台未就绪，等待恢复...')
+              state.isLoading = false
+              if (!state.disposed && item.isConnected && state.isVisible) {
+                setTimeout(() => loadCovers(), 6000)
+              }
+            }
+            else {
+              showPreviewUnavailable(container, '扩展后台未就绪，暂无法预览')
+              state.isLoaded = true
+              state.isLoading = false
             }
             return
           }

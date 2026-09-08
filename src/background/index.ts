@@ -30,13 +30,28 @@ void sweepStaleCache()
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === 'PING') {
     sendResponse({ pong: true })
-    return true
+    return false // 同步响应返回 false，防止端口悬挂导致 Service Worker 僵死
   }
   handleMessage(message, sender).then(sendResponse).catch((err) => {
     console.error('[115m] BG error:', err)
-    sendResponse({ error: err.message })
+    sendResponse({ error: err?.message || String(err) })
   })
-  return true // 保持 sendResponse 有效
+  return true // 异步响应保持 sendResponse 通道有效
+})
+
+// 监听长连接 Port 保活（来自 115 页面），防止 MV3 Service Worker 在用户浏览时意外休眠或死锁
+chrome.runtime.onConnect?.addListener((port) => {
+  if (port.name === 'keep-alive') {
+    if (!isTrustedSender(port.sender)) {
+      port.disconnect()
+      return
+    }
+    port.onMessage.addListener((msg) => {
+      if (msg === 'ping') {
+        port.postMessage('pong')
+      }
+    })
+  }
 })
 
 let lastOpenTabMeta: { url: string, ts: number } | null = null
