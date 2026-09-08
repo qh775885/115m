@@ -86,7 +86,7 @@ describe('buildListKey', () => {
 })
 
 describe('saveScrollPosition / restoreScrollPosition', () => {
-  it('round-trips a saved position', () => {
+  it('round-trips a saved position for the same active key', () => {
     saveScrollPosition('k', 300)
     const box = makeScrollableBox()
     const restored = restoreScrollPosition('k', box)
@@ -94,10 +94,34 @@ describe('saveScrollPosition / restoreScrollPosition', () => {
     expect(box.scrollTop).toBe(300)
   })
 
-  it('ignores saving zero or negative positions', () => {
-    saveScrollPosition('k', 0)
+  it('resets scroll position to 0 when switching to a different key', () => {
+    saveScrollPosition('folder_A', 300)
+    const box = makeScrollableBox()
+    box.scrollTop = 300
+
+    // 切换到 folder_B
+    const restored = restoreScrollPosition('folder_B', box)
+    expect(restored).toBe(false)
+    expect(box.scrollTop).toBe(0)
+  })
+
+  it('does not remember previous folders after switching (only active key is kept)', () => {
+    saveScrollPosition('folder_A', 500)
+    const box = makeScrollableBox()
+
+    // 切换到 folder_B
+    restoreScrollPosition('folder_B', box)
+    expect(box.scrollTop).toBe(0)
+
+    // 再次进入 folder_A 时也是作为新目录进入，重置为 0
+    const restored = restoreScrollPosition('folder_A', box)
+    expect(restored).toBe(false)
+    expect(box.scrollTop).toBe(0)
+  })
+
+  it('ignores saving negative positions', () => {
     saveScrollPosition('k', -5)
-    expect(sessionStorage.getItem('m115_scroll_history')).toBeNull()
+    expect(sessionStorage.getItem('m115_active_scroll')).toBeNull()
   })
 
   it('does not restore when no record exists', () => {
@@ -105,13 +129,5 @@ describe('saveScrollPosition / restoreScrollPosition', () => {
     const restored = restoreScrollPosition('missing_key', box)
     expect(restored).toBe(false)
     expect(box.scrollTop).toBe(0)
-  })
-
-  it('caps the store size at 200 entries', () => {
-    for (let i = 0; i < 220; i++) {
-      saveScrollPosition(`k_x${i}`, 100)
-    }
-    const store = JSON.parse(sessionStorage.getItem('m115_scroll_history') ?? '{}')
-    expect(Object.keys(store).length).toBeLessThanOrEqual(200)
   })
 })

@@ -14,7 +14,10 @@ export class HomeScrollBinder {
       if (!scrollBox) return
 
       const manager = this.scrollManagers.get(doc)
-      if (manager?.matches(scrollBox, doc)) return
+      if (manager?.matches(scrollBox, doc)) {
+        manager.checkAndRestore()
+        return
+      }
       manager?.unbind()
       const nextManager = new ScrollPositionManager()
       nextManager.bind(scrollBox, doc)
