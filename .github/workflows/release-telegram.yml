@@ -16,44 +16,32 @@ jobs:
     name: Notify Telegram
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch Release Info
-        id: release_info
+      - name: Send Notification and Asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_TAG: ${{ inputs.release_tag }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
-          
+
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID"
+            exit 1
+          fi
+
           TAG="${INPUT_TAG:-}"
           if [ -z "$TAG" ]; then
-            TAG="${{ github.event.release.tag_name }}"
+            TAG="${EVENT_TAG:-}"
           fi
           if [ -z "$TAG" ]; then
             TAG="v1.9.4"
           fi
-          
-          echo "Processing release tag: $TAG"
-          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
-          
-          gh release view "$TAG" --repo ${{ github.repository }} --json name,body > /tmp/release.json
-          
-          NAME=$(jq -r '.name // empty' /tmp/release.json)
-          if [ -z "$NAME" ]; then
-            NAME="$TAG"
-          fi
-          echo "RELEASE_NAME=$NAME" >> $GITHUB_ENV
+          export TAG
 
-      - name: Send Telegram message (Text)
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          set -euo pipefail
-
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
-            echo "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID"
-            exit 1
-          fi
+          echo "Fetching details for release tag: $TAG"
+          gh release view "$TAG" --repo "${{ github.repository }}" --json name,body > /tmp/release.json
 
           python3 <<'PY' > /tmp/telegram_payload.json
           import json
@@ -62,8 +50,8 @@ jobs:
           with open("/tmp/release.json", "r", encoding="utf-8") as f:
               rel = json.load(f)
 
-          title = os.environ.get("RELEASE_NAME") or os.environ.get("RELEASE_TAG") or "New release"
-          tag = os.environ.get("RELEASE_TAG") or ""
+          tag = os.environ.get("TAG", "")
+          title = rel.get("name") or tag or "New release"
           body = (rel.get("body") or "").strip()
           if len(body) > 3800:
               body = body[:3800].rstrip() + "\n..."
@@ -73,7 +61,6 @@ jobs:
               f"🏷 版本：{tag}",
               f"📌 标题：{title}",
           ]
-
           if body:
               lines.extend(["", body])
 
@@ -82,39 +69,23 @@ jobs:
               "text": "\n".join(lines),
               "disable_web_page_preview": True,
           }
-
           print(json.dumps(payload, ensure_ascii=False))
           PY
 
+          echo "Sending text notification to Telegram..."
           curl --fail --show-error --silent \
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             --data @/tmp/telegram_payload.json
 
-      - name: Download Release Asset (ZIP)
-        id: download_asset
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p release_assets
-          gh release download "$RELEASE_TAG" --pattern "*.zip" --dir release_assets --repo ${{ github.repository }} || true
-          
-          ZIP_FILE=$(find release_assets -name "*.zip" | head -n 1)
-          if [ -n "$ZIP_FILE" ]; then
-            echo "Found zip file: $ZIP_FILE"
-            echo "ZIP_FILE=$ZIP_FILE" >> $GITHUB_ENV
-          else
-            echo "No zip file found for this release."
-          fi
+          echo "Downloading ZIP asset..."
+          mkdir -p /tmp/release_assets
+          gh release download "$TAG" --pattern "*.zip" --dir /tmp/release_assets --repo "${{ github.repository }}" || true
 
-      - name: Send Telegram Document (ZIP)
-        if: env.ZIP_FILE != ''
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          CAPTION="📦 115m ${RELEASE_TAG} 安装包
+          ZIP_FILE=$(find /tmp/release_assets -name "*.zip" | head -n 1)
+          if [ -n "$ZIP_FILE" ] && [ -f "$ZIP_FILE" ]; then
+            echo "Found ZIP asset: $ZIP_FILE, sending to Telegram..."
+            CAPTION="📦 115m ${TAG} 安装包
 
 👇 安装/更新指南：
 1. 下载此压缩包，并【解压】到一个固定的文件夹中。
@@ -126,8 +97,12 @@ jobs:
 - 更新时，下载新包解压并覆盖原文件夹，在扩展页点“刷新”即可。
 - 安装后请勿删除解压的文件夹，否则扩展会失效。"
 
-          curl --fail --show-error --silent \
-            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
-            -F "chat_id=${TELEGRAM_CHAT_ID}" \
-            -F "document=@${ZIP_FILE}" \
-            -F "caption=${CAPTION}"
+            curl --fail --show-error --silent \
+              -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F "chat_id=${TELEGRAM_CHAT_ID}" \
+              -F "document=@${ZIP_FILE}" \
+              -F "caption=${CAPTION}"
+            echo "Asset sent successfully."
+          else
+            echo "No zip asset found for release $TAG."
+          fi
