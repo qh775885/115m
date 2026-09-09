@@ -1,6 +1,9 @@
 name: Release to Telegram
 
 on:
+  push:
+    paths:
+      - '.github/workflows/**'
   release:
     types: [published]
   workflow_dispatch:
