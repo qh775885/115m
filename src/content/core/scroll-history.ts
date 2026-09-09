@@ -14,7 +14,9 @@ const LEGACY_STORAGE_KEY = 'm115_scroll_history'
 try {
   sessionStorage.removeItem(LEGACY_STORAGE_KEY)
 }
-catch {}
+catch {
+  // 忽略环境不支持
+}
 
 export interface ActiveScrollRecord {
   key: string
@@ -35,14 +37,18 @@ export function setActiveScroll(key: string, scrollTop: number) {
   try {
     sessionStorage.setItem(ACTIVE_STORAGE_KEY, JSON.stringify({ key, scrollTop }))
   }
-  catch {}
+  catch {
+    // 忽略写入异常
+  }
 }
 
 export function clearActiveScroll() {
   try {
     sessionStorage.removeItem(ACTIVE_STORAGE_KEY)
   }
-  catch {}
+  catch {
+    // 忽略清理异常
+  }
 }
 
 /**
