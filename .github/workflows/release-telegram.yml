@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release Tag (e.g. v1.9.4)'
+        description: 'Release Tag'
         required: false
         default: 'v1.9.4'
+        type: string
 
 jobs:
   notify:
@@ -19,14 +20,13 @@ jobs:
         id: release_info
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_EVENT: ${{ toJson(github.event) }}
-          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+          INPUT_TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
           
-          TAG=$(echo "$GH_EVENT" | jq -r '.release.tag_name // empty')
+          TAG="${INPUT_TAG:-}"
           if [ -z "$TAG" ]; then
-            TAG="$INPUT_TAG"
+            TAG="${{ github.event.release.tag_name }}"
           fi
           if [ -z "$TAG" ]; then
             TAG="v1.9.4"
@@ -109,7 +109,7 @@ jobs:
           fi
 
       - name: Send Telegram Document (ZIP)
-        if: ${{ env.ZIP_FILE != '' }}
+        if: env.ZIP_FILE != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
