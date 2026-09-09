@@ -1,31 +1,54 @@
-name: Release to Telegram
+name: Notify Telegram on Release
 
 on:
-  push:
-    paths:
-      - '.github/workflows/**'
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: 'Release Tag'
-        required: false
-        default: 'v1.9.4'
-        type: string
+
+permissions:
+  contents: read
 
 jobs:
   notify:
     name: Notify Telegram
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.draft && !github.event.release.prerelease) }}
+
     steps:
-      - name: Send Notification and Asset
+      - name: Resolve Release Information
+        id: resolve
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            NAME="${{ github.event.release.name }}"
+            BODY="${{ github.event.release.body }}"
+          else
+            # 手动触发时获取最新 release
+            echo "Workflow triggered manually. Fetching latest release info..."
+            LATEST_JSON=$(gh release view --repo "${{ github.repository }}" --json tagName,name,body)
+            TAG=$(echo "$LATEST_JSON" | jq -r '.tagName')
+            NAME=$(echo "$LATEST_JSON" | jq -r '.name // empty')
+            BODY=$(echo "$LATEST_JSON" | jq -r '.body // empty')
+          fi
+
+          if [ -z "$NAME" ]; then
+            NAME="$TAG"
+          fi
+
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "NAME=$NAME" >> $GITHUB_ENV
+          
+          # 将 body 保存至临时文件避免换行转义问题
+          printf "%s" "$BODY" > /tmp/release_body.txt
+
+      - name: Send Telegram message (Text)
+        env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          INPUT_TAG: ${{ github.event.inputs.release_tag }}
-          EVENT_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
 
@@ -34,36 +57,27 @@ jobs:
             exit 1
           fi
 
-          TAG="${INPUT_TAG:-}"
-          if [ -z "$TAG" ]; then
-            TAG="${EVENT_TAG:-}"
-          fi
-          if [ -z "$TAG" ]; then
-            TAG="v1.9.4"
-          fi
-          export TAG
-
-          echo "Fetching details for release tag: $TAG"
-          gh release view "$TAG" --repo "${{ github.repository }}" --json name,body > /tmp/release.json
-
           python3 <<'PY' > /tmp/telegram_payload.json
           import json
           import os
 
-          with open("/tmp/release.json", "r", encoding="utf-8") as f:
-              rel = json.load(f)
-
           tag = os.environ.get("TAG", "")
-          title = rel.get("name") or tag or "New release"
-          body = (rel.get("body") or "").strip()
-          if len(body) > 3800:
-              body = body[:3800].rstrip() + "\n..."
+          name = os.environ.get("NAME") or tag or "New release"
+          
+          body = ""
+          if os.path.exists("/tmp/release_body.txt"):
+              with open("/tmp/release_body.txt", "r", encoding="utf-8") as f:
+                  body = f.read().strip()
+
+          if len(body) > 3500:
+              body = body[:3500].rstrip() + "\n..."
 
           lines = [
               "🎉 115m 新版本发布",
               f"🏷 版本：{tag}",
-              f"📌 标题：{title}",
+              f"📌 标题：{name}",
           ]
+
           if body:
               lines.extend(["", body])
 
@@ -72,22 +86,29 @@ jobs:
               "text": "\n".join(lines),
               "disable_web_page_preview": True,
           }
+
           print(json.dumps(payload, ensure_ascii=False))
           PY
 
-          echo "Sending text notification to Telegram..."
           curl --fail --show-error --silent \
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             --data @/tmp/telegram_payload.json
 
-          echo "Downloading ZIP asset..."
+      - name: Download and Send Release Asset (ZIP)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
           mkdir -p /tmp/release_assets
           gh release download "$TAG" --pattern "*.zip" --dir /tmp/release_assets --repo "${{ github.repository }}" || true
 
           ZIP_FILE=$(find /tmp/release_assets -name "*.zip" | head -n 1)
           if [ -n "$ZIP_FILE" ] && [ -f "$ZIP_FILE" ]; then
-            echo "Found ZIP asset: $ZIP_FILE, sending to Telegram..."
+            echo "Found zip file: $ZIP_FILE. Uploading to Telegram..."
             CAPTION="📦 115m ${TAG} 安装包
 
 👇 安装/更新指南：
@@ -105,7 +126,7 @@ jobs:
               -F "chat_id=${TELEGRAM_CHAT_ID}" \
               -F "document=@${ZIP_FILE}" \
               -F "caption=${CAPTION}"
-            echo "Asset sent successfully."
+            echo "Document sent successfully."
           else
-            echo "No zip asset found for release $TAG."
+            echo "No zip file found for release $TAG. Skipped."
           fi
