@@ -1,4 +1,4 @@
-name: Notify Telegram on Release
+name: Release to Telegram
 
 on:
   release:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release Tag to notify (e.g. v1.9.4)'
+        description: 'Release Tag (e.g. v1.9.4)'
         required: false
         default: 'v1.9.4'
 
@@ -29,8 +29,7 @@ jobs:
             TAG="$INPUT_TAG"
           fi
           if [ -z "$TAG" ]; then
-            echo "No tag found"
-            exit 1
+            TAG="v1.9.4"
           fi
           
           echo "Processing release tag: $TAG"
