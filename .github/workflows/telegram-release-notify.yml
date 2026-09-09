@@ -12,7 +12,6 @@ jobs:
   notify:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.draft && !github.event.release.prerelease) }}
 
     steps:
       - name: Resolve Release Information
