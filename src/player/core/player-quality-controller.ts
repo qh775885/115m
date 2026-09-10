@@ -7,7 +7,7 @@ import type Artplayer from 'artplayer'
 import type { M3u8Item } from '../../lib/types'
 import { fetchM3u8WithRetry } from './source'
 import { ORIGINAL_PLACEHOLDER_URL, buildQualityOptions } from './quality'
-import { saveQualityPreference } from './history'
+import { saveQualityPreference, loadQualityPreference } from './history'
 import { buildQualityControlItem as buildQualityControlConfig, updateArtplayerControl } from './player-quality'
 import type { QualityOption } from './types'
 import type { ResolvedPlaybackBundle } from './player-services'
@@ -215,6 +215,7 @@ export class PlayerQualityController {
   /**
    * 切换画质。
    * 原画占位项需先解析真实源；切换后应用状态、记录偏好，并委托 artplayer.switchQuality。
+   * 成功/失败均有 toast 反馈；失败时回滚状态与偏好，并回切到原播放源，避免黑屏卡死与「假切换」状态残留。
    */
   async switchQuality(opt: QualityOption) {
     const deps = this.deps
@@ -230,6 +231,10 @@ export class PlayerQualityController {
     }
 
     if (this.artplayer.url === opt.url) return
+
+    const prevState = this.getPlaybackState()
+    const prevSourceUrl = this.artplayer.url || ''
+    const prevPref = await loadQualityPreference(deps.getCurrentPickCode())
 
     deps.resetNativeRetry()
     this.currentPlaybackType = !!this.ultraUrl && opt.url === this.ultraUrl ? 'native' : 'hls'
@@ -252,12 +257,34 @@ export class PlayerQualityController {
       finally {
         deps.setSwitchUrlInFlight(false)
       }
+      deps.onShowToast(`已切换到${opt.label}`)
     }
     catch (error) {
       if (!this.artplayer) return
-      this.updateQualityByUrl(this.artplayer.url || '')
+      this.applyPlaybackStatePatch({
+        currentQuality: prevState.currentQuality,
+        currentQualityLabel: prevState.currentQualityLabel,
+        isNativeVideo: prevState.isNativeVideo,
+      })
+      if (prevPref) {
+        saveQualityPreference(deps.getCurrentPickCode(), prevPref.label, prevPref.quality)
+      }
       this.renderQualityPanel()
-      deps.onShowToast(error instanceof Error ? error.message : '切换画质失败')
+      deps.onShowToast(error instanceof Error ? error.message : '切换画质失败，已恢复原画质')
+      if (prevSourceUrl && this.artplayer.url !== prevSourceUrl) {
+        try {
+          deps.setSwitchUrlInFlight(true)
+          try {
+            await deps.withSwitchTimeout(this.artplayer.switchUrl(prevSourceUrl))
+          }
+          finally {
+            deps.setSwitchUrlInFlight(false)
+          }
+        }
+        catch {
+          deps.onShowError('恢复原画质失败，请刷新重试')
+        }
+      }
     }
   }
 
