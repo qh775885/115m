@@ -106,10 +106,43 @@ describe('PlayerQualityController', () => {
     expect(artMock.switchQuality).toHaveBeenCalledWith('https://example.com/ultra.mp4')
   })
 
-  it('switchQuality 相同 URL 直接返回', async () => {
+  it('switchQuality 相同画质或 URL 直接返回', async () => {
     const { controller, artMock } = createController()
     await controller.switchQuality({ url: 'https://example.com/best.m3u8', label: '超清', quality: 1080 })
     expect(artMock.switchQuality).not.toHaveBeenCalled()
+  })
+
+  it('attach 时 artplayer 尚未创建，后续创建后仍可正常切画质与渲染', async () => {
+    let currentArt: any = null
+    const getArtplayer = vi.fn(() => currentArt)
+    const withSwitchTimeout = vi.fn((p: Promise<unknown>) => p)
+    const onShowToast = vi.fn()
+    const controller = new PlayerQualityController()
+    controller.attach({
+      getArtplayer,
+      getCurrentPickCode: () => 'pick-1',
+      isReady: () => true,
+      getSwitchUrlInFlight: () => false,
+      setSwitchUrlInFlight: vi.fn(),
+      withSwitchTimeout: withSwitchTimeout as any,
+      resetNativeRetry: vi.fn(),
+      disposeHls: vi.fn(),
+      onShowToast,
+      onShowError: vi.fn(),
+    })
+
+    // 延迟注入 artplayer 实例（模拟实际运行时 new Artplayer 时序）
+    const artInstance = {
+      url: 'https://example.com/ultra.mp4',
+      video: document.createElement('video'),
+      switchQuality: vi.fn().mockResolvedValue(undefined),
+      controls: { update: vi.fn(), remove: vi.fn(), add: vi.fn() },
+    }
+    currentArt = artInstance
+
+    await controller.switchQuality({ url: 'https://example.com/1080.m3u8', label: '1080P', quality: 1080 })
+    expect(artInstance.switchQuality).toHaveBeenCalledWith('https://example.com/1080.m3u8')
+    expect(onShowToast).toHaveBeenCalledWith('已切换到1080P')
   })
 
   it('switchQuality 原画占位先解析真实源', async () => {

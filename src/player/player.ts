@@ -323,6 +323,10 @@ class PlayerManager {
       withSwitchTimeout: <T>(promise: Promise<T>, timeoutMs?: number, message?: string) => this.withSwitchTimeout(promise, timeoutMs, message),
       resetNativeRetry: () => this.nativeMonitor?.resetRetryCount(),
       disposeHls: () => this.hlsController.dispose(),
+      onSwitchToNative: () => {
+        this.audioManager?.resetForNative()
+        this.mediaTrackController?.renderControl()
+      },
       onShowToast: msg => this.overlay?.showToast(msg),
       onShowError: msg => this.showError(msg),
     })

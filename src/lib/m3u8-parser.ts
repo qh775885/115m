@@ -10,7 +10,7 @@ import { NORMAL_URL } from './constants'
  * 获取 URL 的绝对路径
  * 兼容绝对 URL、协议相对 URL（//host/path）、相对路径
  */
-function resolveM3u8Url(url: string): string {
+export function resolveM3u8Url(url: string): string {
   try {
     return new URL(url, NORMAL_URL).href
   }

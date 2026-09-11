@@ -10,6 +10,7 @@ import { createHlsInstance } from './hls'
 import { debugLog } from './debug'
 import { findVariantInMaster } from './playlist-url'
 import { sendTypedRuntimeMessageSafe } from './runtime'
+import { resolveM3u8Url } from '../../lib/m3u8-parser'
 
 const HLS_STEADY_RECOVER_MAX = 3
 
@@ -344,7 +345,11 @@ export class HlsPlayerController {
       streamInf = `${streamInf},AUDIO="${groupId}"`
     }
 
-    const wrapped = ['#EXTM3U', ...audioTags, streamInf, matchedUrl || selectedUrl].join('\n')
+    const absoluteAudioTags = audioTags.map(tag =>
+      tag.replace(/URI="([^"]+)"/i, (_, uri) => `URI="${resolveM3u8Url(uri)}"`)
+    )
+    const targetVariantUrl = resolveM3u8Url(matchedUrl || selectedUrl)
+    const wrapped = ['#EXTM3U', ...absoluteAudioTags, streamInf, targetVariantUrl].join('\n')
     return URL.createObjectURL(new Blob([wrapped], { type: 'application/vnd.apple.mpegurl' }))
   }
 }

@@ -40,6 +40,8 @@ export interface QualityControllerDeps {
   resetNativeRetry: () => void
   /** 销毁 HLS 实例（切到原生源前） */
   disposeHls: () => void
+  /** 切换到原生源时的回调（重置音轨状态等） */
+  onSwitchToNative?: () => void
   /** toast 提示 */
   onShowToast: (msg: string) => void
   /** 展示错误 */
@@ -47,8 +49,11 @@ export interface QualityControllerDeps {
 }
 
 export class PlayerQualityController {
-  private artplayer: Artplayer | null = null
   private deps: QualityControllerDeps | null = null
+
+  private get artplayer(): Artplayer | null {
+    return this.deps?.getArtplayer() ?? null
+  }
 
   private m3u8List: M3u8Item[] = []
   private ultraUrl: string | null = null
@@ -95,7 +100,6 @@ export class PlayerQualityController {
 
   attach(deps: QualityControllerDeps) {
     this.deps = deps
-    this.artplayer = deps.getArtplayer()
   }
 
   /** 构建 PlaybackState 快照（供纯函数操作） */
@@ -230,7 +234,7 @@ export class PlayerQualityController {
       opt = { ...opt, url: resolvedUrl }
     }
 
-    if (this.artplayer.url === opt.url) return
+    if (this.currentQualityLabel === opt.label || this.artplayer.url === opt.url) return
 
     const prevState = this.getPlaybackState()
     const prevSourceUrl = this.artplayer.url || ''
@@ -247,6 +251,7 @@ export class PlayerQualityController {
 
     if (this.currentPlaybackType === 'native') {
       deps.disposeHls()
+      deps.onSwitchToNative?.()
     }
 
     try {
@@ -340,7 +345,6 @@ export class PlayerQualityController {
   }
 
   destroy() {
-    this.artplayer = null
     this.deps = null
   }
 }
