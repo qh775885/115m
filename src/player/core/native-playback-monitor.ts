@@ -350,8 +350,8 @@ export class NativePlaybackMonitor {
   private async checkAudioDecode() {
     if (!this.art || !this.isNativePlayback || !this.deps) return
     const video = this.art.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number }
-    // 暂停时不重排探测，等 play 事件再重新调度，避免无限自我重排
-    if (video.paused) return
+    // 暂停或静音时不判定为无声异常
+    if (video.paused || video.muted) return
     if (video.currentTime < 1) {
       this.scheduleAudioProbe()
       return
@@ -368,8 +368,9 @@ export class NativePlaybackMonitor {
       nativeUltraConservative: this.deps.getNativeUltraConservative(),
     })) return
     const masterText = await this.deps.fetchMasterPlaylistText()
-    const hasHlsAudioTracks = !!masterText && /#EXT-X-MEDIA:TYPE=AUDIO/i.test(masterText)
-    if (!hasHlsAudioTracks) return
+    // 只要能获取到 HLS 播放列表（即 115 已转码出 HLS 流，含兼容的 AAC 音频），即可降级
+    // 绝大多数普通视频为单音轨（音视频混流），不含独立的 #EXT-X-MEDIA:TYPE=AUDIO 标签
+    if (!masterText) return
     await this.deps.onFallbackToHls('无损音频不兼容，已改用 115原画', true)
   }
 

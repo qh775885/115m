@@ -12,6 +12,7 @@ function createVideo() {
     __paused: false,
     __ended: false,
     __seeking: false,
+    __muted: false,
     __currentTime: 5,
     __readyState: 4,
     __videoWidth: 1280,
@@ -21,6 +22,7 @@ function createVideo() {
   Object.defineProperty(video, 'paused', { configurable: true, get: () => state.__paused })
   Object.defineProperty(video, 'ended', { configurable: true, get: () => state.__ended })
   Object.defineProperty(video, 'seeking', { configurable: true, get: () => state.__seeking })
+  Object.defineProperty(video, 'muted', { configurable: true, get: () => state.__muted })
   Object.defineProperty(video, 'currentTime', { configurable: true, get: () => state.__currentTime, set: v => { state.__currentTime = v } })
   Object.defineProperty(video, 'readyState', { configurable: true, get: () => state.__readyState })
   Object.defineProperty(video, 'videoWidth', { configurable: true, get: () => state.__videoWidth })
@@ -110,5 +112,28 @@ describe('NativePlaybackMonitor 暂停停止探测', () => {
     expect((monitor as any).videoProbeTimer).not.toBeNull()
     // 清理定时器避免测试挂起
     ;(monitor as any).clearVideoProbe()
+  })
+
+  it('checkAudioDecode 在普通单音轨（无 EXT-X-MEDIA 标签）HLS 存在时触发降级', async () => {
+    const { monitor, state, deps, video } = createMonitor()
+    state.__paused = false
+    state.__currentTime = 5
+    state.__readyState = 4
+    video.webkitAudioDecodedByteCount = 0
+    // 普通单音轨 master 列表不含 #EXT-X-MEDIA:TYPE=AUDIO
+    deps.fetchMasterPlaylistText = vi.fn().mockResolvedValue('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000\n/sub.m3u8')
+    await (monitor as any).checkAudioDecode()
+    expect(deps.onFallbackToHls).toHaveBeenCalledWith('无损音频不兼容，已改用 115原画', true)
+  })
+
+  it('checkAudioDecode 在用户主动静音时不触发降级', async () => {
+    const { monitor, state, deps, video } = createMonitor()
+    state.__paused = false
+    state.__muted = true
+    state.__currentTime = 5
+    state.__readyState = 4
+    video.webkitAudioDecodedByteCount = 0
+    await (monitor as any).checkAudioDecode()
+    expect(deps.onFallbackToHls).not.toHaveBeenCalled()
   })
 })
