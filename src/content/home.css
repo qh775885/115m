@@ -271,6 +271,7 @@
   justify-content: center;
   background: rgba(0, 0, 0, .86);
   cursor: zoom-out;
+  outline: none;
 }
 
 .m115-cover-lightbox-img {
@@ -329,5 +330,19 @@
   background: rgba(0, 0, 0, .42);
   font-size: 13px;
   line-height: 18px;
+}
+
+.m115-cover-lightbox-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 60px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, .74);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 

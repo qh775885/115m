@@ -6,6 +6,7 @@ let lightboxTime: HTMLDivElement | null = null
 let lightboxCovers: VideoThumbnail[] = []
 let lightboxIndex = 0
 let lightboxDoc: Document | null = null
+let lightboxWin: Window | null = null
 
 function renderLightboxImage() {
   const cover = lightboxCovers[lightboxIndex]
@@ -25,6 +26,10 @@ export function closeCoverLightbox() {
   if (lightboxDoc) {
     lightboxDoc.removeEventListener('keydown', handleLightboxKeydown, true)
     lightboxDoc = null
+  }
+  if (lightboxWin) {
+    lightboxWin.removeEventListener('keydown', handleLightboxKeydown, true)
+    lightboxWin = null
   }
 }
 
@@ -69,17 +74,24 @@ export function openCoverLightbox(doc: Document, covers: VideoThumbnail[], index
   closeCoverLightbox()
 
   lightboxDoc = doc
+  lightboxWin = doc.defaultView
   lightboxCovers = covers
   lightboxIndex = index
 
   const root = doc.createElement('div')
   root.className = 'm115-cover-lightbox'
+  // 让遮罩可获得键盘焦点，避免焦点停留在外部文档导致 Esc/方向键失效
+  root.tabIndex = -1
 
   const image = doc.createElement('img')
   image.className = 'm115-cover-lightbox-img'
 
   const time = doc.createElement('div')
   time.className = 'm115-cover-lightbox-time'
+
+  const hint = doc.createElement('div')
+  hint.className = 'm115-cover-lightbox-hint'
+  hint.textContent = '点击任意处或按 Esc 关闭'
 
   const closeButton = doc.createElement('button')
   closeButton.type = 'button'
@@ -98,6 +110,7 @@ export function openCoverLightbox(doc: Document, covers: VideoThumbnail[], index
 
   root.appendChild(image)
   root.appendChild(time)
+  root.appendChild(hint)
   root.appendChild(closeButton)
   root.appendChild(prevButton)
   root.appendChild(nextButton)
@@ -107,6 +120,14 @@ export function openCoverLightbox(doc: Document, covers: VideoThumbnail[], index
   lightboxImg = image
   lightboxTime = time
   renderLightboxImage()
+
+  // 抢占焦点，确保此前焦点无论位于何处，Esc/方向键都能被本遮罩接收
+  try {
+    root.focus({ preventScroll: true })
+  }
+  catch {
+    root.focus()
+  }
 
   root.addEventListener('click', closeCoverLightbox)
   image.addEventListener('click', closeCoverLightbox)
@@ -123,4 +144,5 @@ export function openCoverLightbox(doc: Document, covers: VideoThumbnail[], index
     showLightboxImage(lightboxIndex + 1)
   })
   doc.addEventListener('keydown', handleLightboxKeydown, true)
+  lightboxWin?.addEventListener('keydown', handleLightboxKeydown, true)
 }
