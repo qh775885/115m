@@ -15,6 +15,7 @@ function createOverlay(meta: PlayerOverlayMeta) {
     } as never,
     meta,
     onMoveFile: vi.fn(),
+    onDownloadFile: vi.fn(),
     onToggleFavorite: vi.fn(),
     onPlaylistToggle: vi.fn(),
     onPlaylistPlay: vi.fn(),
@@ -73,5 +74,19 @@ describe('PlayerOverlayController.updateMeta', () => {
     expect(options.meta.title).toBe('新标题')
     expect(options.meta.fileSize).toBe('1.5GB')
     expect(options.meta.isMarked).toBe(true)
+  })
+
+  it('mountHeaderOverlay 渲染下载视频按钮并响应点击', async () => {
+    const { overlay, options } = createOverlay(baseMeta())
+    options.getCurrentPickCode = () => 'test-pick-code'
+    overlay.init()
+
+    const root = (options.art as any).template.$player as HTMLElement
+    const downloadBtn = root.querySelector('button[title="下载视频"]') as HTMLButtonElement | null
+    expect(downloadBtn).toBeTruthy()
+
+    downloadBtn!.click()
+    await Promise.resolve()
+    expect(options.onDownloadFile).toHaveBeenCalledWith('test-pick-code')
   })
 })

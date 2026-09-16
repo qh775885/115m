@@ -687,6 +687,7 @@ class PlayerManager {
       art: this.artplayer,
       meta,
       onMoveFile: async (fileId, cid) => await this.actions.moveFile(fileId, cid),
+      onDownloadFile: async (pickCode) => await this.actions.downloadVideo(pickCode),
       onToggleFavorite: async (fileId, nextMarked) => await this.actions.toggleFavorite(fileId, nextMarked),
       onPlaylistToggle: async (open) => {
         if (!open) return []

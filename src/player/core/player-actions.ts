@@ -8,6 +8,7 @@ import { deleteVideoFile, fetchFavoriteStatus, updateFavoriteStatus } from './pl
 import { getDeleteFallback } from './playlist-navigation'
 import { MoveDialog } from './move-dialog'
 import { sendRuntimeMessageSafe } from './runtime'
+import { fetchBestDownloadResult } from '../../lib/pro-api'
 import {
   buildUpdatedMarkedUrl,
   readOverlayMetaFromQuery,
@@ -167,6 +168,35 @@ export class PlayerActionsController {
 
   async deleteCurrentVideo(fileId: string, parentId: string, pickCode: string): Promise<void> {
     await this.deleteVideoFromPlaylist({ fileId, parentId, pickCode, navigateAfterDelete: true })
+  }
+
+  async downloadVideo(pickCode?: string): Promise<void> {
+    const deps = this.deps
+    const targetPickCode = pickCode || deps?.getCurrentPickCode()
+    if (!targetPickCode) {
+      deps?.onShowToast('缺少视频信息')
+      throw new Error('缺少视频信息')
+    }
+
+    const res = await fetchBestDownloadResult(sendRuntimeMessageSafe, targetPickCode)
+    if (res?.url?.auth_cookie) {
+      await sendRuntimeMessageSafe({
+        type: 'SET_COOKIE',
+        data: {
+          name: res.url.auth_cookie.name,
+          value: res.url.auth_cookie.value,
+          path: '/',
+          domain: '.115cdn.net',
+          expirationDate: Number(res.url.auth_cookie.expire),
+        },
+      })
+    }
+
+    if (res?.url?.url) {
+      window.open(res.url.url, '_blank')
+    } else {
+      throw new Error('未获取到真实下载地址')
+    }
   }
 
   async deletePlaylistVideo(item: OverlayPlaylistItem): Promise<void> {

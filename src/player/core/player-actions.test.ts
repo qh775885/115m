@@ -2,6 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlayerActionsController, type ActionsControllerDeps } from './player-actions'
 import { PlayerPlaylistController } from './player-playlist'
+import { fetchBestDownloadResult } from '../../lib/pro-api'
+
+vi.mock('../../lib/pro-api', () => ({
+  fetchBestDownloadResult: vi.fn(),
+}))
 
 function createController() {
   const playlist = new PlayerPlaylistController()
@@ -101,5 +106,32 @@ describe('PlayerActionsController', () => {
     const { controller, onShowToast } = createController()
     await controller.movePlaylistVideo({ fileId: '', pickCode: 'pick-1' } as any)
     expect(onShowToast).toHaveBeenCalledWith('文件 ID 缺失')
+  })
+
+  it('downloadVideo 无 pickCode 时抛错并提示', async () => {
+    const { controller, onShowToast, getCurrentPickCode } = createController()
+    getCurrentPickCode.mockReturnValue('')
+    await expect(controller.downloadVideo('')).rejects.toThrow('缺少视频信息')
+    expect(onShowToast).toHaveBeenCalledWith('缺少视频信息')
+  })
+
+  it('downloadVideo 成功时通过 window.open 打开下载链接', async () => {
+    const { controller } = createController()
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    vi.mocked(fetchBestDownloadResult).mockResolvedValueOnce({
+      url: {
+        url: 'https://example.com/video.mp4',
+        auth_cookie: {
+          name: 'ac',
+          value: 'val',
+          expire: 123456,
+        },
+      },
+    } as any)
+
+    await controller.downloadVideo('pick-1')
+    expect(fetchBestDownloadResult).toHaveBeenCalledWith(expect.any(Function), 'pick-1')
+    expect(openSpy).toHaveBeenCalledWith('https://example.com/video.mp4', '_blank')
+    openSpy.mockRestore()
   })
 })

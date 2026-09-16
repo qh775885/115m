@@ -22,6 +22,7 @@ export interface PlayerOverlayOptions {
   art: Artplayer
   meta: PlayerOverlayMeta
   onMoveFile: (fileId: string, cid: string) => Promise<void>
+  onDownloadFile?: (pickCode: string) => Promise<void>
   onToggleFavorite: (fileId: string, nextMarked: boolean) => Promise<boolean>
   onPlaylistToggle: (open: boolean) => Promise<OverlayPlaylistItem[]>
   onPlaylistOpenChange?: (open: boolean) => void
@@ -478,6 +479,28 @@ export class PlayerOverlayController {
         else this.showToast('移动失败: ' + msg)
       }
     })
+    const downloadBtn = createHeaderActionButton('下载视频', Icons.Download())
+    downloadBtn.addEventListener('click', async () => {
+      const pickCode = this.options.getCurrentPickCode()
+      if (!pickCode) {
+        this.showToast('缺少视频信息')
+        return
+      }
+      try {
+        downloadBtn.style.opacity = '0.5'
+        downloadBtn.style.pointerEvents = 'none'
+        this.showToast('正在解析下载地址...')
+        if (this.options.onDownloadFile) {
+          await this.options.onDownloadFile(pickCode)
+        }
+        this.showToast('已打开下载链接')
+      } catch (error) {
+        this.showToast(error instanceof Error ? error.message : '下载失败')
+      } finally {
+        downloadBtn.style.opacity = '1'
+        downloadBtn.style.pointerEvents = 'auto'
+      }
+    })
     const deleteBtn = createHeaderActionButton('删除视频', Icons.Trash())
     deleteBtn.addEventListener('click', async () => {
       const fileId = this.options.meta.fileId
@@ -500,6 +523,7 @@ export class PlayerOverlayController {
     this.updateFavoriteIcon()
 
     pillGroup.appendChild(moveBtn)
+    pillGroup.appendChild(downloadBtn)
     pillGroup.appendChild(deleteBtn)
 
     this.root.appendChild(header)
