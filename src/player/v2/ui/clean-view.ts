@@ -148,14 +148,20 @@ export function mountCleanView(options: CleanViewOptions) {
   `
   overlay.appendChild(topBar)
 
-  // 渲染面包屑（由内容状态驱动）
+  // 渲染面包屑（由内容状态驱动；无路径时隐藏整行）
   const crumbsContainer = topBar.querySelector('.m115-v2-crumbs-row') as HTMLElement
   const renderCrumbs = (crumbs: BreadcrumbNode[]) => {
     crumbsContainer.innerHTML = ''
+    if (crumbs.length === 0) {
+      crumbsContainer.style.display = 'none'
+      return
+    }
+    crumbsContainer.style.display = ''
     crumbs.forEach((crumb, idx) => {
       const node = document.createElement('span')
       node.className = 'm115-v2-crumb-item'
       node.textContent = crumb.name
+      node.title = `在网盘中打开：${crumb.name}`
       node.onclick = () => options.onBreadcrumbClick?.(crumb)
       crumbsContainer.appendChild(node)
 

@@ -102,6 +102,10 @@ export async function igniteV2Player() {
       content: session.content,
       subtitles: session.subtitles,
       onBack: () => window.history.back(),
+      onBreadcrumbClick: (item) => {
+        const url = `https://115.com/?cid=${encodeURIComponent(item.cid)}&offset=0&tab=&mode=wangpan`
+        window.open(url, '_blank', 'noopener')
+      },
       onMove: () => void session.moveCurrent(),
       onDownload: () => void session.download(),
       onDelete: () => void session.removeCurrent(),
