@@ -1,7 +1,13 @@
+import { Icons } from '../../../shared/icons'
+
 export function createBottomControls(options: {
   onTogglePlay?: () => void
+  onPrev?: () => void
+  onNext?: () => void
   onVolumeChange?: (vol: number) => void
   onToggleMute?: () => void
+  onModeClick?: () => void
+  onRotateClick?: () => void
   onQualityClick?: () => void
   onAudioTrackClick?: () => void
   onSubtitleClick?: () => void
@@ -10,45 +16,33 @@ export function createBottomControls(options: {
   onFullscreenClick?: () => void
 }) {
   const container = document.createElement('div')
-  container.className = 'm115-v2-bottom-bar'
+  container.className = 'm115-v2-controls-row'
 
-  // 左侧操作与信息群
-  const leftControls = document.createElement('div')
-  leftControls.className = 'm115-v2-left-controls'
+  // ───────────────────────────────────────────
+  // 1. 左侧区域：播放时间码 + 横向水银音量滑块
+  // ───────────────────────────────────────────
+  const left = document.createElement('div')
+  left.className = 'm115-v2-left-cluster'
 
-  // 底部常规小播放按钮
-  const miniPlayBtn = document.createElement('button')
-  miniPlayBtn.className = 'm115-v2-step-btn'
-  miniPlayBtn.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-    </svg>
-  `
-  miniPlayBtn.onclick = () => options.onTogglePlay?.()
-
-  // 等宽时间显示
   const timeDisplay = document.createElement('div')
   timeDisplay.className = 'm115-v2-time-display'
-  timeDisplay.textContent = '00:00 / 00:00'
+  timeDisplay.textContent = '00:00:00 / 00:00:00'
 
-  // 横向水银微动效音量胶囊
   const volumeCluster = document.createElement('div')
   volumeCluster.className = 'm115-v2-volume-cluster'
 
   const volumeBtn = document.createElement('button')
-  volumeBtn.className = 'm115-v2-step-btn'
+  volumeBtn.className = 'm115-v2-ctrl-icon-btn'
+  volumeBtn.style.border = 'none'
+  volumeBtn.style.background = 'transparent'
   volumeBtn.style.width = '24px'
   volumeBtn.style.height = '24px'
-  volumeBtn.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-    </svg>
-  `
+  volumeBtn.title = '静音 / 取消静音 ( M )'
+  volumeBtn.innerHTML = Icons.Volume2()
   volumeBtn.onclick = () => options.onToggleMute?.()
 
   const sliderWrap = document.createElement('div')
-  sliderWrap.className = 'm115-v2-volume-bar-wrap'
+  sliderWrap.className = 'm115-v2-volume-slider-wrap'
 
   const slider = document.createElement('input')
   slider.type = 'range'
@@ -62,104 +56,135 @@ export function createBottomControls(options: {
   volumeCluster.appendChild(volumeBtn)
   volumeCluster.appendChild(sliderWrap)
 
-  leftControls.appendChild(miniPlayBtn)
-  leftControls.appendChild(timeDisplay)
-  leftControls.appendChild(volumeCluster)
+  left.appendChild(timeDisplay)
+  left.appendChild(volumeCluster)
 
-  // 右侧高频功能胶囊群
-  const rightControls = document.createElement('div')
-  rightControls.className = 'm115-v2-right-controls'
+  // ───────────────────────────────────────────
+  // 2. 居中区域：黄金中轴三联主控（上一集 / 大播放 / 下一集）
+  // ───────────────────────────────────────────
+  const center = document.createElement('div')
+  center.className = 'm115-v2-center-cluster'
+
+  const prevBtn = document.createElement('button')
+  prevBtn.className = 'm115-v2-nav-btn'
+  prevBtn.title = '上一集 ( [ )'
+  prevBtn.innerHTML = Icons.SkipBack()
+  prevBtn.onclick = () => options.onPrev?.()
+
+  const playBtn = document.createElement('button')
+  playBtn.className = 'm115-v2-center-play-btn'
+  playBtn.title = '播放 / 暂停 ( 空格 )'
+  let isPlaying = false
+
+  const updatePlayBtn = (playing: boolean) => {
+    isPlaying = playing
+    playBtn.innerHTML = playing ? Icons.Pause() : Icons.Play()
+  }
+  updatePlayBtn(false)
+
+  playBtn.onclick = () => options.onTogglePlay?.()
+
+  const nextBtn = document.createElement('button')
+  nextBtn.className = 'm115-v2-nav-btn'
+  nextBtn.title = '下一集 ( ] )'
+  nextBtn.innerHTML = Icons.SkipForward()
+  nextBtn.onclick = () => options.onNext?.()
+
+  center.appendChild(prevBtn)
+  center.appendChild(playBtn)
+  center.appendChild(nextBtn)
+
+  // ───────────────────────────────────────────
+  // 3. 右侧区域：高频功能胶囊群
+  // ───────────────────────────────────────────
+  const right = document.createElement('div')
+  right.className = 'm115-v2-right-cluster'
+
+  // 循环模式
+  const modeBtn = document.createElement('button')
+  modeBtn.className = 'm115-v2-ctrl-icon-btn'
+  modeBtn.title = '播放模式（顺序播放 / 单集循环 / 列表循环）'
+  modeBtn.innerHTML = Icons.Repeat()
+  modeBtn.onclick = () => options.onModeClick?.()
+
+  // 画面旋转
+  const rotateBtn = document.createElement('button')
+  rotateBtn.className = 'm115-v2-ctrl-icon-btn'
+  rotateBtn.title = '画面旋转 90° ( R )'
+  rotateBtn.innerHTML = Icons.RotateCw()
+  rotateBtn.onclick = () => options.onRotateClick?.()
 
   // 画质
-  const qualityPill = document.createElement('button')
-  qualityPill.className = 'm115-v2-pill-btn'
-  qualityPill.id = 'm115-pill-quality'
-  qualityPill.textContent = '原画'
-  qualityPill.onclick = () => options.onQualityClick?.()
+  const qualityBtn = document.createElement('button')
+  qualityBtn.className = 'm115-v2-ctrl-btn'
+  qualityBtn.id = 'm115-btn-quality'
+  qualityBtn.textContent = '原画'
+  qualityBtn.onclick = () => options.onQualityClick?.()
 
   // 音轨
-  const audioPill = document.createElement('button')
-  audioPill.className = 'm115-v2-pill-btn'
-  audioPill.id = 'm115-pill-audio'
-  audioPill.textContent = '音轨'
-  audioPill.onclick = () => options.onAudioTrackClick?.()
+  const audioBtn = document.createElement('button')
+  audioBtn.className = 'm115-v2-ctrl-btn'
+  audioBtn.id = 'm115-btn-audio'
+  audioBtn.innerHTML = `${Icons.MediaTrack()} <span>音轨</span>`
+  audioBtn.onclick = () => options.onAudioTrackClick?.()
 
   // 字幕
-  const subtitlePill = document.createElement('button')
-  subtitlePill.className = 'm115-v2-pill-btn'
-  subtitlePill.id = 'm115-pill-subtitle'
-  subtitlePill.textContent = '字幕'
-  subtitlePill.onclick = () => options.onSubtitleClick?.()
+  const subtitleBtn = document.createElement('button')
+  subtitleBtn.className = 'm115-v2-ctrl-btn'
+  subtitleBtn.id = 'm115-btn-subtitle'
+  subtitleBtn.textContent = '字幕'
+  subtitleBtn.onclick = () => options.onSubtitleClick?.()
 
   // 倍速
-  const speedPill = document.createElement('button')
-  speedPill.className = 'm115-v2-pill-btn'
-  speedPill.id = 'm115-pill-speed'
-  speedPill.textContent = '1.0x'
-  speedPill.onclick = () => options.onSpeedClick?.()
+  const speedBtn = document.createElement('button')
+  speedBtn.className = 'm115-v2-ctrl-btn'
+  speedBtn.id = 'm115-btn-speed'
+  speedBtn.textContent = '1.0x'
+  speedBtn.onclick = () => options.onSpeedClick?.()
 
-  // 选集
+  // 选集抽屉
   const playlistBtn = document.createElement('button')
-  playlistBtn.className = 'm115-v2-pill-btn'
-  playlistBtn.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="8" y1="6" x2="21" y2="6"></line>
-      <line x1="8" y1="12" x2="21" y2="12"></line>
-      <line x1="8" y1="18" x2="21" y2="18"></line>
-      <line x1="3" y1="6" x2="3.01" y2="6"></line>
-      <line x1="3" y1="12" x2="3.01" y2="12"></line>
-      <line x1="3" y1="18" x2="3.01" y2="18"></line>
-    </svg>
-    <span>选集</span>
-  `
+  playlistBtn.className = 'm115-v2-ctrl-btn'
+  playlistBtn.innerHTML = `${Icons.Playlist()} <span>选集</span>`
   playlistBtn.onclick = () => options.onPlaylistClick?.()
 
   // 全屏
   const fullscreenBtn = document.createElement('button')
-  fullscreenBtn.className = 'm115-v2-step-btn'
+  fullscreenBtn.className = 'm115-v2-ctrl-icon-btn'
   fullscreenBtn.title = '全屏 ( F )'
-  fullscreenBtn.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-    </svg>
-  `
+  fullscreenBtn.innerHTML = Icons.Fullscreen()
   fullscreenBtn.onclick = () => options.onFullscreenClick?.()
 
-  rightControls.appendChild(qualityPill)
-  rightControls.appendChild(audioPill)
-  rightControls.appendChild(subtitlePill)
-  rightControls.appendChild(speedPill)
-  rightControls.appendChild(playlistBtn)
-  rightControls.appendChild(fullscreenBtn)
+  right.appendChild(modeBtn)
+  right.appendChild(rotateBtn)
+  right.appendChild(qualityBtn)
+  right.appendChild(audioBtn)
+  right.appendChild(subtitleBtn)
+  right.appendChild(speedBtn)
+  right.appendChild(playlistBtn)
+  right.appendChild(fullscreenBtn)
 
-  container.appendChild(leftControls)
-  container.appendChild(rightControls)
+  container.appendChild(left)
+  container.appendChild(center)
+  container.appendChild(right)
 
   return {
     element: container,
-    setTime(currentText: string, totalText: string) {
-      timeDisplay.textContent = `${currentText} / ${totalText}`
+    setTime(currentTime: string, duration: string) {
+      timeDisplay.textContent = `${currentTime} / ${duration}`
     },
     setPlaying(playing: boolean) {
-      miniPlayBtn.innerHTML = playing ? `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <rect x="6" y="4" width="4" height="16" rx="1"></rect>
-          <rect x="14" y="4" width="4" height="16" rx="1"></rect>
-        </svg>
-      ` : `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-      `
+      updatePlayBtn(playing)
     },
-    setQualityLabel(label: string) {
-      qualityPill.textContent = label
-    },
-    setSpeedLabel(label: string) {
-      speedPill.textContent = label
-    },
-    setVolume(value: number) {
+    setVolume(value: number, muted: boolean) {
       slider.value = String(Math.round(value * 100))
+      volumeBtn.innerHTML = (muted || value === 0) ? Icons.VolumeX() : Icons.Volume2()
+    },
+    setQuality(label: string) {
+      qualityBtn.textContent = label
+    },
+    setSpeed(label: string) {
+      speedBtn.textContent = label
     },
   }
 }

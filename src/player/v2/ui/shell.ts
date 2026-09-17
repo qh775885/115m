@@ -1,6 +1,5 @@
 import './theme.css'
 import { createTopBar } from './topbar'
-import { createCenterCapsule } from './center'
 import { createTimeline } from './timeline'
 import { createBottomControls } from './controls'
 import { createFloatingSheet } from './sheet'
@@ -24,31 +23,36 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
   root.appendChild(maskTop)
   root.appendChild(maskBottom)
 
-  // 1. 顶部栏
+  // 1. 顶部 Header 骨架（左上角信息与面包屑，右上角三联操作）
   const topbar = createTopBar({
     title: '色，戒 (2007) · 完整无删减版',
-    badgeText: '4K 原画 33.2GB',
+    indexText: '01',
+    statsText: '33.17 GB · 1080P',
+    breadcrumbs: [
+      { cid: '0', name: '全部文件' },
+      { cid: '1', name: '我的影视库' },
+      { cid: '2', name: '经典华语电影' },
+      { cid: '3', name: '色戒' },
+    ],
+    isFavorite: false,
     onBack: () => window.history.back(),
-    onDownload: () => alert('[2.0 视觉壳演示] 下载原画视频'),
-    onMove: () => alert('[2.0 视觉壳演示] 移动到网盘目录'),
+    onBreadcrumbClick: (item) => {
+      alert(`[2.0 骨架交互] 点击面包屑返回目录: ${item.name} (cid: ${item.cid})`)
+    },
+    onToggleFavorite: (marked) => {
+      alert(`[2.0 骨架交互] ${marked ? '已加入星标收藏' : '已取消星标'}`)
+    },
+    onMove: () => alert('[2.0 骨架交互] 移动到网盘目录'),
+    onDownload: () => alert('[2.0 骨架交互] 下载原画视频'),
+    onDelete: () => alert('[2.0 骨架交互] 删除当前视频文件'),
   })
   root.appendChild(topbar.element)
 
-  // 2. 居中主控微气泡胶囊
-  const center = createCenterCapsule({
-    onPrev: () => alert('[2.0 视觉壳演示] 切换上一集'),
-    onTogglePlay: () => {
-      const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
-      if (video) {
-        if (video.paused) video.play()
-        else video.pause()
-      }
-    },
-    onNext: () => alert('[2.0 视觉壳演示] 切换下一集'),
-  })
-  root.appendChild(center.element)
+  // 2. 底部控制区（贴底时间轴 + 底栏三区域）
+  const bottomArea = document.createElement('div')
+  bottomArea.className = 'm115-v2-bottom-area'
 
-  // 3. 贴底极光流光时间轴
+  // 时间轴
   const timeline = createTimeline({
     onSeek: (percent) => {
       const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
@@ -57,22 +61,21 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
       }
     },
   })
-  root.appendChild(timeline.element)
+  bottomArea.appendChild(timeline.element)
 
-  // 4. 通用向上浮层微卡片面板
+  // 通用微卡片弹层 (Sheet)
   const sheet = createFloatingSheet()
   root.appendChild(sheet.element)
 
-  // 5. 右侧选集无感抽屉
+  // 右侧选集抽屉 (Drawer)
   const drawer = createEpisodeDrawer({
     onSelect: (ep) => {
-      alert(`[2.0 视觉壳演示] 点击跳播: ${ep.name}`)
+      alert(`[2.0 骨架交互] 点击跳播: ${ep.name}`)
       drawer.close()
     },
   })
   root.appendChild(drawer.element)
 
-  // 填充示例选集数据以供零审阅视觉效果
   drawer.setEpisodes([
     { id: 1, name: '第 01 集 · 破晓入局', sub: '1080P · 42 分钟' },
     { id: 2, name: '第 02 集 · 暗潮汹涌', sub: '1080P · 45 分钟' },
@@ -81,7 +84,7 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
     { id: 5, name: '第 05 集 · 终极抉择', sub: '1080P · 50 分钟' },
   ], 1)
 
-  // 6. 底部控制栏
+  // 底部控制行（左时间音量、中上一集大播放下一集、右功能菜单）
   const controls = createBottomControls({
     onTogglePlay: () => {
       const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
@@ -90,13 +93,33 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
         else video.pause()
       }
     },
+    onPrev: () => alert('[2.0 骨架交互] 播放上一集 ( [ )'),
+    onNext: () => alert('[2.0 骨架交互] 播放下一集 ( ] )'),
     onVolumeChange: (vol) => {
       const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
-      if (video) video.volume = vol
+      if (video) {
+        video.volume = vol
+        controls.setVolume(vol, video.muted)
+      }
     },
     onToggleMute: () => {
       const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
-      if (video) video.muted = !video.muted
+      if (video) {
+        video.muted = !video.muted
+        controls.setVolume(video.volume, video.muted)
+      }
+    },
+    onModeClick: () => {
+      sheet.open('播放模式', [
+        { id: 'sequence', label: '顺序播放', badge: '默认' },
+        { id: 'loop-one', label: '单集循环' },
+        { id: 'loop-all', label: '列表循环' },
+      ], 'sequence', (item) => {
+        alert(`[2.0 骨架交互] 切换模式: ${item.label}`)
+      })
+    },
+    onRotateClick: () => {
+      alert('[2.0 骨架交互] 画面顺时针旋转 90°')
     },
     onQualityClick: () => {
       sheet.open('切换画质', [
@@ -105,7 +128,7 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
         { id: 'fhd', label: '1080P 全高清' },
         { id: 'hd', label: '720P 高清' },
       ], 'origin', (item) => {
-        controls.setQualityLabel(item.label.split(' ')[0])
+        controls.setQuality(item.label.split(' ')[0])
       })
     },
     onAudioTrackClick: () => {
@@ -114,16 +137,16 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
         { id: 2, label: '粤语原声 (Stereo)' },
         { id: 3, label: '英语伴音 (AAC)' },
       ], 1, (item) => {
-        alert(`[2.0 视觉壳演示] 切换音轨: ${item.label}`)
+        alert(`[2.0 骨架交互] 切换音轨: ${item.label}`)
       })
     },
     onSubtitleClick: () => {
-      sheet.open('字幕轨道与样式', [
+      sheet.open('字幕选择与样式', [
         { id: 'sub1', label: '内置中文字幕 (ASS)', badge: '特效' },
         { id: 'sub2', label: '外挂双语字幕 (SRT)' },
         { id: 'off', label: '关闭字幕' },
       ], 'sub1', (item) => {
-        alert(`[2.0 视觉壳演示] 字幕选择: ${item.label}`)
+        alert(`[2.0 骨架交互] 切换字幕: ${item.label}`)
       })
     },
     onSpeedClick: () => {
@@ -134,7 +157,7 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
         { id: 1.5, label: '1.5x' },
         { id: 2.0, label: '2.0x 倍速' },
       ], 1.0, (item) => {
-        controls.setSpeedLabel(String(item.id) + 'x')
+        controls.setSpeed(String(item.id) + 'x')
         const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
         if (video) video.playbackRate = Number(item.id)
       })
@@ -151,9 +174,10 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
       }
     },
   })
-  root.appendChild(controls.element)
+  bottomArea.appendChild(controls.element)
+  root.appendChild(bottomArea)
 
-  // 7. 绑定底层视频状态到 UI 呈现
+  // 3. 驱动底层播放进度
   const bindVideoListeners = () => {
     const video = ctx.playerEl.querySelector('video') as HTMLVideoElement | null
     if (!video) return
@@ -180,18 +204,16 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
     })
 
     video.addEventListener('play', () => {
-      center.setPlaying(true)
       controls.setPlaying(true)
     })
 
     video.addEventListener('pause', () => {
-      center.setPlaying(false)
       controls.setPlaying(false)
       root.classList.remove('idle')
     })
   }
 
-  // 8. 鼠标空闲自动平滑淡出控制层
+  // 4. 鼠标空闲 2.5 秒淡出
   let idleTimer: any = null
   const resetIdle = () => {
     root.classList.remove('idle')
@@ -217,7 +239,6 @@ export function mountAuroraShell(ctx: AuroraShellContext) {
   return {
     root,
     topbar,
-    center,
     timeline,
     controls,
   }

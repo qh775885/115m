@@ -1,76 +1,157 @@
+import { Icons } from '../../../shared/icons'
+
+export interface BreadcrumbItem {
+  cid: string
+  name: string
+}
+
 export function createTopBar(options: {
   title?: string
-  badgeText?: string
+  indexText?: string
+  statsText?: string
+  breadcrumbs?: BreadcrumbItem[]
+  isFavorite?: boolean
   onBack?: () => void
-  onDownload?: () => void
+  onBreadcrumbClick?: (item: BreadcrumbItem) => void
+  onToggleFavorite?: (marked: boolean) => void
   onMove?: () => void
+  onDownload?: () => void
+  onDelete?: () => void
 }) {
   const container = document.createElement('div')
   container.className = 'm115-v2-topbar'
 
-  const titleGroup = document.createElement('div')
-  titleGroup.className = 'm115-v2-title-group'
+  // 左侧复合信息区
+  const left = document.createElement('div')
+  left.className = 'm115-v2-header-left'
 
   const backBtn = document.createElement('button')
   backBtn.className = 'm115-v2-back-btn'
   backBtn.title = '返回'
-  backBtn.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-  `
+  backBtn.innerHTML = Icons.Back()
   backBtn.onclick = () => options.onBack?.()
 
-  const titleText = document.createElement('div')
-  titleText.className = 'm115-v2-title'
-  titleText.textContent = options.title || '115m 极光影院'
+  const info = document.createElement('div')
+  info.className = 'm115-v2-header-info'
 
-  const badge = document.createElement('span')
-  badge.className = 'm115-v2-badge'
-  badge.textContent = options.badgeText || '4K 原画'
+  // 第一行：编号徽章 + 标题 + 大小清晰度
+  const titleRow = document.createElement('div')
+  titleRow.className = 'm115-v2-header-title-row'
 
-  titleGroup.appendChild(backBtn)
-  titleGroup.appendChild(titleText)
-  titleGroup.appendChild(badge)
+  const indexEl = document.createElement('span')
+  indexEl.className = 'm115-v2-ep-index'
+  indexEl.textContent = options.indexText || '01'
 
-  const actions = document.createElement('div')
-  actions.className = 'm115-v2-top-actions'
+  const titleEl = document.createElement('div')
+  titleEl.className = 'm115-v2-header-title'
+  titleEl.textContent = options.title || '正在加载视频标题...'
 
-  const downloadBtn = document.createElement('button')
-  downloadBtn.className = 'm115-v2-icon-btn'
-  downloadBtn.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-      <polyline points="7 10 12 15 17 10"></polyline>
-      <line x1="12" y1="15" x2="12" y2="3"></line>
-    </svg>
-    <span>下载原画</span>
-  `
-  downloadBtn.onclick = () => options.onDownload?.()
+  const statsEl = document.createElement('div')
+  statsEl.className = 'm115-v2-header-stats'
+  statsEl.textContent = options.statsText || '33.17 GB · 原画'
+
+  titleRow.appendChild(indexEl)
+  titleRow.appendChild(titleEl)
+  titleRow.appendChild(statsEl)
+
+  // 第二行：面包屑导航
+  const breadcrumbsEl = document.createElement('div')
+  breadcrumbsEl.className = 'm115-v2-breadcrumbs'
+
+  const renderBreadcrumbs = (items: BreadcrumbItem[]) => {
+    breadcrumbsEl.innerHTML = ''
+    items.forEach((item, idx) => {
+      const crumb = document.createElement('span')
+      crumb.className = 'm115-v2-breadcrumb-item'
+      crumb.textContent = item.name
+      crumb.onclick = () => options.onBreadcrumbClick?.(item)
+      breadcrumbsEl.appendChild(crumb)
+
+      if (idx < items.length - 1) {
+        const sep = document.createElement('span')
+        sep.className = 'm115-v2-breadcrumb-sep'
+        sep.textContent = '>'
+        breadcrumbsEl.appendChild(sep)
+      }
+    })
+  }
+
+  renderBreadcrumbs(options.breadcrumbs || [
+    { cid: '0', name: '根目录' },
+    { cid: '1', name: '影视' },
+    { cid: '2', name: '华语经典' },
+  ])
+
+  info.appendChild(titleRow)
+  info.appendChild(breadcrumbsEl)
+  left.appendChild(backBtn)
+  left.appendChild(info)
+
+  // 右侧操作区：星标收藏 + 三联操作胶囊
+  const right = document.createElement('div')
+  right.className = 'm115-v2-header-right'
+
+  const favBtn = document.createElement('button')
+  favBtn.className = `m115-v2-fav-btn ${options.isFavorite ? 'active' : ''}`
+  favBtn.title = '星标收藏'
+  favBtn.innerHTML = options.isFavorite ? Icons.StarFilled() : Icons.Star()
+  let isFav = !!options.isFavorite
+  favBtn.onclick = () => {
+    isFav = !isFav
+    favBtn.className = `m115-v2-fav-btn ${isFav ? 'active' : ''}`
+    favBtn.innerHTML = isFav ? Icons.StarFilled() : Icons.Star()
+    options.onToggleFavorite?.(isFav)
+  }
+
+  const pillGroup = document.createElement('div')
+  pillGroup.className = 'm115-v2-top-pill-group'
 
   const moveBtn = document.createElement('button')
-  moveBtn.className = 'm115-v2-icon-btn'
-  moveBtn.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-    <span>移动目录</span>
-  `
+  moveBtn.className = 'm115-v2-top-action-btn'
+  moveBtn.title = '移动到网盘目录'
+  moveBtn.innerHTML = `${Icons.Move()} <span>移动</span>`
   moveBtn.onclick = () => options.onMove?.()
 
-  actions.appendChild(downloadBtn)
-  actions.appendChild(moveBtn)
+  const downloadBtn = document.createElement('button')
+  downloadBtn.className = 'm115-v2-top-action-btn'
+  downloadBtn.title = '下载原画文件'
+  downloadBtn.innerHTML = `${Icons.Download()} <span>下载</span>`
+  downloadBtn.onclick = () => options.onDownload?.()
 
-  container.appendChild(titleGroup)
-  container.appendChild(actions)
+  const deleteBtn = document.createElement('button')
+  deleteBtn.className = 'm115-v2-top-action-btn delete'
+  deleteBtn.title = '删除文件'
+  deleteBtn.innerHTML = `${Icons.Trash()} <span>删除</span>`
+  deleteBtn.onclick = () => options.onDelete?.()
+
+  pillGroup.appendChild(moveBtn)
+  pillGroup.appendChild(downloadBtn)
+  pillGroup.appendChild(deleteBtn)
+
+  right.appendChild(favBtn)
+  right.appendChild(pillGroup)
+
+  container.appendChild(left)
+  container.appendChild(right)
 
   return {
     element: container,
     setTitle(title: string) {
-      titleText.textContent = title
+      titleEl.textContent = title
     },
-    setBadge(text: string) {
-      badge.textContent = text
+    setIndex(text: string) {
+      indexEl.textContent = text
+    },
+    setStats(text: string) {
+      statsEl.textContent = text
+    },
+    setBreadcrumbs(items: BreadcrumbItem[]) {
+      renderBreadcrumbs(items)
+    },
+    setFavorite(marked: boolean) {
+      isFav = marked
+      favBtn.className = `m115-v2-fav-btn ${marked ? 'active' : ''}`
+      favBtn.innerHTML = marked ? Icons.StarFilled() : Icons.Star()
     },
   }
 }
