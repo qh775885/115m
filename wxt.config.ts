@@ -5,11 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   srcDir: 'src',
   outDir: 'dist',
-  vite: () => ({
+  vite: ({ mode }) => ({
     plugins: [tailwindcss()],
-    define: {
+    define: mode === 'production' ? {
       'process.env.NODE_ENV': JSON.stringify('production'),
-    },
+    } : {},
     build: {
       minify: false,
       sourcemap: 'inline',
