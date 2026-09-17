@@ -1,3 +1,4 @@
+import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
 import 'vidstack/player/styles/default/theme.css'
