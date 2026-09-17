@@ -1,3 +1,5 @@
+import { Icons } from '../../../shared/icons'
+
 export interface SheetItem {
   id: string | number
   label: string
@@ -29,10 +31,16 @@ export function createFloatingSheet() {
 
       items.forEach((item) => {
         const itemEl = document.createElement('div')
-        itemEl.className = `m115-v2-sheet-item ${item.id === activeId ? 'selected' : ''}`
+        const isSelected = item.id === activeId
+        itemEl.className = `m115-v2-sheet-item ${isSelected ? 'selected' : ''}`
         itemEl.innerHTML = `
-          <span>${item.label}</span>
-          ${item.badge ? `<span style="font-size:10px;opacity:0.6">${item.badge}</span>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:14px;height:14px;display:flex;align-items:center;justify-content:center;opacity:${isSelected ? '1' : '0'}">
+              ${Icons.Check()}
+            </span>
+            <span>${item.label}</span>
+          </div>
+          ${item.badge ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);">${item.badge}</span>` : ''}
         `
         itemEl.onclick = (e) => {
           e.stopPropagation()

@@ -1,19 +1,29 @@
-/* 115m 2.0 极光深空流光视觉系统 */
+/* 115m 2.0 现代工业级流媒体视觉规范 (Apple TV / Netflix 级深空灰阶) */
 
 :root {
-  --m115-cyan: #38bdf8;
-  --m115-blue: #3b82f6;
-  --m115-purple: #a855f7;
-  --m115-aurora-gradient: linear-gradient(135deg, #38bdf8 0%, #3b82f6 50%, #a855f7 100%);
-  --m115-bar-bg: rgba(12, 16, 24, 0.82);
-  --m115-border-subtle: rgba(255, 255, 255, 0.1);
-  --m115-border-glow: rgba(56, 189, 248, 0.4);
-  --m115-glass-blur: blur(20px) saturate(180%);
+  --m115-white: #ffffff;
+  --m115-white-85: rgba(255, 255, 255, 0.85);
+  --m115-white-60: rgba(255, 255, 255, 0.6);
+  --m115-white-30: rgba(255, 255, 255, 0.3);
+  --m115-white-15: rgba(255, 255, 255, 0.15);
+  --m115-white-08: rgba(255, 255, 255, 0.08);
+
+  /* 沉稳克制的主题强调色 (无任何刺眼渐变) */
+  --m115-accent: #38bdf8;
+  --m115-accent-bg: rgba(56, 189, 248, 0.12);
+  --m115-accent-border: rgba(56, 189, 248, 0.35);
+
+  /* 经典毛玻璃底色 */
+  --m115-panel-bg: rgba(18, 20, 28, 0.88);
+  --m115-panel-border: rgba(255, 255, 255, 0.1);
+  --m115-glass-blur: blur(24px) saturate(160%);
 }
 
 .m115-v2-shell {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #fff;
@@ -28,14 +38,14 @@
   cursor: none;
 }
 
-/* 顶部与底部沉浸式高动态暗部遮罩 */
+/* 顶部与底部高动态深黑渐变暗部遮罩 */
 .m115-v2-mask-top {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 140px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  height: 130px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -45,12 +55,12 @@
   left: 0;
   right: 0;
   height: 160px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.45) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
   pointer-events: none;
 }
 
 /* ────────────────────────────────────────────────────────
-   1. 顶部 Header：左上角复合信息区 + 面包屑，右上角三联胶囊
+   1. 顶部 Header
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-topbar {
@@ -58,7 +68,7 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 16px 24px 20px 24px;
+  padding: 16px 24px 18px 24px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -69,40 +79,39 @@
 .m115-v2-header-left {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
   flex: 1;
   max-width: min(72vw, 860px);
 }
 
 .m115-v2-back-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--m115-border-subtle);
+  background: var(--m115-white-08);
+  border: 1px solid var(--m115-panel-border);
   backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--m115-white-85);
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 2px;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .m115-v2-back-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--m115-white-15);
   border-color: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
   color: #fff;
 }
 
 .m115-v2-header-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   flex: 1;
 }
@@ -116,11 +125,11 @@
 
 .m115-v2-ep-index {
   height: 20px;
-  padding: 0 7px;
-  border-radius: 5px;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: var(--m115-cyan);
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--m115-white-15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
   line-height: 20px;
@@ -128,7 +137,7 @@
 }
 
 .m115-v2-header-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
@@ -140,7 +149,7 @@
 .m115-v2-header-stats {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--m115-white-60);
   flex-shrink: 0;
   margin-left: 2px;
 }
@@ -152,7 +161,7 @@
   flex-wrap: nowrap;
   overflow: hidden;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--m115-white-60);
   line-height: 1.4;
 }
 
@@ -163,13 +172,13 @@
 }
 
 .m115-v2-breadcrumb-item:hover {
-  color: var(--m115-cyan);
+  color: #fff;
   text-decoration: underline;
 }
 
 .m115-v2-breadcrumb-sep {
   margin: 0 6px;
-  opacity: 0.4;
+  opacity: 0.35;
   font-size: 10px;
 }
 
@@ -177,77 +186,77 @@
 .m115-v2-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
   padding-top: 2px;
 }
 
 .m115-v2-fav-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--m115-border-subtle);
+  background: var(--m115-white-08);
+  border: 1px solid var(--m115-panel-border);
   backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--m115-white-85);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .m115-v2-fav-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--m115-white-15);
   color: #fbbf24;
 }
 
 .m115-v2-fav-btn.active {
   color: #fbbf24;
-  background: rgba(251, 191, 36, 0.15);
-  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
 }
 
 /* 右上角三联胶囊（移动、下载、删除） */
 .m115-v2-top-pill-group {
   display: flex;
   align-items: center;
-  background: var(--m115-bar-bg);
-  border: 1px solid var(--m115-border-subtle);
+  background: var(--m115-panel-bg);
+  border: 1px solid var(--m115-panel-border);
   backdrop-filter: var(--m115-glass-blur);
-  border-radius: 20px;
-  padding: 3px;
+  border-radius: 18px;
+  padding: 2px;
   gap: 2px;
 }
 
 .m115-v2-top-action-btn {
-  height: 30px;
+  height: 28px;
   padding: 0 10px;
-  border-radius: 15px;
+  border-radius: 14px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--m115-white-85);
   font-size: 12px;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
 
 .m115-v2-top-action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--m115-white-15);
   color: #fff;
 }
 
 .m115-v2-top-action-btn.delete:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.18);
   color: #f87171;
 }
 
 /* ────────────────────────────────────────────────────────
-   2. 底部控制栏：进度条 + 三大黄金分区（左时间音量、中主控、右功能）
+   2. 底部控制区：经典全白高对比度进度条 + 三大黄金中轴控制行
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-bottom-area {
@@ -255,15 +264,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 24px 16px 24px;
+  padding: 0 24px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   pointer-events: auto;
   z-index: 20;
 }
 
-/* 时间轴 */
+/* 经典成熟时间轴：纯白已播进度、微透灰缓冲条 */
 .m115-v2-timeline-container {
   position: relative;
   width: 100%;
@@ -277,13 +286,13 @@
   position: relative;
   width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
-  transition: height 0.18s ease;
+  transition: height 0.16s ease;
 }
 
 .m115-v2-timeline-container:hover .m115-v2-timeline-track {
-  height: 6px;
+  height: 5px;
 }
 
 .m115-v2-timeline-buffer {
@@ -300,21 +309,20 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: var(--m115-aurora-gradient);
+  background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
 }
 
 .m115-v2-timeline-thumb {
   position: absolute;
-  right: -6px;
+  right: -5px;
   top: 50%;
   transform: translateY(-50%) scale(0);
-  width: 13px;
-  height: 13px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 8px #38bdf8;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   transition: transform 0.15s ease;
 }
 
@@ -328,21 +336,21 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 44px;
+  height: 42px;
 }
 
 /* 底部左侧：时间与音量 */
 .m115-v2-left-cluster {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
 }
 
 .m115-v2-time-display {
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--m115-white-85);
   letter-spacing: 0.3px;
 }
 
@@ -351,32 +359,32 @@
   align-items: center;
   gap: 6px;
   height: 32px;
-  padding: 0 8px;
+  padding: 0 6px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--m115-white-08);
   border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
 .m115-v2-volume-cluster:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--m115-border-subtle);
+  background: var(--m115-white-15);
+  border-color: var(--m115-panel-border);
 }
 
 .m115-v2-volume-slider-wrap {
   width: 0;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
 }
 
 .m115-v2-volume-cluster:hover .m115-v2-volume-slider-wrap {
-  width: 78px;
+  width: 76px;
 }
 
 .m115-v2-volume-slider {
-  width: 72px;
+  width: 70px;
   height: 4px;
   appearance: none;
   background: rgba(255, 255, 255, 0.25);
@@ -390,132 +398,133 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--m115-cyan);
-  box-shadow: 0 0 6px var(--m115-cyan);
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* 底部居中：三联主控簇（上一集 / 大播放 / 下一集） */
+/* 底部居中：三联主控簇（纯净中性工业质感） */
 .m115-v2-center-cluster {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   flex: 0 0 auto;
 }
 
 .m115-v2-nav-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--m115-border-subtle);
-  color: rgba(255, 255, 255, 0.85);
+  background: var(--m115-white-08);
+  border: 1px solid var(--m115-panel-border);
+  color: var(--m115-white-85);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
 }
 
 .m115-v2-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: scale(1.08);
+  background: var(--m115-white-15);
   color: #fff;
+  transform: scale(1.06);
 }
 
+/* 纯白实心主播放键，优雅大气，绝无刺眼流光 */
 .m115-v2-center-play-btn {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--m115-aurora-gradient);
+  background: #ffffff;
   border: none;
-  color: #fff;
+  color: #0c1018;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-center-play-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 22px rgba(56, 189, 248, 0.6), 0 0 10px var(--m115-cyan);
+  transform: scale(1.08);
+  background: #f1f5f9;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
-/* 底部右侧：高频功能胶囊群（模式/旋转/画质/音轨/字幕/倍速/选集/全屏） */
+/* 底部右侧：高频功能胶囊群 */
 .m115-v2-right-cluster {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   justify-content: flex-end;
   flex: 1;
 }
 
 .m115-v2-ctrl-btn {
-  height: 32px;
+  height: 30px;
   padding: 0 10px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--m115-border-subtle);
+  border-radius: 15px;
+  background: var(--m115-white-08);
+  border: 1px solid var(--m115-panel-border);
   backdrop-filter: blur(8px);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--m115-white-85);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
 
 .m115-v2-ctrl-btn:hover, .m115-v2-ctrl-btn.active {
-  background: rgba(56, 189, 248, 0.18);
-  border-color: var(--m115-border-glow);
-  color: var(--m115-cyan);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  background: var(--m115-white-15);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
 }
 
 .m115-v2-ctrl-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--m115-border-subtle);
+  background: var(--m115-white-08);
+  border: 1px solid var(--m115-panel-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--m115-white-85);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
 
 .m115-v2-ctrl-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--m115-white-15);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: scale(1.06);
 }
 
-/* 向上滑出的 Apple TV 风格浮动微卡片菜单 (Sheet) */
+/* ────────────────────────────────────────────────────────
+   3. 浮动微卡片菜单 (Sheet) - Apple TV 极简深灰毛玻璃
+   ──────────────────────────────────────────────────────── */
+
 .m115-v2-sheet {
   position: absolute;
-  bottom: 70px;
+  bottom: 64px;
   right: 24px;
-  width: 220px;
-  background: var(--m115-bar-bg);
-  border: 1px solid var(--m115-border-subtle);
+  width: 210px;
+  background: var(--m115-panel-bg);
+  border: 1px solid var(--m115-panel-border);
   backdrop-filter: var(--m115-glass-blur);
-  border-radius: 16px;
-  padding: 8px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   display: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   pointer-events: auto;
   z-index: 30;
-  animation: m115SheetIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: m115SheetIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-sheet.open {
@@ -526,7 +535,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--m115-white-60);
   padding: 6px 10px 4px 10px;
   text-transform: uppercase;
 }
@@ -535,29 +544,29 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--m115-white-85);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .m115-v2-sheet-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--m115-white-08);
   color: #fff;
 }
 
 .m115-v2-sheet-item.selected {
-  background: rgba(56, 189, 248, 0.16);
-  color: var(--m115-cyan);
+  background: var(--m115-white-15);
+  color: #fff;
   font-weight: 600;
 }
 
 @keyframes m115SheetIn {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(8px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -565,19 +574,22 @@
   }
 }
 
-/* 右侧无感毛玻璃选集抽屉 (Drawer) */
+/* ────────────────────────────────────────────────────────
+   4. 右侧无感毛玻璃选集抽屉 (Drawer)
+   ──────────────────────────────────────────────────────── */
+
 .m115-v2-drawer {
   position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
-  width: 330px;
-  background: rgba(10, 14, 22, 0.88);
-  border-left: 1px solid var(--m115-border-subtle);
+  width: 320px;
+  background: rgba(14, 16, 22, 0.92);
+  border-left: 1px solid var(--m115-panel-border);
   backdrop-filter: var(--m115-glass-blur);
   box-shadow: -10px 0 36px rgba(0, 0, 0, 0.65);
   transform: translateX(100%);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
   z-index: 40;
   display: flex;
@@ -589,8 +601,8 @@
 }
 
 .m115-v2-drawer-header {
-  height: 64px;
-  padding: 0 20px;
+  height: 60px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -609,26 +621,26 @@
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .m115-v2-episode-card {
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--m115-white-08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .m115-v2-episode-card:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--m115-white-15);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
 .m115-v2-episode-card.active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .m115-v2-episode-name {
@@ -642,6 +654,6 @@
 
 .m115-v2-episode-sub {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  margin-top: 4px;
+  color: var(--m115-white-60);
+  margin-top: 3px;
 }
