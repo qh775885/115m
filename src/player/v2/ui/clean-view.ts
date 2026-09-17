@@ -162,12 +162,16 @@ export function mountCleanView(options: CleanViewOptions) {
 
     <!-- 底栏控件行 -->
     <div class="m115-v2-controls-line">
-      <!-- 左侧：播放时间与音量 -->
+      <!-- 左侧：播放时间与音量 (时间在前、音量在后，展开时向右舒展不挤压) -->
       <div class="m115-v2-ctrl-left">
-        <div class="m115-v2-time-label">00:00:00 / 00:00:00</div>
+        <div class="m115-v2-time-label">
+          <span class="m115-v2-time-current">00:00</span>
+          <span class="m115-v2-time-sep">/</span>
+          <span class="m115-v2-time-duration">00:00</span>
+        </div>
 
         <div class="m115-v2-vol-group">
-          <button type="button" class="m115-v2-icon-action m115-btn-vol" title="静音 (M)">
+          <button type="button" class="m115-v2-icon-action m115-btn-vol" title="静音 / 恢复 (M)">
             ${Icons.Volume2()}
           </button>
           <div class="m115-v2-vol-slider-box">
@@ -472,7 +476,10 @@ export function mountCleanView(options: CleanViewOptions) {
         if (!isDragging) {
           playedBar.style.width = `${(video.currentTime / video.duration) * 100}%`
         }
-        timeLabel.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`
+        const curEl = timeLabel.querySelector('.m115-v2-time-current')
+        const durEl = timeLabel.querySelector('.m115-v2-time-duration')
+        if (curEl) curEl.textContent = formatTime(video.currentTime)
+        if (durEl) durEl.textContent = formatTime(video.duration)
       }
     })
 

@@ -516,53 +516,72 @@ video {
   height: 40px;
 }
 
-/* 左侧：播放时间与音量 */
+/* 左侧：播放时间与音量 (时间在前、音量在后，展开时向右舒展不挤压) */
 .m115-v2-ctrl-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
 }
 
 .m115-v2-time-label {
-  font-size: 13px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--m115-text-regular);
-  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+  user-select: none;
+}
+
+.m115-v2-time-current {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.m115-v2-time-sep {
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  font-weight: 300;
+}
+
+.m115-v2-time-duration {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
 }
 
 .m115-v2-vol-group {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 6px;
-  border-radius: 16px;
+  gap: 4px;
+  height: 30px;
+  padding: 0 4px;
+  border-radius: 6px;
   background: transparent;
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-vol-group:hover {
-  background: var(--m115-btn-hover-bg);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .m115-v2-vol-slider-box {
   width: 0;
   overflow: hidden;
-  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
 }
 
 .m115-v2-vol-group:hover .m115-v2-vol-slider-box {
-  width: 76px;
+  width: 72px;
 }
 
 .m115-v2-vol-range {
-  width: 70px;
-  height: 4px;
+  width: 66px;
+  height: 3.5px;
   appearance: none;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -570,11 +589,18 @@ video {
 
 .m115-v2-vol-range::-webkit-slider-thumb {
   appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  transition: transform 0.15s ease;
+}
+
+.m115-v2-vol-range:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
   background: var(--m115-blue);
-  box-shadow: 0 0 6px var(--m115-blue);
+  box-shadow: 0 0 8px var(--m115-blue);
 }
 
 /* 中间：三联主控（上一集 / 大播放键 / 下一集） */
