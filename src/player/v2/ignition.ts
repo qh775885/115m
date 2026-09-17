@@ -5,6 +5,7 @@ import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
 import { mountCleanView } from './ui/clean-view'
 import { PlayerCore } from './controller/player-core'
+import { PlaybackSession } from './controller/session'
 
 let currentBlobUrl: string | null = null
 
@@ -90,17 +91,30 @@ export async function igniteV2Player() {
     const core = new PlayerCore()
     core.attach(player)
 
+    // 会话控制器：播放列表加载、切集、上一下一集、播完连播
+    const titleParam = params.get('title')
+    const fileSizeParam = params.get('fileSize')
+    const session = new PlaybackSession(core, {
+      pickCode,
+      cid: params.get('cid') || '',
+      title: titleParam ? decodeURIComponent(titleParam) : source.label,
+      fileSize: fileSizeParam || '',
+      isFavorite: params.get('marked') === '1',
+    })
+
     // 专业现代影院视口装配，每一个元素像素级对齐，底层 Vidstack 纯净驱动
     const view = mountCleanView({
       container,
       playerEl: player,
       core,
+      content: session.content,
       onBack: () => window.history.back(),
       onMove: () => alert('[115 移动] 移动到网盘目录'),
       onDownload: () => alert('[115 下载] 下载原画视频'),
       onDelete: () => alert('[115 删除] 删除当前视频文件'),
-      onPrev: () => alert('[115 导航] 上一集 ( [ )'),
-      onNext: () => alert('[115 导航] 下一集 ( ] )'),
+      onPrev: () => session.prev(true),
+      onNext: () => session.next(true),
+      onSelectEpisode: (code) => session.switchTo(code, { autoPlay: true, keepPlaylistOpen: true }),
     })
 
     player.src = {
@@ -108,16 +122,7 @@ export async function igniteV2Player() {
       type: source.type,
     }
 
-    const titleParam = params.get('title')
-    const fileSizeParam = params.get('fileSize')
-    if (titleParam) {
-      view.setTitle(decodeURIComponent(titleParam))
-    }
-    const statText = fileSizeParam ? fileSizeParam : source.label
-    view.setStats(statText)
-    if (params.get('marked') === '1') {
-      view.setFavorite(true)
-    }
+    void session.init()
 
     // 移除点火阶段左上角临时指示条
     statusBadge.remove()

@@ -10,12 +10,16 @@ import { initialPlayerState, type PlayerState } from '../state/player-state'
 export class PlayerCore {
   readonly store = new Store<PlayerState>({ ...initialPlayerState })
 
+  private root: (HTMLElement & { src?: unknown }) | null = null
   private media: HTMLVideoElement | null = null
   private detachFns: Array<() => void> = []
   private observer: MutationObserver | null = null
+  private autoPlayPending = false
+  private endedHandlers = new Set<() => void>()
 
   /** 挂载到播放器根节点；Vidstack 异步渲染 <video>，故用 MutationObserver 等待。 */
   attach(root: HTMLElement): void {
+    this.root = root as HTMLElement & { src?: unknown }
     const existing = root.querySelector('video')
     if (existing) {
       this.bind(existing)
@@ -34,6 +38,13 @@ export class PlayerCore {
 
   get ready(): boolean {
     return !!this.media
+  }
+
+  onEnded(fn: () => void): () => void {
+    this.endedHandlers.add(fn)
+    return () => {
+      this.endedHandlers.delete(fn)
+    }
   }
 
   private bind(video: HTMLVideoElement): void {
@@ -63,6 +74,13 @@ export class PlayerCore {
       this.store.set({ volume: video.volume, muted: video.muted })
     })
     listen('ratechange', () => this.store.set({ rate: video.playbackRate }))
+    listen('canplay', () => {
+      if (this.autoPlayPending) {
+        this.autoPlayPending = false
+        this.play()
+      }
+    })
+    listen('ended', () => this.endedHandlers.forEach((fn) => fn()))
 
     this.syncAll()
   }
@@ -95,6 +113,15 @@ export class PlayerCore {
     if (!this.media) return
     if (this.media.paused) this.play()
     else this.pause()
+  }
+
+  /** 换源（切集 / 切清晰度）；autoPlay 需等内核就绪后自动起播。 */
+  load(src: string, type?: string, autoPlay = false): void {
+    const el = this.root
+    if (!el) return
+    this.autoPlayPending = autoPlay
+    this.store.set({ currentTime: 0, duration: 0, buffered: 0 })
+    el.src = type ? { src, type } : { src }
   }
 
   /** 拖拽开始/结束（拖拽期间冻结内核时间回写，避免抖动）。 */

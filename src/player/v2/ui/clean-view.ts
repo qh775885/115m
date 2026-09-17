@@ -8,6 +8,9 @@ import themeCss from './theme.css?inline'
 import { Icons } from '../../../shared/icons'
 import type { PlayerCore } from '../controller/player-core'
 import type { PlayerState } from '../state/player-state'
+import type { ContentState } from '../state/content-state'
+import type { Store } from '../state/store'
+import type { OverlayPlaylistItem } from '../../core/overlay-types'
 
 export interface BreadcrumbNode {
   cid: string
@@ -18,11 +21,7 @@ export interface CleanViewOptions {
   container: HTMLElement
   playerEl: HTMLElement
   core: PlayerCore
-  title?: string
-  indexText?: string
-  statsText?: string
-  breadcrumbs?: BreadcrumbNode[]
-  isFavorite?: boolean
+  content: Store<ContentState>
   onBack?: () => void
   onBreadcrumbClick?: (item: BreadcrumbNode) => void
   onToggleFavorite?: (marked: boolean) => void
@@ -31,6 +30,7 @@ export interface CleanViewOptions {
   onDelete?: () => void
   onPrev?: () => void
   onNext?: () => void
+  onSelectEpisode?: (pickCode: string) => void
 }
 
 function formatTime(seconds: number): string {
@@ -98,12 +98,12 @@ export function mountCleanView(options: CleanViewOptions) {
       </button>
       <div class="m115-v2-title-cluster">
         <div class="m115-v2-title-row">
-          <span class="m115-v2-badge-index">${options.indexText || '01'}</span>
-          <span class="m115-v2-title-text">${options.title || '正在读取视频标题...'}</span>
-          <button type="button" class="m115-v2-fav-btn ${options.isFavorite ? 'active' : ''}" title="星标收藏">
-            ${options.isFavorite ? Icons.StarFilled() : Icons.Star()}
+          <span class="m115-v2-badge-index">--</span>
+          <span class="m115-v2-title-text">正在读取视频标题...</span>
+          <button type="button" class="m115-v2-fav-btn" title="星标收藏">
+            ${Icons.Star()}
           </button>
-          <span class="m115-v2-badge-size">${options.statsText || '33.17GB'}</span>
+          <span class="m115-v2-badge-size"></span>
         </div>
         <div class="m115-v2-crumbs-row"></div>
       </div>
@@ -126,7 +126,7 @@ export function mountCleanView(options: CleanViewOptions) {
   `
   overlay.appendChild(topBar)
 
-  // 渲染面包屑
+  // 渲染面包屑（由内容状态驱动）
   const crumbsContainer = topBar.querySelector('.m115-v2-crumbs-row') as HTMLElement
   const renderCrumbs = (crumbs: BreadcrumbNode[]) => {
     crumbsContainer.innerHTML = ''
@@ -145,12 +145,6 @@ export function mountCleanView(options: CleanViewOptions) {
       }
     })
   }
-  renderCrumbs(options.breadcrumbs || [
-    { cid: '0', name: '全部文件' },
-    { cid: '1', name: '我的影视库' },
-    { cid: '2', name: '经典华语电影' },
-    { cid: '3', name: '色戒' },
-  ])
 
   // ───────────────────────────────────────────
   // 4.2 底部 Controls Bar (带时间轴 + 黄金对称排版)
@@ -363,30 +357,35 @@ export function mountCleanView(options: CleanViewOptions) {
     }
   })
 
-  const setDrawerEpisodes = (episodes: { id: number, name: string, sub?: string }[], curId: number) => {
-    const list = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
-    list.innerHTML = ''
-    episodes.forEach((ep) => {
+  const drawerHeading = playlistAside.querySelector('.m115-v2-drawer-heading') as HTMLElement
+  const drawerBody = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
+
+  const renderEpisodes = (items: OverlayPlaylistItem[], curPickCode: string) => {
+    drawerBody.innerHTML = ''
+    items.forEach((item) => {
       const card = document.createElement('div')
-      card.className = `m115-v2-card-item ${ep.id === curId ? 'active' : ''}`
-      card.innerHTML = `
-        <div class="m115-v2-card-name">${ep.name}</div>
-        ${ep.sub ? `<div class="m115-v2-card-meta">${ep.sub}</div>` : ''}
-      `
-      card.onclick = () => {
-        alert(`[115 选集] 点击切换: ${ep.name}`)
+      card.className = `m115-v2-card-item ${item.pickCode === curPickCode ? 'active' : ''}`
+
+      const nameEl = document.createElement('div')
+      nameEl.className = 'm115-v2-card-name'
+      nameEl.textContent = item.name
+      card.appendChild(nameEl)
+
+      const meta = [
+        item.progressPercent != null ? `已看 ${Math.round(item.progressPercent)}%` : '',
+        item.size || '',
+      ].filter(Boolean).join(' · ')
+      if (meta) {
+        const metaEl = document.createElement('div')
+        metaEl.className = 'm115-v2-card-meta'
+        metaEl.textContent = meta
+        card.appendChild(metaEl)
       }
-      list.appendChild(card)
+
+      card.onclick = () => options.onSelectEpisode?.(item.pickCode)
+      drawerBody.appendChild(card)
     })
   }
-
-  setDrawerEpisodes([
-    { id: 1, name: '第 01 集 · 破晓入局', sub: '1080P · 42 分钟' },
-    { id: 2, name: '第 02 集 · 暗潮汹涌', sub: '1080P · 45 分钟' },
-    { id: 3, name: '第 03 集 · 绝密交锋', sub: '1080P · 48 分钟' },
-    { id: 4, name: '第 04 集 · 迷局追踪', sub: '1080P · 41 分钟' },
-    { id: 5, name: '第 05 集 · 终极抉择', sub: '1080P · 50 分钟' },
-  ], 1)
 
   // ───────────────────────────────────────────
   // 5. 绑定交互事件与底层视频驱动
@@ -559,6 +558,40 @@ export function mountCleanView(options: CleanViewOptions) {
   const unsubscribe = options.core.store.subscribe(render)
   render(options.core.store.get())
 
+  // 内容状态 -> UI（标题 / 序号 / 大小 / 星标 / 面包屑 / 播放列表）
+  const titleTextEl = topBar.querySelector('.m115-v2-title-text') as HTMLElement
+  const badgeIndexEl = topBar.querySelector('.m115-v2-badge-index') as HTMLElement
+  const badgeSizeEl = topBar.querySelector('.m115-v2-badge-size') as HTMLElement
+
+  let prevContent: ContentState | null = null
+  const renderContent = (c: ContentState) => {
+    const p = prevContent
+    if (!p || c.title !== p.title) {
+      titleTextEl.textContent = c.title || '正在读取视频标题...'
+    }
+    if (!p || c.currentIndex !== p.currentIndex) {
+      badgeIndexEl.textContent = c.currentIndex ? String(c.currentIndex).padStart(2, '0') : '--'
+    }
+    if (!p || c.fileSize !== p.fileSize) {
+      badgeSizeEl.textContent = c.fileSize || ''
+    }
+    if (!p || c.isFavorite !== p.isFavorite) {
+      favBtn.classList.toggle('active', c.isFavorite)
+      favBtn.innerHTML = c.isFavorite ? Icons.StarFilled() : Icons.Star()
+    }
+    if (!p || c.path !== p.path) {
+      renderCrumbs(c.path)
+    }
+    if (!p || c.playlist !== p.playlist || c.pickCode !== p.pickCode) {
+      drawerHeading.textContent = `播放列表 (${c.playlist.length})`
+      renderEpisodes(c.playlist, c.pickCode)
+    }
+    prevContent = c
+  }
+
+  const unsubscribeContent = options.content.subscribe(renderContent)
+  renderContent(options.content.get())
+
   // 鼠标空闲自动淡出
   let idleTimer: ReturnType<typeof setTimeout> | null = null
   const resetIdle = () => {
@@ -584,27 +617,9 @@ export function mountCleanView(options: CleanViewOptions) {
 
   return {
     viewport,
-    topBar,
-    bottomBar,
-    setTitle(title: string) {
-      topBar.querySelector('.m115-v2-title-text')!.textContent = title
-    },
-    setStats(text: string) {
-      const badge = topBar.querySelector('.m115-v2-badge-size')
-      if (badge) badge.textContent = text
-    },
-    setIndex(text: string) {
-      topBar.querySelector('.m115-v2-badge-index')!.textContent = text
-    },
-    setBreadcrumbs(items: BreadcrumbNode[]) {
-      renderCrumbs(items)
-    },
-    setFavorite(marked: boolean) {
-      favBtn.classList.toggle('active', marked)
-      favBtn.innerHTML = marked ? Icons.StarFilled() : Icons.Star()
-    },
     destroy() {
       unsubscribe()
+      unsubscribeContent()
       if (idleTimer) clearTimeout(idleTimer)
     },
   }
