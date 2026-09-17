@@ -59,6 +59,15 @@ export default defineConfig({
       "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
-    }
+    },
+    web_accessible_resources: [
+      {
+        resources: [
+          "content-scripts/video-page-main.js",
+          "content-scripts/video-page-main.css"
+        ],
+        matches: ["*://*.115.com/*", "*://115.com/*"]
+      }
+    ]
   })
 });

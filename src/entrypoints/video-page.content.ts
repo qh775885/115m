@@ -45,5 +45,22 @@ export default defineContentScript({
         window.postMessage({ channel: '115M_BRIDGE_RESP', id, error: error?.message || String(error) }, '*')
       }
     })
+
+    // 主动注入主世界脚本与样式，确保 document.write 之后主世界代码绝对可靠执行
+    try {
+      const script = document.createElement('script')
+      script.src = chrome.runtime.getURL('content-scripts/video-page-main.js')
+      script.async = false
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = chrome.runtime.getURL('content-scripts/video-page-main.css')
+      const targetHead = document.head || document.documentElement
+      targetHead.appendChild(link)
+      targetHead.appendChild(script)
+      console.log('[115m-v2][Sandbox] 已向页面主世界注入播放器脚本')
+    }
+    catch (err) {
+      console.error('[115m-v2][Sandbox] 注入主世界播放器脚本失败:', err)
+    }
   },
 })
