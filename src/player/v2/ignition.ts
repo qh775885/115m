@@ -1,10 +1,12 @@
 import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
+import 'vidstack/player/layouts/default'
 import 'vidstack/player/styles/default/theme.css'
+import 'vidstack/player/styles/default/layouts/video.css'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
-import { mountAuroraShell } from './ui/shell'
+import { mount115Overlay } from './ui/overlay'
 
 let currentBlobUrl: string | null = null
 
@@ -84,6 +86,7 @@ export async function igniteV2Player() {
 
     player.innerHTML = `
       <media-provider></media-provider>
+      <media-video-layout></media-video-layout>
     `
 
     container.appendChild(player)
@@ -92,27 +95,27 @@ export async function igniteV2Player() {
       type: source.type,
     }
 
-    // 装配 2.0 极光纯 UI 壳子
-    const shell = mountAuroraShell({ playerEl: player })
+    // 外挂 115 专属顶部信息与选集抽屉
+    const overlay = mount115Overlay({ playerEl: player })
     const titleParam = params.get('title')
     const fileSizeParam = params.get('fileSize')
     if (titleParam) {
-      shell.topbar.setTitle(decodeURIComponent(titleParam))
+      overlay.topbar.setTitle(decodeURIComponent(titleParam))
     }
     const statText = fileSizeParam ? `${fileSizeParam} · ${source.label}` : source.label
-    shell.topbar.setStats(statText)
+    overlay.topbar.setStats(statText)
     if (params.get('marked') === '1') {
-      shell.topbar.setFavorite(true)
+      overlay.topbar.setFavorite(true)
     }
 
-    // 移除点火阶段左上角临时指示条，正式交接给 2.0 极光 UI
+    // 移除点火阶段左上角临时指示条
     statusBadge.remove()
 
     // 移除 loading
     const loading = document.getElementById('loading')
     if (loading) loading.style.display = 'none'
 
-    console.log('[115m-v2] 2.0 极光 UI 壳子装配成功，当前源:', source)
+    console.log('[115m-v2] Vidstack 官方原生布局装配成功，当前源:', source)
   }
   catch (error: any) {
     console.error('[115m-v2] 点火失败:', error)
