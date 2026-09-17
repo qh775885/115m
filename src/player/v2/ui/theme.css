@@ -1164,6 +1164,11 @@ video {
   box-shadow: 0 0 6px var(--m115-blue);
 }
 
+/* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
+#playlist-sidebar {
+  display: none !important;
+}
+
 /* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
 .m115-v2-playlist-aside {
   width: 0;
@@ -1178,6 +1183,7 @@ video {
   display: flex;
   flex-direction: column;
   z-index: 30;
+  box-sizing: border-box;
 }
 
 .m115-v2-playlist-aside.open {
@@ -1202,32 +1208,95 @@ video {
   letter-spacing: 0.3px;
 }
 
+/* 右上角关闭小圆钮 (彻底告别白底粗暴大方块) */
+.m115-drawer-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.m115-drawer-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.m115-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: scale(1.06);
+}
+
 .m115-v2-drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
+/* 剧集卡片 (注入三联同款黑曜石微透底与地平线微光，彻底消除生硬大蓝框) */
 .m115-v2-card-item {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.m115-v2-card-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    14%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .m115-v2-card-item:hover {
-  background: var(--m115-btn-hover-bg);
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+.m115-v2-card-item:hover::after {
+  opacity: 0.9;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+/* 当前播放集数 (Active)：彻底去除生硬大蓝粗框，常驻亮起三联同款【蓝白地平线微光】 */
 .m115-v2-card-item.active {
-  background: rgba(24, 144, 255, 0.16);
-  border-color: rgba(24, 144, 255, 0.4);
+  background: rgba(24, 144, 255, 0.08);
+  border: 1px solid rgba(24, 144, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.m115-v2-card-item.active::after {
+  opacity: 1;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
 .m115-v2-card-name {
@@ -1237,10 +1306,16 @@ video {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.m115-v2-card-item.active .m115-v2-card-name {
+  color: #69c0ff;
+  font-weight: 600;
 }
 
 .m115-v2-card-meta {
   font-size: 11px;
-  color: var(--m115-text-muted);
-  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
 }
