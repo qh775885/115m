@@ -5,7 +5,7 @@
  */
 
 import { Store } from '../state/store'
-import { initialPlayerState, type PlayerState } from '../state/player-state'
+import { initialPlayerState, type AudioTrackInfo, type PlayerState } from '../state/player-state'
 
 export class PlayerCore {
   readonly store = new Store<PlayerState>({ ...initialPlayerState })
@@ -13,6 +13,7 @@ export class PlayerCore {
   private root: (HTMLElement & { src?: unknown }) | null = null
   private media: HTMLVideoElement | null = null
   private detachFns: Array<() => void> = []
+  private rootListeners: Array<() => void> = []
   private observer: MutationObserver | null = null
   private autoPlayPending = false
   private endedHandlers = new Set<() => void>()
@@ -20,6 +21,7 @@ export class PlayerCore {
   /** 挂载到播放器根节点；Vidstack 异步渲染 <video>，故用 MutationObserver 等待。 */
   attach(root: HTMLElement): void {
     this.root = root as HTMLElement & { src?: unknown }
+    this.bindAudioTracks()
     const existing = root.querySelector('video')
     if (existing) {
       this.bind(existing)
@@ -99,7 +101,47 @@ export class PlayerCore {
     })
   }
 
+  /** 监听媒体内核音频轨道变化（Vidstack 原生 track API）。 */
+  private bindAudioTracks(): void {
+    const el = this.root as any
+    if (!el) return
+    const emit = () => this.syncAudioTracks()
+    for (const type of ['audio-tracks-change', 'audio-track-change', 'provider-change']) {
+      el.addEventListener(type, emit)
+      this.rootListeners.push(() => el.removeEventListener(type, emit))
+    }
+  }
+
+  private syncAudioTracks(): void {
+    const tracks = (this.root as any)?.audioTracks
+    const list: AudioTrackInfo[] = []
+    let selectedId = ''
+    if (tracks) {
+      for (let i = 0; i < tracks.length; i += 1) {
+        const track = tracks[i]
+        const id = String(track?.id ?? i)
+        list.push({ id, label: track?.label || track?.language || `音轨 ${i + 1}` })
+        if (track?.selected) selectedId = id
+      }
+    }
+    if (!selectedId && list.length) selectedId = list[0].id
+    this.store.set({ audioTracks: list, audioTrack: selectedId })
+  }
+
   // ───────────────────────────── 动作 ─────────────────────────────
+
+  /** 选择音频轨道。 */
+  selectAudioTrack(id: string): void {
+    const tracks = (this.root as any)?.audioTracks
+    if (!tracks) return
+    for (let i = 0; i < tracks.length; i += 1) {
+      if (String(tracks[i]?.id ?? i) === id) {
+        tracks[i].selected = true
+        break
+      }
+    }
+    this.syncAudioTracks()
+  }
 
   play(): void {
     this.media?.play().catch(() => {})
@@ -170,6 +212,8 @@ export class PlayerCore {
     this.observer = null
     this.detachFns.forEach((fn) => fn())
     this.detachFns = []
+    this.rootListeners.forEach((fn) => fn())
+    this.rootListeners = []
     this.media = null
     this.store.destroy()
   }

@@ -32,6 +32,7 @@ export interface CleanViewOptions {
   onNext?: () => void
   onSelectEpisode?: (pickCode: string) => void
   onSelectQuality?: (label: string) => void
+  onSelectAudioTrack?: (id: string) => void
 }
 
 function formatTime(seconds: number): string {
@@ -456,11 +457,16 @@ export function mountCleanView(options: CleanViewOptions) {
   const audioBtn = bottomBar.querySelector('.m115-btn-audio') as HTMLElement
   audioBtn?.addEventListener('click', (e) => {
     e.stopPropagation()
-    openSheet('audio', '多音频轨道', [
-      { id: 1, label: '国语原声 (Dolby 5.1)', badge: '当前' },
-      { id: 2, label: '粤语原声 (Stereo)' },
-      { id: 3, label: '英语伴音 (AAC)' },
-    ], 1, audioBtn, (it) => alert(`[115 音轨] 切换至: ${it.label}`))
+    const s = options.core.store.get()
+    if (s.audioTracks.length === 0) return
+    openSheet(
+      'audio',
+      '多音频轨道',
+      s.audioTracks.map(track => ({ id: track.id, label: track.label })),
+      s.audioTrack,
+      audioBtn,
+      (it) => options.onSelectAudioTrack?.(String(it.id)),
+    )
   })
 
   const subtitleBtn = bottomBar.querySelector('.m115-btn-subtitle') as HTMLElement
