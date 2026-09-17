@@ -1027,12 +1027,18 @@ video {
   -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
+/* 选中项：告别生硬矩形蓝线框，完全统一为三联同款【蓝白地平线激光微光】常驻激活 */
 .m115-v2-pop-item.selected {
-  background: linear-gradient(135deg, rgba(24, 144, 255, 0.22) 0%, rgba(24, 144, 255, 0.08) 100%);
-  border: 1px solid rgba(24, 144, 255, 0.35);
-  color: #69c0ff;
-  font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 12px rgba(24, 144, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.m115-v2-pop-item.selected::after {
+  opacity: 1;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
 .m115-v2-pop-item.selected svg {
