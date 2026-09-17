@@ -1288,6 +1288,33 @@ video {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+/* 滚动条：细发丝暗色，融入黑曜石面板（消除系统白色滚动条） */
+.m115-v2-drawer-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: content-box;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
