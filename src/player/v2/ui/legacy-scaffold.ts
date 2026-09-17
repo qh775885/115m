@@ -71,7 +71,94 @@ function injectFullLegacyStyles() {
     ${playerMediaTrackCss}
     ${playerSettingsMenuCss}
 
-    /* 保证 Vidstack 充满父容器与老版图层融合 */
+    /* Artplayer 基础定位垫片 (替代缺失的 artplayer.css) */
+    .art-video-player {
+      position: relative !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
+      background: #000 !important;
+    }
+    .art-video-player .m115-layer-header {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 30 !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: space-between !important;
+      padding: 16px 20px 28px !important;
+      box-sizing: border-box !important;
+    }
+    .art-video-player .art-bottom {
+      position: absolute !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      z-index: 30 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 0 16px 14px !important;
+      box-sizing: border-box !important;
+    }
+    .art-video-player .art-progress {
+      position: relative !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 0 10px 0 !important;
+    }
+    .art-control-progress {
+      position: relative !important;
+      width: 100% !important;
+      height: 8px !important;
+      cursor: pointer !important;
+    }
+    .art-control-progress-inner {
+      position: relative !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: rgba(255, 255, 255, 0.2) !important;
+      border-radius: 999px !important;
+      overflow: visible !important;
+    }
+    .art-progress-loaded {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      height: 100% !important;
+      background: rgba(255, 255, 255, 0.35) !important;
+      border-radius: 999px !important;
+    }
+    .art-progress-played {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      height: 100% !important;
+      background: #1890ff !important;
+      border-radius: 999px !important;
+    }
+    .art-progress-indicator {
+      position: absolute !important;
+      right: -6px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 12px !important;
+      height: 12px !important;
+      border-radius: 999px !important;
+      background: #fff !important;
+      box-shadow: 0 0 6px rgba(24, 144, 255, 0.8) !important;
+    }
+    .art-video-player .art-controls {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-sizing: border-box !important;
+      width: 100% !important;
+      height: 40px !important;
+    }
+
+    /* 保证 Vidstack 充满父容器并置于最底层 */
     media-player {
       width: 100% !important;
       height: 100% !important;
@@ -79,18 +166,28 @@ function injectFullLegacyStyles() {
       position: absolute !important;
       inset: 0 !important;
       overflow: hidden !important;
+      z-index: 1 !important;
+      display: block !important;
     }
     media-player[data-view-type='video'] {
       aspect-ratio: unset !important;
     }
     media-provider {
+      position: absolute !important;
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
     video {
+      position: absolute !important;
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       object-fit: contain !important;
+      display: block !important;
     }
 
     /* 顶部与底部渐变暗部遮罩 */
