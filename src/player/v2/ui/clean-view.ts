@@ -513,28 +513,43 @@ export function mountCleanView(options: CleanViewOptions) {
   })
 
   // 状态 -> UI 单向下行渲染（唯一数据源：core.store）
+  // 差异比对：仅在字段真变化时才写 DOM，避免 innerHTML 重建触发图标动画重播（抖动）
+  const curEl = timeLabel.querySelector('.m115-v2-time-current')
+  const durEl = timeLabel.querySelector('.m115-v2-time-duration')
+  const speedSpan = speedBtn.querySelector('.m115-btn-text-speed')
+  let prev: PlayerState | null = null
+
   const render = (s: PlayerState) => {
-    const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0
-    playedBar.style.width = `${pct}%`
-    bufferBar.style.width = `${s.buffered * 100}%`
+    if (!prev || s.currentTime !== prev.currentTime || s.duration !== prev.duration) {
+      const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0
+      playedBar.style.width = `${pct}%`
+      if (curEl) curEl.textContent = formatTime(s.currentTime)
+      if (durEl) durEl.textContent = formatTime(s.duration)
+    }
 
-    const curEl = timeLabel.querySelector('.m115-v2-time-current')
-    const durEl = timeLabel.querySelector('.m115-v2-time-duration')
-    if (curEl) curEl.textContent = formatTime(s.currentTime)
-    if (durEl) durEl.textContent = formatTime(s.duration)
+    if (!prev || s.buffered !== prev.buffered) {
+      bufferBar.style.width = `${s.buffered * 100}%`
+    }
 
-    playBtn.innerHTML = s.paused ? Icons.Play() : Icons.Pause()
+    if (!prev || s.paused !== prev.paused) {
+      playBtn.innerHTML = s.paused ? Icons.Play() : Icons.Pause()
+    }
 
-    const volPct = s.muted ? 0 : Math.round(s.volume * 100)
-    volRange.style.setProperty('--vol', `${volPct}%`)
-    volRange.value = String(volPct)
-    volBtn.innerHTML = (s.muted || volPct === 0) ? Icons.VolumeX() : Icons.Volume2()
-    if (volPercentEl) volPercentEl.textContent = `${volPct}%`
+    if (!prev || s.volume !== prev.volume || s.muted !== prev.muted) {
+      const volPct = s.muted ? 0 : Math.round(s.volume * 100)
+      volRange.style.setProperty('--vol', `${volPct}%`)
+      volRange.value = String(volPct)
+      volBtn.innerHTML = (s.muted || volPct === 0) ? Icons.VolumeX() : Icons.Volume2()
+      if (volPercentEl) volPercentEl.textContent = `${volPct}%`
+    }
 
-    const speedSpan = speedBtn.querySelector('.m115-btn-text-speed')
-    if (speedSpan) speedSpan.textContent = `${s.rate}x`
+    if ((!prev || s.rate !== prev.rate) && speedSpan) {
+      speedSpan.textContent = `${s.rate}x`
+    }
 
     if (s.paused) playerPane.classList.remove('idle')
+
+    prev = s
   }
 
   const unsubscribe = options.core.store.subscribe(render)
