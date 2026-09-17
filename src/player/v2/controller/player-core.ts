@@ -191,6 +191,24 @@ export class PlayerCore {
     this.seekTo(this.store.get().currentTime + delta)
   }
 
+  /** 断点续播：内核就绪后跳到指定时间（未就绪则等元数据）。 */
+  restoreTime(time: number): void {
+    const video = this.media
+    if (!video || time <= 0) return
+    const apply = () => {
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        video.currentTime = Math.min(time, Math.max(0, video.duration - 1))
+        this.store.set({ currentTime: video.currentTime })
+      }
+    }
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      apply()
+    }
+    else {
+      video.addEventListener('loadedmetadata', apply, { once: true })
+    }
+  }
+
   setVolume(value: number): void {
     const video = this.media
     if (!video) return

@@ -6,6 +6,7 @@
 
 import { PlayerCore } from './player-core'
 import { SubtitleController } from './subtitles'
+import { HistoryController } from './history'
 import { createContentStore } from '../state/content-state'
 import { loadPlaylist } from '../adapters/playlist'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
@@ -36,6 +37,7 @@ export interface SwitchOptions {
 export class PlaybackSession {
   readonly content = createContentStore()
   readonly subtitles = new SubtitleController()
+  readonly history: HistoryController
 
   private qualityOptions: QualityOption[] = []
   private subtitleItems: SubtitleItem[] = []
@@ -44,7 +46,12 @@ export class PlaybackSession {
   constructor(
     private readonly core: PlayerCore,
     private readonly params: SessionParams,
-  ) {}
+  ) {
+    this.history = new HistoryController(core, () => ({
+      pickCode: this.content.get().pickCode,
+      fileName: this.content.get().title,
+    }))
+  }
 
   /** 首播：解析源 → 装载首播源 → 加载播放列表。返回首播源供状态提示使用。 */
   async start(): Promise<PreparedPlaybackSource> {
@@ -63,6 +70,9 @@ export class PlaybackSession {
 
     if (this.params.cid) void this.loadList()
     void this.loadSubtitles(this.params.pickCode)
+
+    this.history.start()
+    void this.history.restore(this.params.pickCode)
 
     return resolved.initial
   }
@@ -119,17 +129,22 @@ export class PlaybackSession {
     this.switching = true
     this.content.set({ switching: true })
     try {
+      // 切集前先把当前集进度落库
+      await this.history.flush()
+
       const resolved = await resolvePlaybackSources(pickCode)
       const item = this.content.get().playlist.find(entry => entry.pickCode === pickCode)
 
       this.applySources(resolved)
       this.core.load(resolved.initial.src, resolved.initial.type, options.autoPlay !== false)
 
-      // 切集后字幕归属新视频：清空并重新拉取字幕列表
+      // 切集后字幕/历史归属新视频
       this.subtitles.clear()
       this.subtitleItems = []
       this.content.set({ subtitle: '', subtitles: [] })
       void this.loadSubtitles(pickCode)
+      this.history.resetWindow()
+      void this.history.restore(pickCode)
 
       const pos = getPlaylistPosition(this.content.get().playlist, pickCode)
       this.content.set({
