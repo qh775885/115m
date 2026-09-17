@@ -87,22 +87,24 @@ export function mountCleanView(options: CleanViewOptions) {
         <div class="m115-v2-title-row">
           <span class="m115-v2-badge-index">${options.indexText || '01'}</span>
           <span class="m115-v2-title-text">${options.title || '正在读取视频标题...'}</span>
-          <span class="m115-v2-badge-stats">${options.statsText || '原画'}</span>
+          <button type="button" class="m115-v2-fav-btn ${options.isFavorite ? 'active' : ''}" title="星标收藏">
+            ${options.isFavorite ? Icons.StarFilled() : Icons.Star()}
+          </button>
+          <span class="m115-v2-badge-size">${options.statsText || '33.17GB'}</span>
         </div>
         <div class="m115-v2-crumbs-row"></div>
       </div>
     </div>
     <div class="m115-v2-top-right">
-      <button type="button" class="m115-v2-fav-btn ${options.isFavorite ? 'active' : ''}" title="星标收藏">
-        ${options.isFavorite ? Icons.StarFilled() : Icons.Star()}
-      </button>
       <div class="m115-v2-pill-actions">
         <button type="button" class="m115-v2-pill-btn m115-btn-move" title="移动目录">
           ${Icons.Move()} <span>移动</span>
         </button>
+        <div class="m115-v2-pill-divider"></div>
         <button type="button" class="m115-v2-pill-btn m115-btn-download" title="下载原画">
           ${Icons.Download()} <span>下载</span>
         </button>
+        <div class="m115-v2-pill-divider"></div>
         <button type="button" class="m115-v2-pill-btn m115-btn-delete delete" title="删除文件">
           ${Icons.Trash()} <span>删除</span>
         </button>
@@ -512,7 +514,8 @@ export function mountCleanView(options: CleanViewOptions) {
       topBar.querySelector('.m115-v2-title-text')!.textContent = title
     },
     setStats(text: string) {
-      topBar.querySelector('.m115-v2-badge-stats')!.textContent = text
+      const badge = topBar.querySelector('.m115-v2-badge-size')
+      if (badge) badge.textContent = text
     },
     setIndex(text: string) {
       topBar.querySelector('.m115-v2-badge-index')!.textContent = text

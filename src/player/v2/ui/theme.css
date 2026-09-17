@@ -98,7 +98,7 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   1. 顶部 Header (单行/双行精准垂直居中对齐，绝不重叠)
+   1. 顶部 Header (工业级严密双行装配，微雕视效)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-top-bar {
@@ -106,7 +106,7 @@ video {
   top: 0;
   left: 0;
   right: 0;
-  padding: 16px 24px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -117,39 +117,50 @@ video {
 .m115-v2-top-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
   flex: 1;
-  max-width: min(72vw, 880px);
+  max-width: min(74vw, 920px);
 }
 
+/* 精巧微透圆形返回键 (30px 腕表级微雕) */
 .m115-v2-back-btn {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--m115-pill-bg);
-  border: 1px solid var(--m115-pill-border);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--m115-text-regular);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.18s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.m115-v2-back-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 .m115-v2-back-btn:hover {
-  background: var(--m115-btn-hover-bg);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
   color: #fff;
-  transform: scale(1.05);
+  transform: scale(1.06);
+}
+
+.m115-v2-back-btn:active {
+  transform: scale(0.94);
 }
 
 .m115-v2-title-cluster {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
@@ -161,21 +172,24 @@ video {
   min-width: 0;
 }
 
+/* 序号微徽章 */
 .m115-v2-badge-index {
   height: 18px;
   padding: 0 6px;
   border-radius: 4px;
-  background: rgba(24, 144, 255, 0.16);
-  border: 1px solid rgba(24, 144, 255, 0.4);
+  background: rgba(24, 144, 255, 0.14);
+  border: 1px solid rgba(24, 144, 255, 0.38);
   color: var(--m115-blue);
   font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
   line-height: 18px;
   flex-shrink: 0;
 }
 
+/* 视频标题 */
 .m115-v2-title-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--m115-text-title);
   white-space: nowrap;
@@ -184,18 +198,58 @@ video {
   letter-spacing: 0.2px;
 }
 
-.m115-v2-badge-stats {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--m115-text-muted);
+/* 紧随标题的星标收藏五角星 */
+.m115-v2-fav-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
   flex-shrink: 0;
+  padding: 0;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 面包屑导航行 */
+.m115-v2-fav-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.m115-v2-fav-btn:hover {
+  color: #fbbf24;
+  transform: scale(1.15);
+}
+
+.m115-v2-fav-btn.active {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+}
+
+/* 文件大小胶囊微标签 (无损已剥离) */
+.m115-v2-badge-size {
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+/* 面包屑导航行 (下移 3px 舒展对齐) */
 .m115-v2-crumbs-row {
   display: flex;
   align-items: center;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--m115-text-muted);
   line-height: 1;
 }
@@ -212,79 +266,92 @@ video {
 }
 
 .m115-v2-crumb-sep {
-  margin: 0 6px;
-  opacity: 0.4;
+  margin: 0 5px;
+  opacity: 0.35;
   font-size: 10px;
 }
 
-/* 顶部右侧功能群 (星标 + 三联操作胶囊) */
+/* ────────────────────────────────────────────────────────
+   顶部右侧：UIverse 级暗黑微透毛玻璃分段胶囊 (Dark Glassmorphic Pill)
+   ──────────────────────────────────────────────────────── */
+
 .m115-v2-top-right {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
-}
-
-.m115-v2-fav-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--m115-pill-bg);
-  border: 1px solid var(--m115-pill-border);
-  color: var(--m115-text-regular);
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.m115-v2-fav-btn:hover {
-  background: var(--m115-btn-hover-bg);
-  color: #fbbf24;
-}
-
-.m115-v2-fav-btn.active {
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.15);
-  border-color: rgba(251, 191, 36, 0.4);
 }
 
 .m115-v2-pill-actions {
   display: flex;
   align-items: center;
-  background: rgba(20, 24, 32, 0.85);
-  border: 1px solid var(--m115-pill-border);
-  backdrop-filter: blur(16px);
-  border-radius: 18px;
-  padding: 2px;
-  gap: 2px;
+  height: 30px;
+  padding: 2px 3px;
+  box-sizing: border-box;
+  background: rgba(18, 22, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .m115-v2-pill-btn {
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 14px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 9999px;
   background: transparent;
   border: none;
-  color: var(--m115-text-regular);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  letter-spacing: 0.2px;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.m115-v2-pill-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.6px;
+  opacity: 0.85;
+  transition: transform 0.16s ease, opacity 0.16s ease;
 }
 
 .m115-v2-pill-btn:hover {
-  background: var(--m115-btn-hover-bg);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.11);
+  color: #ffffff;
 }
 
+.m115-v2-pill-btn:hover svg {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.m115-v2-pill-btn:active {
+  transform: scale(0.96);
+}
+
+/* 删除分段特调暗红悬停 */
 .m115-v2-pill-btn.delete:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.16);
   color: #f87171;
+}
+
+.m115-v2-pill-btn.delete:hover svg {
+  color: #f87171;
+}
+
+/* 分段微细内嵌分割线 */
+.m115-v2-pill-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  margin: 0 1px;
 }
 
 /* ────────────────────────────────────────────────────────

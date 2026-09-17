@@ -113,7 +113,7 @@ export async function igniteV2Player() {
     if (titleParam) {
       view.setTitle(decodeURIComponent(titleParam))
     }
-    const statText = fileSizeParam ? `${fileSizeParam} · ${source.label}` : source.label
+    const statText = fileSizeParam ? fileSizeParam : source.label
     view.setStats(statText)
     if (params.get('marked') === '1') {
       view.setFavorite(true)
