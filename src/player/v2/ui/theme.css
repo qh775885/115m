@@ -11,7 +11,7 @@
   --m115-pill-border: rgba(255, 255, 255, 0.12);
 }
 
-/* 根视口 */
+/* 根视口 (Flex 双栏，支持播放列表右侧挤压式展开) */
 .m115-v2-viewport {
   position: absolute;
   inset: 0;
@@ -19,9 +19,19 @@
   height: 100%;
   overflow: hidden;
   background: #000;
+  display: flex;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #fff;
   user-select: none;
+}
+
+.m115-v2-player-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: flex 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 底层 Vidstack 播放器：绝对撑满 */
@@ -90,9 +100,10 @@ video {
   transition: opacity 0.25s ease;
 }
 
-.m115-v2-viewport.idle .m115-v2-controls-overlay,
-.m115-v2-viewport.idle .m115-v2-mask-top,
-.m115-v2-viewport.idle .m115-v2-mask-bottom {
+.m115-v2-player-pane.idle .m115-v2-controls-overlay,
+.m115-v2-player-pane.idle .m115-v2-mask-top,
+.m115-v2-player-pane.idle .m115-v2-mask-bottom,
+.m115-v2-player-pane.idle .m115-v2-drawer-toggle-handle {
   opacity: 0;
   cursor: none;
 }
@@ -698,44 +709,91 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   4. 右侧选集抽屉 (Drawer)
+   4. 右侧边缘随鼠标显隐的浮动把手 & 挤压式播放列表侧边栏
    ──────────────────────────────────────────────────────── */
 
-.m115-v2-side-drawer {
+/* 屏幕右侧边缘随鼠标接近平滑显隐的把手 */
+.m115-v2-drawer-toggle-handle {
   position: absolute;
-  top: 0;
-  bottom: 0;
   right: 0;
-  width: 320px;
-  background: rgba(16, 20, 28, 0.95);
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(24px);
-  box-shadow: -10px 0 36px rgba(0, 0, 0, 0.65);
-  transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: auto;
-  z-index: 40;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 60px;
+  background: rgba(18, 22, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  z-index: 28;
+  opacity: 0.18;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
 }
 
-.m115-v2-side-drawer.open {
-  transform: translateX(0);
+.m115-v2-drawer-toggle-handle svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 鼠标移到右侧区域或 hover 把手时完全浮现 */
+.m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
+.m115-v2-drawer-toggle-handle:hover {
+  opacity: 1;
+  width: 26px;
+  color: #ffffff;
+  background: rgba(18, 22, 30, 0.92);
+  border-color: rgba(24, 144, 255, 0.35);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(24, 144, 255, 0.25);
+}
+
+.m115-v2-drawer-toggle-handle.open svg {
+  transform: rotate(180deg);
+}
+
+/* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
+.m115-v2-playlist-aside {
+  width: 0;
+  min-width: 0;
+  flex: 0 0 0;
+  height: 100%;
+  background: rgba(14, 18, 26, 0.96);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), flex-basis 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+
+.m115-v2-playlist-aside.open {
+  width: 320px;
+  flex: 0 0 320px;
 }
 
 .m115-v2-drawer-head {
-  height: 60px;
+  height: 56px;
   padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .m115-v2-drawer-heading {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
+  letter-spacing: 0.3px;
 }
 
 .m115-v2-drawer-body {

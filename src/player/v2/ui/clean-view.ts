@@ -53,20 +53,24 @@ export function mountCleanView(options: CleanViewOptions) {
   const { container, playerEl } = options
   container.innerHTML = ''
 
-  // 1. 视口主根节点
+  // 1. 视口主根节点 (支持右侧挤压式布局)
   const viewport = document.createElement('div')
   viewport.className = 'm115-v2-viewport'
 
+  // 1.1 主播放核心视口
+  const playerPane = document.createElement('div')
+  playerPane.className = 'm115-v2-player-pane'
+
   // 2. 插入 Vidstack 播放器
-  viewport.appendChild(playerEl)
+  playerPane.appendChild(playerEl)
 
   // 3. 插入上下渐变暗部遮罩
   const maskTop = document.createElement('div')
   maskTop.className = 'm115-v2-mask-top'
   const maskBottom = document.createElement('div')
   maskBottom.className = 'm115-v2-mask-bottom'
-  viewport.appendChild(maskTop)
-  viewport.appendChild(maskBottom)
+  playerPane.appendChild(maskTop)
+  playerPane.appendChild(maskBottom)
 
   // 4. 控制层包裹器
   const overlay = document.createElement('div')
@@ -185,7 +189,7 @@ export function mountCleanView(options: CleanViewOptions) {
         </button>
       </div>
 
-      <!-- 右侧：全量功能胶囊群 -->
+      <!-- 右侧：全量功能胶囊群 (移除多余的选集胶囊，由右侧边缘悬浮把手无缝接管) -->
       <div class="m115-v2-ctrl-right">
         <button type="button" class="m115-v2-icon-action m115-btn-mode" title="播放模式">
           ${Icons.Repeat()}
@@ -199,9 +203,6 @@ export function mountCleanView(options: CleanViewOptions) {
         </button>
         <button type="button" class="m115-v2-action-pill m115-btn-subtitle">字幕</button>
         <button type="button" class="m115-v2-action-pill m115-btn-speed">1.0x</button>
-        <button type="button" class="m115-v2-action-pill m115-btn-playlist">
-          ${Icons.Playlist()} <span>选集</span>
-        </button>
         <button type="button" class="m115-v2-icon-action m115-btn-fullscreen" title="全屏 ( F )">
           ${Icons.Fullscreen()}
         </button>
@@ -247,27 +248,38 @@ export function mountCleanView(options: CleanViewOptions) {
   }
 
   // ───────────────────────────────────────────
-  // 4.4 右侧选集抽屉 (Drawer)
+  // 4.4 右侧边缘悬浮把手 & 挤压式播放列表侧边栏 (Playlist Aside)
   // ───────────────────────────────────────────
-  const drawer = document.createElement('div')
-  drawer.className = 'm115-v2-side-drawer'
-  drawer.innerHTML = `
+  const toggleHandle = document.createElement('button')
+  toggleHandle.type = 'button'
+  toggleHandle.className = 'm115-v2-drawer-toggle-handle'
+  toggleHandle.title = '展开 / 收起播放列表'
+  toggleHandle.innerHTML = Icons.ChevronLeft()
+  playerPane.appendChild(toggleHandle)
+
+  const playlistAside = document.createElement('aside')
+  playlistAside.className = 'm115-v2-playlist-aside'
+  playlistAside.innerHTML = `
     <div class="m115-v2-drawer-head">
-      <span class="m115-v2-drawer-heading">选集列表</span>
-      <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;">
+      <span class="m115-v2-drawer-heading">播放列表 (5)</span>
+      <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
         ${Icons.Close()}
       </button>
     </div>
     <div class="m115-v2-drawer-body"></div>
   `
-  overlay.appendChild(drawer)
 
-  drawer.querySelector('.m115-drawer-close')?.addEventListener('click', () => {
-    drawer.classList.remove('open')
-  })
+  const togglePlaylist = (open?: boolean) => {
+    const willOpen = open !== undefined ? open : !playlistAside.classList.contains('open')
+    playlistAside.classList.toggle('open', willOpen)
+    toggleHandle.classList.toggle('open', willOpen)
+  }
+
+  toggleHandle.addEventListener('click', () => togglePlaylist())
+  playlistAside.querySelector('.m115-drawer-close')?.addEventListener('click', () => togglePlaylist(false))
 
   const setDrawerEpisodes = (episodes: { id: number, name: string, sub?: string }[], curId: number) => {
-    const list = drawer.querySelector('.m115-v2-drawer-body') as HTMLElement
+    const list = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
     list.innerHTML = ''
     episodes.forEach((ep) => {
       const card = document.createElement('div')
@@ -278,7 +290,6 @@ export function mountCleanView(options: CleanViewOptions) {
       `
       card.onclick = () => {
         alert(`[115 选集] 点击切换: ${ep.name}`)
-        drawer.classList.remove('open')
       }
       list.appendChild(card)
     })
@@ -483,23 +494,25 @@ export function mountCleanView(options: CleanViewOptions) {
   // 鼠标空闲自动淡出
   let idleTimer: any = null
   const resetIdle = () => {
-    viewport.classList.remove('idle')
+    playerPane.classList.remove('idle')
     clearTimeout(idleTimer)
     idleTimer = setTimeout(() => {
       const video = playerEl.querySelector('video') as HTMLVideoElement | null
-      const isDrawerOpen = drawer.classList.contains('open')
+      const isPlaylistOpen = playlistAside.classList.contains('open')
       const isSheetOpen = sheet.classList.contains('open')
-      if (video && !video.paused && !isDrawerOpen && !isSheetOpen) {
-        viewport.classList.add('idle')
+      if (video && !video.paused && !isPlaylistOpen && !isSheetOpen) {
+        playerPane.classList.add('idle')
       }
     }, 2500)
   }
 
-  viewport.addEventListener('mousemove', resetIdle)
-  viewport.addEventListener('mouseenter', resetIdle)
+  playerPane.addEventListener('mousemove', resetIdle)
+  playerPane.addEventListener('mouseenter', resetIdle)
 
-  // 挂入整体
-  viewport.appendChild(overlay)
+  // 挂入整体结构
+  playerPane.appendChild(overlay)
+  viewport.appendChild(playerPane)
+  viewport.appendChild(playlistAside)
   container.appendChild(viewport)
 
   setTimeout(() => {
