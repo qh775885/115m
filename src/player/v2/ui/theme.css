@@ -693,7 +693,7 @@ video {
   justify-content: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 55%),
-    rgba(22, 22, 24, 0.55);
+    rgba(17, 17, 19, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.09);
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
@@ -737,7 +737,7 @@ video {
   justify-content: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 55%),
-    rgba(22, 22, 24, 0.58);
+    rgba(17, 17, 19, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   cursor: pointer;
