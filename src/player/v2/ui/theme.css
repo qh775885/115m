@@ -1294,19 +1294,12 @@ video {
 .m115-v2-drawer-body .m115-pl-item {
   border-radius: 10px !important;
   gap: 8px !important;
-  /* 让预览图纵向拉伸，顶齐标题、底齐进度条 */
-  align-items: stretch !important;
 }
 
-.m115-v2-drawer-body .m115-pl-item > span:first-child {
-  align-self: center;
-}
-
+/* 预览图固定高度：略加大但不撑高卡片 */
 .m115-v2-drawer-body .m115-pl-thumb {
-  width: 106px !important;
-  height: auto !important;
-  min-height: 56px;
-  align-self: stretch;
+  width: 104px !important;
+  height: 58px !important;
   border-radius: 6px !important;
 }
 
