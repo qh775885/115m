@@ -3,7 +3,7 @@ import 'vidstack/player'
 import 'vidstack/player/ui'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
-import { mount115Overlay } from './ui/overlay'
+import { mountLegacyScaffold } from './ui/legacy-scaffold'
 
 let currentBlobUrl: string | null = null
 
@@ -85,23 +85,42 @@ export async function igniteV2Player() {
       <media-provider></media-provider>
     `
 
-    container.appendChild(player)
     player.src = {
       src: source.src,
       type: source.type,
     }
 
-    // 外挂 115 专属顶部信息与选集抽屉
-    const overlay = mount115Overlay({ playerEl: player })
+    // 100% 沿用老版经典成熟架子，底层交由 Vidstack 强劲驱动
+    const scaffold = mountLegacyScaffold({
+      container,
+      playerEl: player,
+      onBack: () => window.history.back(),
+      onMove: () => alert('[115 移动] 移动到网盘目录'),
+      onDownload: () => alert('[115 下载] 下载原画视频'),
+      onDelete: () => alert('[115 删除] 删除当前视频文件'),
+      onPrev: () => alert('[115 导航] 上一集 ( [ )'),
+      onNext: () => alert('[115 导航] 下一集 ( ] )'),
+      onModeClick: () => alert('[115 模式] 切换循环模式'),
+      onRotateClick: () => alert('[115 旋转] 顺时针旋转 90°'),
+      onQualityClick: () => alert('[115 画质] 切换原画/超清'),
+      onAudioClick: () => alert('[115 音轨] 切换多音轨'),
+      onSubtitleClick: () => alert('[115 字幕] 选择字幕'),
+      onSpeedClick: () => alert('[115 倍速] 调节播放倍速'),
+      onPlaylistToggle: () => {
+        const sidebar = document.getElementById('playlist-sidebar')
+        if (sidebar) sidebar.classList.toggle('open')
+      },
+    })
+
     const titleParam = params.get('title')
     const fileSizeParam = params.get('fileSize')
     if (titleParam) {
-      overlay.topbar.setTitle(decodeURIComponent(titleParam))
+      scaffold.setTitle(decodeURIComponent(titleParam))
     }
     const statText = fileSizeParam ? `${fileSizeParam} · ${source.label}` : source.label
-    overlay.topbar.setStats(statText)
+    scaffold.setStats(statText)
     if (params.get('marked') === '1') {
-      overlay.topbar.setFavorite(true)
+      scaffold.setFavorite(true)
     }
 
     // 移除点火阶段左上角临时指示条
@@ -111,7 +130,7 @@ export async function igniteV2Player() {
     const loading = document.getElementById('loading')
     if (loading) loading.style.display = 'none'
 
-    console.log('[115m-v2] Vidstack 官方原生布局装配成功，当前源:', source)
+    console.log('[115m-v2] 经典成熟架子挂载成功，Vidstack 底座驱动中:', source)
   }
   catch (error: any) {
     console.error('[115m-v2] 点火失败:', error)
