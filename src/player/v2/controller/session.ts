@@ -7,7 +7,7 @@
 import { PlayerCore } from './player-core'
 import { SubtitleController } from './subtitles'
 import { HistoryController } from './history'
-import { createContentStore } from '../state/content-state'
+import { createContentStore, type PlaybackMode } from '../state/content-state'
 import { loadPlaylist } from '../adapters/playlist'
 import { downloadVideo, loadFavorite, removeVideo, setFavorite } from '../adapters/files'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
@@ -280,9 +280,21 @@ export class PlaybackSession {
     }
   }
 
+  /** 设置播放模式。 */
+  setMode(mode: PlaybackMode): void {
+    this.content.set({ mode })
+  }
+
   private autoAdvance(): void {
-    const { playlist, pickCode } = this.content.get()
+    const { playlist, pickCode, mode } = this.content.get()
+    if (mode === 'loop-one') {
+      this.core.seekTo(0)
+      this.core.play()
+      return
+    }
+
     const pos = getPlaylistPosition(playlist, pickCode)
-    if (pos.next) void this.switchTo(pos.next.pickCode, { autoPlay: true, keepPlaylistOpen: true })
+    const target = pos.next?.pickCode || (mode === 'loop-all' && playlist.length ? playlist[0].pickCode : '')
+    if (target) void this.switchTo(target, { autoPlay: true, keepPlaylistOpen: true })
   }
 }

@@ -6,6 +6,8 @@
 import type { OverlayPathItem, OverlayPlaylistItem } from '../../core/overlay-types'
 import { Store } from './store'
 
+export type PlaybackMode = 'sequence' | 'loop-one' | 'loop-all'
+
 export interface ContentState {
   /** 当前视频 pickCode */
   pickCode: string
@@ -28,6 +30,8 @@ export interface ContentState {
   subtitles: { sid: string, title: string }[]
   /** 当前字幕 sid（'' 表示关闭） */
   subtitle: string
+  /** 播放模式 */
+  mode: PlaybackMode
   /** 是否正在切换集数 */
   switching: boolean
 }
@@ -45,6 +49,7 @@ export const initialContentState: ContentState = {
   quality: '',
   subtitles: [],
   subtitle: '',
+  mode: 'sequence',
   switching: false,
 }
 

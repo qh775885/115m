@@ -37,6 +37,7 @@ export interface CleanViewOptions {
   onSelectQuality?: (label: string) => void
   onSelectAudioTrack?: (id: string) => void
   onSelectSubtitle?: (sid: string) => void
+  onSelectMode?: (mode: string) => void
 }
 
 function formatTime(seconds: number): string {
@@ -440,10 +441,10 @@ export function mountCleanView(options: CleanViewOptions) {
   modeBtn?.addEventListener('click', (e) => {
     e.stopPropagation()
     openSheet('mode', '播放模式', [
-      { id: 'sequence', label: '顺序播放', badge: '默认' },
+      { id: 'sequence', label: '顺序播放' },
       { id: 'loop-one', label: '单集循环' },
       { id: 'loop-all', label: '列表循环' },
-    ], 'sequence', modeBtn, (it) => alert(`[115 模式] ${it.label}`))
+    ], options.content.get().mode, modeBtn, (it) => options.onSelectMode?.(String(it.id)))
   })
 
   bottomBar.querySelector('.m115-btn-rotate')?.addEventListener('click', () => options.onRotate?.())
