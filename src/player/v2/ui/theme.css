@@ -709,20 +709,20 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   4. 右侧边缘：修长扁平光感感应片 (Sleek Slim Rail) & 挤压侧边栏
+   4. 右侧边缘：修长纤薄感应片 (Sleek Slim Rail) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧边缘极修长、扁平贴边的感应片 (长一点、扁一点，绝无大圆头) */
+/* 屏幕右侧边缘修长纤薄感应片 (平时仅 3px 极淡发丝线，贴合屏幕边缘) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 5px;
-  height: 76px;
+  width: 4px;
+  height: 64px;
   padding: 0;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
   border: none;
   border-radius: 4px 0 0 4px;
   backdrop-filter: blur(12px);
@@ -732,71 +732,61 @@ video {
   justify-content: center;
   cursor: pointer;
   z-index: 28;
-  opacity: 0.35;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.4);
+  opacity: 0.3;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 内部修长的纵向极细光导轨 */
-.m115-v2-rail-track {
+/* 内部细腻向左微折叠角 */
+.m115-v2-rail-arrow {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  color: rgba(255, 255, 255, 0.6);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transform: translateX(2px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
-.m115-v2-rail-dot {
-  width: 2.5px;
-  height: 2.5px;
-  border-radius: 50%;
-  background: #ffffff;
+.m115-v2-rail-arrow svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2px;
+  transition: transform 0.25s ease;
 }
 
-.m115-v2-rail-bar {
-  width: 2px;
-  height: 28px;
-  border-radius: 1px;
-  background: #ffffff;
-}
-
-/* 鼠标接近右侧边缘或悬停时：修长感应片优雅展开至 14px 扁宽，浮现纵向光轨与科技蓝 */
+/* 悬停显示时：优雅展开至 16px，深黑磨砂微透，绝无任何刺眼浮夸光晕 */
 .m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 1;
-  width: 14px;
-  background: rgba(14, 18, 26, 0.88);
-  border: 1px solid rgba(24, 144, 255, 0.45);
+  width: 16px;
+  background: rgba(22, 26, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-right: none;
+  border-radius: 6px 0 0 6px;
   box-shadow: 
-    -4px 0 16px rgba(0, 0, 0, 0.55),
-    0 0 14px rgba(24, 144, 255, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    -4px 0 16px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
-.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-track {
+.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-arrow {
   opacity: 1;
-}
-
-.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-dot {
-  background: var(--m115-blue);
-  box-shadow: 0 0 6px var(--m115-blue);
-}
-
-.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-bar {
-  background: linear-gradient(to bottom, var(--m115-blue), #ffffff 50%, var(--m115-blue));
+  color: #ffffff;
+  transform: translateX(0);
 }
 
 .m115-v2-drawer-toggle-handle:active {
-  transform: translateY(-50%) scaleY(0.95);
+  transform: translateY(-50%) scale(0.96);
+}
+
+/* 展开状态：箭头反向指示收起 */
+.m115-v2-drawer-toggle-handle.open .m115-v2-rail-arrow svg {
+  transform: rotate(180deg);
 }
 
 .m115-v2-drawer-toggle-handle.open {
-  border-color: var(--m115-blue);
-  background: rgba(24, 144, 255, 0.2);
+  background: rgba(22, 26, 34, 0.95);
+  border-color: rgba(255, 255, 255, 0.18);
   opacity: 1;
 }
 
