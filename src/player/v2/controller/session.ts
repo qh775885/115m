@@ -8,7 +8,7 @@ import { PlayerCore } from './player-core'
 import { SubtitleController } from './subtitles'
 import { HistoryController } from './history'
 import { createContentStore, type PlaybackMode } from '../state/content-state'
-import { loadPlaylist } from '../adapters/playlist'
+import { loadBreadcrumb, loadPlaylist } from '../adapters/playlist'
 import { downloadVideo, loadFavorite, removeVideo, setFavorite } from '../adapters/files'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
 import { loadCoverAt } from '../adapters/thumbnail'
@@ -270,9 +270,24 @@ export class PlaybackSession {
         title: this.content.get().title || current?.name || '',
         fileSize: this.content.get().fileSize || current?.size || '',
       })
+
+      // 播放列表响应未带路径时，独立拉取面包屑
+      if (!path.length) void this.loadBreadcrumb(this.content.get().pickCode)
     }
     catch (error) {
       console.warn('[115m-v2] 播放列表加载失败', error)
+    }
+  }
+
+  private async loadBreadcrumb(pickCode: string): Promise<void> {
+    try {
+      const path = await loadBreadcrumb(pickCode)
+      if (path.length && pickCode === this.content.get().pickCode) {
+        this.content.set({ path })
+      }
+    }
+    catch {
+      // 面包屑为低优先级，静默失败
     }
   }
 

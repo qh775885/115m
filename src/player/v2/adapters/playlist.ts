@@ -5,6 +5,7 @@
  */
 
 import { fetchPlaylistResponse } from '../../core/player-api'
+import { fetchBreadcrumbPath } from '../../core/player-services'
 import { normalizePlaylistItems } from '../../core/playlist'
 import { buildPlaylistProgressSnapshot, type PlayHistoryMap } from '../../core/history'
 import type { OverlayPathItem, OverlayPlaylistItem } from '../../core/overlay-types'
@@ -22,6 +23,11 @@ export async function loadPlaylist(cid: string, pickCode: string): Promise<Loade
     items: await attachPlaylistProgress(items),
     path: response?.path ?? [],
   }
+}
+
+/** 独立拉取面包屑路径（旧实现即以此方式获取，cid 传空由后台按 pickCode 推导）。 */
+export async function loadBreadcrumb(pickCode: string): Promise<OverlayPathItem[]> {
+  return await fetchBreadcrumbPath(bridgeSender as never, '', pickCode)
 }
 
 function bridgeSender(message: unknown) {

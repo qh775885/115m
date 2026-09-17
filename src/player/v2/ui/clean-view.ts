@@ -608,6 +608,26 @@ export function mountCleanView(options: CleanViewOptions) {
   let previewToken = 0
   let previewTimer: ReturnType<typeof setTimeout> | null = null
 
+  // 按源画面比例计算预览尺寸：横屏限宽，竖屏限高（避免竖屏撑爆/变形）
+  const applyPreviewSize = (sourceWidth: number, sourceHeight: number) => {
+    if (!sourceWidth || !sourceHeight) return
+    const maxWidth = 186
+    const maxHeight = 160
+    let width: number
+    let height: number
+    if (sourceHeight > sourceWidth) {
+      height = maxHeight
+      width = Math.round(height * (sourceWidth / sourceHeight))
+    }
+    else {
+      width = maxWidth
+      height = Math.round(width * (sourceHeight / sourceWidth))
+    }
+    previewEl.style.width = `${width + 8}px`
+    previewImg.style.width = `${width}px`
+    previewImg.style.height = `${height}px`
+  }
+
   const handlePreviewMove = (e: MouseEvent) => {
     const state = options.core.store.get()
     if (!state.duration || !options.requestPreview) return
@@ -619,7 +639,7 @@ export function mountCleanView(options: CleanViewOptions) {
     const trackRect = progressBox.getBoundingClientRect()
     const paneRect = playerPane.getBoundingClientRect()
     previewEl.classList.add('visible')
-    const width = previewEl.offsetWidth || 186
+    const width = previewEl.offsetWidth || 194
     const cursorX = trackRect.left - paneRect.left + ratio * trackRect.width
     const left = Math.max(8, Math.min(cursorX - width / 2, paneRect.width - width - 8))
     previewEl.style.left = `${Math.round(left)}px`
@@ -630,12 +650,9 @@ export function mountCleanView(options: CleanViewOptions) {
       const cover = await options.requestPreview?.(time, state.duration)
       if (token !== previewToken) return
       if (cover?.imgUrl) {
+        if (cover.width && cover.height) applyPreviewSize(cover.width, cover.height)
         previewImg.src = cover.imgUrl
         previewImg.style.visibility = 'visible'
-      }
-      else {
-        previewImg.removeAttribute('src')
-        previewImg.style.visibility = 'hidden'
       }
     }, 90)
   }
@@ -645,6 +662,7 @@ export function mountCleanView(options: CleanViewOptions) {
     if (previewTimer) clearTimeout(previewTimer)
     previewEl.classList.remove('visible')
     previewImg.removeAttribute('src')
+    previewImg.style.visibility = 'hidden'
   }
 
   progressBox.addEventListener('mousemove', handlePreviewMove)

@@ -122,8 +122,8 @@ video {
 /* 进度条悬停预览（缩略图 + 时间码） */
 .m115-v2-preview {
   position: absolute;
-  bottom: 70px;
-  width: 186px;
+  bottom: 82px;
+  width: 194px;
   padding: 4px;
   box-sizing: border-box;
   border-radius: 10px;
@@ -139,7 +139,7 @@ video {
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.12s ease;
+  transition: opacity 0.12s ease, transform 0.12s ease, width 0.12s ease;
   z-index: 30;
 }
 
@@ -149,10 +149,8 @@ video {
 }
 
 .m115-v2-preview-img {
-  width: 100%;
-  min-height: 96px;
-  border-radius: 6px;
   display: block;
+  border-radius: 6px;
   background: #000;
   visibility: hidden;
 }
