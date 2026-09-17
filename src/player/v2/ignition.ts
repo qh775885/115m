@@ -1,4 +1,5 @@
 import './lit-shield'
+import './runtime-shim-install'
 import 'vidstack/player'
 import 'vidstack/player/ui'
 import Hls from 'hls.js'
@@ -101,7 +102,7 @@ export async function igniteV2Player() {
       content: session.content,
       subtitles: session.subtitles,
       onBack: () => window.history.back(),
-      onMove: () => alert('[115 移动] 移动到网盘目录'),
+      onMove: () => void session.moveCurrent(),
       onDownload: () => void session.download(),
       onDelete: () => void session.removeCurrent(),
       onToggleFavorite: (marked) => void session.toggleFavorite(marked),

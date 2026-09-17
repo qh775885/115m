@@ -19,6 +19,7 @@ import {
   type ResolvedPlaybackSources,
 } from '../stream-builder'
 import { getPlaylistPosition, getDeleteFallback } from '../../core/playlist-navigation'
+import { MoveDialog } from '../../core/move-dialog'
 import { buildNavigateToVideoUrl } from '../../core/player-query'
 import type { QualityOption } from '../../core/types'
 import type { SubtitleItem } from '../../core/subtitles'
@@ -133,6 +134,26 @@ export class PlaybackSession {
     }
     catch (error) {
       console.warn('[115m-v2] 下载失败', error)
+    }
+  }
+
+  /** 移动当前文件到其它目录（复用旧 MoveDialog 目录树弹窗）。 */
+  async moveCurrent(): Promise<void> {
+    const content = this.content.get()
+    const item = content.playlist.find(entry => entry.pickCode === content.pickCode)
+    if (!item?.fileId) return
+
+    const dialog = new MoveDialog(item.fileId, content.cid || '0', () => {})
+    const result = await dialog.show()
+    if (!result.moved) return
+
+    // 移动后当前文件已不在本目录：从列表移除并跳到下一集
+    const fallback = getDeleteFallback(content.playlist, content.pickCode)
+    const remaining = content.playlist.filter(entry => entry.pickCode !== content.pickCode)
+    this.content.set({ playlist: remaining })
+
+    if (fallback.nextPickCode) {
+      void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
     }
   }
 
