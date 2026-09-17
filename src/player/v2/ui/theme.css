@@ -552,14 +552,14 @@ video {
   font-weight: 400;
 }
 
-/* 一体化黑曜石音量流线微胶囊 (高度 28px，圆角 14px，与三联胶囊完全同源) */
+/* 一体化黑曜石音量流线微胶囊 (高度 28px，超椭圆圆角，与三联/托盘同族) */
 .m115-v2-vol-group {
   position: relative;
   display: flex;
   align-items: center;
   height: 28px;
   padding: 0 6px;
-  border-radius: 14px;
+  border-radius: 9px;
   background: transparent;
   border: 1px solid transparent;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1194,11 +1194,11 @@ video {
   letter-spacing: 0.3px;
 }
 
-/* 右上角关闭小圆钮 (彻底告别白底粗暴大方块) */
+/* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */
 .m115-drawer-close {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 9px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.75);
