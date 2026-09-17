@@ -1287,18 +1287,38 @@ video {
   padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
 .m115-v2-drawer-body .m115-pl-item {
   border-radius: 10px !important;
+  gap: 8px !important;
+  /* 让预览图纵向拉伸，顶齐标题、底齐进度条 */
+  align-items: stretch !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item > span:first-child {
+  align-self: center;
 }
 
 .m115-v2-drawer-body .m115-pl-thumb {
-  width: 92px !important;
-  height: 52px !important;
+  width: 106px !important;
+  height: auto !important;
+  min-height: 56px;
+  align-self: stretch;
   border-radius: 6px !important;
+}
+
+/* 缩略图填充裁切（避免竖屏在大框里出现大黑边） */
+.m115-v2-drawer-body .m115-pl-thumb img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+.m115-v2-drawer-body .m115-pl-actions {
+  align-self: center;
+  justify-content: center !important;
 }
 
 .m115-v2-drawer-body .m115-pl-item.is-active {
