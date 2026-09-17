@@ -752,102 +752,63 @@ video {
    4. 右侧边缘：标准经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧固定侧键 (dexter-st 神作黑曜石半岛切边，超扁 16px × 64px 紧凑贴边，实体阶梯高光与地平线微光) */
+/* 屏幕右侧固定侧键 (极致淡薄轻透，平时不明显，触碰时稍微提亮，绝无复杂特效) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 64px;
-  padding: 0 1px 0 0;
+  width: 18px;
+  height: 54px;
+  padding: 0;
   box-sizing: border-box;
-  background-color: #121620;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-right: none;
-  border-radius: 9px 0 0 9px;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 6px 0 0 6px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 28;
-  opacity: 0.75;
+  opacity: 0.35;
   user-select: none;
-  /* dexter-st 5 层物理阶梯 Inset 触感倒角 */
-  box-shadow:
-    inset 0px 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0px 2px 2px rgba(255, 255, 255, 0.15),
-    inset 0px 4px 4px rgba(255, 255, 255, 0.08),
-    inset 0px 8px 8px rgba(255, 255, 255, 0.04),
-    inset 0px 16px 16px rgba(255, 255, 255, 0.02),
-    -4px 0 16px rgba(0, 0, 0, 0.5);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* dexter-st 灵魂地平线微光 (左侧圆弧激光切割亮白与 210° 科技蓝微光) */
-.m115-v2-drawer-toggle-handle::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background-image: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    hsl(210deg, 100%, 70%) 6%,
-    hsla(210deg, 100%, 70%, 40%) 14%,
-    transparent 24%
-  );
-  opacity: 0;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
 }
 
 .m115-v2-drawer-toggle-handle svg {
-  width: 11px;
-  height: 11px;
-  color: rgba(255, 255, 255, 0.75);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  width: 12px;
+  height: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
 }
 
-/* 悬停状态：触发地平线弧光与漫射微光，纯净而深邃 */
+/* 触碰时：稍微给点明显 (背景微亮，图标变白，清清爽爽) */
 .m115-v2-drawer-toggle-handle:hover {
-  opacity: 1;
-  background-color: #10141e;
-  border-color: hsla(210deg, 100%, 80%, 0.4);
-  box-shadow:
-    inset 0px 1px 1px rgba(255, 255, 255, 0.28),
-    inset 0px 2px 4px hsla(210deg, 100%, 70%, 0.2),
-    inset 0px 8px 16px hsla(210deg, 100%, 70%, 0.1),
-    -6px 0 20px rgba(0, 0, 0, 0.65);
-}
-
-.m115-v2-drawer-toggle-handle:hover::after {
-  opacity: 0.95;
-  mask-image: linear-gradient(90deg, #fff, transparent);
-  -webkit-mask-image: linear-gradient(90deg, #fff, transparent);
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .m115-v2-drawer-toggle-handle:hover svg {
   color: #ffffff;
-  filter: drop-shadow(0 0 4px hsl(210deg, 100%, 70%));
 }
 
 .m115-v2-drawer-toggle-handle:active {
   transform: translateY(-50%) scale(0.96);
 }
 
-/* 展开状态：保持贴合激活 */
+/* 展开状态 */
 .m115-v2-drawer-toggle-handle.open {
-  background-color: #141a26;
-  border-color: var(--m115-blue);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
   opacity: 1;
 }
 
 .m115-v2-drawer-toggle-handle.open svg {
-  color: var(--m115-blue);
+  color: #ffffff;
 }
 
 /* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
