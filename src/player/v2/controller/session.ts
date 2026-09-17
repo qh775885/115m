@@ -9,6 +9,7 @@ import { SubtitleController } from './subtitles'
 import { HistoryController } from './history'
 import { createContentStore } from '../state/content-state'
 import { loadPlaylist } from '../adapters/playlist'
+import { downloadVideo, loadFavorite, removeVideo, setFavorite } from '../adapters/files'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
 import {
   prepareQualitySource,
@@ -16,7 +17,7 @@ import {
   type PreparedPlaybackSource,
   type ResolvedPlaybackSources,
 } from '../stream-builder'
-import { getPlaylistPosition } from '../../core/playlist-navigation'
+import { getPlaylistPosition, getDeleteFallback } from '../../core/playlist-navigation'
 import { buildNavigateToVideoUrl } from '../../core/player-query'
 import type { QualityOption } from '../../core/types'
 import type { SubtitleItem } from '../../core/subtitles'
@@ -70,6 +71,7 @@ export class PlaybackSession {
 
     if (this.params.cid) void this.loadList()
     void this.loadSubtitles(this.params.pickCode)
+    void this.refreshFavorite()
 
     this.history.start()
     void this.history.restore(this.params.pickCode)
@@ -112,6 +114,54 @@ export class PlaybackSession {
     }
   }
 
+  /** 收藏 / 取消收藏当前视频。 */
+  async toggleFavorite(marked: boolean): Promise<void> {
+    const content = this.content.get()
+    const item = content.playlist.find(entry => entry.pickCode === content.pickCode)
+    const result = await setFavorite(item?.fileId || '', marked)
+    this.content.set({ isFavorite: result })
+    const params = new URLSearchParams(window.location.search)
+    params.set('marked', result ? '1' : '0')
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
+  }
+
+  /** 下载原画。 */
+  async download(): Promise<void> {
+    try {
+      await downloadVideo(this.content.get().pickCode)
+    }
+    catch (error) {
+      console.warn('[115m-v2] 下载失败', error)
+    }
+  }
+
+  /** 删除当前视频，并自动跳到下一集（无则上一集，再无则返回）。 */
+  async removeCurrent(): Promise<void> {
+    const content = this.content.get()
+    const item = content.playlist.find(entry => entry.pickCode === content.pickCode)
+    if (!item?.fileId) return
+    if (!window.confirm(`确定删除「${content.title || item.name}」吗？`)) return
+
+    try {
+      await removeVideo(item.fileId, content.cid, content.pickCode)
+    }
+    catch (error) {
+      console.warn('[115m-v2] 删除失败', error)
+      return
+    }
+
+    const fallback = getDeleteFallback(content.playlist, content.pickCode)
+    const remaining = content.playlist.filter(entry => entry.pickCode !== content.pickCode)
+    this.content.set({ playlist: remaining })
+
+    if (fallback.nextPickCode) {
+      void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
+    }
+    else {
+      window.history.back()
+    }
+  }
+
   next(autoPlay = true): void {
     const { playlist, pickCode } = this.content.get()
     const pos = getPlaylistPosition(playlist, pickCode)
@@ -145,6 +195,7 @@ export class PlaybackSession {
       void this.loadSubtitles(pickCode)
       this.history.resetWindow()
       void this.history.restore(pickCode)
+      void this.refreshFavorite()
 
       const pos = getPlaylistPosition(this.content.get().playlist, pickCode)
       this.content.set({
@@ -213,6 +264,19 @@ export class PlaybackSession {
     }
     catch (error) {
       console.warn('[115m-v2] 字幕列表加载失败', error)
+    }
+  }
+
+  private async refreshFavorite(): Promise<void> {
+    const pickCode = this.content.get().pickCode
+    try {
+      const marked = await loadFavorite(pickCode)
+      if (marked !== null && pickCode === this.content.get().pickCode) {
+        this.content.set({ isFavorite: marked })
+      }
+    }
+    catch {
+      // 收藏状态为低优先级，静默失败
     }
   }
 
