@@ -176,6 +176,7 @@ export function mountCleanView(options: CleanViewOptions) {
           </button>
           <div class="m115-v2-vol-slider-box">
             <input type="range" class="m115-v2-vol-range" min="0" max="100" value="100" style="--vol: 100%;">
+            <span class="m115-v2-vol-percent">100%</span>
           </div>
         </div>
       </div>
@@ -399,11 +400,14 @@ export function mountCleanView(options: CleanViewOptions) {
     }
   }
 
+  const volPercentEl = bottomBar.querySelector('.m115-v2-vol-percent') as HTMLElement | null
+
   const updateVolUi = (val: number, muted: boolean) => {
     const pct = muted ? 0 : Math.round(val * 100)
     volRange.style.setProperty('--vol', `${pct}%`)
     volRange.value = String(pct)
     volBtn.innerHTML = (muted || pct === 0) ? Icons.VolumeX() : Icons.Volume2()
+    if (volPercentEl) volPercentEl.textContent = `${pct}%`
   }
 
   volBtn.onclick = () => {
