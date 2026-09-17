@@ -17,6 +17,7 @@ import {
   lazyLoadPlaylistCovers,
   scrollActivePlaylistNodeIntoView,
 } from '../../core/overlay-playlist'
+import { formatCompactTime } from '../../core/hover-utils'
 import type { SubtitleController } from '../controller/subtitles'
 
 export interface BreadcrumbNode {
@@ -565,6 +566,23 @@ export function mountCleanView(options: CleanViewOptions) {
   const speedSpan = speedBtn.querySelector('.m115-btn-text-speed')
   let prev: PlayerState | null = null
   let prevSubtitleText = ''
+  let lastCardProgressAt = 0
+
+  // 把当前集播放进度实时同步到播放列表卡片（进度条 + 已看时间）
+  const syncActiveCardProgress = (currentTime: number, duration: number) => {
+    const card = drawerBody.querySelector('.m115-pl-item.is-active')
+    if (!card) return
+    const pct = Math.max(0, Math.min(100, (currentTime / duration) * 100))
+    const wrap = card.querySelector('[data-role="playlist-progress"]') as HTMLElement | null
+    const bar = card.querySelector('[data-role="playlist-progress-bar"]') as HTMLElement | null
+    const text = card.querySelector('[data-role="playlist-progress-text"]') as HTMLElement | null
+    if (wrap) wrap.style.display = pct > 0 ? 'flex' : 'none'
+    if (bar) bar.style.width = `${Math.max(2, pct)}%`
+    if (text) {
+      text.textContent = formatCompactTime(currentTime)
+      text.style.display = 'inline'
+    }
+  }
 
   const render = (s: PlayerState) => {
     if (!prev || s.currentTime !== prev.currentTime || s.duration !== prev.duration) {
@@ -578,6 +596,12 @@ export function mountCleanView(options: CleanViewOptions) {
         prevSubtitleText = subText
         subtitleLayer.textContent = subText
         subtitleLayer.classList.toggle('visible', !!subText)
+      }
+
+      // 当前集卡片进度条实时同步（每秒一次，避免频繁回流）
+      if (s.duration > 0 && Date.now() - lastCardProgressAt > 1000) {
+        lastCardProgressAt = Date.now()
+        syncActiveCardProgress(s.currentTime, s.duration)
       }
     }
 
