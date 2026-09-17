@@ -740,11 +740,10 @@ video {
   pointer-events: none;
   background-image: linear-gradient(
     0deg,
-    #ffffff,
-    hsl(210deg, 100%, 70%),
-    hsla(210deg, 100%, 70%, 50%),
-    14%,
-    transparent
+    rgba(255, 255, 255, 0.5) 0%,
+    hsla(210deg, 100%, 72%, 0.38) 16%,
+    hsla(210deg, 100%, 70%, 0.12) 40%,
+    transparent 64%
   );
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -770,9 +769,9 @@ video {
 }
 
 .m115-v2-round-btn:hover::after {
-  opacity: 0.95;
-  mask-image: linear-gradient(0deg, #fff, transparent);
-  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+  opacity: 0.75;
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 .m115-v2-round-btn:active {
@@ -832,10 +831,10 @@ video {
   pointer-events: none;
   background-image: linear-gradient(
     0deg,
-    #ffffff 0%,
-    hsl(210deg, 100%, 70%) 4%,
-    hsla(210deg, 100%, 70%, 50%) 10%,
-    transparent 18%
+    rgba(255, 255, 255, 0.55) 0%,
+    hsla(210deg, 100%, 72%, 0.4) 16%,
+    hsla(210deg, 100%, 70%, 0.13) 40%,
+    transparent 64%
   );
   opacity: 0;
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -868,10 +867,11 @@ video {
   );
 }
 
+/* 圆形按钮去除底部 mask 聚集，改由渐变自身向上柔和晕散 */
 .m115-v2-main-play-btn:hover::after {
-  opacity: 1;
-  mask-image: linear-gradient(0deg, #fff, transparent);
-  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+  opacity: 0.8;
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 .m115-v2-main-play-btn:hover svg {
