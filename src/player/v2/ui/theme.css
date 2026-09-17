@@ -11,6 +11,9 @@
   --m115-aurora-soft: hsl(210deg, 100%, 78%);
   --m115-aurora-glow: hsla(210deg, 100%, 68%, 0.55);
 
+  /* 引擎正蓝：进度 / 音量 / 列表强调 / 侧键 统一使用的唯一进度蓝 */
+  --m115-engine-blue: #2b90ff;
+
   --m115-text-title: #ffffff;
   --m115-text-regular: rgba(255, 255, 255, 0.88);
   --m115-text-muted: rgba(255, 255, 255, 0.55);
@@ -484,7 +487,7 @@ video {
   left: 0;
   top: 0;
   height: 100%;
-  background: #2b90ff;
+  background: var(--m115-engine-blue);
   border-radius: 2px;
   box-shadow: 0 0 8px rgba(43, 144, 255, 0.45);
 }
@@ -633,8 +636,8 @@ video {
   border-radius: 2px;
   background: linear-gradient(
     to right,
-    #2b90ff 0%,
-    #2b90ff var(--vol, 100%),
+    var(--m115-engine-blue) 0%,
+    var(--m115-engine-blue) var(--vol, 100%),
     rgba(255, 255, 255, 0.2) var(--vol, 100%),
     rgba(255, 255, 255, 0.2) 100%
   );
@@ -1179,16 +1182,16 @@ video {
   transform: translateY(-50%) scaleY(0.97);
 }
 
-/* 展开状态：极光蓝白发光材质 */
+/* 展开状态：低调安静的引擎正蓝，去掉强光晕，与列表强调条同一支蓝 */
 .m115-v2-drawer-toggle-handle.open {
-  background: hsla(210deg, 100%, 68%, 0.2);
-  border-color: hsla(210deg, 100%, 68%, 0.48);
+  background: rgba(43, 144, 255, 0.12);
+  border-color: rgba(43, 144, 255, 0.32);
   opacity: 1;
 }
 
 .m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
-  background: linear-gradient(180deg, #ffffff 0%, var(--m115-aurora-core) 100%);
-  box-shadow: 0 0 6px var(--m115-aurora-glow);
+  background: var(--m115-engine-blue);
+  box-shadow: none;
 }
 
 /* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
@@ -1329,7 +1332,7 @@ video {
   bottom: 22%;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: #2b90ff;
+  background: var(--m115-engine-blue);
 }
 
 /* 选中项不参与地平线极光，保持绝对安静 */
