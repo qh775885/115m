@@ -216,7 +216,7 @@ export function mountCleanView(options: CleanViewOptions) {
   overlay.appendChild(bottomBar)
 
   // ───────────────────────────────────────────
-  // 4.3 浮动微卡片 (Sheet)
+  // 4.3 浮动微卡片 (Sheet - 具备完整的反向切换、点击外部关闭与 Escape 闭环)
   // ───────────────────────────────────────────
   const sheet = document.createElement('div')
   sheet.className = 'm115-v2-pop-sheet'
@@ -226,7 +226,28 @@ export function mountCleanView(options: CleanViewOptions) {
   `
   overlay.appendChild(sheet)
 
-  const openSheet = (title: string, items: { id: string | number, label: string, badge?: string }[], currentId: any, onPick: (item: any) => void) => {
+  let activeSheetType: string | null = null
+
+  const closeSheet = () => {
+    sheet.classList.remove('open')
+    activeSheetType = null
+  }
+
+  const openSheet = (
+    type: string,
+    title: string, 
+    items: { id: string | number, label: string, badge?: string }[], 
+    currentId: any, 
+    anchorBtn: HTMLElement | null,
+    onPick: (item: any) => void
+  ) => {
+    // 若再次点击当前已经展开的按钮，则直接反向收回！
+    if (activeSheetType === type && sheet.classList.contains('open')) {
+      closeSheet()
+      return
+    }
+
+    activeSheetType = type
     sheet.querySelector('.m115-v2-pop-header')!.textContent = title
     const body = sheet.querySelector('.m115-v2-pop-body') as HTMLElement
     body.innerHTML = ''
@@ -244,12 +265,32 @@ export function mountCleanView(options: CleanViewOptions) {
       row.onclick = (e) => {
         e.stopPropagation()
         onPick(it)
-        sheet.classList.remove('open')
+        closeSheet()
       }
       body.appendChild(row)
     })
+
+    // 精准悬浮在触发按钮正上方
+    if (anchorBtn) {
+      const rect = anchorBtn.getBoundingClientRect()
+      const viewportRect = playerPane.getBoundingClientRect()
+      const centerLeft = rect.left - viewportRect.left + rect.width / 2
+      // 避免贴出屏幕右侧边缘
+      const maxLeft = viewportRect.width - 210
+      const targetLeft = Math.max(12, Math.min(centerLeft - 100, maxLeft))
+      sheet.style.left = `${targetLeft}px`
+      sheet.style.right = 'auto'
+    }
+
     sheet.classList.add('open')
   }
+
+  // 点击外部空白区域，自动优雅关闭微卡片面板
+  window.addEventListener('click', (e) => {
+    if (!sheet.contains(e.target as Node)) {
+      closeSheet()
+    }
+  })
 
   // ───────────────────────────────────────────
   // 4.4 右侧边缘长扁条纤薄感应轨 (Ultra-slim Long Rail) & 挤压侧边栏
@@ -291,10 +332,11 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
-  // 按 Escape 快捷键亦可一键收回
+  // 按 Escape 快捷键亦可一键收回面板与侧边栏
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && playlistAside.classList.contains('open')) {
-      togglePlaylist(false)
+    if (e.key === 'Escape') {
+      if (sheet.classList.contains('open')) closeSheet()
+      if (playlistAside.classList.contains('open')) togglePlaylist(false)
     }
   })
 
@@ -379,57 +421,67 @@ export function mountCleanView(options: CleanViewOptions) {
   // 底部功能群
   bottomBar.querySelector('.m115-btn-prev')?.addEventListener('click', () => options.onPrev?.())
   bottomBar.querySelector('.m115-btn-next')?.addEventListener('click', () => options.onNext?.())
-  bottomBar.querySelector('.m115-btn-mode')?.addEventListener('click', () => {
-    openSheet('播放模式', [
+
+  const modeBtn = bottomBar.querySelector('.m115-btn-mode') as HTMLElement
+  modeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openSheet('mode', '播放模式', [
       { id: 'sequence', label: '顺序播放', badge: '默认' },
       { id: 'loop-one', label: '单集循环' },
       { id: 'loop-all', label: '列表循环' },
-    ], 'sequence', (it) => alert(`[115 模式] ${it.label}`))
+    ], 'sequence', modeBtn, (it) => alert(`[115 模式] ${it.label}`))
   })
+
   bottomBar.querySelector('.m115-btn-rotate')?.addEventListener('click', () => alert('[115 旋转] 顺时针旋转 90°'))
 
   const qualityBtn = bottomBar.querySelector('.m115-btn-quality') as HTMLElement
-  qualityBtn.onclick = () => {
-    openSheet('切换清晰度', [
+  qualityBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openSheet('quality', '切换清晰度', [
       { id: 'origin', label: '115 原画直链', badge: '无损' },
       { id: 'uhd', label: '4K 超高清', badge: '转码' },
       { id: 'fhd', label: '1080P 全高清' },
       { id: 'hd', label: '720P 高清' },
-    ], 'origin', (it) => {
+    ], 'origin', qualityBtn, (it) => {
       qualityBtn.textContent = it.label.split(' ')[0]
     })
-  }
+  })
 
-  bottomBar.querySelector('.m115-btn-audio')?.addEventListener('click', () => {
-    openSheet('多音频轨道', [
+  const audioBtn = bottomBar.querySelector('.m115-btn-audio') as HTMLElement
+  audioBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openSheet('audio', '多音频轨道', [
       { id: 1, label: '国语原声 (Dolby 5.1)', badge: '当前' },
       { id: 2, label: '粤语原声 (Stereo)' },
       { id: 3, label: '英语伴音 (AAC)' },
-    ], 1, (it) => alert(`[115 音轨] 切换至: ${it.label}`))
+    ], 1, audioBtn, (it) => alert(`[115 音轨] 切换至: ${it.label}`))
   })
 
-  bottomBar.querySelector('.m115-btn-subtitle')?.addEventListener('click', () => {
-    openSheet('字幕选择与样式', [
+  const subtitleBtn = bottomBar.querySelector('.m115-btn-subtitle') as HTMLElement
+  subtitleBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openSheet('subtitle', '字幕选择与样式', [
       { id: 'sub1', label: '内置中文字幕 (ASS)', badge: '特效' },
       { id: 'sub2', label: '外挂双语字幕 (SRT)' },
       { id: 'off', label: '关闭字幕' },
-    ], 'sub1', (it) => alert(`[115 字幕] ${it.label}`))
+    ], 'sub1', subtitleBtn, (it) => alert(`[115 字幕] ${it.label}`))
   })
 
   const speedBtn = bottomBar.querySelector('.m115-btn-speed') as HTMLElement
-  speedBtn.onclick = () => {
-    openSheet('播放速度', [
+  speedBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openSheet('speed', '播放速度', [
       { id: 0.75, label: '0.75x' },
       { id: 1.0, label: '1.0x 标准' },
       { id: 1.25, label: '1.25x' },
       { id: 1.5, label: '1.5x' },
       { id: 2.0, label: '2.0x 倍速' },
-    ], 1.0, (it) => {
+    ], 1.0, speedBtn, (it) => {
       speedBtn.textContent = String(it.id) + 'x'
       const video = playerEl.querySelector('video') as HTMLVideoElement | null
       if (video) video.playbackRate = Number(it.id)
     })
-  }
+  })
 
   bottomBar.querySelector('.m115-btn-playlist')?.addEventListener('click', () => {
     drawer.classList.toggle('open')
