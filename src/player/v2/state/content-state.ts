@@ -20,6 +20,10 @@ export interface ContentState {
   path: OverlayPathItem[]
   /** 当前集序号（1 起，0 表示未知） */
   currentIndex: number
+  /** 可选清晰度标签列表 */
+  qualities: string[]
+  /** 当前清晰度标签 */
+  quality: string
   /** 是否正在切换集数 */
   switching: boolean
 }
@@ -33,6 +37,8 @@ export const initialContentState: ContentState = {
   playlist: [],
   path: [],
   currentIndex: 0,
+  qualities: [],
+  quality: '',
   switching: false,
 }
 

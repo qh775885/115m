@@ -31,6 +31,7 @@ export interface CleanViewOptions {
   onPrev?: () => void
   onNext?: () => void
   onSelectEpisode?: (pickCode: string) => void
+  onSelectQuality?: (label: string) => void
 }
 
 function formatTime(seconds: number): string {
@@ -440,15 +441,16 @@ export function mountCleanView(options: CleanViewOptions) {
   const qualityBtn = bottomBar.querySelector('.m115-btn-quality') as HTMLElement
   qualityBtn?.addEventListener('click', (e) => {
     e.stopPropagation()
-    openSheet('quality', '切换清晰度', [
-      { id: 'origin', label: '115 原画直链', badge: '无损' },
-      { id: 'uhd', label: '4K 超高清', badge: '转码' },
-      { id: 'fhd', label: '1080P 全高清' },
-      { id: 'hd', label: '720P 高清' },
-    ], 'origin', qualityBtn, (it) => {
-      const textSpan = qualityBtn.querySelector('.m115-btn-text')
-      if (textSpan) textSpan.textContent = it.label.split(' ')[0]
-    })
+    const c = options.content.get()
+    if (c.qualities.length === 0) return
+    openSheet(
+      'quality',
+      '切换清晰度',
+      c.qualities.map(label => ({ id: label, label })),
+      c.quality,
+      qualityBtn,
+      (it) => options.onSelectQuality?.(String(it.id)),
+    )
   })
 
   const audioBtn = bottomBar.querySelector('.m115-btn-audio') as HTMLElement
@@ -585,6 +587,10 @@ export function mountCleanView(options: CleanViewOptions) {
     if (!p || c.playlist !== p.playlist || c.pickCode !== p.pickCode) {
       drawerHeading.textContent = `播放列表 (${c.playlist.length})`
       renderEpisodes(c.playlist, c.pickCode)
+    }
+    if (!p || c.quality !== p.quality) {
+      const span = qualityBtn.querySelector('.m115-btn-text')
+      if (span) span.textContent = c.quality || '原画'
     }
     prevContent = c
   }

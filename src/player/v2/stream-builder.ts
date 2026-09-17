@@ -2,6 +2,8 @@ import { resolvePlaybackBundle } from '../core/player-services'
 import { callExtensionBridge } from './bridge-client'
 import { findVariantInMaster } from '../core/playlist-url'
 import { resolveM3u8Url } from '../../lib/m3u8-parser'
+import { buildQualityOptions, ORIGINAL_PLACEHOLDER_URL } from '../core/quality'
+import type { QualityOption } from '../core/types'
 
 export interface PreparedPlaybackSource {
   src: string
@@ -48,26 +50,23 @@ export function buildMasterHlsBlobUrl(masterText: string, selectedUrl: string): 
  * 准备视频播放源：自动完成鉴权 Cookie 写入、清晰度优选与多音轨组装
  */
 export async function preparePlaybackSource(pickCode: string): Promise<PreparedPlaybackSource> {
-  const bridgeSender = async (message: unknown) => {
-    return await callExtensionBridge(message)
+  const { initial } = await resolvePlaybackSources(pickCode)
+  return initial
+}
+
+const bridgeSender = async (message: unknown) => await callExtensionBridge(message)
+
+/** 由单个 URL 构建可播放源：原画直链直传；HLS 拉取 master 合成音频轨 Blob。 */
+async function buildPreparedSource(playUrl: string, pickCode: string, label = ''): Promise<PreparedPlaybackSource> {
+  if (!playUrl) {
+    throw new Error('无效的播放源地址')
   }
 
-  const bundle = await resolvePlaybackBundle(bridgeSender as any, pickCode)
-  const { initialPlayback } = bundle
-
-  const playUrl = initialPlayback.url
-  const isM3u8 = /\.m3u8/i.test(playUrl) || initialPlayback.type === 'hls'
-
+  const isM3u8 = /\.m3u8/i.test(playUrl)
   if (!isM3u8) {
-    return {
-      src: playUrl,
-      type: 'video/mp4',
-      label: initialPlayback.currentQualityLabel || '原画直链',
-      isBlob: false,
-    }
+    return { src: playUrl, type: 'video/mp4', label: label || '原画直链', isBlob: false }
   }
 
-  // HLS 流：拉取 master playlist 检查是否需要合成独立音频轨
   let finalUrl = playUrl
   let isBlob = false
   try {
@@ -91,7 +90,38 @@ export async function preparePlaybackSource(pickCode: string): Promise<PreparedP
   return {
     src: finalUrl,
     type: 'application/x-mpegurl',
-    label: initialPlayback.currentQualityLabel || 'HLS 转码流',
+    label: label || 'HLS 转码流',
     isBlob,
   }
 }
+
+export interface ResolvedPlaybackSources {
+  initial: PreparedPlaybackSource
+  options: QualityOption[]
+  qualityLabel: string
+}
+
+/**
+ * 解析播放源全集：首播源 + 全部可选画质（供清晰度切换）。
+ */
+export async function resolvePlaybackSources(pickCode: string): Promise<ResolvedPlaybackSources> {
+  const bundle = await resolvePlaybackBundle(bridgeSender as never, pickCode)
+  const { initialPlayback } = bundle
+  const initial = await buildPreparedSource(initialPlayback.url, pickCode, initialPlayback.currentQualityLabel)
+
+  const options = buildQualityOptions(
+    initialPlayback.url,
+    bundle.ultraUrl,
+    bundle.m3u8List,
+    initialPlayback.currentQuality,
+    initialPlayback.currentQualityLabel,
+  ).filter(option => !!option.url && option.url !== ORIGINAL_PLACEHOLDER_URL)
+
+  return { initial, options, qualityLabel: initialPlayback.currentQualityLabel }
+}
+
+/** 按所选画质构建播放源（切清晰度用）。 */
+export async function prepareQualitySource(option: QualityOption, pickCode: string): Promise<PreparedPlaybackSource> {
+  return await buildPreparedSource(option.url, pickCode, option.label)
+}
+

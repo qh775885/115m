@@ -2,7 +2,6 @@ import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
 import Hls from 'hls.js'
-import { preparePlaybackSource } from './stream-builder'
 import { mountCleanView } from './ui/clean-view'
 import { PlayerCore } from './controller/player-core'
 import { PlaybackSession } from './controller/session'
@@ -51,16 +50,7 @@ export async function igniteV2Player() {
   if (loadingText) loadingText.textContent = '正在获取视频播放源与鉴权凭证...'
 
   try {
-    const source = await preparePlaybackSource(pickCode)
-    if (source.isBlob) {
-      if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl)
-      currentBlobUrl = source.src
-    }
-
-    if (loadingText) loadingText.textContent = `视频源获取成功 (${source.label})，正在挂载 Vidstack...`
-
-    statusBadge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;"></span> 2.0 底座已就绪 · ${source.label}`
-    statusBadge.style.color = '#4ade80'
+    if (loadingText) loadingText.textContent = '正在获取视频播放源与鉴权凭证...'
 
     // 构造 Vidstack 播放器 Web Component
     const player = document.createElement('media-player') as any
@@ -97,7 +87,7 @@ export async function igniteV2Player() {
     const session = new PlaybackSession(core, {
       pickCode,
       cid: params.get('cid') || '',
-      title: titleParam ? decodeURIComponent(titleParam) : source.label,
+      title: titleParam ? decodeURIComponent(titleParam) : '',
       fileSize: fileSizeParam || '',
       isFavorite: params.get('marked') === '1',
     })
@@ -115,14 +105,18 @@ export async function igniteV2Player() {
       onPrev: () => session.prev(true),
       onNext: () => session.next(true),
       onSelectEpisode: (code) => session.switchTo(code, { autoPlay: true, keepPlaylistOpen: true }),
+      onSelectQuality: (label) => void session.setQuality(label),
     })
 
-    player.src = {
-      src: source.src,
-      type: source.type,
+    // 会话启动：解析播放源（含清晰度全集）→ 装载首播源 → 加载播放列表
+    const initial = await session.start()
+    if (initial.isBlob) {
+      if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl)
+      currentBlobUrl = initial.src
     }
 
-    void session.init()
+    statusBadge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;"></span> 2.0 底座已就绪 · ${initial.label}`
+    statusBadge.style.color = '#4ade80'
 
     // 移除点火阶段左上角临时指示条
     statusBadge.remove()
@@ -131,7 +125,7 @@ export async function igniteV2Player() {
     const loading = document.getElementById('loading')
     if (loading) loading.style.display = 'none'
 
-    console.log('[115m-v2] 经典成熟架子挂载成功，Vidstack 底座驱动中:', source)
+    console.log('[115m-v2] 经典成熟架子挂载成功，Vidstack 底座驱动中:', initial)
   }
   catch (error: any) {
     console.error('[115m-v2] 点火失败:', error)
