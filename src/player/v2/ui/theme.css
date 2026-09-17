@@ -709,53 +709,99 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   4. 右侧边缘随鼠标显隐的浮动把手 & 挤压式播放列表侧边栏
+   4. 右侧边缘：黑曜石水晶微水滴 (Glass Pebble Handle) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧边缘随鼠标接近平滑显隐的把手 */
+/* 屏幕右侧边缘精巧微水滴锚点 (绝不傻大笨粗，轻盈微露一角) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 60px;
-  background: rgba(18, 22, 30, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 14px;
+  height: 38px;
+  padding: 0 4px 0 3px;
+  box-sizing: border-box;
+  background: rgba(14, 18, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-right: none;
-  border-radius: 10px 0 0 10px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px 0 0 12px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
   z-index: 28;
-  opacity: 0.18;
+  opacity: 0.25;
+  box-shadow: 
+    -4px 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
 }
 
-.m115-v2-drawer-toggle-handle svg {
-  width: 15px;
-  height: 15px;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+/* 内部三道灵动微刻度谱线 */
+.m115-v2-handle-icon-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  pointer-events: none;
 }
 
-/* 鼠标移到右侧区域或 hover 把手时完全浮现 */
+.m115-v2-handle-bar {
+  display: block;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 1px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-handle-bar.bar-1 { width: 6px; }
+.m115-v2-handle-bar.bar-2 { width: 9px; }
+.m115-v2-handle-bar.bar-3 { width: 5px; }
+
+/* 鼠标靠近右侧区域或悬停时：柔滑向左弹出一截，亮起黑曜石与科技蓝光晕 */
 .m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 1;
   width: 26px;
-  color: #ffffff;
-  background: rgba(18, 22, 30, 0.92);
-  border-color: rgba(24, 144, 255, 0.35);
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(24, 144, 255, 0.25);
+  background: rgba(14, 18, 26, 0.85);
+  border-color: rgba(24, 144, 255, 0.4);
+  box-shadow: 
+    -6px 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(24, 144, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
-.m115-v2-drawer-toggle-handle.open svg {
-  transform: rotate(180deg);
+.m115-v2-drawer-toggle-handle:hover .m115-v2-handle-bar {
+  background: #ffffff;
+}
+
+.m115-v2-drawer-toggle-handle:hover .m115-v2-handle-bar.bar-1 {
+  width: 12px;
+  background: var(--m115-blue);
+  box-shadow: 0 0 6px var(--m115-blue);
+}
+
+.m115-v2-drawer-toggle-handle:hover .m115-v2-handle-bar.bar-2 {
+  width: 12px;
+}
+
+.m115-v2-drawer-toggle-handle:hover .m115-v2-handle-bar.bar-3 {
+  width: 8px;
+  background: var(--m115-blue);
+  box-shadow: 0 0 6px var(--m115-blue);
+}
+
+.m115-v2-drawer-toggle-handle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.m115-v2-drawer-toggle-handle.open {
+  border-color: var(--m115-blue);
+  background: rgba(24, 144, 255, 0.16);
 }
 
 /* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
