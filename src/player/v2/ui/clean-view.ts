@@ -38,7 +38,11 @@ export interface CleanViewOptions {
   onSelectAudioTrack?: (id: string) => void
   onSelectSubtitle?: (sid: string) => void
   onSelectMode?: (mode: string) => void
-  requestPreview?: (time: number, duration: number) => Promise<{ imgUrl: string, width?: number, height?: number } | null>
+  requestPreview?: (
+    time: number,
+    duration: number,
+    onUpdate: (cover: { imgUrl: string, width?: number, height?: number } | null) => void,
+  ) => void
 }
 
 function formatTime(seconds: number): string {
@@ -652,15 +656,16 @@ export function mountCleanView(options: CleanViewOptions) {
 
     const token = ++previewToken
     if (previewTimer) clearTimeout(previewTimer)
-    previewTimer = setTimeout(async () => {
-      const cover = await options.requestPreview?.(time, state.duration)
-      if (token !== previewToken) return
-      if (cover?.imgUrl) {
-        if (cover.width && cover.height) applyPreviewSize(cover.width, cover.height)
-        previewImg.src = cover.imgUrl
-        previewImg.style.visibility = 'visible'
-      }
-    }, 90)
+    previewTimer = setTimeout(() => {
+      options.requestPreview?.(time, state.duration, (cover) => {
+        if (token !== previewToken) return
+        if (cover?.imgUrl) {
+          if (cover.width && cover.height) applyPreviewSize(cover.width, cover.height)
+          previewImg.src = cover.imgUrl
+          previewImg.style.visibility = 'visible'
+        }
+      })
+    }, 60)
   }
 
   const handlePreviewLeave = () => {
