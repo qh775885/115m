@@ -729,6 +729,21 @@ export function mountCleanView(options: CleanViewOptions) {
   playerPane.addEventListener('mousemove', resetIdle)
   playerPane.addEventListener('mouseenter', resetIdle)
 
+  // 点击视频画面切换播放/暂停；顶栏/底栏/菜单/播放列表/侧键/预览等控件区域一律排除，避免误触
+  const isControlTarget = (target: Node) =>
+    topBar.contains(target)
+    || bottomBar.contains(target)
+    || sheet.contains(target)
+    || toggleHandle.contains(target)
+    || playlistAside.contains(target)
+    || previewEl.contains(target)
+
+  playerPane.addEventListener('click', (e) => {
+    if (isControlTarget(e.target as Node)) return
+    if (window.getSelection()?.toString()) return
+    options.core.toggle()
+  })
+
   // 挂入整体结构
   playerPane.appendChild(overlay)
   viewport.appendChild(playerPane)
