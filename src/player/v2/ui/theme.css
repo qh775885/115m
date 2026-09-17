@@ -753,20 +753,20 @@ video {
    4. 右侧边缘：标准经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧固定侧键 (dexter-st 神作黑曜石半岛切边，24px × 68px 实体阶梯高光与地平线微光) */
+/* 屏幕右侧固定侧键 (dexter-st 神作黑曜石半岛切边，超扁 16px × 64px 紧凑贴边，实体阶梯高光与地平线微光) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 68px;
-  padding: 0 2px 0 0;
+  width: 16px;
+  height: 64px;
+  padding: 0 1px 0 0;
   box-sizing: border-box;
   background-color: #121620;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-right: none;
-  border-radius: 14px 0 0 14px;
+  border-radius: 9px 0 0 9px;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
@@ -797,17 +797,17 @@ video {
   background-image: linear-gradient(
     90deg,
     #ffffff 0%,
-    hsl(210deg, 100%, 70%) 4%,
-    hsla(210deg, 100%, 70%, 40%) 10%,
-    transparent 16%
+    hsl(210deg, 100%, 70%) 6%,
+    hsla(210deg, 100%, 70%, 40%) 14%,
+    transparent 24%
   );
   opacity: 0;
   transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-drawer-toggle-handle svg {
-  width: 14px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
   color: rgba(255, 255, 255, 0.75);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
