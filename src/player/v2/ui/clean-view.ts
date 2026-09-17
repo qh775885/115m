@@ -32,6 +32,7 @@ export interface CleanViewOptions {
   onDelete?: () => void
   onPrev?: () => void
   onNext?: () => void
+  onRotate?: () => void
   onSelectEpisode?: (pickCode: string) => void
   onSelectQuality?: (label: string) => void
   onSelectAudioTrack?: (id: string) => void
@@ -445,7 +446,7 @@ export function mountCleanView(options: CleanViewOptions) {
     ], 'sequence', modeBtn, (it) => alert(`[115 模式] ${it.label}`))
   })
 
-  bottomBar.querySelector('.m115-btn-rotate')?.addEventListener('click', () => alert('[115 旋转] 顺时针旋转 90°'))
+  bottomBar.querySelector('.m115-btn-rotate')?.addEventListener('click', () => options.onRotate?.())
 
   const qualityBtn = bottomBar.querySelector('.m115-btn-quality') as HTMLElement
   qualityBtn?.addEventListener('click', (e) => {

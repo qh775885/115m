@@ -5,6 +5,7 @@ import Hls from 'hls.js'
 import { mountCleanView } from './ui/clean-view'
 import { PlayerCore } from './controller/player-core'
 import { PlaybackSession } from './controller/session'
+import { bindKeyboard } from './adapters/keyboard'
 
 let currentBlobUrl: string | null = null
 
@@ -105,10 +106,30 @@ export async function igniteV2Player() {
       onDelete: () => alert('[115 删除] 删除当前视频文件'),
       onPrev: () => session.prev(true),
       onNext: () => session.next(true),
+      onRotate: () => core.rotate(),
       onSelectEpisode: (code) => session.switchTo(code, { autoPlay: true, keepPlaylistOpen: true }),
       onSelectQuality: (label) => void session.setQuality(label),
       onSelectAudioTrack: (id) => core.selectAudioTrack(id),
       onSelectSubtitle: (sid) => void session.setSubtitle(sid),
+    })
+
+    // 全局快捷键：空格播放暂停 / 左右步进 / 上下音量 / M 静音 / F 全屏 / [ ] 切集 / R 旋转
+    bindKeyboard({
+      togglePlay: () => core.toggle(),
+      seekBy: (delta) => core.seekBy(delta),
+      volumeBy: (delta) => core.adjustVolume(delta),
+      toggleMute: () => core.toggleMute(),
+      toggleFullscreen: () => {
+        if (!document.fullscreenElement) {
+          view.viewport.requestFullscreen().catch(() => {})
+        }
+        else {
+          document.exitFullscreen().catch(() => {})
+        }
+      },
+      prev: () => session.prev(true),
+      next: () => session.next(true),
+      rotate: () => core.rotate(),
     })
 
     // 会话启动：解析播放源（含清晰度全集）→ 装载首播源 → 加载播放列表

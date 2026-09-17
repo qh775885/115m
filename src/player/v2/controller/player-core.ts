@@ -16,6 +16,7 @@ export class PlayerCore {
   private rootListeners: Array<() => void> = []
   private observer: MutationObserver | null = null
   private autoPlayPending = false
+  private rotation = 0
   private endedHandlers = new Set<() => void>()
 
   /** 挂载到播放器根节点；Vidstack 异步渲染 <video>，故用 MutationObserver 等待。 */
@@ -185,6 +186,11 @@ export class PlayerCore {
     this.seekTo(ratio * duration)
   }
 
+  /** 以当前时间为基础步进（键盘左右键用）。 */
+  seekBy(delta: number): void {
+    this.seekTo(this.store.get().currentTime + delta)
+  }
+
   setVolume(value: number): void {
     const video = this.media
     if (!video) return
@@ -198,6 +204,36 @@ export class PlayerCore {
     const video = this.media
     if (!video) return
     video.muted = !video.muted
+  }
+
+  /** 以当前音量为基础增减（键盘音量键用）。 */
+  adjustVolume(delta: number): void {
+    const video = this.media
+    if (!video) return
+    this.setVolume(video.volume + delta)
+  }
+
+  /** 顺时针 90° 循环旋转画面，并按视口自适应缩放。 */
+  rotate(): void {
+    this.rotation = (this.rotation + 90) % 360
+    this.applyRotation()
+  }
+
+  private applyRotation(): void {
+    const video = this.media
+    if (!video) return
+    const deg = this.rotation
+    if (deg === 0) {
+      video.style.transform = ''
+      video.style.transformOrigin = ''
+      return
+    }
+    const pane = video.parentElement
+    const w = pane?.clientWidth || video.clientWidth || 0
+    const h = pane?.clientHeight || video.clientHeight || 0
+    const scale = deg % 180 === 90 && w && h ? Math.min(w / h, h / w) : 1
+    video.style.transformOrigin = 'center center'
+    video.style.transform = `rotate(${deg}deg) scale(${scale})`
   }
 
   setRate(rate: number): void {
