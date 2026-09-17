@@ -94,10 +94,15 @@ export async function igniteV2Player() {
     // 装配 2.0 极光纯 UI 壳子
     const shell = mountAuroraShell({ playerEl: player })
     const titleParam = params.get('title')
+    const fileSizeParam = params.get('fileSize')
     if (titleParam) {
       shell.topbar.setTitle(decodeURIComponent(titleParam))
     }
-    shell.topbar.setBadge(`${source.label}`)
+    const statText = fileSizeParam ? `${fileSizeParam} · ${source.label}` : source.label
+    shell.topbar.setStats(statText)
+    if (params.get('marked') === '1') {
+      shell.topbar.setFavorite(true)
+    }
 
     // 移除点火阶段左上角临时指示条，正式交接给 2.0 极光 UI
     statusBadge.remove()

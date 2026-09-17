@@ -145,6 +145,9 @@ export function createTopBar(options: {
     setStats(text: string) {
       statsEl.textContent = text
     },
+    setBadge(text: string) {
+      statsEl.textContent = text
+    },
     setBreadcrumbs(items: BreadcrumbItem[]) {
       renderBreadcrumbs(items)
     },
