@@ -93,6 +93,32 @@ video {
   transition: opacity 0.25s ease;
 }
 
+/* 字幕显示层：底部居中、强描边保证任何画面下可读 */
+.m115-v2-subtitle-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 96px;
+  padding: 0 8%;
+  text-align: center;
+  font-size: 22px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 2px rgba(0, 0, 0, 0.9);
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 15;
+}
+
+.m115-v2-subtitle-layer.visible {
+  opacity: 1;
+}
+
 /* 控制层自动淡出 */
 .m115-v2-controls-overlay {
   position: absolute;

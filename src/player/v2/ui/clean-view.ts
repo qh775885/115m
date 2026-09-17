@@ -11,6 +11,7 @@ import type { PlayerState } from '../state/player-state'
 import type { ContentState } from '../state/content-state'
 import type { Store } from '../state/store'
 import type { OverlayPlaylistItem } from '../../core/overlay-types'
+import type { SubtitleController } from '../controller/subtitles'
 
 export interface BreadcrumbNode {
   cid: string
@@ -22,6 +23,7 @@ export interface CleanViewOptions {
   playerEl: HTMLElement
   core: PlayerCore
   content: Store<ContentState>
+  subtitles: SubtitleController
   onBack?: () => void
   onBreadcrumbClick?: (item: BreadcrumbNode) => void
   onToggleFavorite?: (marked: boolean) => void
@@ -33,6 +35,7 @@ export interface CleanViewOptions {
   onSelectEpisode?: (pickCode: string) => void
   onSelectQuality?: (label: string) => void
   onSelectAudioTrack?: (id: string) => void
+  onSelectSubtitle?: (sid: string) => void
 }
 
 function formatTime(seconds: number): string {
@@ -82,6 +85,11 @@ export function mountCleanView(options: CleanViewOptions) {
   maskBottom.className = 'm115-v2-mask-bottom'
   playerPane.appendChild(maskTop)
   playerPane.appendChild(maskBottom)
+
+  // 字幕显示层（位于视频之上、控制层之下）
+  const subtitleLayer = document.createElement('div')
+  subtitleLayer.className = 'm115-v2-subtitle-layer'
+  playerPane.appendChild(subtitleLayer)
 
   // 4. 控制层包裹器
   const overlay = document.createElement('div')
@@ -472,11 +480,19 @@ export function mountCleanView(options: CleanViewOptions) {
   const subtitleBtn = bottomBar.querySelector('.m115-btn-subtitle') as HTMLElement
   subtitleBtn?.addEventListener('click', (e) => {
     e.stopPropagation()
-    openSheet('subtitle', '字幕选择与样式', [
-      { id: 'sub1', label: '内置中文字幕 (ASS)', badge: '特效' },
-      { id: 'sub2', label: '外挂双语字幕 (SRT)' },
-      { id: 'off', label: '关闭字幕' },
-    ], 'sub1', subtitleBtn, (it) => alert(`[115 字幕] ${it.label}`))
+    const c = options.content.get()
+    if (c.subtitles.length === 0) return
+    openSheet(
+      'subtitle',
+      '字幕选择',
+      [
+        ...c.subtitles.map(item => ({ id: item.sid, label: item.title })),
+        { id: '', label: '关闭字幕' },
+      ],
+      c.subtitle,
+      subtitleBtn,
+      (it) => options.onSelectSubtitle?.(String(it.id)),
+    )
   })
 
   const speedBtn = bottomBar.querySelector('.m115-btn-speed') as HTMLElement
@@ -529,6 +545,7 @@ export function mountCleanView(options: CleanViewOptions) {
   const durEl = timeLabel.querySelector('.m115-v2-time-duration')
   const speedSpan = speedBtn.querySelector('.m115-btn-text-speed')
   let prev: PlayerState | null = null
+  let prevSubtitleText = ''
 
   const render = (s: PlayerState) => {
     if (!prev || s.currentTime !== prev.currentTime || s.duration !== prev.duration) {
@@ -536,6 +553,13 @@ export function mountCleanView(options: CleanViewOptions) {
       playedBar.style.width = `${pct}%`
       if (curEl) curEl.textContent = formatTime(s.currentTime)
       if (durEl) durEl.textContent = formatTime(s.duration)
+
+      const subText = options.subtitles.getTextAt(s.currentTime)
+      if (subText !== prevSubtitleText) {
+        prevSubtitleText = subText
+        subtitleLayer.textContent = subText
+        subtitleLayer.classList.toggle('visible', !!subText)
+      }
     }
 
     if (!prev || s.buffered !== prev.buffered) {

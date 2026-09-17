@@ -24,6 +24,10 @@ export interface ContentState {
   qualities: string[]
   /** 当前清晰度标签 */
   quality: string
+  /** 可选字幕列表 */
+  subtitles: { sid: string, title: string }[]
+  /** 当前字幕 sid（'' 表示关闭） */
+  subtitle: string
   /** 是否正在切换集数 */
   switching: boolean
 }
@@ -39,6 +43,8 @@ export const initialContentState: ContentState = {
   currentIndex: 0,
   qualities: [],
   quality: '',
+  subtitles: [],
+  subtitle: '',
   switching: false,
 }
 

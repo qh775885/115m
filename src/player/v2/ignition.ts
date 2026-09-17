@@ -98,6 +98,7 @@ export async function igniteV2Player() {
       playerEl: player,
       core,
       content: session.content,
+      subtitles: session.subtitles,
       onBack: () => window.history.back(),
       onMove: () => alert('[115 移动] 移动到网盘目录'),
       onDownload: () => alert('[115 下载] 下载原画视频'),
@@ -107,6 +108,7 @@ export async function igniteV2Player() {
       onSelectEpisode: (code) => session.switchTo(code, { autoPlay: true, keepPlaylistOpen: true }),
       onSelectQuality: (label) => void session.setQuality(label),
       onSelectAudioTrack: (id) => core.selectAudioTrack(id),
+      onSelectSubtitle: (sid) => void session.setSubtitle(sid),
     })
 
     // 会话启动：解析播放源（含清晰度全集）→ 装载首播源 → 加载播放列表

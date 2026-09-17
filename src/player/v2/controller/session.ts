@@ -5,8 +5,10 @@
  */
 
 import { PlayerCore } from './player-core'
+import { SubtitleController } from './subtitles'
 import { createContentStore } from '../state/content-state'
 import { loadPlaylist } from '../adapters/playlist'
+import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
 import {
   prepareQualitySource,
   resolvePlaybackSources,
@@ -16,6 +18,7 @@ import {
 import { getPlaylistPosition } from '../../core/playlist-navigation'
 import { buildNavigateToVideoUrl } from '../../core/player-query'
 import type { QualityOption } from '../../core/types'
+import type { SubtitleItem } from '../../core/subtitles'
 
 export interface SessionParams {
   pickCode: string
@@ -32,8 +35,10 @@ export interface SwitchOptions {
 
 export class PlaybackSession {
   readonly content = createContentStore()
+  readonly subtitles = new SubtitleController()
 
   private qualityOptions: QualityOption[] = []
+  private subtitleItems: SubtitleItem[] = []
   private switching = false
 
   constructor(
@@ -57,8 +62,29 @@ export class PlaybackSession {
     this.core.load(resolved.initial.src, resolved.initial.type, false)
 
     if (this.params.cid) void this.loadList()
+    void this.loadSubtitles(this.params.pickCode)
 
     return resolved.initial
+  }
+
+  /** 切换字幕；sid 为空串表示关闭字幕。 */
+  async setSubtitle(sid: string): Promise<void> {
+    if (sid === this.content.get().subtitle) return
+    if (!sid) {
+      this.subtitles.clear()
+      this.content.set({ subtitle: '' })
+      return
+    }
+    const item = this.subtitleItems.find(entry => entry.sid === sid)
+    if (!item) return
+    try {
+      const cues = await loadSubtitleCues(item)
+      this.subtitles.setCues(cues)
+      this.content.set({ subtitle: sid })
+    }
+    catch (error) {
+      console.warn('[115m-v2] 字幕加载失败', error)
+    }
   }
 
   /** 切换清晰度。 */
@@ -98,6 +124,12 @@ export class PlaybackSession {
 
       this.applySources(resolved)
       this.core.load(resolved.initial.src, resolved.initial.type, options.autoPlay !== false)
+
+      // 切集后字幕归属新视频：清空并重新拉取字幕列表
+      this.subtitles.clear()
+      this.subtitleItems = []
+      this.content.set({ subtitle: '', subtitles: [] })
+      void this.loadSubtitles(pickCode)
 
       const pos = getPlaylistPosition(this.content.get().playlist, pickCode)
       this.content.set({
@@ -153,6 +185,19 @@ export class PlaybackSession {
     }
     catch (error) {
       console.warn('[115m-v2] 播放列表加载失败', error)
+    }
+  }
+
+  private async loadSubtitles(pickCode: string): Promise<void> {
+    try {
+      const list = await loadSubtitleList(pickCode)
+      this.subtitleItems = list
+      this.content.set({
+        subtitles: list.map(item => ({ sid: item.sid, title: item.title })),
+      })
+    }
+    catch (error) {
+      console.warn('[115m-v2] 字幕列表加载失败', error)
     }
   }
 
