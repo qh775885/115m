@@ -20,7 +20,7 @@ export default defineConfig({
     }
   },
   manifest: ({ mode }) => ({
-    name: mode === 'development' ? "115m [DEV]" : "115m",
+    name: mode === 'development' ? "115m 2.0 [DEV]" : "115m 2.0",
     version: pkg.version,
     description: "115m | 列表预览图 + 无损播放",
     permissions: [
