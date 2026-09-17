@@ -3,7 +3,7 @@ import 'vidstack/player'
 import 'vidstack/player/ui'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
-import { mountLegacyScaffold } from './ui/legacy-scaffold'
+import { mountCleanView } from './ui/clean-view'
 
 let currentBlobUrl: string | null = null
 
@@ -85,8 +85,8 @@ export async function igniteV2Player() {
       <media-provider></media-provider>
     `
 
-    // 100% 沿用老版经典成熟架子，底层交由 Vidstack 强劲驱动
-    const scaffold = mountLegacyScaffold({
+    // 专业现代影院视口装配，每一个元素像素级对齐，底层 Vidstack 纯净驱动
+    const view = mountCleanView({
       container,
       playerEl: player,
       onBack: () => window.history.back(),
@@ -101,10 +101,6 @@ export async function igniteV2Player() {
       onAudioClick: () => alert('[115 音轨] 切换多音轨'),
       onSubtitleClick: () => alert('[115 字幕] 选择字幕'),
       onSpeedClick: () => alert('[115 倍速] 调节播放倍速'),
-      onPlaylistToggle: () => {
-        const sidebar = document.getElementById('playlist-sidebar')
-        if (sidebar) sidebar.classList.toggle('open')
-      },
     })
 
     player.src = {
@@ -115,12 +111,12 @@ export async function igniteV2Player() {
     const titleParam = params.get('title')
     const fileSizeParam = params.get('fileSize')
     if (titleParam) {
-      scaffold.setTitle(decodeURIComponent(titleParam))
+      view.setTitle(decodeURIComponent(titleParam))
     }
     const statText = fileSizeParam ? `${fileSizeParam} · ${source.label}` : source.label
-    scaffold.setStats(statText)
+    view.setStats(statText)
     if (params.get('marked') === '1') {
-      scaffold.setFavorite(true)
+      view.setFavorite(true)
     }
 
     // 移除点火阶段左上角临时指示条
