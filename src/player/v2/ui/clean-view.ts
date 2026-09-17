@@ -248,17 +248,17 @@ export function mountCleanView(options: CleanViewOptions) {
   }
 
   // ───────────────────────────────────────────
-  // 4.4 右侧边缘悬浮水滴把手 (Glass Pebble Handle) & 挤压式播放列表
+  // 4.4 右侧边缘修长纤薄感应片 (Sleek Slim Rail) & 挤压侧边栏
   // ───────────────────────────────────────────
   const toggleHandle = document.createElement('button')
   toggleHandle.type = 'button'
   toggleHandle.className = 'm115-v2-drawer-toggle-handle'
   toggleHandle.title = '播放列表 (快捷收展)'
   toggleHandle.innerHTML = `
-    <div class="m115-v2-handle-icon-box">
-      <span class="m115-v2-handle-bar bar-1"></span>
-      <span class="m115-v2-handle-bar bar-2"></span>
-      <span class="m115-v2-handle-bar bar-3"></span>
+    <div class="m115-v2-rail-track">
+      <span class="m115-v2-rail-dot"></span>
+      <span class="m115-v2-rail-bar"></span>
+      <span class="m115-v2-rail-dot"></span>
     </div>
   `
   playerPane.appendChild(toggleHandle)
