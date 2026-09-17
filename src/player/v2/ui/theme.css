@@ -393,7 +393,6 @@ video {
 
 .m115-v2-pill-btn:hover svg {
   opacity: 1;
-  transform: scale(1.08);
   filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
 }
 
@@ -833,7 +832,6 @@ video {
 
 .m115-v2-drawer-toggle-handle:hover svg {
   color: #ffffff;
-  transform: scale(1.08);
   filter: drop-shadow(0 0 4px hsl(210deg, 100%, 70%));
 }
 
