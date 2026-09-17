@@ -20,7 +20,7 @@ import {
 } from '../stream-builder'
 import { getPlaylistPosition, getDeleteFallback } from '../../core/playlist-navigation'
 import { MoveDialog } from '../../core/move-dialog'
-import { buildNavigateToVideoUrl } from '../../core/player-query'
+import { buildNavigateToVideoUrl, readPathFromLocation } from '../../core/player-query'
 import type { QualityOption } from '../../core/types'
 import type { SubtitleItem } from '../../core/subtitles'
 
@@ -64,6 +64,8 @@ export class PlaybackSession {
       title: this.params.title,
       fileSize: this.params.fileSize,
       isFavorite: this.params.isFavorite,
+      // URL 若带 path 参数，先立即渲染面包屑，后续由接口精修
+      path: readPathFromLocation(window.location.search),
     })
     this.core.onEnded(() => this.autoAdvance())
 
