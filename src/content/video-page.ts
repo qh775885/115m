@@ -1,7 +1,7 @@
 // 页面已被 video-page.content.ts 在 document_start 阶段同步接管（document.write）
 // 这里只负责加载播放器模块和启动初始化
 
-import '../player/player'
+import { igniteV2Player } from '../player/v2/ignition'
 
 function clearNativeVideoRequests() {
   try {
@@ -33,11 +33,7 @@ function init() {
 
   window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
 
-  // 确保 initPlayer 被调用（防止 player.ts 底部的条件检查失败）
-  const initPlayer = (window as any).__115m_initPlayer
-  if (typeof initPlayer === 'function') {
-    initPlayer()
-  }
+  igniteV2Player()
 }
 
 if (document.readyState === 'loading') {
