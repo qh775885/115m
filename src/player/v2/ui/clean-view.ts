@@ -6,6 +6,8 @@
 
 import themeCss from './theme.css?inline'
 import { Icons } from '../../../shared/icons'
+import type { PlayerCore } from '../controller/player-core'
+import type { PlayerState } from '../state/player-state'
 
 export interface BreadcrumbNode {
   cid: string
@@ -15,6 +17,7 @@ export interface BreadcrumbNode {
 export interface CleanViewOptions {
   container: HTMLElement
   playerEl: HTMLElement
+  core: PlayerCore
   title?: string
   indexText?: string
   statsText?: string
@@ -28,12 +31,14 @@ export interface CleanViewOptions {
   onDelete?: () => void
   onPrev?: () => void
   onNext?: () => void
-  onModeClick?: () => void
-  onRotateClick?: () => void
-  onQualityClick?: () => void
-  onAudioClick?: () => void
-  onSubtitleClick?: () => void
-  onSpeedClick?: () => void
+}
+
+function formatTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return '00:00'
+  const s = Math.floor(seconds % 60).toString().padStart(2, '0')
+  const m = Math.floor((seconds / 60) % 60).toString().padStart(2, '0')
+  const h = Math.floor(seconds / 3600)
+  return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`
 }
 
 function ensureThemeCss() {
@@ -404,42 +409,14 @@ export function mountCleanView(options: CleanViewOptions) {
     options.onToggleFavorite?.(isAct)
   }
 
-  // 播放暂停
-  playBtn.onclick = () => {
-    const video = playerEl.querySelector('video') as HTMLVideoElement | null
-    if (video) {
-      if (video.paused) video.play()
-      else video.pause()
-    }
-  }
+  // 播放 / 暂停（走能力层）
+  playBtn.onclick = () => options.core.toggle()
 
   const volPercentEl = bottomBar.querySelector('.m115-v2-vol-percent') as HTMLElement | null
 
-  const updateVolUi = (val: number, muted: boolean) => {
-    const pct = muted ? 0 : Math.round(val * 100)
-    volRange.style.setProperty('--vol', `${pct}%`)
-    volRange.value = String(pct)
-    volBtn.innerHTML = (muted || pct === 0) ? Icons.VolumeX() : Icons.Volume2()
-    if (volPercentEl) volPercentEl.textContent = `${pct}%`
-  }
+  volBtn.onclick = () => options.core.toggleMute()
 
-  volBtn.onclick = () => {
-    const video = playerEl.querySelector('video') as HTMLVideoElement | null
-    if (video) {
-      video.muted = !video.muted
-      updateVolUi(video.volume, video.muted)
-    }
-  }
-
-  volRange.oninput = () => {
-    const video = playerEl.querySelector('video') as HTMLVideoElement | null
-    if (video) {
-      const val = Number(volRange.value) / 100
-      video.volume = val
-      video.muted = (val === 0)
-      updateVolUi(val, video.muted)
-    }
-  }
+  volRange.oninput = () => options.core.setVolume(Number(volRange.value) / 100)
 
   // 底部功能群
   bottomBar.querySelector('.m115-btn-prev')?.addEventListener('click', () => options.onPrev?.())
@@ -501,15 +478,8 @@ export function mountCleanView(options: CleanViewOptions) {
       { id: 1.5, label: '1.5x' },
       { id: 2.0, label: '2.0x 倍速' },
     ], 1.0, speedBtn, (it) => {
-      const textSpan = speedBtn.querySelector('.m115-btn-text-speed')
-      if (textSpan) textSpan.textContent = String(it.id) + 'x'
-      const video = playerEl.querySelector('video') as HTMLVideoElement | null
-      if (video) video.playbackRate = Number(it.id)
+      options.core.setRate(Number(it.id))
     })
-  })
-
-  bottomBar.querySelector('.m115-btn-playlist')?.addEventListener('click', () => {
-    drawer.classList.toggle('open')
   })
 
   bottomBar.querySelector('.m115-btn-fullscreen')?.addEventListener('click', () => {
@@ -521,28 +491,20 @@ export function mountCleanView(options: CleanViewOptions) {
     }
   })
 
-  // 进度条拖拽
-  let isDragging = false
+  // 进度条拖拽（走能力层，拖拽期间冻结内核回写）
   const getPercent = (e: MouseEvent) => {
     const rect = progressBox.getBoundingClientRect()
     return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
   }
 
   progressBox.addEventListener('mousedown', (e) => {
-    isDragging = true
-    const p = getPercent(e)
-    playedBar.style.width = `${p * 100}%`
-    const video = playerEl.querySelector('video') as HTMLVideoElement | null
-    if (video && video.duration) video.currentTime = p * video.duration
+    const core = options.core
+    core.setDragging(true)
+    core.seekByRatio(getPercent(e))
 
-    const onMove = (me: MouseEvent) => {
-      if (!isDragging) return
-      const mp = getPercent(me)
-      playedBar.style.width = `${mp * 100}%`
-      if (video && video.duration) video.currentTime = mp * video.duration
-    }
+    const onMove = (me: MouseEvent) => core.seekByRatio(getPercent(me))
     const onUp = () => {
-      isDragging = false
+      core.setDragging(false)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -550,57 +512,43 @@ export function mountCleanView(options: CleanViewOptions) {
     window.addEventListener('mouseup', onUp)
   })
 
-  // 驱动视频底层进度
-  const bindVideo = () => {
-    const video = playerEl.querySelector('video') as HTMLVideoElement | null
-    if (!video) return
+  // 状态 -> UI 单向下行渲染（唯一数据源：core.store）
+  const render = (s: PlayerState) => {
+    const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0
+    playedBar.style.width = `${pct}%`
+    bufferBar.style.width = `${s.buffered * 100}%`
 
-    const formatTime = (seconds: number) => {
-      const s = Math.floor(seconds % 60).toString().padStart(2, '0')
-      const m = Math.floor((seconds / 60) % 60).toString().padStart(2, '0')
-      const h = Math.floor(seconds / 3600)
-      return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`
-    }
+    const curEl = timeLabel.querySelector('.m115-v2-time-current')
+    const durEl = timeLabel.querySelector('.m115-v2-time-duration')
+    if (curEl) curEl.textContent = formatTime(s.currentTime)
+    if (durEl) durEl.textContent = formatTime(s.duration)
 
-    video.addEventListener('timeupdate', () => {
-      if (video.duration) {
-        if (!isDragging) {
-          playedBar.style.width = `${(video.currentTime / video.duration) * 100}%`
-        }
-        const curEl = timeLabel.querySelector('.m115-v2-time-current')
-        const durEl = timeLabel.querySelector('.m115-v2-time-duration')
-        if (curEl) curEl.textContent = formatTime(video.currentTime)
-        if (durEl) durEl.textContent = formatTime(video.duration)
-      }
-    })
+    playBtn.innerHTML = s.paused ? Icons.Play() : Icons.Pause()
 
-    video.addEventListener('progress', () => {
-      if (video.buffered.length > 0 && video.duration) {
-        const bufferedEnd = video.buffered.end(video.buffered.length - 1)
-        bufferBar.style.width = `${(bufferedEnd / video.duration) * 100}%`
-      }
-    })
+    const volPct = s.muted ? 0 : Math.round(s.volume * 100)
+    volRange.style.setProperty('--vol', `${volPct}%`)
+    volRange.value = String(volPct)
+    volBtn.innerHTML = (s.muted || volPct === 0) ? Icons.VolumeX() : Icons.Volume2()
+    if (volPercentEl) volPercentEl.textContent = `${volPct}%`
 
-    video.addEventListener('play', () => {
-      playBtn.innerHTML = Icons.Pause()
-    })
+    const speedSpan = speedBtn.querySelector('.m115-btn-text-speed')
+    if (speedSpan) speedSpan.textContent = `${s.rate}x`
 
-    video.addEventListener('pause', () => {
-      playBtn.innerHTML = Icons.Play()
-      viewport.classList.remove('idle')
-    })
+    if (s.paused) playerPane.classList.remove('idle')
   }
 
+  const unsubscribe = options.core.store.subscribe(render)
+  render(options.core.store.get())
+
   // 鼠标空闲自动淡出
-  let idleTimer: any = null
+  let idleTimer: ReturnType<typeof setTimeout> | null = null
   const resetIdle = () => {
     playerPane.classList.remove('idle')
-    clearTimeout(idleTimer)
+    if (idleTimer) clearTimeout(idleTimer)
     idleTimer = setTimeout(() => {
-      const video = playerEl.querySelector('video') as HTMLVideoElement | null
       const isPlaylistOpen = playlistAside.classList.contains('open')
       const isSheetOpen = sheet.classList.contains('open')
-      if (video && !video.paused && !isPlaylistOpen && !isSheetOpen) {
+      if (!options.core.store.get().paused && !isPlaylistOpen && !isSheetOpen) {
         playerPane.classList.add('idle')
       }
     }, 2500)
@@ -614,10 +562,6 @@ export function mountCleanView(options: CleanViewOptions) {
   viewport.appendChild(playerPane)
   viewport.appendChild(playlistAside)
   container.appendChild(viewport)
-
-  setTimeout(() => {
-    bindVideo()
-  }, 200)
 
   return {
     viewport,
@@ -639,6 +583,10 @@ export function mountCleanView(options: CleanViewOptions) {
     setFavorite(marked: boolean) {
       favBtn.classList.toggle('active', marked)
       favBtn.innerHTML = marked ? Icons.StarFilled() : Icons.Star()
+    },
+    destroy() {
+      unsubscribe()
+      if (idleTimer) clearTimeout(idleTimer)
     },
   }
 }

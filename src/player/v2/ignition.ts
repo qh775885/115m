@@ -4,6 +4,7 @@ import 'vidstack/player/ui'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
 import { mountCleanView } from './ui/clean-view'
+import { PlayerCore } from './controller/player-core'
 
 let currentBlobUrl: string | null = null
 
@@ -85,22 +86,21 @@ export async function igniteV2Player() {
       <media-provider></media-provider>
     `
 
+    // 能力层：挂载播放内核，向内回写状态，向 UI 暴露标准动作
+    const core = new PlayerCore()
+    core.attach(player)
+
     // 专业现代影院视口装配，每一个元素像素级对齐，底层 Vidstack 纯净驱动
     const view = mountCleanView({
       container,
       playerEl: player,
+      core,
       onBack: () => window.history.back(),
       onMove: () => alert('[115 移动] 移动到网盘目录'),
       onDownload: () => alert('[115 下载] 下载原画视频'),
       onDelete: () => alert('[115 删除] 删除当前视频文件'),
       onPrev: () => alert('[115 导航] 上一集 ( [ )'),
       onNext: () => alert('[115 导航] 下一集 ( ] )'),
-      onModeClick: () => alert('[115 模式] 切换循环模式'),
-      onRotateClick: () => alert('[115 旋转] 顺时针旋转 90°'),
-      onQualityClick: () => alert('[115 画质] 切换原画/超清'),
-      onAudioClick: () => alert('[115 音轨] 切换多音轨'),
-      onSubtitleClick: () => alert('[115 字幕] 选择字幕'),
-      onSpeedClick: () => alert('[115 倍速] 调节播放倍速'),
     })
 
     player.src = {
