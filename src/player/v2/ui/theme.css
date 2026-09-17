@@ -331,12 +331,13 @@ video {
 }
 
 .m115-v2-pill-btn {
+  position: relative;
   height: 24px;
   padding: 0 9px;
   border-radius: 9999px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 11px;
   font-weight: 500;
   display: flex;
@@ -344,8 +345,9 @@ video {
   gap: 4px;
   cursor: pointer;
   letter-spacing: 0.25px;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  overflow: hidden;
 }
 
 .m115-v2-pill-btn svg {
@@ -353,39 +355,72 @@ video {
   height: 13px;
   stroke-width: 1.6px;
   opacity: 0.85;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.25s ease;
+}
+
+/* dexter-st 灵魂地平线微光 (底部激光切割亮白蓝光) */
+.m115-v2-pill-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    12%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-pill-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.22),
-    inset 0 2px 4px hsla(210deg, 100%, 70%, 0.18);
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.08);
+}
+
+.m115-v2-pill-btn:hover::after {
+  opacity: 0.95;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
 .m115-v2-pill-btn:hover svg {
   opacity: 1;
   transform: scale(1.08);
-  filter: drop-shadow(0 0 3px hsla(210deg, 100%, 70%, 0.5));
+  filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
 }
 
 .m115-v2-pill-btn:active {
   transform: scale(0.96) translateY(0.5px);
 }
 
-/* 删除分段特调暗红悬停微光 (阶梯 Inset) */
+/* 删除分段特调珊瑚红地平线微光 */
+.m115-v2-pill-btn.delete::after {
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    #f87171,
+    rgba(248, 113, 113, 0.5),
+    12%,
+    transparent
+  );
+}
+
 .m115-v2-pill-btn.delete:hover {
-  background: rgba(248, 113, 113, 0.14);
+  background: rgba(248, 113, 113, 0.12);
   color: #f87171;
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.18),
-    inset 0 2px 4px rgba(248, 113, 113, 0.25);
 }
 
 .m115-v2-pill-btn.delete:hover svg {
   color: #f87171;
-  filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.5));
+  filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.6));
 }
 
 /* 两端自然渐隐羽化的发丝分割线 */
@@ -718,20 +753,20 @@ video {
    4. 右侧边缘：标准经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧固定侧键 (dexter-st 神作黑曜石半岛切边，22px × 64px 实体阶梯高光) */
+/* 屏幕右侧固定侧键 (dexter-st 神作黑曜石半岛切边，24px × 68px 实体阶梯高光与地平线微光) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 64px;
+  width: 24px;
+  height: 68px;
   padding: 0 2px 0 0;
   box-sizing: border-box;
-  background-color: rgba(16, 20, 28, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #121620;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-right: none;
-  border-radius: 12px 0 0 12px;
+  border-radius: 14px 0 0 14px;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
@@ -739,40 +774,67 @@ video {
   justify-content: center;
   cursor: pointer;
   z-index: 28;
-  opacity: 0.7;
-  /* 借鉴 dexter-st 的 5 层物理阶梯 Inset 触感倒角 */
+  opacity: 0.75;
+  user-select: none;
+  /* dexter-st 5 层物理阶梯 Inset 触感倒角 */
   box-shadow:
     inset 0px 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0px 2px 2px rgba(255, 255, 255, 0.12),
-    inset 0px 4px 6px rgba(255, 255, 255, 0.06),
-    inset 0px 8px 12px rgba(255, 255, 255, 0.03),
+    inset 0px 2px 2px rgba(255, 255, 255, 0.15),
+    inset 0px 4px 4px rgba(255, 255, 255, 0.08),
+    inset 0px 8px 8px rgba(255, 255, 255, 0.04),
+    inset 0px 16px 16px rgba(255, 255, 255, 0.02),
     -4px 0 16px rgba(0, 0, 0, 0.5);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* dexter-st 灵魂地平线微光 (左侧圆弧激光切割亮白与 210° 科技蓝微光) */
+.m115-v2-drawer-toggle-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    hsl(210deg, 100%, 70%) 4%,
+    hsla(210deg, 100%, 70%, 40%) 10%,
+    transparent 16%
+  );
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-drawer-toggle-handle svg {
   width: 14px;
   height: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  transition: all 0.25s ease;
+  color: rgba(255, 255, 255, 0.75);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
 }
 
-/* 悬停状态：触发 dexter-st 专属 210° 深海科技蓝漫射微光，沉稳不刺眼 */
+/* 悬停状态：触发地平线弧光与漫射微光，纯净而深邃 */
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 1;
-  background-color: rgba(14, 20, 32, 0.92);
-  border-color: hsla(210deg, 100%, 75%, 0.45);
+  background-color: #10141e;
+  border-color: hsla(210deg, 100%, 80%, 0.4);
   box-shadow:
     inset 0px 1px 1px rgba(255, 255, 255, 0.28),
-    inset 0px 2px 4px hsla(210deg, 100%, 70%, 0.25),
-    inset 0px 8px 16px hsla(210deg, 100%, 70%, 0.12),
-    -6px 0 20px rgba(0, 0, 0, 0.6);
+    inset 0px 2px 4px hsla(210deg, 100%, 70%, 0.2),
+    inset 0px 8px 16px hsla(210deg, 100%, 70%, 0.1),
+    -6px 0 20px rgba(0, 0, 0, 0.65);
+}
+
+.m115-v2-drawer-toggle-handle:hover::after {
+  opacity: 0.95;
+  mask-image: linear-gradient(90deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #fff, transparent);
 }
 
 .m115-v2-drawer-toggle-handle:hover svg {
   color: #ffffff;
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 4px hsla(210deg, 100%, 70%, 0.6));
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 4px hsl(210deg, 100%, 70%));
 }
 
 .m115-v2-drawer-toggle-handle:active {
@@ -781,8 +843,8 @@ video {
 
 /* 展开状态：保持贴合激活 */
 .m115-v2-drawer-toggle-handle.open {
-  background: rgba(24, 144, 255, 0.18);
-  border-color: rgba(24, 144, 255, 0.4);
+  background-color: #141a26;
+  border-color: var(--m115-blue);
   opacity: 1;
 }
 
