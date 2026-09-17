@@ -281,8 +281,22 @@ export function mountCleanView(options: CleanViewOptions) {
     toggleHandle.classList.toggle('open', willOpen)
   }
 
-  toggleHandle.addEventListener('click', () => togglePlaylist())
-  playlistAside.querySelector('.m115-drawer-close')?.addEventListener('click', () => togglePlaylist(false))
+  toggleHandle.addEventListener('click', (e) => {
+    e.stopPropagation()
+    togglePlaylist()
+  })
+  
+  playlistAside.querySelector('.m115-drawer-close')?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    togglePlaylist(false)
+  })
+
+  // 按 Escape 快捷键亦可一键收回
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && playlistAside.classList.contains('open')) {
+      togglePlaylist(false)
+    }
+  })
 
   const setDrawerEpisodes = (episodes: { id: number, name: string, sub?: string }[], curId: number) => {
     const list = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement

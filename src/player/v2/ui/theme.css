@@ -981,65 +981,68 @@ video {
    4. 右侧边缘：标准经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧固定侧键 (加长至 140px，宽度极度收窄至 6px~10px 的修长长扁条) */
+/* 屏幕右侧固定侧键 (长扁条，保障 100% 绝对点击热区与顶级层级) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 6px;
+  width: 14px;
   height: 140px;
   padding: 0;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-right: none;
-  border-radius: 5px 0 0 5px;
+  border-radius: 6px 0 0 6px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 28;
-  opacity: 0.35;
+  z-index: 50 !important;
+  pointer-events: auto !important;
+  opacity: 0.4;
   user-select: none;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 内部修长发丝级光纤微芯 */
 .m115-v2-handle-filament {
-  width: 1.5px;
+  width: 2px;
   height: 36px;
   border-radius: 1px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
   transition: all 0.22s ease;
 }
 
-/* 触碰悬停时：长扁条优雅微展至 10px，光纤提亮，稍微给点明显，极其干净 */
+/* 触碰悬停时：长扁条优雅提亮 */
 .m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 0.95;
-  width: 10px;
-  background: rgba(20, 24, 32, 0.65);
-  border-color: rgba(255, 255, 255, 0.25);
+  width: 18px;
+  background: rgba(20, 24, 32, 0.75);
+  border-color: rgba(255, 255, 255, 0.28);
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .m115-v2-drawer-toggle-handle:hover .m115-v2-handle-filament {
   background: #ffffff;
   height: 48px;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 
 .m115-v2-drawer-toggle-handle:active {
   transform: translateY(-50%) scaleY(0.97);
 }
 
-/* 展开状态 */
+/* 展开状态 (open 状态下加宽至 20px，方便随时反向点击收起) */
 .m115-v2-drawer-toggle-handle.open {
-  background: rgba(24, 144, 255, 0.2);
-  border-color: rgba(24, 144, 255, 0.45);
+  width: 20px;
+  background: rgba(24, 144, 255, 0.22);
+  border-color: rgba(24, 144, 255, 0.5);
   opacity: 1;
 }
 
