@@ -1,8 +1,16 @@
 /* 115m 2.0 现代专业工业级影院布局系统 (Bilibili / YouTube 顶级工业对齐标准) */
 
 :root {
+  /* 115 品牌锚点（保留 115 基因，慎用于大面积实心） */
   --m115-blue: #1890ff;
   --m115-blue-hover: #40a9ff;
+
+  /* 极光蓝白色阶：与【地平线激光】同源同族 (210° 色相)，仅调明度以统一发光材质 */
+  --m115-aurora-deep: hsl(210deg, 100%, 56%);
+  --m115-aurora-core: hsl(210deg, 100%, 68%);
+  --m115-aurora-soft: hsl(210deg, 100%, 78%);
+  --m115-aurora-glow: hsla(210deg, 100%, 68%, 0.55);
+
   --m115-text-title: #ffffff;
   --m115-text-regular: rgba(255, 255, 255, 0.88);
   --m115-text-muted: rgba(255, 255, 255, 0.55);
@@ -190,15 +198,15 @@ video {
   min-width: 0;
 }
 
-/* 航空仪表级序号微徽章 (母带监视器感，微光渐变) */
+/* 航空仪表级序号微徽章 (母带监视器感，极光发光材质) */
 .m115-v2-badge-index {
   height: 18px;
   padding: 0 6px;
   border-radius: 4px;
-  background: linear-gradient(135deg, rgba(24, 144, 255, 0.22) 0%, rgba(24, 144, 255, 0.06) 100%);
-  border: 1px solid rgba(24, 144, 255, 0.35);
-  box-shadow: 0 0 10px rgba(24, 144, 255, 0.15);
-  color: #69c0ff;
+  background: linear-gradient(135deg, hsla(210deg, 100%, 68%, 0.2) 0%, hsla(210deg, 100%, 68%, 0.05) 100%);
+  border: 1px solid hsla(210deg, 100%, 68%, 0.32);
+  box-shadow: 0 0 10px var(--m115-aurora-glow);
+  color: var(--m115-aurora-soft);
   font-size: 11px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
@@ -215,8 +223,8 @@ video {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--m115-blue);
-  box-shadow: 0 0 6px var(--m115-blue);
+  background: var(--m115-aurora-core);
+  box-shadow: 0 0 6px var(--m115-aurora-glow);
 }
 
 /* 视频标题 */
@@ -293,7 +301,7 @@ video {
 }
 
 .m115-v2-crumb-item:hover {
-  color: var(--m115-blue);
+  color: var(--m115-aurora-core);
   text-decoration: underline;
 }
 
@@ -486,9 +494,9 @@ video {
   left: 0;
   top: 0;
   height: 100%;
-  background: var(--m115-blue);
+  background: linear-gradient(90deg, var(--m115-aurora-deep) 0%, var(--m115-aurora-core) 100%);
   border-radius: 2px;
-  box-shadow: 0 0 8px rgba(24, 144, 255, 0.5);
+  box-shadow: 0 0 8px var(--m115-aurora-glow);
 }
 
 .m115-v2-progress-thumb {
@@ -500,7 +508,7 @@ video {
   height: 11px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px var(--m115-blue);
+  box-shadow: 0 0 6px var(--m115-aurora-glow);
   transition: transform 0.15s ease;
 }
 
@@ -635,8 +643,8 @@ video {
   border-radius: 2px;
   background: linear-gradient(
     to right,
-    var(--m115-blue) 0%,
-    var(--m115-blue) var(--vol, 100%),
+    var(--m115-aurora-deep) 0%,
+    var(--m115-aurora-core) var(--vol, 100%),
     rgba(255, 255, 255, 0.2) var(--vol, 100%),
     rgba(255, 255, 255, 0.2) 100%
   );
@@ -1026,7 +1034,7 @@ video {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--m115-blue);
+  color: var(--m115-aurora-core);
   transition: opacity 0.15s ease;
 }
 
@@ -1096,8 +1104,8 @@ video {
 }
 
 .m115-v2-pop-item.selected svg {
-  color: var(--m115-blue);
-  filter: drop-shadow(0 0 4px var(--m115-blue));
+  color: var(--m115-aurora-core);
+  filter: drop-shadow(0 0 4px var(--m115-aurora-glow));
 }
 
 @keyframes m115PopIn {
@@ -1171,16 +1179,16 @@ video {
   transform: translateY(-50%) scaleY(0.97);
 }
 
-/* 展开状态 */
+/* 展开状态：极光蓝白发光材质 */
 .m115-v2-drawer-toggle-handle.open {
-  background: rgba(24, 144, 255, 0.2);
-  border-color: rgba(24, 144, 255, 0.45);
+  background: hsla(210deg, 100%, 68%, 0.2);
+  border-color: hsla(210deg, 100%, 68%, 0.48);
   opacity: 1;
 }
 
 .m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
-  background: var(--m115-blue);
-  box-shadow: 0 0 6px var(--m115-blue);
+  background: linear-gradient(180deg, #ffffff 0%, var(--m115-aurora-core) 100%);
+  box-shadow: 0 0 6px var(--m115-aurora-glow);
 }
 
 /* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
@@ -1307,12 +1315,12 @@ video {
 
 /* 当前播放集数 (Active)：做极致淡化处理，彻底拿掉刺眼的长条强光 */
 .m115-v2-card-item.active {
-  background: rgba(24, 144, 255, 0.07);
-  border: 1px solid rgba(24, 144, 255, 0.2);
+  background: hsla(210deg, 100%, 68%, 0.07);
+  border: 1px solid hsla(210deg, 100%, 68%, 0.2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* 左侧贴上 3px 极简克制的科技蓝指示条 */
+/* 左侧贴上 3px 极简克制的极光立标（上白下蓝，与地平线同源） */
 .m115-v2-card-item.active::before {
   content: "";
   position: absolute;
@@ -1321,8 +1329,8 @@ video {
   bottom: 20%;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--m115-blue);
-  box-shadow: 0 0 6px var(--m115-blue);
+  background: linear-gradient(180deg, #ffffff 0%, var(--m115-aurora-core) 100%);
+  box-shadow: 0 0 6px var(--m115-aurora-glow);
 }
 
 .m115-v2-card-item.active::after {
@@ -1340,7 +1348,7 @@ video {
 }
 
 .m115-v2-card-item.active .m115-v2-card-name {
-  color: #69c0ff;
+  color: var(--m115-aurora-soft);
   font-weight: 600;
 }
 
