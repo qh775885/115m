@@ -198,8 +198,10 @@ video {
   min-width: 0;
 }
 
-/* 航空仪表级序号微徽章 (母带监视器感，极光发光材质) */
+/* 航空仪表级序号微徽章 (母带监视器感，底部地平线极光常驻微光) */
 .m115-v2-badge-index {
+  position: relative;
+  overflow: hidden;
   height: 18px;
   padding: 0 6px;
   border-radius: 4px;
@@ -216,6 +218,26 @@ video {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+}
+
+/* 底部白热地平线极光 (与三联按钮同款材质，常驻低强度发光) */
+.m115-v2-badge-index::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    14%,
+    transparent
+  );
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+  opacity: 0.55;
 }
 
 .m115-v2-badge-index::before {
@@ -499,6 +521,24 @@ video {
   box-shadow: 0 0 8px var(--m115-aurora-glow);
 }
 
+/* 已播放段底部白热地平线极光 (三联同源材质) */
+.m115-v2-progress-played::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 72%),
+    hsla(210deg, 100%, 72%, 40%),
+    70%,
+    transparent
+  );
+  opacity: 0.9;
+}
+
 .m115-v2-progress-thumb {
   position: absolute;
   right: -5px;
@@ -641,13 +681,18 @@ video {
   width: 100%;
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(
-    to right,
-    var(--m115-aurora-deep) 0%,
-    var(--m115-aurora-core) var(--vol, 100%),
-    rgba(255, 255, 255, 0.2) var(--vol, 100%),
-    rgba(255, 255, 255, 0.2) 100%
-  );
+  background-image:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 65%),
+    linear-gradient(
+      to right,
+      var(--m115-aurora-deep) 0%,
+      var(--m115-aurora-core) var(--vol, 100%),
+      rgba(255, 255, 255, 0.2) var(--vol, 100%),
+      rgba(255, 255, 255, 0.2) 100%
+    );
+  background-repeat: no-repeat;
+  background-position: left center, left center;
+  background-size: var(--vol, 100%) 100%, 100% 100%;
 }
 
 /* 纯白玉珠 Thumb：精准居中对齐 4px 轨道，留足 16px 视窗，绝不裁切！ */
@@ -1149,6 +1194,27 @@ video {
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 侧键整体底部地平线极光 (三联同源材质，悬停/展开点亮) */
+.m115-v2-drawer-toggle-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    16%,
+    transparent
+  );
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
 /* 内部修长发丝级光纤微芯 */
 .m115-v2-handle-filament {
   width: 1.5px;
@@ -1175,6 +1241,12 @@ video {
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
 }
 
+/* 悬停点亮底部极光 */
+.m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle::after,
+.m115-v2-drawer-toggle-handle:hover::after {
+  opacity: 0.65;
+}
+
 .m115-v2-drawer-toggle-handle:active {
   transform: translateY(-50%) scaleY(0.97);
 }
@@ -1184,6 +1256,10 @@ video {
   background: hsla(210deg, 100%, 68%, 0.2);
   border-color: hsla(210deg, 100%, 68%, 0.48);
   opacity: 1;
+}
+
+.m115-v2-drawer-toggle-handle.open::after {
+  opacity: 0.9;
 }
 
 .m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
@@ -1333,8 +1409,12 @@ video {
   box-shadow: 0 0 6px var(--m115-aurora-glow);
 }
 
+/* 选中项：恢复三联同款【底部地平线极光】，但校准为极克制强度，绝不刺眼 */
 .m115-v2-card-item.active::after {
-  display: none !important;
+  display: block;
+  opacity: 0.5;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
 .m115-v2-card-name {
