@@ -1,4 +1,4 @@
-import './theme.css'
+import themeCss from './theme.css?inline'
 import { createTopBar } from './topbar'
 import { createEpisodeDrawer } from './drawer'
 
@@ -6,7 +6,18 @@ export interface OverlayContext {
   playerEl: HTMLElement
 }
 
+function ensureThemeStyles() {
+  if (typeof document === 'undefined') return
+  if (document.getElementById('m115-v2-theme-styles')) return
+  const style = document.createElement('style')
+  style.id = 'm115-v2-theme-styles'
+  style.textContent = themeCss
+  ;(document.head || document.documentElement).appendChild(style)
+}
+
 export function mount115Overlay(ctx: OverlayContext) {
+  ensureThemeStyles()
+
   const root = document.createElement('div')
   root.className = 'm115-overlay-root'
 
