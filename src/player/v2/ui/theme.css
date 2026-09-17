@@ -1,22 +1,20 @@
-/* 115m 2.0 现代工业级流媒体视觉规范 (Apple TV / Netflix 级深空灰阶) */
+/* 115m 2.0 经典科技蓝与通透暗黑磨砂质感 (对齐 115 官方视觉与老版精髓) */
 
 :root {
-  --m115-white: #ffffff;
-  --m115-white-85: rgba(255, 255, 255, 0.85);
-  --m115-white-60: rgba(255, 255, 255, 0.6);
-  --m115-white-30: rgba(255, 255, 255, 0.3);
-  --m115-white-15: rgba(255, 255, 255, 0.15);
-  --m115-white-08: rgba(255, 255, 255, 0.08);
+  /* 115 官方经典科技蓝 */
+  --m115-primary: #1890ff;
+  --m115-primary-hover: #40a9ff;
+  --m115-primary-bg: rgba(24, 144, 255, 0.16);
+  --m115-primary-border: rgba(24, 144, 255, 0.4);
 
-  /* 沉稳克制的主题强调色 (无任何刺眼渐变) */
-  --m115-accent: #38bdf8;
-  --m115-accent-bg: rgba(56, 189, 248, 0.12);
-  --m115-accent-border: rgba(56, 189, 248, 0.35);
-
-  /* 经典毛玻璃底色 */
-  --m115-panel-bg: rgba(18, 20, 28, 0.88);
-  --m115-panel-border: rgba(255, 255, 255, 0.1);
-  --m115-glass-blur: blur(24px) saturate(160%);
+  /* 通透暗黑层 */
+  --m115-bg-overlay: rgba(14, 17, 23, 0.88);
+  --m115-border-light: rgba(255, 255, 255, 0.12);
+  --m115-btn-bg: rgba(255, 255, 255, 0.06);
+  --m115-btn-hover: rgba(255, 255, 255, 0.14);
+  --m115-text-main: rgba(255, 255, 255, 0.92);
+  --m115-text-sub: rgba(255, 255, 255, 0.55);
+  --m115-blur: blur(20px) saturate(180%);
 }
 
 .m115-v2-shell {
@@ -29,7 +27,7 @@
   color: #fff;
   user-select: none;
   pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 10;
 }
 
@@ -45,7 +43,7 @@
   left: 0;
   right: 0;
   height: 130px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 60%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -55,7 +53,7 @@
   left: 0;
   right: 0;
   height: 160px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -92,19 +90,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--m115-white-08);
-  border: 1px solid var(--m115-panel-border);
+  background: var(--m115-btn-bg);
+  border: 1px solid var(--m115-border-light);
   backdrop-filter: blur(12px);
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 2px;
-  transition: all 0.18s ease;
+  transition: all 0.16s ease;
 }
 
 .m115-v2-back-btn:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
   color: #fff;
 }
 
@@ -119,7 +118,7 @@
 .m115-v2-header-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -127,9 +126,9 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 4px;
-  background: var(--m115-white-15);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--m115-primary-bg);
+  border: 1px solid var(--m115-primary-border);
+  color: var(--m115-primary);
   font-size: 11px;
   font-weight: 700;
   line-height: 20px;
@@ -149,7 +148,7 @@
 .m115-v2-header-stats {
   font-size: 12px;
   font-weight: 500;
-  color: var(--m115-white-60);
+  color: var(--m115-text-sub);
   flex-shrink: 0;
   margin-left: 2px;
 }
@@ -161,7 +160,7 @@
   flex-wrap: nowrap;
   overflow: hidden;
   font-size: 12px;
-  color: var(--m115-white-60);
+  color: var(--m115-text-sub);
   line-height: 1.4;
 }
 
@@ -172,7 +171,7 @@
 }
 
 .m115-v2-breadcrumb-item:hover {
-  color: #fff;
+  color: var(--m115-primary);
   text-decoration: underline;
 }
 
@@ -198,22 +197,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--m115-white-08);
-  border: 1px solid var(--m115-panel-border);
+  background: var(--m115-btn-bg);
+  border: 1px solid var(--m115-border-light);
   backdrop-filter: blur(12px);
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.16s ease;
 }
 
 .m115-v2-fav-btn:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   color: #fbbf24;
 }
 
 .m115-v2-fav-btn.active {
   color: #fbbf24;
-  background: rgba(251, 191, 36, 0.12);
+  background: rgba(251, 191, 36, 0.15);
   border-color: rgba(251, 191, 36, 0.35);
 }
 
@@ -221,9 +220,9 @@
 .m115-v2-top-pill-group {
   display: flex;
   align-items: center;
-  background: var(--m115-panel-bg);
-  border: 1px solid var(--m115-panel-border);
-  backdrop-filter: var(--m115-glass-blur);
+  background: var(--m115-bg-overlay);
+  border: 1px solid var(--m115-border-light);
+  backdrop-filter: var(--m115-blur);
   border-radius: 18px;
   padding: 2px;
   gap: 2px;
@@ -235,7 +234,7 @@
   border-radius: 14px;
   background: transparent;
   border: none;
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   font-size: 12px;
   font-weight: 500;
   display: flex;
@@ -246,17 +245,17 @@
 }
 
 .m115-v2-top-action-btn:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   color: #fff;
 }
 
 .m115-v2-top-action-btn.delete:hover {
-  background: rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
 
 /* ────────────────────────────────────────────────────────
-   2. 底部控制区：经典全白高对比度进度条 + 三大黄金中轴控制行
+   2. 底部控制区：经典 115 科技蓝进度条 + 通透中轴控制行
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-bottom-area {
@@ -272,7 +271,7 @@
   z-index: 20;
 }
 
-/* 经典成熟时间轴：纯白已播进度、微透灰缓冲条 */
+/* 经典 115 科技蓝进度条 */
 .m115-v2-timeline-container {
   position: relative;
   width: 100%;
@@ -309,8 +308,9 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: #ffffff;
+  background: var(--m115-primary);
   border-radius: 2px;
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.5);
 }
 
 .m115-v2-timeline-thumb {
@@ -322,7 +322,7 @@
   height: 11px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6px var(--m115-primary);
   transition: transform 0.15s ease;
 }
 
@@ -350,7 +350,7 @@
 .m115-v2-time-display {
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   letter-spacing: 0.3px;
 }
 
@@ -361,14 +361,14 @@
   height: 32px;
   padding: 0 6px;
   border-radius: 16px;
-  background: var(--m115-white-08);
+  background: var(--m115-btn-bg);
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .m115-v2-volume-cluster:hover {
-  background: var(--m115-white-15);
-  border-color: var(--m115-panel-border);
+  background: var(--m115-btn-hover);
+  border-color: var(--m115-border-light);
 }
 
 .m115-v2-volume-slider-wrap {
@@ -398,11 +398,11 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: var(--m115-primary);
+  box-shadow: 0 0 6px var(--m115-primary);
 }
 
-/* 底部居中：三联主控簇（纯净中性工业质感） */
+/* 底部居中：三联主控簇（通透磨砂，绝不搞实心白圆盘） */
 .m115-v2-center-cluster {
   display: flex;
   align-items: center;
@@ -418,20 +418,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--m115-white-08);
-  border: 1px solid var(--m115-panel-border);
-  color: var(--m115-white-85);
+  background: var(--m115-btn-bg);
+  border: 1px solid var(--m115-border-light);
+  color: var(--m115-text-main);
   cursor: pointer;
   transition: all 0.16s ease;
 }
 
 .m115-v2-nav-btn:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
   transform: scale(1.06);
 }
 
-/* 纯白实心主播放键，优雅大气，绝无刺眼流光 */
+/* 居中主播放大键：半透明通透外壳 + 白色优雅图标，悬停蓝光微透 */
 .m115-v2-center-play-btn {
   width: 42px;
   height: 42px;
@@ -439,18 +440,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  border: none;
-  color: #0c1018;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-center-play-btn:hover {
   transform: scale(1.08);
-  background: #f1f5f9;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(24, 144, 255, 0.35);
 }
 
 /* 底部右侧：高频功能胶囊群 */
@@ -466,10 +469,10 @@
   height: 30px;
   padding: 0 10px;
   border-radius: 15px;
-  background: var(--m115-white-08);
-  border: 1px solid var(--m115-panel-border);
+  background: var(--m115-btn-bg);
+  border: 1px solid var(--m115-border-light);
   backdrop-filter: blur(8px);
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -480,32 +483,33 @@
 }
 
 .m115-v2-ctrl-btn:hover, .m115-v2-ctrl-btn.active {
-  background: var(--m115-white-15);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
+  color: var(--m115-primary-hover);
 }
 
 .m115-v2-ctrl-icon-btn {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--m115-white-08);
-  border: 1px solid var(--m115-panel-border);
+  background: var(--m115-btn-bg);
+  border: 1px solid var(--m115-border-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .m115-v2-ctrl-icon-btn:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* ────────────────────────────────────────────────────────
-   3. 浮动微卡片菜单 (Sheet) - Apple TV 极简深灰毛玻璃
+   3. 浮动微卡片菜单 (Sheet)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-sheet {
@@ -513,9 +517,9 @@
   bottom: 64px;
   right: 24px;
   width: 210px;
-  background: var(--m115-panel-bg);
-  border: 1px solid var(--m115-panel-border);
-  backdrop-filter: var(--m115-glass-blur);
+  background: var(--m115-bg-overlay);
+  border: 1px solid var(--m115-border-light);
+  backdrop-filter: var(--m115-blur);
   border-radius: 14px;
   padding: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
@@ -535,7 +539,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--m115-white-60);
+  color: var(--m115-text-sub);
   padding: 6px 10px 4px 10px;
   text-transform: uppercase;
 }
@@ -547,19 +551,19 @@
   padding: 7px 10px;
   border-radius: 8px;
   font-size: 13px;
-  color: var(--m115-white-85);
+  color: var(--m115-text-main);
   cursor: pointer;
   transition: all 0.12s ease;
 }
 
 .m115-v2-sheet-item:hover {
-  background: var(--m115-white-08);
+  background: var(--m115-btn-hover);
   color: #fff;
 }
 
 .m115-v2-sheet-item.selected {
-  background: var(--m115-white-15);
-  color: #fff;
+  background: var(--m115-primary-bg);
+  color: var(--m115-primary-hover);
   font-weight: 600;
 }
 
@@ -575,7 +579,7 @@
 }
 
 /* ────────────────────────────────────────────────────────
-   4. 右侧无感毛玻璃选集抽屉 (Drawer)
+   4. 右侧选集抽屉 (Drawer)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-drawer {
@@ -584,9 +588,9 @@
   bottom: 0;
   right: 0;
   width: 320px;
-  background: rgba(14, 16, 22, 0.92);
-  border-left: 1px solid var(--m115-panel-border);
-  backdrop-filter: var(--m115-glass-blur);
+  background: rgba(14, 17, 23, 0.92);
+  border-left: 1px solid var(--m115-border-light);
+  backdrop-filter: var(--m115-blur);
   box-shadow: -10px 0 36px rgba(0, 0, 0, 0.65);
   transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -627,20 +631,20 @@
 .m115-v2-episode-card {
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--m115-white-08);
+  background: var(--m115-btn-bg);
   border: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .m115-v2-episode-card:hover {
-  background: var(--m115-white-15);
+  background: var(--m115-btn-hover);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
 .m115-v2-episode-card.active {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
 }
 
 .m115-v2-episode-name {
@@ -654,6 +658,6 @@
 
 .m115-v2-episode-sub {
   font-size: 11px;
-  color: var(--m115-white-60);
+  color: var(--m115-text-sub);
   margin-top: 3px;
 }
