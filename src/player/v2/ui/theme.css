@@ -288,6 +288,9 @@ video {
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.2px;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 
 /* 紧随标题的星标收藏五角星 */
