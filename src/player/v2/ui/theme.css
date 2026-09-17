@@ -320,7 +320,7 @@ video {
   height: 30px;
   padding: 2px 3px;
   box-sizing: border-box;
-  background: rgba(14, 18, 26, 0.52);
+  background: rgba(17, 17, 19, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(24px) saturate(190%);
   -webkit-backdrop-filter: blur(24px) saturate(190%);
@@ -567,7 +567,7 @@ video {
 }
 
 .m115-v2-vol-group:hover {
-  background: rgba(14, 18, 26, 0.75);
+  background: rgba(17, 17, 19, 0.75);
   border-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -693,7 +693,7 @@ video {
   justify-content: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 55%),
-    rgba(20, 22, 27, 0.55);
+    rgba(22, 22, 24, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.09);
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
@@ -713,7 +713,7 @@ video {
 .m115-v2-round-btn:hover {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 55%),
-    rgba(26, 30, 38, 0.72);
+    rgba(30, 30, 32, 0.72);
   border-color: rgba(255, 255, 255, 0.16);
   color: #ffffff;
   box-shadow: 
@@ -737,7 +737,7 @@ video {
   justify-content: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 55%),
-    rgba(20, 22, 27, 0.58);
+    rgba(22, 22, 24, 0.58);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   cursor: pointer;
@@ -760,7 +760,7 @@ video {
 .m115-v2-main-play-btn:hover {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 55%),
-    rgba(26, 30, 38, 0.72);
+    rgba(30, 30, 32, 0.72);
   border-color: rgba(255, 255, 255, 0.18);
   box-shadow: 
     0 0 24px -2px hsla(210deg, 100%, 68%, 0.45),
@@ -809,7 +809,7 @@ video {
   height: 30px;
   padding: 2px 3px;
   box-sizing: border-box;
-  background: rgba(14, 18, 26, 0.52);
+  background: rgba(17, 17, 19, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(24px) saturate(190%);
   -webkit-backdrop-filter: blur(24px) saturate(190%);
@@ -934,7 +934,7 @@ video {
   width: max-content;
   min-width: 112px;
   max-width: 230px;
-  background: rgba(14, 18, 26, 0.82);
+  background: rgba(17, 17, 19, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
@@ -1123,7 +1123,7 @@ video {
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 0.95;
   width: 12px;
-  background: rgba(20, 24, 32, 0.65);
+  background: rgba(24, 24, 26, 0.65);
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.4);
 }
