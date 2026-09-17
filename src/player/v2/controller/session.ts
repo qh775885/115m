@@ -159,7 +159,6 @@ export class PlaybackSession {
     const content = this.content.get()
     const item = content.playlist.find(entry => entry.pickCode === pickCode)
     if (!item?.fileId) return
-    if (!window.confirm(`确定删除「${item.name}」吗？`)) return
 
     try {
       await removeVideo(item.fileId, item.cid || content.cid, pickCode)
@@ -217,6 +216,8 @@ export class PlaybackSession {
 
       this.applySources(resolved)
       this.core.load(resolved.initial.src, resolved.initial.type, options.autoPlay !== false)
+      // 定论：倍速不记忆，切集重置为 1x
+      this.core.setRate(1)
 
       // 切集后字幕/历史归属新视频
       this.subtitles.clear()
