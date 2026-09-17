@@ -946,9 +946,10 @@ video {
 .m115-v2-pop-sheet {
   position: absolute;
   bottom: 56px;
-  right: 24px;
-  width: 200px;
-  background: rgba(14, 18, 26, 0.78);
+  width: max-content;
+  min-width: 112px;
+  max-width: 230px;
+  background: rgba(14, 18, 26, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
@@ -960,7 +961,7 @@ video {
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
   display: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   pointer-events: auto;
   z-index: 35;
   animation: m115PopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -974,27 +975,61 @@ video {
 .m115-v2-pop-header {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 6px 10px 6px 10px;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 5px 8px 6px 8px;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  text-align: center;
 }
 
 .m115-v2-pop-item {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
+  padding: 6px 8px;
   border-radius: 8px;
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.82);
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   user-select: none;
+  white-space: nowrap;
+}
+
+.m115-v2-pop-check {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--m115-blue);
+  transition: opacity 0.15s ease;
+}
+
+.m115-v2-pop-check svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.2px;
+}
+
+.m115-v2-pop-label {
+  flex: 0 1 auto;
+  letter-spacing: 0.2px;
+}
+
+.m115-v2-pop-badge {
+  margin-left: 12px;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
 }
 
 .m115-v2-pop-item::after {

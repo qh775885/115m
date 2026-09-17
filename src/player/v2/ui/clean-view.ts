@@ -271,11 +271,9 @@ export function mountCleanView(options: CleanViewOptions) {
       const isSel = it.id === currentId
       row.className = `m115-v2-pop-item ${isSel ? 'selected' : ''}`
       row.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="width:14px;display:flex;align-items:center;opacity:${isSel ? '1' : '0'};color:var(--m115-blue)">${Icons.Check()}</span>
-          <span>${it.label}</span>
-        </div>
-        ${it.badge ? `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6)">${it.badge}</span>` : ''}
+        <span class="m115-v2-pop-check" style="opacity:${isSel ? '1' : '0'};">${Icons.Check()}</span>
+        <span class="m115-v2-pop-label">${it.label}</span>
+        ${it.badge ? `<span class="m115-v2-pop-badge">${it.badge}</span>` : ''}
       `
       row.onclick = (e) => {
         e.stopPropagation()
@@ -285,19 +283,19 @@ export function mountCleanView(options: CleanViewOptions) {
       body.appendChild(row)
     })
 
-    // 精准悬浮在触发按钮正上方
+    sheet.classList.add('open')
+
+    // 根据自适应宽度精准正对居中悬浮在触发按钮正上方
     if (anchorBtn) {
       const rect = anchorBtn.getBoundingClientRect()
       const viewportRect = playerPane.getBoundingClientRect()
       const centerLeft = rect.left - viewportRect.left + rect.width / 2
-      // 避免贴出屏幕右侧边缘
-      const maxLeft = viewportRect.width - 210
-      const targetLeft = Math.max(12, Math.min(centerLeft - 100, maxLeft))
-      sheet.style.left = `${targetLeft}px`
+      const sheetWidth = sheet.offsetWidth || 130
+      const maxLeft = viewportRect.width - sheetWidth - 12
+      const targetLeft = Math.max(12, Math.min(centerLeft - sheetWidth / 2, maxLeft))
+      sheet.style.left = `${Math.round(targetLeft)}px`
       sheet.style.right = 'auto'
     }
-
-    sheet.classList.add('open')
   }
 
   // 点击外部空白区域，自动优雅关闭微卡片面板
