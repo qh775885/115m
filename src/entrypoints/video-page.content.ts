@@ -8,10 +8,8 @@ export default defineContentScript({
   runAt: 'document_start',
   allFrames: true,
   matchAboutBlank: true,
-  cssInjectionMode: "ui",
+  cssInjectionMode: 'ui',
   async main(_ctx) {
-    // 页面接管必须在 content script 自身中同步完成
-    // 不能依赖外部动态注册的 early script（时序不可控，manifest 声明的 CS 先于动态注册的 CS 执行）
     if (
       window.top === window &&
       /\/web\/lixian\/master\/video\//.test(window.location.pathname) &&
@@ -23,12 +21,27 @@ export default defineContentScript({
       document.close()
     }
 
-    // document.write 之后，当前 content script 的执行上下文仍然有效
-    // 立即绑定画面点击播放/暂停：此时文档刚重建、无任何其他脚本，
-    // 本监听是 window 捕获层第一个注册者，页面后续脚本即使 stopImmediatePropagation 也无法阻止
     bindVideoPlayPause()
 
-    // 异步加载播放器模块
-    await import('../content/video-page.ts')
+    // 开启后台通信 Bridge：接收来自主世界的特权请求并转发给 chrome.runtime
+    window.addEventListener('message', async (event) => {
+      if (
+        event.source !== window ||
+        !event.data ||
+        typeof event.data !== 'object' ||
+        event.data.channel !== '115M_BRIDGE_REQ'
+      ) {
+        return
+      }
+
+      const { id, payload } = event.data
+      try {
+        const result = await chrome.runtime.sendMessage(payload)
+        window.postMessage({ channel: '115M_BRIDGE_RESP', id, result }, '*')
+      }
+      catch (error: any) {
+        window.postMessage({ channel: '115M_BRIDGE_RESP', id, error: error?.message || String(error) }, '*')
+      }
+    })
   },
-});
+})

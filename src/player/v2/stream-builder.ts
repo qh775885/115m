@@ -1,5 +1,5 @@
 import { resolvePlaybackBundle } from '../core/player-services'
-import { sendTypedRuntimeMessageSafe } from '../core/runtime'
+import { callExtensionBridge } from './bridge-client'
 import { findVariantInMaster } from '../core/playlist-url'
 import { resolveM3u8Url } from '../../lib/m3u8-parser'
 
@@ -48,17 +48,21 @@ export function buildMasterHlsBlobUrl(masterText: string, selectedUrl: string): 
  * 准备视频播放源：自动完成鉴权 Cookie 写入、清晰度优选与多音轨组装
  */
 export async function preparePlaybackSource(pickCode: string): Promise<PreparedPlaybackSource> {
-  const bundle = await resolvePlaybackBundle(sendTypedRuntimeMessageSafe, pickCode)
+  const bridgeSender = async (message: unknown) => {
+    return await callExtensionBridge(message)
+  }
+
+  const bundle = await resolvePlaybackBundle(bridgeSender as any, pickCode)
   const { initialPlayback } = bundle
 
-  const playUrl = initialPlayback.playUrl
+  const playUrl = initialPlayback.url
   const isM3u8 = /\.m3u8/i.test(playUrl) || initialPlayback.type === 'hls'
 
   if (!isM3u8) {
     return {
       src: playUrl,
       type: 'video/mp4',
-      label: initialPlayback.name || '原画直链',
+      label: initialPlayback.currentQualityLabel || '原画直链',
       isBlob: false,
     }
   }
@@ -67,10 +71,10 @@ export async function preparePlaybackSource(pickCode: string): Promise<PreparedP
   let finalUrl = playUrl
   let isBlob = false
   try {
-    const res = await sendTypedRuntimeMessageSafe({
+    const res = await callExtensionBridge<any>({
       type: 'FETCH_M3U8_TEXT',
       data: { pickCode },
-    }, 2, 500, 12000)
+    }, 12000)
     const text = res && 'text' in res && res.text ? res.text : null
     if (text) {
       const blobUrl = buildMasterHlsBlobUrl(text, playUrl)
@@ -87,7 +91,7 @@ export async function preparePlaybackSource(pickCode: string): Promise<PreparedP
   return {
     src: finalUrl,
     type: 'application/x-mpegurl',
-    label: initialPlayback.name || 'HLS 转码流',
+    label: initialPlayback.currentQualityLabel || 'HLS 转码流',
     isBlob,
   }
 }

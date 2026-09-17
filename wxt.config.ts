@@ -7,6 +7,10 @@ export default defineConfig({
   outDir: 'dist',
   vite: () => ({
     plugins: [tailwindcss()],
+    build: {
+      minify: false,
+      sourcemap: 'inline',
+    },
   }),
   zip: {
     artifactTemplate: '115m-v{{version}}.zip',
