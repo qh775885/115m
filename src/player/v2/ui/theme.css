@@ -685,14 +685,14 @@ video {
 
 .m115-v2-round-btn {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0) 66%),
+    radial-gradient(ellipse 100% 100% at 50% 26%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0) 66%),
     rgba(16, 20, 28, 0.6);
   border: none;
   color: rgba(255, 255, 255, 0.78);
@@ -778,17 +778,17 @@ video {
   transform: scale(0.92);
 }
 
-/* 居中大播放键：黑曜石圆体 + dexter-st 底部地平线激光微光 + bbaginuk 弹力回弹 */
+/* 居中大播放键：黑曜石椭圆体 + 底部地平线微光 + bbaginuk 弹力回弹 */
 .m115-v2-main-play-btn {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.04) 42%, rgba(255, 255, 255, 0) 66%),
+    radial-gradient(ellipse 100% 100% at 50% 24%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.04) 42%, rgba(255, 255, 255, 0) 66%),
     rgba(16, 20, 28, 0.62);
   border: none;
   color: #ffffff;
