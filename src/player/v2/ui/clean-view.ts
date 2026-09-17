@@ -248,13 +248,15 @@ export function mountCleanView(options: CleanViewOptions) {
   }
 
   // ───────────────────────────────────────────
-  // 4.4 右侧边缘经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
+  // 4.4 右侧边缘长扁条纤薄感应轨 (Ultra-slim Long Rail) & 挤压侧边栏
   // ───────────────────────────────────────────
   const toggleHandle = document.createElement('button')
   toggleHandle.type = 'button'
   toggleHandle.className = 'm115-v2-drawer-toggle-handle'
-  toggleHandle.title = '播放列表'
-  toggleHandle.innerHTML = Icons.Playlist()
+  toggleHandle.title = '播放列表 (快捷收展)'
+  toggleHandle.innerHTML = `
+    <span class="m115-v2-handle-filament"></span>
+  `
   playerPane.appendChild(toggleHandle)
 
   const playlistAside = document.createElement('aside')
