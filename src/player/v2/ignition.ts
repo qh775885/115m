@@ -1,6 +1,7 @@
 import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
+import 'vidstack/player/styles/default/theme.css'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
 import { mountAuroraShell } from './ui/shell'
