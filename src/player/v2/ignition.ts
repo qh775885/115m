@@ -1,10 +1,9 @@
 import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
-import 'vidstack/player/styles/default/theme.css'
-import 'vidstack/player/styles/default/layouts/video.css'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
+import { mountAuroraShell } from './ui/shell'
 
 let currentBlobUrl: string | null = null
 
@@ -84,7 +83,6 @@ export async function igniteV2Player() {
 
     player.innerHTML = `
       <media-provider></media-provider>
-      <media-video-layout></media-video-layout>
     `
 
     container.appendChild(player)
@@ -93,11 +91,22 @@ export async function igniteV2Player() {
       type: source.type,
     }
 
+    // 装配 2.0 极光纯 UI 壳子
+    const shell = mountAuroraShell({ playerEl: player })
+    const titleParam = params.get('title')
+    if (titleParam) {
+      shell.topbar.setTitle(decodeURIComponent(titleParam))
+    }
+    shell.topbar.setBadge(`${source.label}`)
+
+    // 移除点火阶段左上角临时指示条，正式交接给 2.0 极光 UI
+    statusBadge.remove()
+
     // 移除 loading
     const loading = document.getElementById('loading')
     if (loading) loading.style.display = 'none'
 
-    console.log('[115m-v2] Vidstack 点火成功，当前源:', source)
+    console.log('[115m-v2] 2.0 极光 UI 壳子装配成功，当前源:', source)
   }
   catch (error: any) {
     console.error('[115m-v2] 点火失败:', error)
