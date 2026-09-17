@@ -1,25 +1,17 @@
-/* 115m 2.0 融合 Vidstack 原生组件库的顶级现代暗黑风格 */
+/* 115m 2.0 经典科技蓝与通透暗黑磨砂质感 */
 
 :root {
-  /* 覆盖 Vidstack 官方品牌色变量 */
-  --media-brand: #1890ff;
-  --media-focus-ring-color: #1890ff;
-  --media-slider-height: 4px;
-  --media-slider-thumb-size: 11px;
-  --media-slider-focused-height: 6px;
-
-  /* 115m 专属基色 */
   --m115-primary: #1890ff;
   --m115-primary-hover: #40a9ff;
   --m115-primary-bg: rgba(24, 144, 255, 0.16);
   --m115-primary-border: rgba(24, 144, 255, 0.4);
 
-  --m115-bg-overlay: rgba(14, 17, 24, 0.88);
+  --m115-bg-overlay: rgba(14, 17, 24, 0.9);
   --m115-border-light: rgba(255, 255, 255, 0.12);
   --m115-btn-bg: rgba(255, 255, 255, 0.08);
   --m115-btn-hover: rgba(255, 255, 255, 0.16);
   --m115-text-main: rgba(255, 255, 255, 0.92);
-  --m115-text-sub: rgba(255, 255, 255, 0.55);
+  --m115-text-sub: rgba(255, 255, 255, 0.6);
   --m115-blur: blur(24px) saturate(180%);
 }
 
@@ -49,7 +41,7 @@
   left: 0;
   right: 0;
   height: 130px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -59,7 +51,7 @@
   left: 0;
   right: 0;
   height: 160px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -83,7 +75,7 @@
 .m115-v2-header-left {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   flex: 1;
   max-width: min(72vw, 860px);
@@ -116,7 +108,7 @@
 .m115-v2-header-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0;
   min-width: 0;
   flex: 1;
 }
@@ -126,6 +118,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  line-height: 1.35;
 }
 
 .m115-v2-ep-index {
@@ -143,7 +136,8 @@
 
 .m115-v2-header-title {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -154,20 +148,22 @@
 .m115-v2-header-stats {
   font-size: 12px;
   font-weight: 500;
+  line-height: 1.35;
   color: var(--m115-text-sub);
   flex-shrink: 0;
   margin-left: 2px;
 }
 
-/* 面包屑导航行 */
+/* 面包屑导航行：确保彻底与标题行拉开距离，绝不重叠 */
 .m115-v2-breadcrumbs {
+  margin-top: 6px;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
   overflow: hidden;
   font-size: 12px;
   color: var(--m115-text-sub);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .m115-v2-breadcrumb-item {
@@ -261,7 +257,7 @@
 }
 
 /* ────────────────────────────────────────────────────────
-   2. 底部控制区：Vidstack 官方原生控件排版与 115 经典微调
+   2. 底部控制区：经典 115 科技蓝进度条 + 优雅中轴控制行
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-bottom-area {
@@ -272,18 +268,68 @@
   padding: 0 24px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   pointer-events: auto;
   z-index: 20;
 }
 
-/* 官方时间轴全宽容器 */
-.m115-v2-timeline-wrap {
+/* 经典可靠的全宽时间轴：纯净 115 科技蓝 */
+.m115-v2-timeline-container {
+  position: relative;
   width: 100%;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
-.m115-v2-timeline-wrap media-time-slider {
+.m115-v2-timeline-track {
+  position: relative;
   width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: height 0.16s ease;
+}
+
+.m115-v2-timeline-container:hover .m115-v2-timeline-track {
+  height: 5px;
+}
+
+.m115-v2-timeline-buffer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.m115-v2-timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--m115-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.5);
+}
+
+.m115-v2-timeline-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px var(--m115-primary);
+  transition: transform 0.15s ease;
+}
+
+.m115-v2-timeline-container:hover .m115-v2-timeline-thumb {
+  transform: translateY(-50%) scale(1);
 }
 
 /* 底栏主横条 */
@@ -308,14 +354,12 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: var(--m115-text-main);
   letter-spacing: 0.3px;
-  display: flex;
-  align-items: center;
 }
 
 .m115-v2-volume-cluster {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   height: 32px;
   padding: 0 6px;
   border-radius: 16px;
@@ -341,8 +385,23 @@
   width: 76px;
 }
 
-.m115-v2-volume-slider-wrap media-volume-slider {
-  width: 72px;
+.m115-v2-volume-slider {
+  width: 70px;
+  height: 4px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.m115-v2-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--m115-primary);
+  box-shadow: 0 0 6px var(--m115-primary);
 }
 
 /* 底部居中：三联主控簇 */
@@ -375,29 +434,30 @@
   transform: scale(1.06);
 }
 
-/* 官方原生 PlayButton 微调：磨砂通透微圆环 */
+/* 居中主播放大键：微透磨砂圆环 + 优雅居中图标，悬停科技蓝微光 */
 .m115-v2-center-play-btn {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 50% !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-center-play-btn:hover {
   transform: scale(1.08);
-  background: var(--m115-primary-bg) !important;
-  border-color: var(--m115-primary-border) !important;
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
   box-shadow: 0 0 14px rgba(24, 144, 255, 0.35);
 }
 
-/* 底部右侧：高频功能胶囊群 (对接官方 Menu 体系) */
+/* 底部右侧：高频功能胶囊群 */
 .m115-v2-right-cluster {
   display: flex;
   align-items: center;
@@ -417,13 +477,13 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
   transition: all 0.15s ease;
 }
 
-.m115-v2-ctrl-btn:hover {
+.m115-v2-ctrl-btn:hover, .m115-v2-ctrl-btn.active {
   background: var(--m115-primary-bg);
   border-color: var(--m115-primary-border);
   color: var(--m115-primary-hover);
@@ -435,7 +495,7 @@
   border-radius: 50%;
   background: var(--m115-btn-bg);
   border: 1px solid var(--m115-border-light);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   color: var(--m115-text-main);
@@ -449,18 +509,78 @@
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* 官方原生 Menu 弹层样式覆写：高透磨砂深空卡片 */
-media-menu-items {
-  background: var(--m115-bg-overlay) !important;
-  border: 1px solid var(--m115-border-light) !important;
-  backdrop-filter: var(--m115-blur) !important;
-  border-radius: 12px !important;
-  padding: 6px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75) !important;
+/* ────────────────────────────────────────────────────────
+   3. 浮动微卡片菜单 (Sheet)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-sheet {
+  position: absolute;
+  bottom: 64px;
+  right: 24px;
+  width: 210px;
+  background: var(--m115-bg-overlay);
+  border: 1px solid var(--m115-border-light);
+  backdrop-filter: var(--m115-blur);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  z-index: 30;
+  animation: m115SheetIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-sheet.open {
+  display: flex;
+}
+
+.m115-v2-sheet-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--m115-text-sub);
+  padding: 6px 10px 4px 10px;
+  text-transform: uppercase;
+}
+
+.m115-v2-sheet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--m115-text-main);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.m115-v2-sheet-item:hover {
+  background: var(--m115-btn-hover);
+  color: #fff;
+}
+
+.m115-v2-sheet-item.selected {
+  background: var(--m115-primary-bg);
+  color: var(--m115-primary-hover);
+  font-weight: 600;
+}
+
+@keyframes m115SheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ────────────────────────────────────────────────────────
-   3. 右侧选集抽屉 (Drawer)
+   4. 右侧选集抽屉 (Drawer)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-drawer {
