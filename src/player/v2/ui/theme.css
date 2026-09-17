@@ -123,33 +123,39 @@ video {
   max-width: min(74vw, 920px);
 }
 
-/* 精巧微透圆形返回键 (30px 腕表级微雕) */
+/* 精巧超椭圆微浮雕返回键 (Squircle，带箭头向左微动反馈) */
 .m115-v2-back-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--m115-text-regular);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .m115-v2-back-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-v2-back-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
   color: #fff;
-  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.m115-v2-back-btn:hover svg {
+  transform: translateX(-3px);
 }
 
 .m115-v2-back-btn:active {
@@ -172,19 +178,33 @@ video {
   min-width: 0;
 }
 
-/* 序号微徽章 */
+/* 航空仪表级序号微徽章 (母带监视器感，微光渐变) */
 .m115-v2-badge-index {
   height: 18px;
   padding: 0 6px;
   border-radius: 4px;
-  background: rgba(24, 144, 255, 0.14);
-  border: 1px solid rgba(24, 144, 255, 0.38);
-  color: var(--m115-blue);
+  background: linear-gradient(135deg, rgba(24, 144, 255, 0.22) 0%, rgba(24, 144, 255, 0.06) 100%);
+  border: 1px solid rgba(24, 144, 255, 0.35);
+  box-shadow: 0 0 10px rgba(24, 144, 255, 0.15);
+  color: #69c0ff;
   font-size: 11px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
   line-height: 18px;
+  letter-spacing: 0.5px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.m115-v2-badge-index::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--m115-blue);
+  box-shadow: 0 0 6px var(--m115-blue);
 }
 
 /* 视频标题 */
