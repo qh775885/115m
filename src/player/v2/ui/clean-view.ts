@@ -194,23 +194,37 @@ export function mountCleanView(options: CleanViewOptions) {
         </button>
       </div>
 
-      <!-- 右侧：全量功能胶囊群 (移除多余的选集胶囊，由右侧边缘悬浮把手无缝接管) -->
+      <!-- 右侧：一体化黑曜石功能托盘 (完整外壳 + 发丝分割线，与顶栏三联同款精密工艺) -->
       <div class="m115-v2-ctrl-right">
-        <button type="button" class="m115-v2-icon-action m115-btn-mode" title="播放模式">
-          ${Icons.Repeat()}
-        </button>
-        <button type="button" class="m115-v2-icon-action m115-btn-rotate" title="画面旋转 90° ( R )">
-          ${Icons.RotateCw()}
-        </button>
-        <button type="button" class="m115-v2-action-pill m115-btn-quality">原画</button>
-        <button type="button" class="m115-v2-action-pill m115-btn-audio">
-          ${Icons.MediaTrack()} <span>音轨</span>
-        </button>
-        <button type="button" class="m115-v2-action-pill m115-btn-subtitle">字幕</button>
-        <button type="button" class="m115-v2-action-pill m115-btn-speed">1.0x</button>
-        <button type="button" class="m115-v2-icon-action m115-btn-fullscreen" title="全屏 ( F )">
-          ${Icons.Fullscreen()}
-        </button>
+        <div class="m115-v2-pill-tray">
+          <button type="button" class="m115-tray-btn m115-btn-mode" title="播放模式">
+            ${Icons.Repeat()}
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-rotate" title="画面旋转 90° ( R )">
+            ${Icons.RotateCw()}
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-quality" title="切换清晰度">
+            原画
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-audio" title="多音频轨道">
+            ${Icons.MediaTrack()} <span>音轨</span>
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-subtitle" title="字幕设置">
+            字幕
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-speed" title="播放速度">
+            1.0x
+          </button>
+          <div class="m115-tray-divider"></div>
+          <button type="button" class="m115-tray-btn m115-btn-fullscreen" title="全屏 ( F )">
+            ${Icons.Fullscreen()}
+          </button>
+        </div>
       </div>
     </div>
   `

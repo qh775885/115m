@@ -829,49 +829,64 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   右侧高频功能排阵 (全面统一 dexter-st 黑曜石胶囊与地平线微光)
+   右侧高频功能排阵 (一体化黑曜石托盘 + 发丝分割线，与顶栏三联同款神级工艺)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-ctrl-right {
   display: flex;
   align-items: center;
-  gap: 5px;
   justify-content: flex-end;
   flex: 1;
 }
 
-/* 文字/复合功能药丸胶囊 (高度 28px，圆角 14px) */
-.m115-v2-action-pill {
+/* 一体化托盘外壳 (顶反光物理微倒角 + 悬浮黑曜石晶体) */
+.m115-v2-pill-tray {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 2px 3px;
+  box-sizing: border-box;
+  background: rgba(14, 18, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 9999px;
+  box-shadow: 
+    0 6px 20px -2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 托盘内分段功能按钮 (悬停激活 210° 地平线激光微光) */
+.m115-tray-btn {
   position: relative;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 14px;
-  background: rgba(18, 22, 30, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
   color: rgba(255, 255, 255, 0.82);
   font-size: 11.5px;
   font-weight: 500;
-  cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  box-sizing: border-box;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  overflow: hidden;
 }
 
-.m115-v2-action-pill svg {
+.m115-tray-btn svg {
   width: 13px;
   height: 13px;
   opacity: 0.85;
   transition: all 0.2s ease;
 }
 
-.m115-v2-action-pill::after {
+.m115-tray-btn::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -889,91 +904,39 @@ video {
   transition: opacity 0.25s ease;
 }
 
-.m115-v2-action-pill:hover,
-.m115-v2-action-pill.active {
-  background: rgba(22, 28, 38, 0.9);
-  border-color: hsla(210deg, 100%, 75%, 0.4);
+.m115-tray-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
   color: #ffffff;
 }
 
-.m115-v2-action-pill:hover::after,
-.m115-v2-action-pill.active::after {
+.m115-tray-btn:hover::after {
   opacity: 0.95;
   mask-image: linear-gradient(0deg, #fff, transparent);
   -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
-.m115-v2-action-pill:hover svg {
+.m115-tray-btn:hover svg {
   opacity: 1;
   filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
 }
 
-.m115-v2-action-pill:active {
-  transform: scale(0.96) translateY(0.5px);
+.m115-tray-btn:active {
+  transform: scale(0.95);
 }
 
-/* 纯图标功能圆钮 (全屏 / 旋转 / 循环模式，高度 28px × 28px) */
-.m115-v2-icon-action {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(18, 22, 30, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-.m115-v2-icon-action svg {
-  width: 14px;
-  height: 14px;
-  transition: all 0.2s ease;
-}
-
-.m115-v2-icon-action::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background-image: linear-gradient(
-    0deg,
-    #ffffff,
-    hsl(210deg, 100%, 70%),
-    hsla(210deg, 100%, 70%, 50%),
-    14%,
+/* 渐隐羽化内嵌发丝分割线 */
+.m115-tray-divider {
+  width: 1px;
+  height: 12px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.14) 20%,
+    rgba(255, 255, 255, 0.14) 80%,
     transparent
   );
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.m115-v2-icon-action:hover {
-  background: rgba(22, 28, 38, 0.9);
-  border-color: hsla(210deg, 100%, 75%, 0.4);
-  color: #ffffff;
-}
-
-.m115-v2-icon-action:hover::after {
-  opacity: 0.95;
-  mask-image: linear-gradient(0deg, #fff, transparent);
-  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
-}
-
-.m115-v2-icon-action:hover svg {
-  filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
-}
-
-.m115-v2-icon-action:active {
-  transform: scale(0.94);
+  flex-shrink: 0;
+  margin: 0 1px;
 }
 
 /* ────────────────────────────────────────────────────────
