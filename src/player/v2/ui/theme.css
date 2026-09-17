@@ -550,38 +550,82 @@ video {
   font-weight: 400;
 }
 
+/* 一体化黑曜石音量流线微胶囊 (高度 28px，圆角 14px，与三联胶囊完全同源) */
 .m115-v2-vol-group {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
-  height: 30px;
-  padding: 0 4px;
-  border-radius: 6px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 14px;
   background: transparent;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 .m115-v2-vol-group:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(14, 18, 26, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* 纯净喇叭图标按钮 (移除任何孤立黑圆圈) */
+.m115-vol-icon-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.m115-vol-icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.m115-vol-icon-btn:hover {
+  color: #ffffff;
 }
 
 .m115-v2-vol-slider-box {
   width: 0;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding-left 0.25s ease;
   display: flex;
   align-items: center;
+  padding-left: 0;
 }
 
 .m115-v2-vol-group:hover .m115-v2-vol-slider-box {
-  width: 72px;
+  width: 76px;
+  padding-left: 6px;
 }
 
+/* 双轨高精度音量滑轨 (115 科技蓝动态填充 + 白玉珠 Thumb) */
 .m115-v2-vol-range {
-  width: 66px;
-  height: 3.5px;
+  width: 70px;
+  height: 4px;
   appearance: none;
-  background: rgba(255, 255, 255, 0.2);
+  -webkit-appearance: none;
+  background: linear-gradient(
+    to right,
+    var(--m115-blue) 0%,
+    var(--m115-blue) var(--vol, 100%),
+    rgba(255, 255, 255, 0.2) var(--vol, 100%),
+    rgba(255, 255, 255, 0.2) 100%
+  );
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -589,18 +633,19 @@ video {
 
 .m115-v2-vol-range::-webkit-slider-thumb {
   appearance: none;
-  width: 9px;
-  height: 9px;
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-  transition: transform 0.15s ease;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .m115-v2-vol-range:hover::-webkit-slider-thumb {
-  transform: scale(1.15);
-  background: var(--m115-blue);
-  box-shadow: 0 0 8px var(--m115-blue);
+  transform: scale(1.2);
+  background: #ffffff;
+  box-shadow: 0 0 8px #ffffff;
 }
 
 /* 中间：三联主控（上一集 / 大播放键 / 下一集）- 全面统一 dexter-st 黑曜石地平线微光质感 */

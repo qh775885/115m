@@ -171,11 +171,11 @@ export function mountCleanView(options: CleanViewOptions) {
         </div>
 
         <div class="m115-v2-vol-group">
-          <button type="button" class="m115-v2-icon-action m115-btn-vol" title="静音 / 恢复 (M)">
+          <button type="button" class="m115-vol-icon-btn m115-btn-vol" title="静音 / 恢复 (M)">
             ${Icons.Volume2()}
           </button>
           <div class="m115-v2-vol-slider-box">
-            <input type="range" class="m115-v2-vol-range" min="0" max="100" value="100">
+            <input type="range" class="m115-v2-vol-range" min="0" max="100" value="100" style="--vol: 100%;">
           </div>
         </div>
       </div>
@@ -399,12 +399,18 @@ export function mountCleanView(options: CleanViewOptions) {
     }
   }
 
-  // 音量控制
+  const updateVolUi = (val: number, muted: boolean) => {
+    const pct = muted ? 0 : Math.round(val * 100)
+    volRange.style.setProperty('--vol', `${pct}%`)
+    volRange.value = String(pct)
+    volBtn.innerHTML = (muted || pct === 0) ? Icons.VolumeX() : Icons.Volume2()
+  }
+
   volBtn.onclick = () => {
     const video = playerEl.querySelector('video') as HTMLVideoElement | null
     if (video) {
       video.muted = !video.muted
-      volBtn.innerHTML = video.muted ? Icons.VolumeX() : Icons.Volume2()
+      updateVolUi(video.volume, video.muted)
     }
   }
 
@@ -414,7 +420,7 @@ export function mountCleanView(options: CleanViewOptions) {
       const val = Number(volRange.value) / 100
       video.volume = val
       video.muted = (val === 0)
-      volBtn.innerHTML = (val === 0) ? Icons.VolumeX() : Icons.Volume2()
+      updateVolUi(val, video.muted)
     }
   }
 
