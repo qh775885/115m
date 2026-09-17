@@ -255,7 +255,11 @@ export function mountCleanView(options: CleanViewOptions) {
   toggleHandle.className = 'm115-v2-drawer-toggle-handle'
   toggleHandle.title = '播放列表 (快捷收展)'
   toggleHandle.innerHTML = `
-    <span class="m115-v2-rail-arrow">${Icons.ChevronLeft()}</span>
+    <div class="m115-v2-rail-list-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
   `
   playerPane.appendChild(toggleHandle)
 
