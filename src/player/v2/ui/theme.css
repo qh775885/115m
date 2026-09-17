@@ -709,90 +709,66 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   4. 右侧边缘：修长纤薄感应片 (Sleek Slim Rail) & 挤压侧边栏
+   4. 右侧边缘：标准经典播放列表侧键 (Playlist Tab) & 挤压侧边栏
    ──────────────────────────────────────────────────────── */
 
-/* 屏幕右侧边缘修长纤薄感应片 (平时仅 3px 极淡发丝线，贴合屏幕边缘) */
+/* 屏幕右侧固定侧键 (尺寸固定 28px × 72px，绝无变形，静止时平滑淡出) */
 .m115-v2-drawer-toggle-handle {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 64px;
+  width: 28px;
+  height: 72px;
   padding: 0;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.18);
-  border: none;
-  border-radius: 4px 0 0 4px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(18, 22, 30, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 28;
-  opacity: 0.3;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.65;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.45);
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
 }
 
-/* 内部素雅列表发丝微线 */
-.m115-v2-rail-list-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  opacity: 0;
-  transform: translateX(2px);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
+.m115-v2-drawer-toggle-handle svg {
+  width: 17px;
+  height: 17px;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.18s ease, transform 0.18s ease;
 }
 
-.m115-v2-rail-list-icon span {
-  display: block;
-  width: 7px;
-  height: 1.5px;
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 1px;
-  transition: all 0.2s ease;
-}
-
-/* 悬停显示时：通透轻盈微透（告别死黑厚重塑料），微透毛玻璃 */
-.m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
 .m115-v2-drawer-toggle-handle:hover {
   opacity: 1;
-  width: 15px;
-  background: rgba(20, 24, 32, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 
-    -4px 0 16px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: rgba(22, 28, 38, 0.88);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
-.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-list-icon {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.m115-v2-drawer-toggle-handle:hover .m115-v2-rail-list-icon span {
-  background: #ffffff;
-  width: 8px;
+.m115-v2-drawer-toggle-handle:hover svg {
+  color: #ffffff;
+  transform: scale(1.08);
 }
 
 .m115-v2-drawer-toggle-handle:active {
   transform: translateY(-50%) scale(0.96);
 }
 
-/* 展开状态：依然保持清透 */
+/* 展开状态：保持贴合激活 */
 .m115-v2-drawer-toggle-handle.open {
-  background: rgba(20, 24, 32, 0.65);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(24, 144, 255, 0.18);
+  border-color: rgba(24, 144, 255, 0.4);
   opacity: 1;
+}
+
+.m115-v2-drawer-toggle-handle.open svg {
+  color: var(--m115-blue);
 }
 
 /* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
