@@ -1296,10 +1296,13 @@ video {
   gap: 8px !important;
 }
 
-/* 预览图固定高度：略加大但不撑高卡片 */
+/* 缩略图框：固定高度，宽度按视频真实比例自适应（竖屏竖框 / 横屏横框），不裁剪也不留大黑边 */
 .m115-v2-drawer-body .m115-pl-thumb {
-  width: 104px !important;
   height: 58px !important;
+  width: auto !important;
+  min-width: 44px;
+  max-width: 112px;
+  aspect-ratio: 16 / 9;
   border-radius: 6px !important;
 }
 

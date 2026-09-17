@@ -402,6 +402,32 @@ export function mountCleanView(options: CleanViewOptions) {
   const drawerBody = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
 
   let disposePlaylistCovers: (() => void) | null = null
+  let thumbAspectObserver: MutationObserver | null = null
+
+  // 缩略图加载后，用其真实比例设置图框宽高比（竖屏竖框、横屏横框，既不裁剪也不留大黑边）
+  const applyThumbAspect = (img: HTMLImageElement) => {
+    const thumb = img.closest('.m115-pl-thumb') as HTMLElement | null
+    if (!thumb || !img.naturalWidth || !img.naturalHeight) return
+    thumb.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`
+  }
+
+  const watchThumbAspect = () => {
+    thumbAspectObserver?.disconnect()
+    thumbAspectObserver = new MutationObserver((records) => {
+      records.forEach((record) => {
+        record.addedNodes.forEach((node) => {
+          const imgs: HTMLImageElement[] = []
+          if (node instanceof HTMLImageElement) imgs.push(node)
+          else if (node instanceof HTMLElement) imgs.push(...Array.from(node.querySelectorAll('img')))
+          imgs.forEach((img) => {
+            if (img.complete) applyThumbAspect(img)
+            else img.addEventListener('load', () => applyThumbAspect(img), { once: true })
+          })
+        })
+      })
+    })
+    thumbAspectObserver.observe(drawerBody, { childList: true, subtree: true })
+  }
 
   const renderEpisodes = (items: OverlayPlaylistItem[], curPickCode: string) => {
     disposePlaylistCovers?.()
@@ -416,6 +442,8 @@ export function mountCleanView(options: CleanViewOptions) {
     disposePlaylistCovers = lazyLoadPlaylistCovers(drawerBody, items)
     scrollActivePlaylistNodeIntoView(drawerBody, curPickCode)
   }
+
+  watchThumbAspect()
 
   // ───────────────────────────────────────────
   // 5. 绑定交互事件与底层视频驱动
@@ -787,6 +815,7 @@ export function mountCleanView(options: CleanViewOptions) {
       unsubscribe()
       unsubscribeContent()
       disposePlaylistCovers?.()
+      thumbAspectObserver?.disconnect()
       if (idleTimer) clearTimeout(idleTimer)
     },
   }
