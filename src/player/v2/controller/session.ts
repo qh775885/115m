@@ -11,6 +11,7 @@ import { createContentStore, type PlaybackMode } from '../state/content-state'
 import { loadPlaylist } from '../adapters/playlist'
 import { downloadVideo, loadFavorite, removeVideo, setFavorite } from '../adapters/files'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
+import { loadCoverAt } from '../adapters/thumbnail'
 import {
   prepareQualitySource,
   resolvePlaybackSources,
@@ -283,6 +284,12 @@ export class PlaybackSession {
   /** 设置播放模式。 */
   setMode(mode: PlaybackMode): void {
     this.content.set({ mode })
+  }
+
+  /** 进度条悬停预览：取指定时间点的缩略图。 */
+  async getCoverAt(time: number, duration: number): Promise<{ imgUrl: string, width?: number, height?: number } | null> {
+    const cover = await loadCoverAt(this.content.get().pickCode, time, duration)
+    return cover ? { imgUrl: cover.imgUrl, width: cover.width, height: cover.height } : null
   }
 
   private autoAdvance(): void {

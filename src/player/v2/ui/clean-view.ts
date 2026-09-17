@@ -38,6 +38,7 @@ export interface CleanViewOptions {
   onSelectAudioTrack?: (id: string) => void
   onSelectSubtitle?: (sid: string) => void
   onSelectMode?: (mode: string) => void
+  requestPreview?: (time: number, duration: number) => Promise<{ imgUrl: string, width?: number, height?: number } | null>
 }
 
 function formatTime(seconds: number): string {
@@ -92,6 +93,15 @@ export function mountCleanView(options: CleanViewOptions) {
   const subtitleLayer = document.createElement('div')
   subtitleLayer.className = 'm115-v2-subtitle-layer'
   playerPane.appendChild(subtitleLayer)
+
+  // 进度条悬停预览（缩略图 + 时间码）
+  const previewEl = document.createElement('div')
+  previewEl.className = 'm115-v2-preview'
+  previewEl.innerHTML = `
+    <img class="m115-v2-preview-img" alt="" />
+    <span class="m115-v2-preview-time">00:00</span>
+  `
+  playerPane.appendChild(previewEl)
 
   // 4. 控制层包裹器
   const overlay = document.createElement('div')
@@ -591,6 +601,54 @@ export function mountCleanView(options: CleanViewOptions) {
 
   const unsubscribe = options.core.store.subscribe(render)
   render(options.core.store.get())
+
+  // 进度条悬停预览：跟随光标展示时间码与缩略图（缩略图异步抽帧）
+  const previewImg = previewEl.querySelector('.m115-v2-preview-img') as HTMLImageElement
+  const previewTimeEl = previewEl.querySelector('.m115-v2-preview-time') as HTMLElement
+  let previewToken = 0
+  let previewTimer: ReturnType<typeof setTimeout> | null = null
+
+  const handlePreviewMove = (e: MouseEvent) => {
+    const state = options.core.store.get()
+    if (!state.duration || !options.requestPreview) return
+
+    const ratio = getPercent(e)
+    const time = ratio * state.duration
+    previewTimeEl.textContent = formatTime(time)
+
+    const trackRect = progressBox.getBoundingClientRect()
+    const paneRect = playerPane.getBoundingClientRect()
+    previewEl.classList.add('visible')
+    const width = previewEl.offsetWidth || 186
+    const cursorX = trackRect.left - paneRect.left + ratio * trackRect.width
+    const left = Math.max(8, Math.min(cursorX - width / 2, paneRect.width - width - 8))
+    previewEl.style.left = `${Math.round(left)}px`
+
+    const token = ++previewToken
+    if (previewTimer) clearTimeout(previewTimer)
+    previewTimer = setTimeout(async () => {
+      const cover = await options.requestPreview?.(time, state.duration)
+      if (token !== previewToken) return
+      if (cover?.imgUrl) {
+        previewImg.src = cover.imgUrl
+        previewImg.style.visibility = 'visible'
+      }
+      else {
+        previewImg.removeAttribute('src')
+        previewImg.style.visibility = 'hidden'
+      }
+    }, 90)
+  }
+
+  const handlePreviewLeave = () => {
+    previewToken += 1
+    if (previewTimer) clearTimeout(previewTimer)
+    previewEl.classList.remove('visible')
+    previewImg.removeAttribute('src')
+  }
+
+  progressBox.addEventListener('mousemove', handlePreviewMove)
+  progressBox.addEventListener('mouseleave', handlePreviewLeave)
 
   // 内容状态 -> UI（标题 / 序号 / 大小 / 星标 / 面包屑 / 播放列表）
   const titleTextEl = topBar.querySelector('.m115-v2-title-text') as HTMLElement

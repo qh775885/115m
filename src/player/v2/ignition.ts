@@ -113,6 +113,7 @@ export async function igniteV2Player() {
       onSelectAudioTrack: (id) => core.selectAudioTrack(id),
       onSelectSubtitle: (sid) => void session.setSubtitle(sid),
       onSelectMode: (mode) => session.setMode(mode as 'sequence' | 'loop-one' | 'loop-all'),
+      requestPreview: (time, duration) => session.getCoverAt(time, duration),
     })
 
     // 全局快捷键：空格播放暂停 / 左右步进 / 上下音量 / M 静音 / F 全屏 / [ ] 切集 / R 旋转
