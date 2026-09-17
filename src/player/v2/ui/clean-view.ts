@@ -41,6 +41,10 @@ function formatTime(seconds: number): string {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`
 }
 
+function formatRate(rate: number): string {
+  return Number.isInteger(rate) ? rate.toFixed(1) : String(rate)
+}
+
 function ensureThemeCss() {
   if (typeof document === 'undefined') return
   let style = document.getElementById('m115-v2-clean-style') as HTMLStyleElement | null
@@ -477,7 +481,7 @@ export function mountCleanView(options: CleanViewOptions) {
       { id: 1.25, label: '1.25x' },
       { id: 1.5, label: '1.5x' },
       { id: 2.0, label: '2.0x 倍速' },
-    ], 1.0, speedBtn, (it) => {
+    ], options.core.store.get().rate, speedBtn, (it) => {
       options.core.setRate(Number(it.id))
     })
   })
@@ -544,7 +548,7 @@ export function mountCleanView(options: CleanViewOptions) {
     }
 
     if ((!prev || s.rate !== prev.rate) && speedSpan) {
-      speedSpan.textContent = `${s.rate}x`
+      speedSpan.textContent = `${formatRate(s.rate)}x`
     }
 
     if (s.paused) playerPane.classList.remove('idle')
