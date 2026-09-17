@@ -11,7 +11,7 @@ import { createContentStore, type PlaybackMode } from '../state/content-state'
 import { loadBreadcrumb, loadPlaylist } from '../adapters/playlist'
 import { downloadVideo, loadFavorite, removeVideo, setFavorite } from '../adapters/files'
 import { loadSubtitleCues, loadSubtitleList } from '../adapters/subtitles'
-import { loadCoverAt, loadCovers, type VideoThumbnail } from '../adapters/thumbnail'
+import { getPreciseCover, loadCovers, releaseCoverSession, type VideoThumbnail } from '../adapters/thumbnail'
 import {
   prepareQualitySource,
   resolvePlaybackSources,
@@ -224,7 +224,8 @@ export class PlaybackSession {
       void this.history.restore(pickCode)
       void this.refreshFavorite()
 
-      // 切集后封面归新视频：清空并重新预热
+      // 切集后封面归新视频：释放常驻抽帧会话并重新预热
+      releaseCoverSession()
       this.covers = []
       this.coversPickCode = ''
       this.scheduleCoverWarmup()
@@ -382,7 +383,7 @@ export class PlaybackSession {
     }
 
     void (async () => {
-      const precise = await loadCoverAt(pickCode, time, duration)
+      const precise = await getPreciseCover(pickCode, time, duration)
       if (precise && pickCode === this.content.get().pickCode) {
         onUpdate({ imgUrl: precise.imgUrl, width: precise.width, height: precise.height })
       }

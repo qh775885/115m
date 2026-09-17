@@ -646,6 +646,11 @@ export function mountCleanView(options: CleanViewOptions) {
     const time = ratio * state.duration
     previewTimeEl.textContent = formatTime(time)
 
+    // 出图前先按视频比例把预览框撑成正确形状，避免出现扁条空框
+    if (previewImg.style.visibility !== 'visible' && state.videoWidth && state.videoHeight) {
+      applyPreviewSize(state.videoWidth, state.videoHeight)
+    }
+
     const trackRect = progressBox.getBoundingClientRect()
     const paneRect = playerPane.getBoundingClientRect()
     previewEl.classList.add('visible')

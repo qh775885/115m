@@ -64,6 +64,7 @@ export class PlayerCore {
 
     listen('loadedmetadata', () => this.syncAll())
     listen('durationchange', () => this.syncAll())
+    listen('resize', () => this.syncAll())
     listen('timeupdate', () => {
       if (this.store.get().dragging) return
       this.store.set({ currentTime: video.currentTime })
@@ -99,6 +100,8 @@ export class PlayerCore {
       volume: video.volume,
       muted: video.muted,
       rate: video.playbackRate || 1,
+      videoWidth: video.videoWidth || 0,
+      videoHeight: video.videoHeight || 0,
     })
   }
 

@@ -29,6 +29,9 @@ export interface PlayerState {
   audioTracks: AudioTrackInfo[]
   /** 当前音频轨道 id */
   audioTrack: string
+  /** 视频画面原始宽高（用于预览框比例） */
+  videoWidth: number
+  videoHeight: number
 }
 
 export const initialPlayerState: PlayerState = {
@@ -42,4 +45,6 @@ export const initialPlayerState: PlayerState = {
   dragging: false,
   audioTracks: [],
   audioTrack: '',
+  videoWidth: 0,
+  videoHeight: 0,
 }
