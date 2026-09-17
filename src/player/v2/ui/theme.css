@@ -1303,9 +1303,9 @@ video {
   border-radius: 6px !important;
 }
 
-/* 缩略图填充裁切（避免竖屏在大框里出现大黑边） */
+/* 缩略图完整显示不裁剪（竖屏/横屏都等比缩放） */
 .m115-v2-drawer-body .m115-pl-thumb img {
-  object-fit: cover !important;
+  object-fit: contain !important;
   object-position: center !important;
 }
 
