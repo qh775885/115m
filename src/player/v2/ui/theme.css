@@ -757,13 +757,13 @@ video {
   color: #ffffff;
   box-shadow: 
     0 8px 20px -4px rgba(0, 0, 0, 0.6),
-    inset 0 0 12px hsla(210deg, 100%, 70%, 0.14);
+    inset 0 -3px 7px -3px rgba(0, 0, 0, 0.5);
 }
 
 .m115-v2-round-btn:hover::before {
   background: linear-gradient(
     180deg,
-    hsla(210deg, 100%, 78%, 0.6) 0%,
+    rgba(255, 255, 255, 0.46) 0%,
     rgba(255, 255, 255, 0.06) 50%,
     rgba(0, 0, 0, 0.45) 100%
   );
@@ -855,13 +855,14 @@ video {
     rgba(20, 26, 36, 0.82);
   box-shadow: 
     0 12px 30px -5px rgba(0, 0, 0, 0.7),
-    inset 0 0 16px hsla(210deg, 100%, 70%, 0.18);
+    inset 0 -4px 9px -4px rgba(0, 0, 0, 0.5);
 }
 
+/* 悬停时光环保持中性白，蓝色只留给底缘那一道地平线，避免多源泛蓝发糊 */
 .m115-v2-main-play-btn:hover::before {
   background: linear-gradient(
     180deg,
-    hsla(210deg, 100%, 80%, 0.7) 0%,
+    rgba(255, 255, 255, 0.52) 0%,
     rgba(255, 255, 255, 0.07) 50%,
     rgba(0, 0, 0, 0.5) 100%
   );
