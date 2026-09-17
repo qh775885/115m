@@ -45,12 +45,17 @@ export async function igniteV2Player() {
   statusBadge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;"></span> 115m 2.0 底座点火中...`
   document.body.appendChild(statusBadge)
 
+  const loadingText = document.getElementById('loading-text')
+  if (loadingText) loadingText.textContent = '正在获取视频播放源与鉴权凭证...'
+
   try {
     const source = await preparePlaybackSource(pickCode)
     if (source.isBlob) {
       if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl)
       currentBlobUrl = source.src
     }
+
+    if (loadingText) loadingText.textContent = `视频源获取成功 (${source.label})，正在挂载 Vidstack...`
 
     statusBadge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;"></span> 2.0 底座已就绪 · ${source.label}`
     statusBadge.style.color = '#4ade80'

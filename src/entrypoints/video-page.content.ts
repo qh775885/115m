@@ -26,7 +26,6 @@ export default defineContentScript({
     // 开启后台通信 Bridge：接收来自主世界的特权请求并转发给 chrome.runtime
     window.addEventListener('message', async (event) => {
       if (
-        event.source !== window ||
         !event.data ||
         typeof event.data !== 'object' ||
         event.data.channel !== '115M_BRIDGE_REQ'
@@ -35,11 +34,14 @@ export default defineContentScript({
       }
 
       const { id, payload } = event.data
+      console.log(`[115m-v2][Bridge-Server] 收到转发请求 #${id}:`, payload)
       try {
         const result = await chrome.runtime.sendMessage(payload)
+        console.log(`[115m-v2][Bridge-Server] 后台成功返回 #${id}:`, result)
         window.postMessage({ channel: '115M_BRIDGE_RESP', id, result }, '*')
       }
       catch (error: any) {
+        console.warn(`[115m-v2][Bridge-Server] 后台返回异常 #${id}:`, error)
         window.postMessage({ channel: '115M_BRIDGE_RESP', id, error: error?.message || String(error) }, '*')
       }
     })

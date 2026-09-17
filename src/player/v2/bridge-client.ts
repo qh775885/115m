@@ -5,11 +5,13 @@ let messageIdSeq = 0
  */
 export async function callExtensionBridge<T = unknown>(payload: unknown, timeoutMs = 15000): Promise<T | null> {
   const id = ++messageIdSeq
+  console.log(`[115m-v2][Bridge-Client] 发送请求 #${id}:`, payload)
+
   return new Promise((resolve) => {
     let timer: any = null
     const handler = (event: MessageEvent) => {
+      // 跨世界通信中 event.source 引用可能不同，仅校验通道标识与匹配 ID
       if (
-        event.source !== window ||
         !event.data ||
         typeof event.data !== 'object' ||
         event.data.channel !== '115M_BRIDGE_RESP' ||
@@ -20,8 +22,10 @@ export async function callExtensionBridge<T = unknown>(payload: unknown, timeout
 
       window.removeEventListener('message', handler)
       if (timer) clearTimeout(timer)
+
+      console.log(`[115m-v2][Bridge-Client] 收到响应 #${id}:`, event.data)
       if (event.data.error) {
-        console.warn('[115m-v2][Bridge] 错误响应:', event.data.error)
+        console.warn(`[115m-v2][Bridge-Client] 响应报错 #${id}:`, event.data.error)
         resolve(null)
       }
       else {
@@ -32,7 +36,7 @@ export async function callExtensionBridge<T = unknown>(payload: unknown, timeout
     window.addEventListener('message', handler)
     timer = setTimeout(() => {
       window.removeEventListener('message', handler)
-      console.warn('[115m-v2][Bridge] 调用超时:', payload)
+      console.warn(`[115m-v2][Bridge-Client] 请求超时 #${id}:`, payload)
       resolve(null)
     }, timeoutMs)
 
