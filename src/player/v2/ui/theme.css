@@ -1089,7 +1089,7 @@ video {
   -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
-/* 选中项：告别生硬矩形蓝线框，完全统一为三联同款【蓝白地平线激光微光】常驻激活 */
+/* 选中项：保留三联同款地平线材质，但常驻强度压低，避免过亮抢眼 */
 .m115-v2-pop-item.selected {
   background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
@@ -1098,14 +1098,14 @@ video {
 }
 
 .m115-v2-pop-item.selected::after {
-  opacity: 1;
+  opacity: 0.38;
   mask-image: linear-gradient(0deg, #fff, transparent);
   -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
 .m115-v2-pop-item.selected svg {
   color: var(--m115-aurora-core);
-  filter: drop-shadow(0 0 4px var(--m115-aurora-glow));
+  filter: drop-shadow(0 0 3px hsla(210deg, 100%, 68%, 0.4));
 }
 
 @keyframes m115PopIn {
