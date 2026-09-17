@@ -11,18 +11,19 @@
   --m115-pill-border: rgba(255, 255, 255, 0.12);
 }
 
-/* 根视口 (Flex 双栏，支持播放列表右侧挤压式展开) */
+/* 根视口 (Flex 双栏，最高层级绝对固定，屏蔽页面底层遗留杂质) */
 .m115-v2-viewport {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   overflow: hidden;
   background: #000;
   display: flex;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #fff;
   user-select: none;
+  z-index: 9999 !important;
 }
 
 .m115-v2-player-pane {
@@ -1286,17 +1287,28 @@ video {
   -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
 }
 
-/* 当前播放集数 (Active)：彻底去除生硬大蓝粗框，常驻亮起三联同款【蓝白地平线微光】 */
+/* 当前播放集数 (Active)：做极致淡化处理，彻底拿掉刺眼的长条强光 */
 .m115-v2-card-item.active {
-  background: rgba(24, 144, 255, 0.08);
-  border: 1px solid rgba(24, 144, 255, 0.25);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: rgba(24, 144, 255, 0.07);
+  border: 1px solid rgba(24, 144, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 左侧贴上 3px 极简克制的科技蓝指示条 */
+.m115-v2-card-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--m115-blue);
+  box-shadow: 0 0 6px var(--m115-blue);
 }
 
 .m115-v2-card-item.active::after {
-  opacity: 1;
-  mask-image: linear-gradient(0deg, #fff, transparent);
-  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+  display: none !important;
 }
 
 .m115-v2-card-name {
