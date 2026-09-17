@@ -142,51 +142,54 @@ export class PlaybackSession {
     }
   }
 
-  /** 移动当前文件到其它目录（复用旧 MoveDialog 目录树弹窗）。 */
-  async moveCurrent(): Promise<void> {
+  /** 移动指定剧集到其它目录。 */
+  async moveEpisode(pickCode: string): Promise<void> {
     const content = this.content.get()
-    const item = content.playlist.find(entry => entry.pickCode === content.pickCode)
+    const item = content.playlist.find(entry => entry.pickCode === pickCode)
     if (!item?.fileId) return
 
-    const dialog = new MoveDialog(item.fileId, content.cid || '0', () => {})
+    const dialog = new MoveDialog(item.fileId, item.cid || content.cid || '0', () => {})
     const result = await dialog.show()
     if (!result.moved) return
-
-    // 移动后当前文件已不在本目录：从列表移除并跳到下一集
-    const fallback = getDeleteFallback(content.playlist, content.pickCode)
-    const remaining = content.playlist.filter(entry => entry.pickCode !== content.pickCode)
-    this.content.set({ playlist: remaining })
-
-    if (fallback.nextPickCode) {
-      void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
-    }
+    this.removeFromList(pickCode)
   }
 
-  /** 删除当前视频，并自动跳到下一集（无则上一集，再无则返回）。 */
-  async removeCurrent(): Promise<void> {
+  /** 删除指定剧集；若为当前集则自动跳到下一集。 */
+  async deleteEpisode(pickCode: string): Promise<void> {
     const content = this.content.get()
-    const item = content.playlist.find(entry => entry.pickCode === content.pickCode)
+    const item = content.playlist.find(entry => entry.pickCode === pickCode)
     if (!item?.fileId) return
-    if (!window.confirm(`确定删除「${content.title || item.name}」吗？`)) return
+    if (!window.confirm(`确定删除「${item.name}」吗？`)) return
 
     try {
-      await removeVideo(item.fileId, content.cid, content.pickCode)
+      await removeVideo(item.fileId, item.cid || content.cid, pickCode)
     }
     catch (error) {
       console.warn('[115m-v2] 删除失败', error)
       return
     }
+    this.removeFromList(pickCode)
+  }
 
-    const fallback = getDeleteFallback(content.playlist, content.pickCode)
-    const remaining = content.playlist.filter(entry => entry.pickCode !== content.pickCode)
-    this.content.set({ playlist: remaining })
+  private removeFromList(pickCode: string): void {
+    const content = this.content.get()
+    const wasCurrent = content.pickCode === pickCode
+    const fallback = getDeleteFallback(content.playlist, pickCode)
+    this.content.set({ playlist: content.playlist.filter(entry => entry.pickCode !== pickCode) })
 
-    if (fallback.nextPickCode) {
-      void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
+    if (wasCurrent) {
+      if (fallback.nextPickCode) {
+        void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
+      }
+      else {
+        window.history.back()
+      }
     }
-    else {
-      window.history.back()
-    }
+  }
+
+  /** 删除当前视频，并自动跳到下一集（无则上一集，再无则返回）。 */
+  async removeCurrent(): Promise<void> {
+    await this.deleteEpisode(this.content.get().pickCode)
   }
 
   next(autoPlay = true): void {

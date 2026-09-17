@@ -106,7 +106,7 @@ export async function igniteV2Player() {
         const url = `https://115.com/?cid=${encodeURIComponent(item.cid)}&offset=0&tab=&mode=wangpan`
         window.open(url, '_blank', 'noopener')
       },
-      onMove: () => void session.moveCurrent(),
+      onMove: () => void session.moveEpisode(session.content.get().pickCode),
       onDownload: () => void session.download(),
       onDelete: () => void session.removeCurrent(),
       onToggleFavorite: (marked) => void session.toggleFavorite(marked),
@@ -114,6 +114,8 @@ export async function igniteV2Player() {
       onNext: () => session.next(true),
       onRotate: () => core.rotate(),
       onSelectEpisode: (code) => session.switchTo(code, { autoPlay: true, keepPlaylistOpen: true }),
+      onMoveEpisode: (code) => void session.moveEpisode(code),
+      onDeleteEpisode: (code) => void session.deleteEpisode(code),
       onSelectQuality: (label) => void session.setQuality(label),
       onSelectAudioTrack: (id) => core.selectAudioTrack(id),
       onSelectSubtitle: (sid) => void session.setSubtitle(sid),

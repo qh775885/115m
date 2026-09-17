@@ -1290,6 +1290,29 @@ video {
   gap: 8px;
 }
 
+/* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
+.m115-v2-drawer-body .m115-pl-item {
+  border-radius: 10px !important;
+}
+
+.m115-v2-drawer-body .m115-pl-thumb {
+  width: 92px !important;
+  height: 52px !important;
+  border-radius: 6px !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active > span:first-child {
+  color: var(--m115-accent) !important;
+}
+
+.m115-v2-drawer-body [data-role="playlist-progress-bar"] {
+  background: var(--m115-engine-blue) !important;
+}
+
 /* 剧集卡片 (注入三联同款黑曜石微透底与地平线微光，彻底消除生硬大蓝框) */
 .m115-v2-card-item {
   position: relative;

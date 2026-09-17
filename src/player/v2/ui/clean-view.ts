@@ -11,6 +11,12 @@ import type { PlayerState } from '../state/player-state'
 import type { ContentState } from '../state/content-state'
 import type { Store } from '../state/store'
 import type { OverlayPlaylistItem } from '../../core/overlay-types'
+import {
+  bindPlaylistInteractions,
+  buildPlaylistHtml,
+  lazyLoadPlaylistCovers,
+  scrollActivePlaylistNodeIntoView,
+} from '../../core/overlay-playlist'
 import type { SubtitleController } from '../controller/subtitles'
 
 export interface BreadcrumbNode {
@@ -34,6 +40,8 @@ export interface CleanViewOptions {
   onNext?: () => void
   onRotate?: () => void
   onSelectEpisode?: (pickCode: string) => void
+  onMoveEpisode?: (pickCode: string) => void
+  onDeleteEpisode?: (pickCode: string) => void
   onSelectQuality?: (label: string) => void
   onSelectAudioTrack?: (id: string) => void
   onSelectSubtitle?: (sid: string) => void
@@ -392,31 +400,20 @@ export function mountCleanView(options: CleanViewOptions) {
   const drawerHeading = playlistAside.querySelector('.m115-v2-drawer-heading') as HTMLElement
   const drawerBody = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
 
+  let disposePlaylistCovers: (() => void) | null = null
+
   const renderEpisodes = (items: OverlayPlaylistItem[], curPickCode: string) => {
-    drawerBody.innerHTML = ''
-    items.forEach((item) => {
-      const card = document.createElement('div')
-      card.className = `m115-v2-card-item ${item.pickCode === curPickCode ? 'active' : ''}`
+    disposePlaylistCovers?.()
+    disposePlaylistCovers = null
 
-      const nameEl = document.createElement('div')
-      nameEl.className = 'm115-v2-card-name'
-      nameEl.textContent = item.name
-      card.appendChild(nameEl)
-
-      const meta = [
-        item.progressPercent != null ? `已看 ${Math.round(item.progressPercent)}%` : '',
-        item.size || '',
-      ].filter(Boolean).join(' · ')
-      if (meta) {
-        const metaEl = document.createElement('div')
-        metaEl.className = 'm115-v2-card-meta'
-        metaEl.textContent = meta
-        card.appendChild(metaEl)
-      }
-
-      card.onclick = () => options.onSelectEpisode?.(item.pickCode)
-      drawerBody.appendChild(card)
+    drawerBody.innerHTML = buildPlaylistHtml(items, curPickCode)
+    bindPlaylistInteractions(drawerBody, curPickCode, items, {
+      onPlay: (pickCode) => options.onSelectEpisode?.(pickCode),
+      onMove: (item) => options.onMoveEpisode?.(item.pickCode),
+      onDelete: (item) => options.onDeleteEpisode?.(item.pickCode),
     })
+    disposePlaylistCovers = lazyLoadPlaylistCovers(drawerBody, items)
+    scrollActivePlaylistNodeIntoView(drawerBody, curPickCode)
   }
 
   // ───────────────────────────────────────────
@@ -765,6 +762,7 @@ export function mountCleanView(options: CleanViewOptions) {
     destroy() {
       unsubscribe()
       unsubscribeContent()
+      disposePlaylistCovers?.()
       if (idleTimer) clearTimeout(idleTimer)
     },
   }
