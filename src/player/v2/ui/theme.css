@@ -1138,16 +1138,16 @@ video {
   transform: translateY(-50%) scaleY(0.97);
 }
 
-/* 展开状态：微光蓝光纤，淡亮柔光 */
+/* 展开状态：低饱和冷灰蓝光纤，融入中性色系 */
 .m115-v2-drawer-toggle-handle.open {
-  background: hsla(210deg, 100%, 70%, 0.1);
-  border-color: hsla(210deg, 100%, 70%, 0.28);
+  background: hsla(210deg, 42%, 70%, 0.08);
+  border-color: hsla(210deg, 42%, 70%, 0.2);
   opacity: 1;
 }
 
 .m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
-  background: hsla(210deg, 100%, 80%, 0.9);
-  box-shadow: 0 0 5px hsla(210deg, 100%, 70%, 0.5);
+  background: hsla(210deg, 45%, 76%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.3);
 }
 
 /* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
@@ -1279,7 +1279,7 @@ video {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* 左侧 3px 微光蓝立标（淡亮柔光，克制不刺眼） */
+/* 左侧 3px 低饱和冷灰蓝立标（融入中性色系的冷调，柔光极弱） */
 .m115-v2-card-item.active::before {
   content: "";
   position: absolute;
@@ -1288,8 +1288,8 @@ video {
   bottom: 22%;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: hsla(210deg, 100%, 78%, 0.9);
-  box-shadow: 0 0 6px hsla(210deg, 100%, 70%, 0.5);
+  background: hsla(210deg, 42%, 72%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.28);
 }
 
 /* 选中项不参与地平线极光，保持绝对安静 */
