@@ -1,25 +1,15 @@
 /* 115m 2.0 现代专业工业级影院布局系统 (Bilibili / YouTube 顶级工业对齐标准) */
 
 :root {
-  /* 115 品牌锚点（保留 115 基因，慎用于大面积实心） */
-  --m115-blue: #1890ff;
-  --m115-blue-hover: #40a9ff;
-
-  /* 极光蓝白色阶：与【地平线激光】同源同族 (210° 色相)，仅调明度以统一发光材质 */
-  --m115-aurora-deep: hsl(210deg, 100%, 56%);
-  --m115-aurora-core: hsl(210deg, 100%, 68%);
-  --m115-aurora-soft: hsl(210deg, 100%, 78%);
-  --m115-aurora-glow: hsla(210deg, 100%, 68%, 0.55);
-
-  /* 引擎正蓝：进度 / 音量 / 列表强调 / 侧键 统一使用的唯一进度蓝 */
+  /* 唯一进度蓝：进度条 / 音量填充 */
   --m115-engine-blue: #2b90ff;
+
+  /* 唯一强调冷蓝：列表选中项 / 侧键 / 菜单对勾 / 面包屑悬停 */
+  --m115-accent: hsl(210deg, 42%, 72%);
 
   --m115-text-title: #ffffff;
   --m115-text-regular: rgba(255, 255, 255, 0.88);
   --m115-text-muted: rgba(255, 255, 255, 0.55);
-  --m115-btn-hover-bg: rgba(255, 255, 255, 0.12);
-  --m115-pill-bg: rgba(255, 255, 255, 0.08);
-  --m115-pill-border: rgba(255, 255, 255, 0.12);
 }
 
 /* 根视口 (Flex 双栏，最高层级绝对固定，屏蔽页面底层遗留杂质) */
@@ -150,7 +140,7 @@ video {
 .m115-v2-back-btn {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,8 +150,8 @@ video {
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
 }
 
 .m115-v2-back-btn svg {
@@ -294,7 +284,7 @@ video {
 }
 
 .m115-v2-crumb-item:hover {
-  color: var(--m115-aurora-core);
+  color: var(--m115-accent);
   text-decoration: underline;
 }
 
@@ -501,7 +491,7 @@ video {
   height: 11px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px var(--m115-aurora-glow);
+  box-shadow: 0 0 6px rgba(43, 144, 255, 0.5);
   transition: transform 0.15s ease;
 }
 
@@ -569,8 +559,8 @@ video {
 .m115-v2-vol-group:hover {
   background: rgba(17, 17, 19, 0.75);
   border-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -698,8 +688,8 @@ video {
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
   box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -742,8 +732,8 @@ video {
   color: #ffffff;
   cursor: pointer;
   box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
@@ -992,7 +982,7 @@ video {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--m115-aurora-core);
+  color: var(--m115-accent);
   transition: opacity 0.15s ease;
 }
 
@@ -1062,8 +1052,8 @@ video {
 }
 
 .m115-v2-pop-item.selected svg {
-  color: var(--m115-aurora-core);
-  filter: drop-shadow(0 0 3px hsla(210deg, 100%, 68%, 0.4));
+  color: var(--m115-accent);
+  filter: drop-shadow(0 0 3px hsla(210deg, 55%, 72%, 0.45));
 }
 
 @keyframes m115PopIn {
@@ -1163,7 +1153,8 @@ video {
   height: 100%;
   background: rgba(17, 17, 19, 0.96);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
   overflow: hidden;
   transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), flex-basis 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
