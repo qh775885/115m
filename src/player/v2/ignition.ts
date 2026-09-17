@@ -85,11 +85,6 @@ export async function igniteV2Player() {
       <media-provider></media-provider>
     `
 
-    player.src = {
-      src: source.src,
-      type: source.type,
-    }
-
     // 100% 沿用老版经典成熟架子，底层交由 Vidstack 强劲驱动
     const scaffold = mountLegacyScaffold({
       container,
@@ -111,6 +106,11 @@ export async function igniteV2Player() {
         if (sidebar) sidebar.classList.toggle('open')
       },
     })
+
+    player.src = {
+      src: source.src,
+      type: source.type,
+    }
 
     const titleParam = params.get('title')
     const fileSizeParam = params.get('fileSize')

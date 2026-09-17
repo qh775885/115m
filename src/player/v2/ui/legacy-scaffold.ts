@@ -160,34 +160,81 @@ function injectFullLegacyStyles() {
 
     /* 保证 Vidstack 充满父容器并置于最底层 */
     media-player {
+      display: block !important;
+      position: absolute !important;
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       aspect-ratio: unset !important;
-      position: absolute !important;
-      inset: 0 !important;
       overflow: hidden !important;
       z-index: 1 !important;
-      display: block !important;
     }
     media-player[data-view-type='video'] {
       aspect-ratio: unset !important;
     }
     media-provider {
+      display: block !important;
       position: absolute !important;
       inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
     }
     video {
+      display: block !important;
       position: absolute !important;
       inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       object-fit: contain !important;
-      display: block !important;
+    }
+
+    /* 顶部老版按钮与胶囊完整样式 (彻底消灭白底大方块) */
+    .m115-header-back {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      background: transparent !important;
+      color: rgba(255, 255, 255, 0.88) !important;
+      cursor: pointer !important;
+      flex-shrink: 0 !important;
+      transition: background 0.16s ease !important;
+    }
+    .m115-header-back:hover {
+      background: rgba(255, 255, 255, 0.12) !important;
+      color: #fff !important;
+    }
+    .m115-header-pill-group {
+      display: flex !important;
+      align-items: center !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      background: rgba(0, 0, 0, 0.42) !important;
+      padding: 2px !important;
+      gap: 0 !important;
+    }
+    .m115-header-action {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 999px !important;
+      border: none !important;
+      background: transparent !important;
+      color: rgba(255, 255, 255, 0.82) !important;
+      cursor: pointer !important;
+      transition: background 0.16s ease, color 0.16s ease !important;
+    }
+    .m115-header-action:hover {
+      background: rgba(255, 255, 255, 0.12) !important;
+      color: #fff !important;
+    }
+    .m115-header-action.m115-fav-btn.is-marked {
+      color: #fbbf24 !important;
     }
 
     /* 顶部与底部渐变暗部遮罩 */
