@@ -7,6 +7,9 @@ export default defineConfig({
   outDir: 'dist',
   vite: () => ({
     plugins: [tailwindcss()],
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+    },
     build: {
       minify: false,
       sourcemap: 'inline',
