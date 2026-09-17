@@ -1138,16 +1138,16 @@ video {
   transform: translateY(-50%) scaleY(0.97);
 }
 
-/* 展开状态：低调安静的引擎正蓝，去掉强光晕，与列表强调条同一支蓝 */
+/* 展开状态：微光白光纤，中性克制不带蓝 */
 .m115-v2-drawer-toggle-handle.open {
-  background: rgba(43, 144, 255, 0.12);
-  border-color: rgba(43, 144, 255, 0.32);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
   opacity: 1;
 }
 
 .m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
-  background: var(--m115-engine-blue);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.45);
 }
 
 /* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
@@ -1161,7 +1161,7 @@ video {
   min-width: 0;
   flex: 0 0 0;
   height: 100%;
-  background: rgba(14, 18, 26, 0.96);
+  background: rgba(17, 17, 19, 0.96);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(24px);
   overflow: hidden;
@@ -1279,7 +1279,7 @@ video {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* 左侧 3px 安静的正蓝立标（无发光，纯色克制） */
+/* 左侧 3px 微光白立标（中性克制，不带蓝） */
 .m115-v2-card-item.active::before {
   content: "";
   position: absolute;
@@ -1288,7 +1288,8 @@ video {
   bottom: 22%;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--m115-engine-blue);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
 /* 选中项不参与地平线极光，保持绝对安静 */
