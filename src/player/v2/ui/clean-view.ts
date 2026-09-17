@@ -194,7 +194,7 @@ export function mountCleanView(options: CleanViewOptions) {
         </button>
       </div>
 
-      <!-- 右侧：一体化黑曜石功能托盘 (完整外壳 + 发丝分割线，与顶栏三联同款精密工艺) -->
+      <!-- 右侧：一体化黑曜石功能托盘 (完整外壳 + 发丝分割线 + 响应式图标与文字) -->
       <div class="m115-v2-ctrl-right">
         <div class="m115-v2-pill-tray">
           <button type="button" class="m115-tray-btn m115-btn-mode" title="播放模式">
@@ -206,19 +206,19 @@ export function mountCleanView(options: CleanViewOptions) {
           </button>
           <div class="m115-tray-divider"></div>
           <button type="button" class="m115-tray-btn m115-btn-quality" title="切换清晰度">
-            原画
+            ${Icons.Quality()} <span class="m115-btn-text">原画</span>
           </button>
           <div class="m115-tray-divider"></div>
           <button type="button" class="m115-tray-btn m115-btn-audio" title="多音频轨道">
-            ${Icons.MediaTrack()} <span>音轨</span>
+            ${Icons.MediaTrack()} <span class="m115-btn-text">音轨</span>
           </button>
           <div class="m115-tray-divider"></div>
           <button type="button" class="m115-tray-btn m115-btn-subtitle" title="字幕设置">
-            字幕
+            ${Icons.Subtitle()} <span class="m115-btn-text">字幕</span>
           </button>
           <div class="m115-tray-divider"></div>
           <button type="button" class="m115-tray-btn m115-btn-speed" title="播放速度">
-            1.0x
+            <span class="m115-btn-text-speed">1.0x</span>
           </button>
           <div class="m115-tray-divider"></div>
           <button type="button" class="m115-tray-btn m115-btn-fullscreen" title="全屏 ( F )">
@@ -333,6 +333,7 @@ export function mountCleanView(options: CleanViewOptions) {
     const willOpen = open !== undefined ? open : !playlistAside.classList.contains('open')
     playlistAside.classList.toggle('open', willOpen)
     toggleHandle.classList.toggle('open', willOpen)
+    viewport.classList.toggle('playlist-open', willOpen)
   }
 
   toggleHandle.addEventListener('click', (e) => {
@@ -465,7 +466,8 @@ export function mountCleanView(options: CleanViewOptions) {
       { id: 'fhd', label: '1080P 全高清' },
       { id: 'hd', label: '720P 高清' },
     ], 'origin', qualityBtn, (it) => {
-      qualityBtn.textContent = it.label.split(' ')[0]
+      const textSpan = qualityBtn.querySelector('.m115-btn-text')
+      if (textSpan) textSpan.textContent = it.label.split(' ')[0]
     })
   })
 
@@ -499,7 +501,8 @@ export function mountCleanView(options: CleanViewOptions) {
       { id: 1.5, label: '1.5x' },
       { id: 2.0, label: '2.0x 倍速' },
     ], 1.0, speedBtn, (it) => {
-      speedBtn.textContent = String(it.id) + 'x'
+      const textSpan = speedBtn.querySelector('.m115-btn-text-speed')
+      if (textSpan) textSpan.textContent = String(it.id) + 'x'
       const video = playerEl.querySelector('video') as HTMLVideoElement | null
       if (video) video.playbackRate = Number(it.id)
     })
