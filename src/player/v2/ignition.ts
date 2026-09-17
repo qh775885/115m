@@ -1,9 +1,6 @@
 import './lit-shield'
 import 'vidstack/player'
 import 'vidstack/player/ui'
-import 'vidstack/player/layouts/default'
-import 'vidstack/player/styles/default/theme.css'
-import 'vidstack/player/styles/default/layouts/video.css'
 import Hls from 'hls.js'
 import { preparePlaybackSource } from './stream-builder'
 import { mount115Overlay } from './ui/overlay'
@@ -86,7 +83,6 @@ export async function igniteV2Player() {
 
     player.innerHTML = `
       <media-provider></media-provider>
-      <media-video-layout></media-video-layout>
     `
 
     container.appendChild(player)

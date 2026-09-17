@@ -1,60 +1,55 @@
-/* 115m 2.0 官方原生 Vidstack 深度定制主题 */
+/* 115m 2.0 经典排版与克制质感 (100% 对齐老版功能与优雅比例) */
 
 :root {
-  /* 官方品牌色统一注入 115 经典科技蓝 */
-  --media-brand: #1890ff;
-  --media-focus-ring-color: #1890ff;
+  --m115-primary: #1890ff;
+  --m115-primary-hover: #40a9ff;
+  --m115-primary-bg: rgba(24, 144, 255, 0.16);
+  --m115-primary-border: rgba(24, 144, 255, 0.4);
 
-  /* 播放器强制充满父容器，绝不留多余黑边 */
-  --media-width: 100%;
-  --media-height: 100%;
+  --m115-bg-overlay: rgba(18, 20, 26, 0.94);
+  --m115-border-subtle: rgba(255, 255, 255, 0.1);
+  --m115-text-main: rgba(244, 246, 248, 0.92);
+  --m115-text-sub: rgba(255, 255, 255, 0.6);
+  --m115-hover-bg: rgba(255, 255, 255, 0.12);
 }
 
-/* 强制覆盖官方默认的 16/9 锁比，满屏自适应视口 */
-media-player {
-  aspect-ratio: unset !important;
-  width: 100% !important;
-  height: 100% !important;
-  position: relative;
-  overflow: hidden;
-}
-
-media-player[data-view-type='video'] {
-  aspect-ratio: unset !important;
-}
-
-media-provider {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain;
-}
-
-/* 顶部与 115 专属浮层根容器 */
-.m115-overlay-root {
+.m115-v2-shell {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #fff;
+  user-select: none;
   pointer-events: none;
-  z-index: 15;
   transition: opacity 0.22s ease;
+  z-index: 10;
 }
 
-.m115-overlay-root.idle {
+.m115-v2-shell.idle {
   opacity: 0;
+  cursor: none;
 }
 
-/* 顶部暗部渐变遮罩 */
-.m115-overlay-mask-top {
+/* 顶部与底部高动态深黑渐变暗部遮罩 */
+.m115-v2-mask-top {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 140px;
+  height: 130px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+.m115-v2-mask-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
   pointer-events: none;
 }
 
@@ -92,9 +87,9 @@ video {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--m115-border-subtle);
   backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--m115-text-main);
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 2px;
@@ -102,7 +97,7 @@ video {
 }
 
 .m115-v2-back-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--m115-hover-bg);
   border-color: rgba(255, 255, 255, 0.25);
   color: #fff;
   transform: scale(1.05);
@@ -127,9 +122,9 @@ video {
   height: 20px;
   padding: 0 6px;
   border-radius: 4px;
-  background: rgba(24, 144, 255, 0.16);
-  border: 1px solid rgba(24, 144, 255, 0.4);
-  color: #1890ff;
+  background: var(--m115-primary-bg);
+  border: 1px solid var(--m115-primary-border);
+  color: var(--m115-primary);
   font-size: 11px;
   font-weight: 700;
   line-height: 20px;
@@ -151,12 +146,12 @@ video {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--m115-text-sub);
   flex-shrink: 0;
   margin-left: 2px;
 }
 
-/* 面包屑导航行：强制沉降 6px，绝不与标题重叠 */
+/* 面包屑导航行：强制向下隔开，字号清晰，绝不重叠 */
 .m115-v2-breadcrumbs {
   margin-top: 6px;
   display: flex;
@@ -164,7 +159,7 @@ video {
   flex-wrap: nowrap;
   overflow: hidden;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--m115-text-sub);
   line-height: 1.5;
 }
 
@@ -175,7 +170,7 @@ video {
 }
 
 .m115-v2-breadcrumb-item:hover {
-  color: #1890ff;
+  color: var(--m115-primary);
   text-decoration: underline;
 }
 
@@ -202,29 +197,29 @@ video {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--m115-border-subtle);
   backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--m115-text-main);
   cursor: pointer;
   transition: all 0.16s ease;
 }
 
 .m115-v2-fav-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--m115-hover-bg);
   color: #fbbf24;
 }
 
 .m115-v2-fav-btn.active {
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.15);
-  border-color: rgba(251, 191, 36, 0.4);
+  border-color: rgba(251, 191, 36, 0.35);
 }
 
 .m115-v2-top-pill-group {
   display: flex;
   align-items: center;
-  background: rgba(14, 17, 24, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--m115-bg-overlay);
+  border: 1px solid var(--m115-border-subtle);
   backdrop-filter: blur(20px);
   border-radius: 18px;
   padding: 2px;
@@ -237,7 +232,7 @@ video {
   border-radius: 14px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--m115-text-main);
   font-size: 12px;
   font-weight: 500;
   display: flex;
@@ -248,7 +243,7 @@ video {
 }
 
 .m115-v2-top-action-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--m115-hover-bg);
   color: #fff;
 }
 
@@ -258,7 +253,324 @@ video {
 }
 
 /* ────────────────────────────────────────────────────────
-   2. 右侧选集无感抽屉 (默认在屏幕右侧隐藏)
+   2. 底部控制区：经典全宽进度条 + 三大黄金分区
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-bottom-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 24px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  z-index: 20;
+}
+
+/* 全宽时间轴：纯正 115 科技蓝，细致纤薄 */
+.m115-v2-timeline-container {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.m115-v2-timeline-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: height 0.16s ease;
+}
+
+.m115-v2-timeline-container:hover .m115-v2-timeline-track {
+  height: 5px;
+}
+
+.m115-v2-timeline-buffer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.m115-v2-timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--m115-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.5);
+}
+
+.m115-v2-timeline-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px var(--m115-primary);
+  transition: transform 0.15s ease;
+}
+
+.m115-v2-timeline-container:hover .m115-v2-timeline-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* 底栏主横行 */
+.m115-v2-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 40px;
+}
+
+/* 底部左侧：时间与音量 */
+.m115-v2-left-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.m115-v2-time-display {
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--m115-text-main);
+  letter-spacing: 0.3px;
+}
+
+.m115-v2-volume-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 16px;
+  background: transparent;
+  transition: all 0.18s ease;
+}
+
+.m115-v2-volume-cluster:hover {
+  background: var(--m115-hover-bg);
+}
+
+.m115-v2-volume-slider-wrap {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+}
+
+.m115-v2-volume-cluster:hover .m115-v2-volume-slider-wrap {
+  width: 76px;
+}
+
+.m115-v2-volume-slider {
+  width: 70px;
+  height: 4px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.m115-v2-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--m115-primary);
+  box-shadow: 0 0 6px var(--m115-primary);
+}
+
+/* 底部居中：三联主控簇 (上一集 / 大播放 / 下一集) */
+.m115-v2-center-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.m115-v2-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--m115-text-main);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.m115-v2-nav-btn:hover {
+  background: var(--m115-hover-bg);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* 居中主播放键：自然磨砂微透光，悬停微亮蓝光 */
+.m115-v2-center-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--m115-border-subtle);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-center-play-btn:hover {
+  transform: scale(1.08);
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
+  box-shadow: 0 0 14px rgba(24, 144, 255, 0.35);
+}
+
+/* 底部右侧：高频功能区 (扁平无边框，悬停微透底色) */
+.m115-v2-right-cluster {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.m115-v2-ctrl-btn {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--m115-text-main);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.m115-v2-ctrl-btn:hover, .m115-v2-ctrl-btn.active {
+  background: var(--m115-hover-bg);
+  color: #fff;
+}
+
+.m115-v2-ctrl-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--m115-text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.m115-v2-ctrl-icon-btn:hover {
+  background: var(--m115-hover-bg);
+  color: #fff;
+}
+
+/* ────────────────────────────────────────────────────────
+   3. 浮动微卡片菜单 (Sheet)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-sheet {
+  position: absolute;
+  bottom: 60px;
+  right: 24px;
+  width: 210px;
+  background: var(--m115-bg-overlay);
+  border: 1px solid var(--m115-border-subtle);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  z-index: 30;
+  animation: m115SheetIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-sheet.open {
+  display: flex;
+}
+
+.m115-v2-sheet-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--m115-text-sub);
+  padding: 6px 10px 4px 10px;
+  text-transform: uppercase;
+}
+
+.m115-v2-sheet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--m115-text-main);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.m115-v2-sheet-item:hover {
+  background: var(--m115-hover-bg);
+  color: #fff;
+}
+
+.m115-v2-sheet-item.selected {
+  background: var(--m115-primary-bg);
+  color: var(--m115-primary);
+  font-weight: 600;
+}
+
+@keyframes m115SheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ────────────────────────────────────────────────────────
+   4. 右侧选集抽屉 (Drawer)
    ──────────────────────────────────────────────────────── */
 
 .m115-v2-drawer {
@@ -267,9 +579,9 @@ video {
   bottom: 0;
   right: 0;
   width: 320px;
-  background: rgba(14, 17, 24, 0.92);
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(14, 17, 24, 0.94);
+  border-left: 1px solid var(--m115-border-subtle);
+  backdrop-filter: blur(24px);
   box-shadow: -10px 0 36px rgba(0, 0, 0, 0.65);
   transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -310,20 +622,20 @@ video {
 .m115-v2-episode-card {
   padding: 10px 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .m115-v2-episode-card:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--m115-hover-bg);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
 .m115-v2-episode-card.active {
-  background: rgba(24, 144, 255, 0.16);
-  border-color: rgba(24, 144, 255, 0.4);
+  background: var(--m115-primary-bg);
+  border-color: var(--m115-primary-border);
 }
 
 .m115-v2-episode-name {
@@ -337,6 +649,6 @@ video {
 
 .m115-v2-episode-sub {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--m115-text-sub);
   margin-top: 3px;
 }
