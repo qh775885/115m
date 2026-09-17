@@ -45,7 +45,14 @@ async function attachPlaylistProgress(items: OverlayPlaylistItem[]): Promise<Ove
   if (!historyMap) return items
 
   return items.map((item) => {
-    const snapshot = buildPlaylistProgressSnapshot(historyMap[item.pickCode])
+    const record = historyMap[item.pickCode]
+    if (!record?.currentTime) return item
+    // 115 历史接口不返回总时长，用列表项的时长补上
+    const snapshot = buildPlaylistProgressSnapshot({
+      currentTime: record.currentTime,
+      duration: item.duration || 0,
+      watchEnd: record.watchEnd,
+    })
     if (!snapshot) return item
     return {
       ...item,

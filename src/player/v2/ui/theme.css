@@ -1313,6 +1313,36 @@ video {
   background: var(--m115-engine-blue) !important;
 }
 
+/* 条目操作按钮：超椭圆黑曜石玻璃，删除悬停转珊瑚红 */
+.m115-v2-drawer-body .m115-pl-action {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-action svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.m115-v2-drawer-body .m115-pl-action:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  transform: scale(1.06);
+}
+
+.m115-v2-drawer-body .m115-pl-action[data-action="delete"]:hover {
+  background: rgba(248, 113, 113, 0.16) !important;
+  border-color: rgba(248, 113, 113, 0.42) !important;
+  color: #f87171 !important;
+  box-shadow: 0 0 10px -2px rgba(248, 113, 113, 0.5);
+}
+
 /* 剧集卡片 (注入三联同款黑曜石微透底与地平线微光，彻底消除生硬大蓝框) */
 .m115-v2-card-item {
   position: relative;
