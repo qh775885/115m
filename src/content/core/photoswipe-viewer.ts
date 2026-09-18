@@ -46,30 +46,6 @@ export function createPhotoSwipeController(
   zoomBadge.className = 'm115-viewer-zoom-badge'
   zoomBadge.textContent = '100%'
 
-  // 效仿播放器右上角黑曜石晶体胶囊 (下载 + 珊瑚红危险删除)
-  const pillActions = doc.createElement('div')
-  pillActions.className = 'm115-v2-pill-actions'
-
-  const downloadBtn = doc.createElement('button')
-  downloadBtn.type = 'button'
-  downloadBtn.className = 'm115-v2-pill-btn m115-btn-download'
-  downloadBtn.title = '下载原图'
-  downloadBtn.innerHTML = `${Icons.Download()} <span>下载</span>`
-
-  const divider = doc.createElement('div')
-  divider.className = 'm115-v2-pill-divider'
-
-  const deleteBtn = doc.createElement('button')
-  deleteBtn.type = 'button'
-  deleteBtn.className = 'm115-v2-pill-btn m115-btn-delete m115-viewer-frame-delete delete'
-  deleteBtn.title = '删除当前图片'
-  deleteBtn.setAttribute('aria-label', '删除当前图片')
-  deleteBtn.innerHTML = `${Icons.Trash()} <span>删除</span>`
-
-  pillActions.appendChild(downloadBtn)
-  pillActions.appendChild(divider)
-  pillActions.appendChild(deleteBtn)
-
   const closeBtn = doc.createElement('button')
   closeBtn.type = 'button'
   closeBtn.className = 'm115-viewer-tool-btn is-icon'
@@ -80,7 +56,6 @@ export function createPhotoSwipeController(
   toolbarMeta.appendChild(titleEl)
   toolbarMeta.appendChild(zoomHint)
   toolbarActions.appendChild(zoomBadge)
-  toolbarActions.appendChild(pillActions)
   toolbarActions.appendChild(closeBtn)
   toolbar.appendChild(toolbarMeta)
   toolbar.appendChild(toolbarActions)
@@ -111,11 +86,20 @@ export function createPhotoSwipeController(
   loadingEl.className = 'm115-viewer-loading'
   loadingEl.textContent = '加载中…'
 
+  // 右下角黑曜石晶体微胶囊删除键 (效仿播放器三联删除设计语言：平时完全隐匿，悬停时浮现)
+  const deleteBtn = doc.createElement('button')
+  deleteBtn.type = 'button'
+  deleteBtn.className = 'm115-viewer-frame-delete m115-v2-delete-capsule delete'
+  deleteBtn.title = '删除当前图片'
+  deleteBtn.setAttribute('aria-label', '删除当前图片')
+  deleteBtn.innerHTML = `${Icons.Trash()} <span>删除</span>`
+
   mediaFrame.appendChild(imageEl)
   mediaFrame.appendChild(loadingEl)
   stage.appendChild(prevBtn)
   stage.appendChild(mediaFrame)
   stage.appendChild(nextBtn)
+  stage.appendChild(deleteBtn)
 
   // 底部缩略图胶卷条
   const thumbsWrap = doc.createElement('div')
@@ -163,6 +147,18 @@ export function createPhotoSwipeController(
     thumbsToggle.setAttribute('aria-label', thumbsToggle.title)
     thumbsToggle.classList.toggle('open', !thumbsCollapsed)
     thumbsWrap.classList.toggle('is-collapsed', thumbsCollapsed)
+    stage.classList.toggle('thumbs-collapsed', thumbsCollapsed)
+    deleteBtn.classList.toggle('thumbs-collapsed', thumbsCollapsed)
+
+    if (pswpInstance) {
+      pswpInstance.options.padding = {
+        top: 52,
+        bottom: thumbsCollapsed ? 14 : 84,
+        left: 20,
+        right: 20,
+      }
+      pswpInstance.updateSize(true)
+    }
   }
 
   const ensureActiveThumbVisible = () => {
@@ -293,15 +289,6 @@ export function createPhotoSwipeController(
   }
 
   // 事件绑定
-  downloadBtn.addEventListener('click', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const current = items[currentIndex]
-    if (current?.originalUrl) {
-      window.open(current.originalUrl, '_blank')
-    }
-  })
-
   deleteBtn.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -475,6 +462,12 @@ export function createPhotoSwipeController(
               alt: it.title,
             })),
             index: currentIndex,
+            padding: {
+              top: 52,
+              bottom: thumbsCollapsed ? 14 : 84,
+              left: 20,
+              right: 20,
+            },
             showHideAnimationType: 'fade',
             wheelToZoom: true,
             arrowPrev: false,
