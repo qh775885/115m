@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@cbingbing/demuxer": "^2.4.1",
-    "artplayer": "^5.4.0",
     "blueimp-md5": "^2.19.0",
     "hls.js": "^1.6.16",
     "lucide": "^1.25.0",

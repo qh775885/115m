@@ -1,4 +1,4 @@
-import { igniteV2Player } from '../player/v2/ignition'
+import { ignitePlayer } from '../player'
 
 export default defineContentScript({
   matches: [
@@ -16,7 +16,7 @@ export default defineContentScript({
     if ((window as any).__115m_v2_main_started) return
     ;(window as any).__115m_v2_main_started = true
 
-    console.log('[115m-v2][MainWorld] 点火主世界就绪，原生 customElements 状态:', !!window.customElements)
-    await igniteV2Player()
+    console.log('[115m][MainWorld] 播放器主世界点火，原生 customElements 就绪:', !!window.customElements)
+    await ignitePlayer()
   },
 })
