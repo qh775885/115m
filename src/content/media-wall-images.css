@@ -130,56 +130,32 @@ body.m115-viewer-locked {
   gap: 10px;
 }
 
-.m115-viewer-tool-btn {
-  border: var(--m115-border-subtle);
-  border-radius: var(--m115-radius-btn);
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--m115-text-regular);
-  background: var(--m115-bg-glass-btn);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all var(--m115-duration-fast) var(--m115-ease-out);
-  user-select: none;
-}
-
-.m115-viewer-tool-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background-image: linear-gradient(0deg, hsla(210deg, 100%, 70%, 0.14) 0%, transparent 50%);
-  box-shadow: inset 0 -1px 0 0 var(--m115-aurora-hover);
-  opacity: 0;
-  transition: opacity var(--m115-duration-fast) ease;
-}
-
-.m115-viewer-tool-btn:hover {
-  background: var(--m115-bg-glass-btn-hover);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #fff;
-}
-
-.m115-viewer-tool-btn:hover::after {
-  opacity: 1;
-}
-
-.m115-viewer-tool-btn.is-icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: inline-flex;
+/* 右上角关闭按钮：完全对齐播放器关闭小钮 (超椭圆无光效，极其纯正安静) */
+.m115-viewer-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--m115-duration-fast) ease;
 }
 
-.m115-viewer-tool-btn.is-icon svg {
-  width: 15px;
-  height: 15px;
+.m115-viewer-close-btn svg {
+  width: 14px;
+  height: 14px;
   stroke-width: 2px;
+}
+
+.m115-viewer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: scale(1.06);
 }
 
 .m115-viewer-stage {
@@ -210,23 +186,23 @@ body.m115-viewer-locked {
   justify-content: center;
 }
 
-/* 右下角黑曜石晶体微胶囊删除键 (效仿播放器三联删除设计语言：平时完全隐匿，悬停时浮现) */
+/* 右下角删除键 (完全对齐播放器三联删除微胶囊：高度24px，11px字，悬停珊瑚红极光) */
 .m115-viewer-frame-delete {
   position: absolute;
   right: 24px;
   bottom: 84px;
   z-index: 1060;
-  height: 28px;
-  padding: 0 10px;
+  height: 24px;
+  padding: 0 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   border-radius: var(--m115-radius-btn);
-  background: var(--m115-bg-glass-card);
-  border: var(--m115-border-subtle);
-  color: var(--m115-text-regular);
-  font-size: 11.5px;
+  background: rgba(17, 17, 19, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.25px;
   cursor: pointer;
@@ -234,7 +210,7 @@ body.m115-viewer-locked {
   pointer-events: none;
   backdrop-filter: var(--m115-glass-blur);
   -webkit-backdrop-filter: var(--m115-glass-blur);
-  box-shadow: var(--m115-shadow-floating), var(--m115-inset-highlight);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), var(--m115-inset-highlight);
   user-select: none;
   overflow: hidden;
   transition: all var(--m115-duration-normal) var(--m115-ease-out);
@@ -256,11 +232,12 @@ body.m115-viewer-locked {
   width: 13px;
   height: 13px;
   stroke: currentColor;
-  stroke-width: 1.8px;
+  stroke-width: 1.6px;
   flex: 0 0 auto;
+  transition: transform var(--m115-duration-fast) ease, color var(--m115-duration-fast) ease;
 }
 
-/* 效仿播放器三联删除特调珊瑚红微光 */
+/* 播放器三联删除特调珊瑚红地平线微光 */
 .m115-viewer-frame-delete::after {
   content: "";
   position: absolute;
@@ -270,7 +247,7 @@ body.m115-viewer-locked {
   background-image: linear-gradient(
     0deg,
     #ffffff,
-    var(--m115-danger),
+    #f87171,
     rgba(248, 113, 113, 0.5),
     12%,
     transparent
@@ -281,11 +258,11 @@ body.m115-viewer-locked {
 
 .m115-viewer-frame-delete:hover {
   opacity: 1 !important;
-  background: var(--m115-danger-bg);
-  border-color: var(--m115-danger-border);
-  color: var(--m115-danger);
-  transform: scale(1.04);
-  box-shadow: 0 8px 24px rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+  box-shadow: 0 4px 18px rgba(248, 113, 113, 0.2);
+  transform: translateY(-0.5px);
   pointer-events: auto;
 }
 
@@ -294,7 +271,7 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-frame-delete:hover svg {
-  color: var(--m115-danger);
+  color: #f87171;
   filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.6));
 }
 

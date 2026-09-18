@@ -5,7 +5,6 @@
 
 import { Icons } from '../../../shared/icons'
 import type { ViewerStore } from '../state/viewer-store'
-import { computeToggleZoom } from '../engine/gesture-engine'
 
 export function mountToolbar(doc: Document, store: ViewerStore): HTMLElement {
   const toolbar = doc.createElement('div')
@@ -27,32 +26,17 @@ export function mountToolbar(doc: Document, store: ViewerStore): HTMLElement {
   const actions = doc.createElement('div')
   actions.className = 'm115-viewer-actions'
 
-  const zoomBadge = doc.createElement('button')
-  zoomBadge.type = 'button'
-  zoomBadge.className = 'm115-viewer-zoom-badge'
-  zoomBadge.textContent = '100%'
-  zoomBadge.title = '切换缩放 (双击可切换)'
-
   const closeBtn = doc.createElement('button')
   closeBtn.type = 'button'
-  closeBtn.className = 'm115-viewer-tool-btn is-icon'
+  closeBtn.className = 'm115-viewer-close-btn m115-viewer-tool-btn'
   closeBtn.innerHTML = Icons.Close()
-  closeBtn.title = '关闭'
+  closeBtn.title = '关闭 (Esc)'
   closeBtn.setAttribute('aria-label', '关闭')
 
-  actions.appendChild(zoomBadge)
   actions.appendChild(closeBtn)
 
   toolbar.appendChild(meta)
   toolbar.appendChild(actions)
-
-  // 事件绑定
-  zoomBadge.addEventListener('click', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const nextScale = computeToggleZoom(store.get().zoomScale)
-    store.setZoom(nextScale)
-  })
 
   closeBtn.addEventListener('click', (e) => {
     e.preventDefault()
@@ -74,11 +58,8 @@ export function mountToolbar(doc: Document, store: ViewerStore): HTMLElement {
       }
     }
 
-    // 2. 缩放微徽章与提示
+    // 2. 放大时显示提示
     if (state.zoomScale !== prev.zoomScale) {
-      const percent = Math.round(state.zoomScale * 100)
-      zoomBadge.textContent = `${percent}%`
-      zoomBadge.classList.toggle('is-active', state.zoomScale > 1.04)
       zoomHint.classList.toggle('is-active', state.zoomScale > 1.04)
     }
   })
