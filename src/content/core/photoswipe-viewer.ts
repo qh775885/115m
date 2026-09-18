@@ -106,10 +106,10 @@ export function createPhotoSwipeController(
 
   const thumbsToggle = doc.createElement('button')
   thumbsToggle.type = 'button'
-  thumbsToggle.className = 'm115-viewer-thumbs-toggle'
-  thumbsToggle.innerHTML = Icons.ChevronDown()
-  thumbsToggle.title = '收起缩略图'
-  thumbsToggle.setAttribute('aria-label', '收起缩略图')
+  thumbsToggle.className = 'm115-viewer-thumbs-toggle open'
+  thumbsToggle.title = '展开/收起缩略图'
+  thumbsToggle.setAttribute('aria-label', '展开/收起缩略图')
+  thumbsToggle.innerHTML = '<span class="m115-v2-handle-filament"></span>'
 
   const thumbs = doc.createElement('div')
   thumbs.className = 'm115-viewer-thumbs'
@@ -142,9 +142,9 @@ export function createPhotoSwipeController(
   })
 
   const updateThumbsToggle = () => {
-    thumbsToggle.innerHTML = thumbsCollapsed ? Icons.ChevronDown() : Icons.Minus()
     thumbsToggle.title = thumbsCollapsed ? '展开缩略图' : '收起缩略图'
     thumbsToggle.setAttribute('aria-label', thumbsToggle.title)
+    thumbsToggle.classList.toggle('open', !thumbsCollapsed)
     thumbsWrap.classList.toggle('is-collapsed', thumbsCollapsed)
   }
 
@@ -307,20 +307,46 @@ export function createPhotoSwipeController(
     updateThumbsToggle()
   })
 
-  const getCurrentZoom = () => {
-    if (pswpInstance?.currSlide?.currZoomLevel) {
-      return pswpInstance.currSlide.currZoomLevel
+  const getRelativeZoom = (): number => {
+    if (pswpInstance?.currSlide) {
+      const slide = pswpInstance.currSlide
+      const initial = slide.zoomLevels?.initial || 1
+      const current = slide.currZoomLevel || initial
+      return current / initial
     }
     return zoomScale
   }
 
-  const zoomTo = (level: number, point?: { x: number, y: number }) => {
+  const toggleZoomAt = (point?: { x: number, y: number }) => {
+    const pt = point || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    if (pswpInstance?.currSlide) {
+      const slide = pswpInstance.currSlide
+      if (typeof slide.toggleZoom === 'function') {
+        slide.toggleZoom(pt)
+      } else {
+        const rel = getRelativeZoom()
+        const initial = slide.zoomLevels?.initial || 1
+        const secondary = slide.zoomLevels?.secondary || initial * 2
+        const target = rel > 1.05 ? initial : secondary
+        slide.zoomTo(target, pt, 200)
+      }
+      const rel = getRelativeZoom()
+      updateZoomUi(rel)
+    } else {
+      const nextZoom = zoomScale > 1.05 ? 1 : 2
+      updateZoomUi(nextZoom)
+      imageEl.style.transform = `translate(-50%, -50%) scale(${nextZoom})`
+    }
+  }
+
+  const zoomToRelative = (level: number, point?: { x: number, y: number }) => {
     const next = Math.max(1, Math.min(5, level))
     const finalZoom = Math.abs(next - 1) < 0.05 ? 1 : next
     updateZoomUi(finalZoom)
     if (pswpInstance?.currSlide) {
-      const pt = point || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-      pswpInstance.currSlide.zoomTo(finalZoom, pt, 150)
+      const slide = pswpInstance.currSlide
+      const initial = slide.zoomLevels?.initial || 1
+      slide.zoomTo(finalZoom * initial, point || { x: window.innerWidth / 2, y: window.innerHeight / 2 }, 150)
     } else {
       imageEl.style.transform = `translate(-50%, -50%) scale(${finalZoom})`
     }
@@ -329,9 +355,7 @@ export function createPhotoSwipeController(
   zoomBadge.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const current = getCurrentZoom()
-    const nextZoom = current > 1.05 ? 1 : 2
-    zoomTo(nextZoom, { x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    toggleZoomAt({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
   })
 
   imageEl.addEventListener('click', (e) => {
@@ -341,9 +365,7 @@ export function createPhotoSwipeController(
   imageEl.addEventListener('dblclick', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const current = getCurrentZoom()
-    const nextZoom = current > 1.05 ? 1 : 2
-    zoomTo(nextZoom, { x: e.clientX, y: e.clientY })
+    toggleZoomAt({ x: e.clientX, y: e.clientY })
   })
 
   overlay.addEventListener('click', (e) => {
@@ -364,14 +386,14 @@ export function createPhotoSwipeController(
     }
     e.preventDefault()
 
-    const currentZoom = getCurrentZoom()
+    const currentRelZoom = getRelativeZoom()
 
     // 1. 放大状态下（> 1.05）：滚轮由切图转为以光标为中心的平滑缩放
-    if (currentZoom > 1.05) {
+    if (currentRelZoom > 1.05) {
       accumulatedWheel = 0
       const factor = e.deltaY < 0 ? 1.15 : 0.87
-      const nextZoom = currentZoom * factor
-      zoomTo(nextZoom, { x: e.clientX, y: e.clientY })
+      const nextRelZoom = currentRelZoom * factor
+      zoomToRelative(nextRelZoom, { x: e.clientX, y: e.clientY })
       return
     }
 
@@ -445,8 +467,9 @@ export function createPhotoSwipeController(
           })
 
           pswp.on('zoomPanUpdate', () => {
-            const z = pswp.currSlide?.currZoomLevel || 1
-            updateZoomUi(z)
+            const rel = getRelativeZoom()
+            zoomScale = rel
+            updateZoomUi(rel)
           })
 
           pswp.on('close', () => {

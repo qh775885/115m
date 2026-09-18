@@ -450,37 +450,83 @@
   transform: translateY(100%);
 }
 
+/* 底部胶卷条展开/收起手柄 (效仿播放器侧键感应轨设计语言) */
 .m115-viewer-thumbs-toggle {
   position: absolute;
-  top: -26px;
+  top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 8px 8px 0 0;
-  background: rgba(17, 17, 19, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 90px;
+  height: 8px;
+  padding: 0;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
-  backdrop-filter: blur(20px) saturate(190%);
-  -webkit-backdrop-filter: blur(20px) saturate(190%);
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 11px;
-  cursor: pointer;
+  /* 翼根长弧：靠底边为根，向上平缓收尖 */
+  border-radius: 14% 14% 0 0 / 100% 100% 0 0;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.16s ease;
+  cursor: pointer;
+  z-index: 1060;
+  opacity: 0.45;
+  user-select: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 内部纤薄发丝微光微芯 (横向) */
+.m115-viewer-thumbs-toggle .m115-v2-handle-filament {
+  width: 32px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  transition: all 0.22s ease;
+  pointer-events: none;
+}
+
+/* 触碰悬停：翼根外扩提亮，发丝发光 */
 .m115-viewer-thumbs-toggle:hover {
-  color: #fff;
-  background: rgba(17, 17, 19, 0.94);
+  opacity: 0.95;
+  height: 12px;
+  top: -12px;
+  background: rgba(24, 24, 26, 0.75);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.5);
 }
 
-.m115-viewer-thumbs-toggle svg {
-  width: 14px;
+.m115-viewer-thumbs-toggle:hover .m115-v2-handle-filament {
+  background: #ffffff;
+  width: 46px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+}
+
+/* 展开激活状态：低饱和冷灰蓝微光，融入中性体系 */
+.m115-viewer-thumbs-toggle.open {
+  opacity: 0.85;
+}
+
+.m115-viewer-thumbs-toggle.open .m115-v2-handle-filament {
+  background: hsla(210deg, 45%, 76%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.3);
+}
+
+/* 胶卷条收起状态：手柄贴合在视口最底部，悬停时随时呼出 */
+.m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle {
+  top: -14px;
   height: 14px;
-  stroke-width: 2px;
+  opacity: 0.6;
+  background: rgba(17, 17, 19, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: none;
+}
+
+.m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle:hover {
+  opacity: 1;
+  height: 18px;
+  top: -18px;
 }
 
 .m115-viewer-thumbs {
