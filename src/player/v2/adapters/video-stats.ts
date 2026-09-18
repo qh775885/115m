@@ -19,7 +19,7 @@ export function formatResolution(width: number, height: number): { label: string
   if (!width || !height) return { label: '未知', tag: '' }
   const maxDim = Math.max(width, height)
   const minDim = Math.min(width, height)
-  let tag = ''
+  let tag: string
   if (maxDim >= 3800 || minDim >= 2100) tag = '4K'
   else if (maxDim >= 2500 || minDim >= 1400) tag = '2K'
   else if (maxDim >= 1900 || minDim >= 1000) tag = '1080P'

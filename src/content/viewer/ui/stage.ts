@@ -87,7 +87,9 @@ export function mountStage(doc: Document, store: ViewerStore): HTMLElement {
     startPanY = store.get().panY
     try {
       imageEl.setPointerCapture(pointerId)
-    } catch {}
+    } catch {
+      // 忽略不支持指针捕获时的异常
+    }
     store.setDragging(true)
     e.preventDefault()
   })
@@ -113,7 +115,9 @@ export function mountStage(doc: Document, store: ViewerStore): HTMLElement {
     isPointerDown = false
     try {
       imageEl.releasePointerCapture(pointerId)
-    } catch {}
+    } catch {
+      // 忽略不支持指针释放时的异常
+    }
     store.setDragging(false)
   }
 

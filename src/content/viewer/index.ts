@@ -18,7 +18,9 @@ export function resolveViewerRootDoc(doc: Document): Document {
     if (topDoc && topDoc.body) {
       return topDoc
     }
-  } catch {}
+  } catch {
+    // 跨域或安全限制时回退使用当前文档
+  }
   return doc
 }
 
