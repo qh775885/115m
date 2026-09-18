@@ -25,6 +25,7 @@ import { createWheelGestureState, pushWheelGesture } from './viewer-wheel'
 import { Icons } from '../../shared/icons'
 import { showToast } from '../../shared/ui/toast'
 import { getFileType, getImageIv, getImageThumbUrl, getItemCheckboxes, getItemParentId, getItemTitle } from './native-dom'
+import { createPhotoSwipeController } from './photoswipe-viewer'
 
 function toOriginalImageUrl(url: string): string {
   return url.replace(/_\d+(\?|$)/, '_0$1')
@@ -720,7 +721,7 @@ export function createImageModule(sendRuntimeMessageSafe: typeof import('./runti
   const getLightboxController = (doc: Document): LightboxController => {
     const existing = lightboxByDoc.get(doc)
     if (existing) return existing
-    const created = createLightboxController(doc, sendRuntimeMessageSafe)
+    const created = createPhotoSwipeController(doc, sendRuntimeMessageSafe)
     lightboxByDoc.set(doc, created)
     return created
   }
