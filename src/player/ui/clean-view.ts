@@ -429,8 +429,13 @@ export function mountCleanView(options: CleanViewOptions) {
         <button type="button" class="m115-v2-modal-close" title="关闭">${Icons.Close()}</button>
       </div>
       <div class="m115-v2-about-body">
-        <div class="m115-v2-about-badge">v2.0 · Vidstack Engine</div>
+        <div class="m115-v2-about-badge">v${__APP_VERSION__} · Vidstack Engine</div>
         <p class="m115-v2-about-desc">为 115 网盘打造的沉浸式极简观影扩展<br>原生画质直连 · 纯净毛玻璃中控 · 现代化流媒体体验</p>
+        <div class="m115-v2-about-meta">
+          <div class="m115-v2-about-meta-item"><span>作者</span><b>老魔</b></div>
+          <div class="m115-v2-about-meta-item"><span>协议</span><b>GPL-3.0</b></div>
+        </div>
+        <p class="m115-v2-about-note">名称、图标与品牌视觉不在开源授权范围内；欢迎复刻，改名改图标并注明出处即可。官方来源仅下方 GitHub 仓库。</p>
         <div class="m115-v2-about-links">
           <a href="https://github.com/qh775885/115m" target="_blank" rel="noopener noreferrer" class="m115-v2-about-btn">
             <span>GitHub 仓库</span>

@@ -7,9 +7,10 @@ export default defineConfig({
   outDir: 'dist',
   vite: ({ mode }) => ({
     plugins: [tailwindcss()],
-    define: mode === 'production' ? {
-      'process.env.NODE_ENV': JSON.stringify('production'),
-    } : {},
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+      ...(mode === 'production' ? { 'process.env.NODE_ENV': JSON.stringify('production') } : {}),
+    },
     build: {
       minify: false,
       sourcemap: 'inline',
