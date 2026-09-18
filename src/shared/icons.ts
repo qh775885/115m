@@ -32,6 +32,7 @@ import {
   Info,
   ExternalLink,
   Activity,
+  FastForward,
   type IconNode,
 } from 'lucide'
 
@@ -105,4 +106,5 @@ export const Icons = {
   Info: lazyIcon(Info, 16, 16),
   ExternalLink: lazyIcon(ExternalLink, 14, 14),
   Activity: lazyIcon(Activity, 14, 14),
+  FastForward: lazyIcon(FastForward, 16, 16),
 }

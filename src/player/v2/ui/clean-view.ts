@@ -117,6 +117,15 @@ export function mountCleanView(options: CleanViewOptions) {
   `
   playerPane.appendChild(previewEl)
 
+  // 长按极速快进指示器
+  const speedHud = document.createElement('div')
+  speedHud.className = 'm115-v2-speed-hud'
+  speedHud.innerHTML = `
+    ${Icons.FastForward()}
+    <span>2.0x 极速快进中</span>
+  `
+  playerPane.appendChild(speedHud)
+
   // 4. 控制层包裹器
   const overlay = document.createElement('div')
   overlay.className = 'm115-v2-controls-overlay'
@@ -1001,8 +1010,50 @@ export function mountCleanView(options: CleanViewOptions) {
     || previewEl.contains(target)
     || contextMenu.contains(target)
     || modalMask.contains(target)
+    || speedHud.contains(target)
+
+  // 画面长按 2.0x 极速快进（松开自动恢复原倍速）
+  let longPressTimer: ReturnType<typeof setTimeout> | null = null
+  let isLongPressing = false
+  let preLongPressRate = 1
+  let cancelNextClick = false
+
+  const startLongPress = (e: MouseEvent) => {
+    if (e.button !== 0) return
+    if (isControlTarget(e.target as Node)) return
+    if (window.getSelection()?.toString()) return
+
+    if (longPressTimer) clearTimeout(longPressTimer)
+    longPressTimer = setTimeout(() => {
+      isLongPressing = true
+      cancelNextClick = true
+      preLongPressRate = options.core.store.get().rate || 1
+      options.core.setRate(2.0)
+      speedHud.classList.add('visible')
+    }, 280)
+  }
+
+  const endLongPress = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      longPressTimer = null
+    }
+    if (isLongPressing) {
+      isLongPressing = false
+      options.core.setRate(preLongPressRate)
+      speedHud.classList.remove('visible')
+    }
+  }
+
+  playerPane.addEventListener('mousedown', startLongPress)
+  window.addEventListener('mouseup', endLongPress)
+  playerPane.addEventListener('mouseleave', endLongPress)
 
   playerPane.addEventListener('click', (e) => {
+    if (cancelNextClick) {
+      cancelNextClick = false
+      return
+    }
     if (isControlTarget(e.target as Node)) return
     if (window.getSelection()?.toString()) return
     options.core.toggle()
@@ -1025,6 +1076,7 @@ export function mountCleanView(options: CleanViewOptions) {
   return {
     viewport,
     destroy() {
+      if (longPressTimer) clearTimeout(longPressTimer)
       if (statsTimer) clearInterval(statsTimer)
       statsTracker.destroy()
       unsubscribe()
