@@ -37,6 +37,14 @@
   <img src="docs/screenshots/viewer-preview.png" alt="115m 大图查看器预览" width="92%" style="border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,0.6);" />
 </div>
 
+<br />
+
+<div align="center">
+  <h3>📁 现代极简媒体墙与列表增强</h3>
+  <p>纯净侧边栏定制 · 智能媒体封面提取 · 视频悬停动态关键帧 · 批量智能解压与转码加速</p>
+  <img src="docs/screenshots/wall-preview.png" alt="115m 媒体墙与列表预览" width="92%" style="border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,0.6);" />
+</div>
+
 ---
 
 ## 核心特性
