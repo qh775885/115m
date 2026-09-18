@@ -6,11 +6,15 @@ const PLAYBACK_SOURCE_MESSAGE_TIMEOUT_MS = 12000
 /**
  * 获取 M3U8 列表（通过 BG 代理避免跨域）
  */
-export async function fetchM3u8WithRetry(pickCode: string): Promise<M3u8Item[]> {
+export async function fetchM3u8WithRetry(
+  pickCode: string,
+  customSender?: (message: unknown, retries?: number, delay?: number, timeoutMs?: number) => Promise<any>
+): Promise<M3u8Item[]> {
+  const sender = customSender || sendTypedRuntimeMessageSafe
   let lastError: unknown
   for (let i = 0; i < 2; i++) {
     try {
-      const res = await sendTypedRuntimeMessageSafe({
+      const res = await sender({
         type: 'FETCH_M3U8',
         data: { pickCode },
       }, 0, 0, PLAYBACK_SOURCE_MESSAGE_TIMEOUT_MS)

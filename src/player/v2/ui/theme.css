@@ -1,0 +1,1887 @@
+/* 115m 2.0 现代专业工业级影院布局系统 (Bilibili / YouTube 顶级工业对齐标准) */
+
+:root {
+  /* 唯一进度蓝：进度条 / 音量填充 */
+  --m115-engine-blue: #2b90ff;
+
+  /* 唯一强调冷蓝：列表选中项 / 侧键 / 菜单对勾 / 面包屑悬停 */
+  --m115-accent: hsl(210deg, 42%, 72%);
+
+  --m115-text-title: #ffffff;
+  --m115-text-regular: rgba(255, 255, 255, 0.88);
+  --m115-text-muted: rgba(255, 255, 255, 0.55);
+}
+
+/* 根视口 (Flex 双栏，最高层级绝对固定，屏蔽页面底层遗留杂质) */
+.m115-v2-viewport {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #fff;
+  user-select: none;
+  z-index: 9999 !important;
+}
+
+.m115-v2-player-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: flex 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 底层 Vidstack 播放器：绝对撑满 */
+media-player {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: unset !important;
+  z-index: 1 !important;
+}
+
+media-player[data-view-type='video'] {
+  aspect-ratio: unset !important;
+}
+
+media-provider {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+video {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* 上下沉浸式深黑渐变遮罩 (保证文字极佳可读性) */
+.m115-v2-mask-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 65%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.25s ease;
+}
+
+.m115-v2-mask-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.35) 65%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.25s ease;
+}
+
+/* 字幕显示层：底部居中、强描边保证任何画面下可读 */
+.m115-v2-subtitle-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 96px;
+  padding: 0 8%;
+  text-align: center;
+  font-size: 22px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 2px rgba(0, 0, 0, 0.9);
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 15;
+}
+
+.m115-v2-subtitle-layer.visible {
+  opacity: 1;
+}
+
+/* 进度条悬停预览（缩略图 + 时间码） */
+.m115-v2-preview {
+  position: absolute;
+  bottom: 82px;
+  width: 194px;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: rgba(17, 17, 19, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease, width 0.12s ease;
+  z-index: 30;
+}
+
+.m115-v2-preview.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.m115-v2-preview-img {
+  display: block;
+  border-radius: 6px;
+  background: #000;
+  visibility: hidden;
+}
+
+.m115-v2-preview-time {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgba(255, 255, 255, 0.8);
+  padding-bottom: 1px;
+}
+
+/* 控制层自动淡出 */
+.m115-v2-controls-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  transition: opacity 0.25s ease;
+}
+
+.m115-v2-player-pane.idle .m115-v2-controls-overlay,
+.m115-v2-player-pane.idle .m115-v2-mask-top,
+.m115-v2-player-pane.idle .m115-v2-mask-bottom,
+.m115-v2-player-pane.idle .m115-v2-drawer-toggle-handle {
+  opacity: 0;
+  cursor: none;
+}
+
+/* ────────────────────────────────────────────────────────
+   1. 顶部 Header (工业级严密双行装配，微雕视效)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.m115-v2-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  max-width: min(74vw, 920px);
+}
+
+/* 精巧超椭圆微浮雕返回键 (Squircle，带箭头向左微动反馈) */
+.m115-v2-back-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--m115-text-regular);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+}
+
+.m115-v2-back-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-back-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.m115-v2-back-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+.m115-v2-back-btn:active {
+  transform: scale(0.94);
+}
+
+.m115-v2-title-cluster {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.m115-v2-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* 航空仪表级序号微徽章 (极简无彩，仅一道低调内发光，绝不喧宾夺主) */
+.m115-v2-badge-index {
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 视频标题 */
+.m115-v2-title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m115-text-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+/* 紧随标题的星标收藏五角星 */
+.m115-v2-fav-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-fav-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.m115-v2-fav-btn:hover {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.45));
+}
+
+.m115-v2-fav-btn.active {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+}
+
+/* 文件大小胶囊微标签 (无损已剥离) */
+.m115-v2-badge-size {
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+/* 面包屑导航行 (下移 3px 舒展对齐) */
+.m115-v2-crumbs-row {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--m115-text-muted);
+  line-height: 1;
+}
+
+.m115-v2-crumb-item {
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.m115-v2-crumb-item:hover {
+  color: var(--m115-accent);
+  text-decoration: underline;
+}
+
+.m115-v2-crumb-sep {
+  margin: 0 5px;
+  opacity: 0.35;
+  font-size: 10px;
+}
+
+/* ────────────────────────────────────────────────────────
+   顶部右侧：黑曜石晶体分段胶囊 (物理顶高光微倒角 + 羽化发丝分割线)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-top-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.m115-v2-pill-actions {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 2px 3px;
+  box-sizing: border-box;
+  background: rgba(17, 17, 19, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 10px;
+  box-shadow: 
+    0 8px 24px -4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-pill-btn {
+  position: relative;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  letter-spacing: 0.25px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  overflow: hidden;
+}
+
+.m115-v2-pill-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.6px;
+  opacity: 0.85;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.25s ease;
+}
+
+/* dexter-st 灵魂地平线微光 (底部激光切割亮白蓝光) */
+.m115-v2-pill-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    12%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.08);
+}
+
+.m115-v2-pill-btn:hover::after {
+  opacity: 0.95;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+.m115-v2-pill-btn:hover svg {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
+}
+
+.m115-v2-pill-btn:active {
+  transform: scale(0.96) translateY(0.5px);
+}
+
+/* 删除分段特调珊瑚红地平线微光 */
+.m115-v2-pill-btn.delete::after {
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    #f87171,
+    rgba(248, 113, 113, 0.5),
+    12%,
+    transparent
+  );
+}
+
+.m115-v2-pill-btn.delete:hover {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+}
+
+.m115-v2-pill-btn.delete:hover svg {
+  color: #f87171;
+  filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.6));
+}
+
+/* 两端自然渐隐羽化的发丝分割线 */
+.m115-v2-pill-divider {
+  width: 1px;
+  height: 12px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.16) 20%, rgba(255, 255, 255, 0.16) 80%, transparent);
+  flex-shrink: 0;
+  margin: 0 1px;
+}
+
+/* ────────────────────────────────────────────────────────
+   2. 底部控制条 (经典黄金中轴排版，高度 48px，规整对称)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 24px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+/* 进度条轨道 */
+.m115-v2-progress-box {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.m115-v2-progress-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: height 0.15s ease;
+}
+
+.m115-v2-progress-box:hover .m115-v2-progress-track {
+  height: 6px;
+}
+
+.m115-v2-progress-buffered {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.m115-v2-progress-played {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--m115-engine-blue);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(43, 144, 255, 0.45);
+}
+
+.m115-v2-progress-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(43, 144, 255, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.m115-v2-progress-box:hover .m115-v2-progress-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* 底栏控件水平排布行 */
+.m115-v2-controls-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 40px;
+}
+
+/* 左侧：播放时间与音量 (时间在前、音量在后，展开时向右舒展不挤压) */
+.m115-v2-ctrl-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.m115-v2-time-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+  user-select: none;
+}
+
+.m115-v2-time-current {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.m115-v2-time-sep {
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  font-weight: 300;
+}
+
+.m115-v2-time-duration {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+}
+
+/* 一体化黑曜石音量流线微胶囊 (高度 28px，超椭圆圆角，与三联/托盘同族) */
+.m115-v2-vol-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.m115-v2-vol-group:hover {
+  background: rgba(17, 17, 19, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* 纯净喇叭图标按钮 (移除任何孤立黑圆圈) */
+.m115-vol-icon-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.m115-vol-icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.m115-vol-icon-btn:hover {
+  color: #ffffff;
+}
+
+.m115-v2-vol-slider-box {
+  width: 0;
+  height: 24px;
+  overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding-left 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 0;
+}
+
+.m115-v2-vol-group:hover .m115-v2-vol-slider-box {
+  width: 114px;
+  padding-left: 6px;
+}
+
+/* 双轨高精度音量滑轨 (绝对居中防裁切 + 115 科技蓝动态填充) */
+.m115-v2-vol-range {
+  width: 68px;
+  height: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.m115-v2-vol-range::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--m115-engine-blue) 0%,
+    var(--m115-engine-blue) var(--vol, 100%),
+    rgba(255, 255, 255, 0.2) var(--vol, 100%),
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+/* 纯白玉珠 Thumb：精准居中对齐 4px 轨道，留足 16px 视窗，绝不裁切！ */
+.m115-v2-vol-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -3px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5), 0 0 6px rgba(255, 255, 255, 0.85);
+  transition: transform 0.15s ease;
+}
+
+.m115-v2-vol-range:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 8px #ffffff;
+}
+
+/* 音量实时百分比数字 (等宽数字防抖) */
+.m115-v2-vol-percent {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.75);
+  min-width: 32px;
+  text-align: right;
+  user-select: none;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
+/* 中间：三联主控（上一集 / 大播放键 / 下一集）- 全面统一 dexter-st 黑曜石地平线微光质感 */
+.m115-v2-ctrl-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.m115-v2-round-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 34%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 55%),
+    rgba(17, 17, 19, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-round-btn svg {
+  width: 15px;
+  height: 15px;
+  transition: color 0.15s ease, filter 0.2s ease;
+}
+
+/* 圆/超椭圆控件改用环绕环境光（底部地平线光只适用于宽扁胶囊，套在圆形上会变成"半颗球被染色"） */
+.m115-v2-round-btn:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 55%),
+    rgba(30, 30, 32, 0.72);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  box-shadow: 
+    0 0 18px -2px hsla(210deg, 100%, 68%, 0.4),
+    0 6px 18px -4px rgba(0, 0, 0, 0.6),
+    inset 0 0 12px hsla(210deg, 100%, 70%, 0.12);
+}
+
+.m115-v2-round-btn:active {
+  transform: scale(0.92);
+}
+
+/* 居中大播放键：黑曜石超椭圆体 + 环绕环境光 + bbaginuk 弹力回弹 */
+.m115-v2-main-play-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 34%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 55%),
+    rgba(17, 17, 19, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.m115-v2-main-play-btn svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  transition: filter 0.25s ease;
+  animation: m115PlayPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 悬停：环绕环境蓝光，而非底部聚集光 */
+.m115-v2-main-play-btn:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 55%),
+    rgba(30, 30, 32, 0.72);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 0 24px -2px hsla(210deg, 100%, 68%, 0.45),
+    0 8px 24px -5px rgba(0, 0, 0, 0.65),
+    inset 0 0 16px hsla(210deg, 100%, 70%, 0.14);
+}
+
+.m115-v2-main-play-btn:hover svg {
+  filter: drop-shadow(0 0 6px hsla(210deg, 100%, 70%, 0.75));
+}
+
+.m115-v2-main-play-btn:active {
+  transform: scale(0.93);
+}
+
+/* bbaginuk 弹力回弹关键帧 */
+@keyframes m115PlayPop {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ────────────────────────────────────────────────────────
+   右侧高频功能排阵 (一体化黑曜石托盘 + 发丝分割线，与顶栏三联同款神级工艺)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-ctrl-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+/* 一体化托盘外壳 (与顶栏三联完全同款黑曜石晶体配方) */
+.m115-v2-pill-tray {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 2px 3px;
+  box-sizing: border-box;
+  background: rgba(17, 17, 19, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 10px;
+  box-shadow: 
+    0 8px 24px -4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 托盘内分段功能按钮 (悬停激活 210° 地平线激光微光) */
+.m115-tray-btn {
+  position: relative;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap !important;
+}
+
+.m115-tray-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.6px;
+  opacity: 0.85;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.m115-btn-text {
+  white-space: nowrap !important;
+  transition: all 0.2s ease;
+}
+
+/* 响应式智能折叠：当播放列表展开挤压视口时，文字优雅隐去，仅保留纯图标，100% 杜绝垂直折行！ */
+.m115-v2-viewport.playlist-open .m115-btn-text,
+@media (max-width: 980px) {
+  .m115-btn-text {
+    display: none !important;
+  }
+  .m115-tray-btn {
+    padding: 0 6px !important;
+  }
+}
+
+.m115-tray-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    14%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.m115-tray-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.08);
+}
+
+.m115-tray-btn:hover::after {
+  opacity: 0.95;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+.m115-tray-btn:hover svg {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px hsl(210deg, 100%, 70%));
+}
+
+.m115-tray-btn:active {
+  transform: scale(0.95);
+}
+
+/* 渐隐羽化内嵌发丝分割线 */
+.m115-tray-divider {
+  width: 1px;
+  height: 12px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.14) 20%,
+    rgba(255, 255, 255, 0.14) 80%,
+    transparent
+  );
+  flex-shrink: 0;
+  margin: 0 1px;
+}
+
+/* ────────────────────────────────────────────────────────
+   3. 经典微卡片浮动面板 (Pop Sheet - 全面统一黑曜石晶体与地平线微光)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-pop-sheet {
+  position: absolute;
+  bottom: 56px;
+  width: max-content;
+  min-width: 112px;
+  max-width: 230px;
+  background: rgba(17, 17, 19, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 
+    0 16px 36px -4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  z-index: 35;
+  animation: m115PopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.m115-v2-pop-sheet.open {
+  display: flex;
+}
+
+.m115-v2-pop-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 5px 8px 6px 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 3px;
+  text-align: center;
+}
+
+.m115-v2-pop-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.m115-v2-pop-check {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--m115-accent);
+  transition: opacity 0.15s ease;
+}
+
+.m115-v2-pop-check svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.2px;
+}
+
+.m115-v2-pop-label {
+  flex: 0 1 auto;
+  letter-spacing: 0.2px;
+}
+
+.m115-v2-pop-badge {
+  margin-left: 12px;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+
+.m115-v2-pop-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    14%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.m115-v2-pop-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.m115-v2-pop-item:hover::after {
+  opacity: 0.95;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+/* 选中项：保留三联同款地平线材质，但常驻强度压低，避免过亮抢眼 */
+.m115-v2-pop-item.selected {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.m115-v2-pop-item.selected::after {
+  opacity: 0.38;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+.m115-v2-pop-item.selected svg {
+  color: var(--m115-accent);
+  filter: drop-shadow(0 0 3px hsla(210deg, 55%, 72%, 0.45));
+}
+
+@keyframes m115PopIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ────────────────────────────────────────────────────────
+   4. 右侧边缘：极简修长长扁条 (恢复令零满意的 6px 超扁纤薄款，保障收回)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-drawer-toggle-handle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 120px;
+  padding: 0;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  /* 翼根式收尖：靠边全高为根，向外以长弧平缓收成尖端，形成侧边一体感 */
+  border-radius: 100% 0 0 100% / 15% 0 0 15%;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50 !important;
+  pointer-events: auto !important;
+  opacity: 0.35;
+  user-select: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 内部修长发丝级光纤微芯 */
+.m115-v2-handle-filament {
+  width: 1.5px;
+  height: 36px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  transition: all 0.22s ease;
+  pointer-events: none;
+}
+
+/* 触碰悬停时：翼根优雅外扩，光纤提亮，极其干净 */
+.m115-v2-player-pane:hover .m115-v2-drawer-toggle-handle,
+.m115-v2-drawer-toggle-handle:hover {
+  opacity: 0.95;
+  width: 12px;
+  background: rgba(24, 24, 26, 0.65);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.m115-v2-drawer-toggle-handle:hover .m115-v2-handle-filament {
+  background: #ffffff;
+  height: 48px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+.m115-v2-drawer-toggle-handle:active {
+  transform: translateY(-50%) scaleY(0.97);
+}
+
+/* 展开状态：低饱和冷灰蓝光纤，融入中性色系 */
+.m115-v2-drawer-toggle-handle.open {
+  background: hsla(210deg, 42%, 70%, 0.08);
+  border-color: hsla(210deg, 42%, 70%, 0.2);
+  opacity: 1;
+}
+
+.m115-v2-drawer-toggle-handle.open .m115-v2-handle-filament {
+  background: hsla(210deg, 45%, 76%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.3);
+}
+
+/* 屏蔽老版遗留节点，消除左上角幽灵叉号 */
+#playlist-sidebar {
+  display: none !important;
+}
+
+/* 播放列表侧边栏 (绝对不遮挡视频，挤压式宽度过渡) */
+.m115-v2-playlist-aside {
+  width: 0;
+  min-width: 0;
+  flex: 0 0 0;
+  height: 100%;
+  background: rgba(17, 17, 19, 0.96);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), flex-basis 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  box-sizing: border-box;
+}
+
+.m115-v2-playlist-aside.open {
+  width: 320px;
+  flex: 0 0 320px;
+}
+
+.m115-v2-drawer-head {
+  height: 56px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.m115-v2-drawer-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+/* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */
+.m115-drawer-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.m115-drawer-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.m115-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: scale(1.06);
+}
+
+.m115-v2-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+/* 滚动条：细发丝暗色，融入黑曜石面板（消除系统白色滚动条） */
+.m115-v2-drawer-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: content-box;
+}
+
+.m115-v2-drawer-body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
+.m115-v2-drawer-body .m115-pl-item {
+  border-radius: 10px !important;
+  gap: 8px !important;
+}
+
+/* 缩略图框：固定高度，宽度按视频真实比例自适应（竖屏竖框 / 横屏横框），不裁剪也不留大黑边 */
+.m115-v2-drawer-body .m115-pl-thumb {
+  height: 58px !important;
+  width: auto !important;
+  min-width: 44px;
+  max-width: 112px;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px !important;
+}
+
+/* 缩略图完整显示不裁剪（竖屏/横屏都等比缩放） */
+.m115-v2-drawer-body .m115-pl-thumb img {
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.m115-v2-drawer-body .m115-pl-actions {
+  align-self: center;
+  justify-content: center !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active > span:first-child {
+  color: var(--m115-accent) !important;
+}
+
+.m115-v2-drawer-body [data-role="playlist-progress-bar"] {
+  background: var(--m115-engine-blue) !important;
+}
+
+/* 条目操作按钮：超椭圆黑曜石玻璃，删除悬停转珊瑚红 */
+.m115-v2-drawer-body .m115-pl-action {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-action svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.m115-v2-drawer-body .m115-pl-action:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  transform: scale(1.06);
+}
+
+.m115-v2-drawer-body .m115-pl-action[data-action="delete"]:hover {
+  background: rgba(248, 113, 113, 0.16) !important;
+  border-color: rgba(248, 113, 113, 0.42) !important;
+  color: #f87171 !important;
+  box-shadow: 0 0 10px -2px rgba(248, 113, 113, 0.5);
+}
+
+/* 剧集卡片 (注入三联同款黑曜石微透底与地平线微光，彻底消除生硬大蓝框) */
+.m115-v2-card-item {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.m115-v2-card-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    hsl(210deg, 100%, 70%),
+    hsla(210deg, 100%, 70%, 50%),
+    14%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.m115-v2-card-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.m115-v2-card-item:hover::after {
+  opacity: 0.9;
+  mask-image: linear-gradient(0deg, #fff, transparent);
+  -webkit-mask-image: linear-gradient(0deg, #fff, transparent);
+}
+
+/* 当前播放集数 (Active)：极致低调，仅微亮底 + 一根安静的正蓝细立标 */
+.m115-v2-card-item.active {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 左侧 3px 低饱和冷灰蓝立标（融入中性色系的冷调，柔光极弱） */
+.m115-v2-card-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: hsla(210deg, 42%, 72%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.28);
+}
+
+/* 选中项不参与地平线极光，保持绝对安静 */
+.m115-v2-card-item.active::after {
+  display: none !important;
+}
+
+.m115-v2-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.m115-v2-card-item.active .m115-v2-card-name {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+}
+
+.m115-v2-card-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+/* ────────────────────────────────────────────────────────
+   6. 右键自定义上下文菜单与统计信息 (Context Menu & Stats)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-context-menu {
+  position: absolute;
+  width: 228px;
+  background: rgba(17, 17, 19, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow:
+    0 18px 40px -4px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  z-index: 45;
+  user-select: none;
+  animation: m115PopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.m115-v2-context-menu.open {
+  display: flex;
+}
+
+.m115-v2-context-stats {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.m115-v2-context-stats-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.m115-v2-context-stats-title svg {
+  width: 12px;
+  height: 12px;
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 2px;
+}
+
+.m115-v2-context-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+
+.m115-v2-context-stat-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.m115-v2-context-stat-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.m115-v2-context-stat-tag {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: hsla(210, 42%, 72%, 0.16);
+  color: hsl(210, 42%, 72%);
+  border: 1px solid hsla(210, 42%, 72%, 0.25);
+  line-height: 1.2;
+}
+
+.m115-v2-context-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  margin: 4px 2px;
+}
+
+.m115-v2-context-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.m115-v2-context-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.m115-v2-context-item-left svg {
+  width: 14px;
+  height: 14px;
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1.8px;
+}
+
+.m115-v2-context-item-arrow {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.m115-v2-context-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    hsla(210, 100%, 70%, 0.12) 0%,
+    transparent 45%
+  );
+  box-shadow: inset 0 -1px 0 0 hsl(210, 100%, 70%);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.m115-v2-context-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.m115-v2-context-item:hover .m115-v2-context-item-left svg {
+  stroke: #fff;
+}
+
+.m115-v2-context-item:hover .m115-v2-context-item-arrow {
+  color: rgba(255, 255, 255, 0.85);
+  transform: translateX(2px);
+}
+
+.m115-v2-context-item:hover::after {
+  opacity: 1;
+}
+
+/* ────────────────────────────────────────────────────────
+   7. 模态信息对话框 (Modal Dialog - 快捷键 / 关于)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: auto;
+  animation: m115FadeIn 0.2s ease;
+}
+
+.m115-v2-modal-mask.open {
+  display: flex;
+}
+
+.m115-v2-modal {
+  width: 440px;
+  max-width: 90vw;
+  background: rgba(17, 17, 19, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow:
+    0 24px 48px -6px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  user-select: none;
+  box-sizing: border-box;
+  animation: m115PopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.m115-v2-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.m115-v2-modal-close {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.m115-v2-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.m115-v2-modal-close svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2px;
+}
+
+/* 快捷键列表 */
+.m115-v2-hotkeys-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+}
+
+.m115-v2-hotkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+}
+
+.m115-v2-hotkey-desc {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.m115-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 关于 115m 卡片 */
+.m115-v2-about-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 6px 0 8px 0;
+}
+
+.m115-v2-about-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: hsla(210, 42%, 72%, 0.12);
+  color: hsl(210, 42%, 72%);
+  border: 1px solid hsla(210, 42%, 72%, 0.22);
+}
+
+.m115-v2-about-desc {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.m115-v2-about-links {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.m115-v2-about-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-v2-about-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.m115-v2-about-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.8px;
+}
+
+/* ────────────────────────────────────────────────────────
+   8. 画面长按极速快进 HUD 指示器 (Speed HUD)
+   ──────────────────────────────────────────────────────── */
+
+.m115-v2-speed-hud {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.92);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  background: rgba(17, 17, 19, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  box-shadow:
+    0 14px 32px -4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  pointer-events: none;
+  z-index: 30;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.m115-v2-speed-hud.visible {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.m115-v2-speed-hud svg {
+  width: 15px;
+  height: 15px;
+  color: hsl(210, 100%, 70%);
+  animation: m115SpeedPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes m115SpeedPulse {
+  0% { transform: translateX(0); opacity: 0.8; }
+  100% { transform: translateX(2px); opacity: 1; }
+}
+

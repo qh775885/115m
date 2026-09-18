@@ -34,7 +34,7 @@ export async function resolvePlaybackBundle(
     sendMessage(message, retries, delay, timeoutMs)
 
   if (debugMode) debugLogToPage('fetching m3u8 and ultra sources')
-  const m3u8Promise = fetchM3u8WithRetry(pickCode).catch((error) => {
+  const m3u8Promise = fetchM3u8WithRetry(pickCode, timedSendMessage).catch((error) => {
     m3u8Error = error
     return [] as M3u8Item[]
   })

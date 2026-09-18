@@ -371,6 +371,50 @@ export function sortAndDedupeCovers(covers: VideoThumbnail[]): VideoThumbnail[] 
   })
 }
 
+/**
+ * 常驻抽帧会话：复用同一个 clipper 连续抽帧，避免每次请求都新建/初始化 clipper。
+ * 供播放器悬停预览做「精确帧」即时精修。仅新增导出，不影响既有函数行为。
+ */
+export interface CoverSession {
+  getCoverAt: (time: number, duration: number) => Promise<VideoThumbnail | null>
+  destroy: () => void
+}
+
+export async function openCoverSession(pickCode: string): Promise<CoverSession> {
+  const clipper = await openClipper(pickCode)
+  const options = resolveCoverOptions()
+  let destroyed = false
+
+  return {
+    async getCoverAt(time: number, duration: number) {
+      if (destroyed) return null
+      const normalized = clampTime(time, duration)
+      const cacheKey = getSingleCacheKey(pickCode, normalized)
+      const cached = memorySingleCoverCache.get(cacheKey)
+      if (cached) return cached
+      try {
+        const cover = await generateAccurateCover(clipper, normalized, duration, options)
+        if (cover) {
+          memorySingleCoverCache.set(cacheKey, cover)
+        }
+        return cover
+      }
+      catch {
+        return null
+      }
+    },
+    destroy() {
+      destroyed = true
+      try {
+        clipper.destroy()
+      }
+      catch {
+        // 忽略销毁异常
+      }
+    },
+  }
+}
+
 export function selectCoverSet(covers: VideoThumbnail[], duration: number, coverNum: number): VideoThumbnail[] {
   if (covers.length <= coverNum) {
     return covers

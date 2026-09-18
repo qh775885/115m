@@ -47,19 +47,33 @@
   object-position: center;
 }
 
-/* ====== viewer ====== */
-.m115-viewer {
+/* ====== viewer (PhotoSwipe & Modern Obsidian Crystal Glass) ====== */
+.m115-viewer,
+.pswp {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.92);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
   z-index: 9999999;
+}
+
+html.m115-viewer-locked,
+body.m115-viewer-locked {
+  overflow: hidden !important;
+}
+
+.m115-viewer {
+  background: var(--m115-bg-obsidian);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--m115-duration-normal) var(--m115-ease-out);
   pointer-events: none;
   visibility: hidden;
 }
@@ -76,21 +90,16 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 10px 18px 6px;
+  height: 52px;
+  padding: 0 18px;
   box-sizing: border-box;
-  color: #fff;
-}
-
-.m115-viewer-title {
-  flex: 0 1 360px;
-  min-width: 0;
-  max-width: min(32vw, 360px);
-  font-size: 14px;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: rgba(255,255,255,.92);
+  color: var(--m115-text-title);
+  background: var(--m115-bg-glass-card);
+  border-bottom: var(--m115-border-subtle);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1050;
 }
 
 .m115-viewer-meta {
@@ -101,55 +110,52 @@
   flex: 1;
 }
 
+.m115-viewer-title {
+  flex: 0 1 480px;
+  min-width: 0;
+  max-width: min(50vw, 480px);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--m115-text-regular);
+  letter-spacing: 0.2px;
+}
+
 .m115-viewer-actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.m115-viewer-tool-btn {
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #fff;
-  background: rgba(255,255,255,.12);
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: background .15s ease, border-color .15s ease, color .15s ease;
-}
-
-.m115-viewer-tool-btn:hover {
-  background: rgba(255,255,255,.2);
-  border-color: rgba(255,255,255,.28);
-}
-
-.m115-viewer-tool-btn.is-icon {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: inline-flex;
+/* 右上角关闭按钮：完全对齐播放器关闭小钮 (超椭圆无光效，极其纯正安静) */
+.m115-viewer-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,.88);
-  background: rgba(255,255,255,.1);
-  border-color: rgba(255,255,255,.16);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--m115-duration-fast) ease;
 }
 
-.m115-viewer-tool-btn.is-icon svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.m115-viewer-close-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2px;
 }
 
-.m115-viewer-tool-btn.is-icon:hover {
-  background: rgba(255,255,255,.18);
-  border-color: rgba(255,255,255,.28);
+.m115-viewer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: scale(1.06);
 }
 
 .m115-viewer-stage {
@@ -160,71 +166,113 @@
   justify-content: center;
   width: 100%;
   min-height: 0;
-  padding: 4px 18px 0;
+  padding: 8px 24px 84px; /* 展开状态下为胶卷条充分留出 84px 净空，绝对不遮挡任何图片像素 */
   box-sizing: border-box;
+  transition: padding-bottom var(--m115-duration-normal) var(--m115-ease-out);
+}
+
+.m115-viewer-stage.thumbs-collapsed {
+  padding-bottom: 12px; /* 收起状态下占满全屏并保持安全留白 */
 }
 
 .m115-viewer-frame {
   position: relative;
-  width: min(96vw, 1400px);
+  width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
 }
 
+/* 右下角删除键 (完全对齐播放器三联删除微胶囊：高度24px，11px字，悬停珊瑚红极光) */
 .m115-viewer-frame-delete {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
-  z-index: 4;
-  width: 34px;
-  height: 34px;
-  padding: 0;
+  right: 24px;
+  bottom: 84px;
+  z-index: 1060;
+  height: 24px;
+  padding: 0 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,.66);
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 999px;
+  gap: 4px;
+  border-radius: var(--m115-radius-btn);
+  background: rgba(17, 17, 19, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.25px;
   cursor: pointer;
-  opacity: 0;
-  transform: translateY(4px);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: opacity .18s ease, transform .18s ease, background .15s ease, color .15s ease, border-color .15s ease;
+  opacity: 0; /* 平时完全隐匿，零遮挡观图 */
+  pointer-events: none;
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), var(--m115-inset-highlight);
+  user-select: none;
+  overflow: hidden;
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
 }
 
-.m115-viewer-frame:hover .m115-viewer-frame-delete,
+/* 胶卷条收起时位置下移，贴紧底部安全区 */
+.m115-viewer-frame-delete.thumbs-collapsed {
+  bottom: 22px;
+}
+
+/* 鼠标悬停在画面时优雅浮现 */
+.m115-viewer:hover .m115-viewer-frame-delete,
 .m115-viewer-frame-delete:focus-visible {
-  opacity: .62;
-  transform: translateY(0);
+  opacity: 0.75;
+  pointer-events: auto;
 }
 
 .m115-viewer-frame-delete svg {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 auto;
-  fill: none;
+  width: 13px;
+  height: 13px;
   stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-width: 1.6px;
+  flex: 0 0 auto;
+  transition: transform var(--m115-duration-fast) ease, color var(--m115-duration-fast) ease;
 }
 
-.m115-viewer-frame-delete:hover,
-.m115-viewer-frame-delete:focus-visible {
-  color: #fff;
-  opacity: 1;
-  background: rgba(220,38,38,.7);
-  border-color: rgba(248,113,113,.46);
-  transform: translateY(0) scale(1.03);
+/* 播放器三联删除特调珊瑚红地平线微光 */
+.m115-viewer-frame-delete::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    0deg,
+    #ffffff,
+    #f87171,
+    rgba(248, 113, 113, 0.5),
+    12%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity var(--m115-duration-normal) var(--m115-ease-out);
+}
+
+.m115-viewer-frame-delete:hover {
+  opacity: 1 !important;
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+  box-shadow: 0 4px 18px rgba(248, 113, 113, 0.2);
+  transform: translateY(-0.5px);
+  pointer-events: auto;
+}
+
+.m115-viewer-frame-delete:hover::after {
+  opacity: 0.95;
+}
+
+.m115-viewer-frame-delete:hover svg {
+  color: #f87171;
+  filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.6));
 }
 
 .m115-viewer-frame.is-zoomed {
@@ -236,16 +284,17 @@
 }
 
 .m115-viewer-image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  max-width: 100%;
-  max-height: 100%;
-  transform: translate(-50%, -50%) scale(1);
-  transform-origin: center;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  width: auto;
+  height: auto;
   object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: auto;
+  transform-origin: center center;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
-  transition: transform .12s ease;
 }
 
 .m115-viewer-loading {
@@ -257,14 +306,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(0,0,0,.42);
-  color: rgba(255,255,255,.88);
+  padding: 8px 16px;
+  border-radius: var(--m115-radius-pill);
+  background: var(--m115-bg-mask);
+  border: var(--m115-border-subtle);
+  color: var(--m115-text-regular);
   font-size: 12px;
   line-height: 1;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   opacity: 0;
   visibility: hidden;
   transition: opacity .15s ease, visibility .15s ease;
@@ -282,8 +332,8 @@
   height: 14px;
   flex: 0 0 auto;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.25);
-  border-top-color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--m115-aurora-hover);
   animation: m115-viewer-spin .7s linear infinite;
 }
 
@@ -303,208 +353,292 @@
 .m115-viewer-zoom-hint {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.1);
-  color: rgba(255,255,255,.66);
-  font-size: 12px;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: var(--m115-radius-badge);
+  background: hsla(210deg, 42%, 72%, 0.14);
+  border: 1px solid hsla(210deg, 42%, 72%, 0.25);
+  color: var(--m115-accent-active);
+  font-size: 11px;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(-2px);
-  transition: opacity .18s ease, transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+  transition: opacity 0.18s ease;
 }
 
 .m115-viewer-zoom-hint.is-active {
-  opacity: .96;
-  transform: translateY(0);
-  background: rgba(250,204,21,.18);
-  border-color: rgba(250,204,21,.32);
-  color: #fde68a;
+  opacity: 1;
 }
 
 .m115-viewer-zoom-badge {
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 999px;
-  min-width: 68px;
-  padding: 7px 12px;
-  font-size: 12px;
+  border: var(--m115-border-subtle);
+  border-radius: var(--m115-radius-btn);
+  min-width: 60px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
   line-height: 1;
-  color: #fff;
-  background: rgba(0,0,0,.45);
+  color: var(--m115-text-regular);
+  background: var(--m115-bg-glass-btn);
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  backdrop-filter: blur(12px);
+  transition: all var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-zoom-badge:hover {
-  background: rgba(255,255,255,.16);
-  border-color: rgba(255,255,255,.24);
-  transform: translateY(-1px);
+  background: var(--m115-bg-glass-btn-hover);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 
 .m115-viewer-zoom-badge.is-active {
-  background: rgba(250,204,21,.18);
-  border-color: rgba(250,204,21,.42);
-  color: #fde68a;
+  border-color: hsla(210deg, 42%, 72%, 0.35);
+  background: hsla(210deg, 42%, 72%, 0.12);
+  color: var(--m115-accent-active);
 }
 
 .m115-viewer-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
+  z-index: 1040;
   width: 44px;
   height: 44px;
-  display: inline-flex;
+  border-radius: var(--m115-radius-panel);
+  border: var(--m115-border-subtle);
+  color: var(--m115-text-regular);
+  background: var(--m115-bg-glass-card);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: var(--m115-shadow-floating);
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(0,0,0,.38);
-  color: rgba(255,255,255,.9);
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background .15s ease, transform .15s ease;
+  opacity: 0; /* 平时完全隐匿，零遮挡观图 */
+  pointer-events: none;
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
+}
+
+.m115-viewer-prev,
+.pswp__button--arrow--prev {
+  left: 20px;
+  transform: translateY(-50%) translateX(-6px);
+}
+
+.m115-viewer-next,
+.pswp__button--arrow--next {
+  right: 20px;
+  transform: translateY(-50%) translateX(6px);
+}
+
+/* 鼠标在查看器中活动悬停时，左右按钮优雅浮现 */
+.m115-viewer:hover .m115-viewer-nav,
+.pswp:hover .pswp__button--arrow,
+.m115-viewer:hover .pswp__button--arrow,
+.m115-viewer-nav:focus-visible,
+.pswp__button--arrow:focus-visible {
+  opacity: 0.75;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* 直接悬停到切图按钮上时：外扩高亮 */
+.m115-viewer-nav:hover {
+  background: rgba(17, 17, 19, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.06) !important;
+  pointer-events: auto;
 }
 
 .m115-viewer-nav svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  width: 20px;
+  height: 20px;
 }
 
-.m115-viewer-nav:hover {
-  background: rgba(255,255,255,.16);
-  transform: translateY(-50%) scale(1.04);
-}
-
-.m115-viewer-prev {
-  left: 18px;
-}
-
-.m115-viewer-next {
-  right: 18px;
-}
-
+/* 缩略图胶卷条 */
 .m115-viewer-thumbs-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72px;
+  background: var(--m115-bg-mask);
+  border-top: var(--m115-border-subtle);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 18px 14px;
-  box-sizing: border-box;
+  align-items: center;
+  z-index: 1050;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 .m115-viewer-thumbs-wrap.is-collapsed {
-  gap: 0;
-  padding-top: 2px;
+  transform: translateY(100%);
 }
 
+/* 底部胶卷条展开/收起手柄 (效仿播放器侧键设计语言：展开时一直显示，收起时悬停浮现) */
 .m115-viewer-thumbs-toggle {
-  align-self: center;
-  width: 34px;
-  height: 22px;
-  display: inline-flex;
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 8px;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--m115-bg-glass-btn);
+  border: var(--m115-border-subtle);
+  border-bottom: none;
+  border-radius: 14% 14% 0 0 / 100% 100% 0 0;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.76);
   cursor: pointer;
-  transition: background .15s ease, color .15s ease, transform .18s ease;
+  z-index: 1060;
+  opacity: 0.55; /* 展开状态下一直常驻显示 */
+  pointer-events: auto;
+  user-select: none;
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
 }
 
+/* 内部纤薄发丝微光微芯 (横向) */
+.m115-viewer-thumbs-toggle .m115-v2-handle-filament {
+  width: 32px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  transition: all 0.22s ease;
+  pointer-events: none;
+}
+
+/* 触碰手柄悬停：翼根外扩提亮，发丝发光 */
 .m115-viewer-thumbs-toggle:hover {
-  background: rgba(255,255,255,.16);
-  color: rgba(255,255,255,.92);
+  opacity: 0.95 !important;
+  height: 12px;
+  top: -12px;
+  background: rgba(24, 24, 26, 0.75);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
 }
 
-.m115-viewer-thumbs-toggle svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform .18s ease;
+.m115-viewer-thumbs-toggle:hover .m115-v2-handle-filament {
+  background: #ffffff;
+  width: 46px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
 }
 
+/* 展开激活状态：低饱和冷灰蓝微光，融入中性体系 */
+.m115-viewer-thumbs-toggle.open .m115-v2-handle-filament {
+  background: hsla(210deg, 45%, 76%, 0.85);
+  box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.3);
+}
+
+/* 胶卷条收起状态（is-collapsed）：平时完全隐匿不遮挡看图，悬停时贴合在视口最底部随时呼出 */
 .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle {
-  margin-bottom: 0;
+  top: -14px;
+  height: 14px;
+  opacity: 0; /* 收起时平时完全隐形 */
+  pointer-events: none;
+  background: rgba(17, 17, 19, 0.85);
+  border: var(--m115-border-subtle);
+  border-bottom: none;
+}
+
+.m115-viewer:hover .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle,
+.m115-viewer-thumbs-wrap.is-collapsed:hover .m115-viewer-thumbs-toggle {
+  opacity: 0.65;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle:hover {
-  background: rgba(255,255,255,.18);
-}
-
-.m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle svg {
-  transform: rotate(180deg);
-}
-
-.m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs {
-  display: none;
+  opacity: 1 !important;
+  height: 18px;
+  top: -18px;
+  pointer-events: auto;
 }
 
 .m115-viewer-thumbs {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 2px 0 0;
+  scrollbar-width: none;
   scroll-behavior: smooth;
+}
+
+.m115-viewer-thumbs::-webkit-scrollbar {
+  display: none;
 }
 
 .m115-viewer-thumb {
   flex: 0 0 auto;
-  width: 72px;
-  height: 72px;
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 12px;
-  padding: 0;
-  overflow: hidden;
-  background: rgba(255,255,255,.06);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--m115-radius-thumb);
+  border: 1.5px solid transparent;
+  background: var(--m115-bg-glass-btn);
   cursor: pointer;
-  transition: border-color .15s ease, transform .15s ease, background .15s ease;
+  overflow: hidden;
+  padding: 0;
+  transition: all var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-thumb:hover {
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
-  border-color: rgba(255,255,255,.28);
 }
 
 .m115-viewer-thumb.is-active {
-  border-color: rgba(250,204,21,.72);
-  background: rgba(250,204,21,.12);
-  box-shadow: 0 0 0 1px rgba(250,204,21,.18);
+  border-color: var(--m115-accent-active);
+  box-shadow: 0 0 10px hsla(210deg, 42%, 72%, 0.35);
 }
 
 .m115-viewer-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0.6;
+  transition: opacity var(--m115-duration-fast) ease;
+}
+
+.m115-viewer-thumb:hover img {
+  opacity: 0.85;
+}
+
+.m115-viewer-thumb.is-active img {
+  opacity: 1;
 }
 
 .m115-viewer-toast {
   position: fixed;
   left: 50%;
-  bottom: 28px;
+  bottom: 86px;
   transform: translateX(-50%);
   z-index: 10000000;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(17,24,39,.88);
+  padding: 8px 16px;
+  border-radius: var(--m115-radius-pill);
+  background: var(--m115-bg-obsidian);
+  border: var(--m115-border-subtle);
   color: #fff;
-  font-size: 12px;
-  line-height: 1;
-  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
 }

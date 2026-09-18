@@ -26,6 +26,13 @@ import {
   VolumeX,
   X,
   AudioLines,
+  Subtitles,
+  Tv,
+  Keyboard,
+  Info,
+  ExternalLink,
+  Activity,
+  FastForward,
   type IconNode,
 } from 'lucide'
 
@@ -71,6 +78,8 @@ export const Icons = {
   SkipBack: lazyIcon(SkipBack),
   SkipForward: lazyIcon(SkipForward),
   MediaTrack: lazyIcon(AudioLines),
+  Subtitle: lazyIcon(Subtitles, 17, 17),
+  Quality: lazyIcon(Tv, 17, 17),
   Repeat: lazyIcon(Repeat1),
   Stop: lazyIcon(Square),
   RotateCw: lazyIcon(RotateCw, 18, 18),
@@ -93,4 +102,9 @@ export const Icons = {
   FolderPlus: lazyIcon(FolderPlus),
   Clock: lazyIcon(Clock),
   FolderTree: lazyIcon(FolderTree),
+  Keyboard: lazyIcon(Keyboard, 16, 16),
+  Info: lazyIcon(Info, 16, 16),
+  ExternalLink: lazyIcon(ExternalLink, 14, 14),
+  Activity: lazyIcon(Activity, 14, 14),
+  FastForward: lazyIcon(FastForward, 16, 16),
 }
