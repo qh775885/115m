@@ -113,4 +113,42 @@ describe('PhotoSwipe 看图器核心控制器', () => {
     const titleEl = document.querySelector<HTMLElement>('.m115-viewer-title')
     expect(titleEl?.textContent).toContain('测试图片 2.jpg')
   })
+
+  it('双击放大后滚轮转为缩放，恢复正常 1x 后自动转为切图', () => {
+    const sendSafe = vi.fn() as any
+    const controller = createPhotoSwipeController(document, sendSafe)
+    const images = makeImages(3)
+    controller.open(images, 0)
+
+    const overlay = document.querySelector<HTMLElement>('.m115-viewer')!
+    const imageEl = document.querySelector<HTMLElement>('.m115-viewer-image')!
+    const zoomBadge = document.querySelector<HTMLElement>('.m115-viewer-zoom-badge')!
+    const titleEl = document.querySelector<HTMLElement>('.m115-viewer-title')!
+
+    // 1. 正常 1x 状态下，滚轮向下滑动为切图
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    expect(titleEl.textContent).toContain('测试图片 2.jpg')
+
+    // 2. 双击放大至 200%
+    imageEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }))
+    expect(zoomBadge.textContent).toBe('200%')
+
+    // 3. 放大状态下，滚轮不再切图，而是调整缩放比例（滚轮向下缩小）
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    // 图片标题保持在第 2 张，未发生切图
+    expect(titleEl.textContent).toContain('测试图片 2.jpg')
+    // 比例缩小（例如 200% * 0.87 ≈ 174%）
+    expect(zoomBadge.textContent).toBe('174%')
+
+    // 4. 多次向下滚动，缩小至恢复 100%（吸附回 1x）
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    expect(zoomBadge.textContent).toBe('100%')
+
+    // 5. 恢复 1x 之后，滚轮自动再次切图！
+    overlay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }))
+    expect(titleEl.textContent).toContain('测试图片 3.jpg')
+  })
 })

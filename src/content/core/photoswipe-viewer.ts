@@ -204,6 +204,9 @@ export function createPhotoSwipeController(
 
     imageEl.src = current.originalUrl
     imageEl.alt = current.title
+    updateZoomUi(1)
+    imageEl.style.transform = `translate(-50%, -50%) scale(1)`
+    accumulatedWheel = 0
 
     preloader.schedule(currentIndex, index => items[index]?.originalUrl ?? null)
 
@@ -304,16 +307,31 @@ export function createPhotoSwipeController(
     updateThumbsToggle()
   })
 
+  const getCurrentZoom = () => {
+    if (pswpInstance?.currSlide?.currZoomLevel) {
+      return pswpInstance.currSlide.currZoomLevel
+    }
+    return zoomScale
+  }
+
+  const zoomTo = (level: number, point?: { x: number, y: number }) => {
+    const next = Math.max(1, Math.min(5, level))
+    const finalZoom = Math.abs(next - 1) < 0.05 ? 1 : next
+    updateZoomUi(finalZoom)
+    if (pswpInstance?.currSlide) {
+      const pt = point || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+      pswpInstance.currSlide.zoomTo(finalZoom, pt, 150)
+    } else {
+      imageEl.style.transform = `translate(-50%, -50%) scale(${finalZoom})`
+    }
+  }
+
   zoomBadge.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const nextZoom = zoomScale > 1 ? 1 : 2
-    updateZoomUi(nextZoom)
-    if (pswpInstance && pswpInstance.currSlide) {
-      pswpInstance.currSlide.zoomTo(nextZoom, { x: window.innerWidth / 2, y: window.innerHeight / 2 }, 200)
-    } else {
-      imageEl.style.transform = `translate(-50%, -50%) scale(${nextZoom})`
-    }
+    const current = getCurrentZoom()
+    const nextZoom = current > 1.05 ? 1 : 2
+    zoomTo(nextZoom, { x: window.innerWidth / 2, y: window.innerHeight / 2 })
   })
 
   imageEl.addEventListener('click', (e) => {
@@ -323,13 +341,9 @@ export function createPhotoSwipeController(
   imageEl.addEventListener('dblclick', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const nextZoom = zoomScale > 1 ? 1 : 2
-    updateZoomUi(nextZoom)
-    if (pswpInstance && pswpInstance.currSlide) {
-      pswpInstance.currSlide.zoomTo(nextZoom, { x: e.clientX, y: e.clientY }, 200)
-    } else {
-      imageEl.style.transform = `translate(-50%, -50%) scale(${nextZoom})`
-    }
+    const current = getCurrentZoom()
+    const nextZoom = current > 1.05 ? 1 : 2
+    zoomTo(nextZoom, { x: e.clientX, y: e.clientY })
   })
 
   overlay.addEventListener('click', (e) => {
@@ -338,7 +352,7 @@ export function createPhotoSwipeController(
     }
   })
 
-  // 滚轮切图与缩放
+  // 滚轮智能自适应手势：放大状态下为平滑缩放，恢复 1x 后自动转为切图
   let accumulatedWheel = 0
 
   overlay.addEventListener('wheel', (e) => {
@@ -350,14 +364,24 @@ export function createPhotoSwipeController(
     }
     e.preventDefault()
 
-    if (zoomScale <= 1) {
-      accumulatedWheel += e.deltaY
-      const threshold = 60
-      if (Math.abs(accumulatedWheel) >= threshold) {
-        const dir = accumulatedWheel > 0 ? 1 : -1
-        accumulatedWheel = 0
-        move(dir)
-      }
+    const currentZoom = getCurrentZoom()
+
+    // 1. 放大状态下（> 1.05）：滚轮由切图转为以光标为中心的平滑缩放
+    if (currentZoom > 1.05) {
+      accumulatedWheel = 0
+      const factor = e.deltaY < 0 ? 1.15 : 0.87
+      const nextZoom = currentZoom * factor
+      zoomTo(nextZoom, { x: e.clientX, y: e.clientY })
+      return
+    }
+
+    // 2. 正常自适应状态（1x）：滚轮滑动切换上一张 / 下一张
+    accumulatedWheel += e.deltaY
+    const threshold = 60
+    if (Math.abs(accumulatedWheel) >= threshold) {
+      const dir = accumulatedWheel > 0 ? 1 : -1
+      accumulatedWheel = 0
+      move(dir)
     }
   }, { passive: false })
 
