@@ -28,6 +28,10 @@ import {
   AudioLines,
   Subtitles,
   Tv,
+  Keyboard,
+  Info,
+  ExternalLink,
+  Activity,
   type IconNode,
 } from 'lucide'
 
@@ -97,4 +101,8 @@ export const Icons = {
   FolderPlus: lazyIcon(FolderPlus),
   Clock: lazyIcon(Clock),
   FolderTree: lazyIcon(FolderTree),
+  Keyboard: lazyIcon(Keyboard, 16, 16),
+  Info: lazyIcon(Info, 16, 16),
+  ExternalLink: lazyIcon(ExternalLink, 14, 14),
+  Activity: lazyIcon(Activity, 14, 14),
 }

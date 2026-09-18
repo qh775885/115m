@@ -264,6 +264,10 @@ export class PlayerCore {
     this.store.set({ rate })
   }
 
+  getVideoElement(): HTMLVideoElement | null {
+    return this.media
+  }
+
   destroy(): void {
     this.observer?.disconnect()
     this.observer = null

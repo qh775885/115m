@@ -19,6 +19,7 @@ import {
 } from '../../core/overlay-playlist'
 import { formatCompactTime } from '../../core/hover-utils'
 import type { SubtitleController } from '../controller/subtitles'
+import { VideoStatsTracker } from '../adapters/video-stats'
 
 export interface BreadcrumbNode {
   cid: string
@@ -342,10 +343,208 @@ export function mountCleanView(options: CleanViewOptions) {
     }
   }
 
-  // 点击外部空白区域，自动优雅关闭微卡片面板
+  // ───────────────────────────────────────────
+  // 4.3.1 右键自定义上下文菜单 (Context Menu & 实时视频信息)
+  // ───────────────────────────────────────────
+  const statsTracker = new VideoStatsTracker()
+  let statsTimer: number | null = null
+
+  const contextMenu = document.createElement('div')
+  contextMenu.className = 'm115-v2-context-menu'
+  contextMenu.innerHTML = `
+    <div class="m115-v2-context-stats">
+      <div class="m115-v2-context-stats-title">
+        ${Icons.Activity()} <span>视频信息</span>
+      </div>
+      <div class="m115-v2-context-stat-row">
+        <span class="m115-v2-context-stat-label">分辨率</span>
+        <span class="m115-v2-context-stat-value">
+          <span class="m115-v2-stat-res">--</span>
+          <span class="m115-v2-context-stat-tag m115-v2-stat-tag" style="display:none;"></span>
+        </span>
+      </div>
+      <div class="m115-v2-context-stat-row">
+        <span class="m115-v2-context-stat-label">实时帧率</span>
+        <span class="m115-v2-context-stat-value m115-v2-stat-fps">--</span>
+      </div>
+      <div class="m115-v2-context-stat-row">
+        <span class="m115-v2-context-stat-label">渲染丢帧</span>
+        <span class="m115-v2-context-stat-value m115-v2-stat-drop">0 (0.0%)</span>
+      </div>
+    </div>
+    <div class="m115-v2-context-divider"></div>
+    <div class="m115-v2-context-item m115-ctx-hotkeys">
+      <div class="m115-v2-context-item-left">
+        ${Icons.Keyboard()}
+        <span>快捷键说明</span>
+      </div>
+      <span class="m115-v2-context-item-arrow">›</span>
+    </div>
+    <div class="m115-v2-context-item m115-ctx-about">
+      <div class="m115-v2-context-item-left">
+        ${Icons.Info()}
+        <span>关于 115m</span>
+      </div>
+      <span class="m115-v2-context-item-arrow">›</span>
+    </div>
+  `
+  overlay.appendChild(contextMenu)
+
+  // ───────────────────────────────────────────
+  // 4.3.2 快捷键指南与关于面板 (Modal Mask & Dialog)
+  // ───────────────────────────────────────────
+  const modalMask = document.createElement('div')
+  modalMask.className = 'm115-v2-modal-mask'
+  modalMask.innerHTML = `
+    <div class="m115-v2-modal m115-v2-modal-hotkeys" style="display:none;">
+      <div class="m115-v2-modal-header">
+        <div class="m115-v2-modal-title">${Icons.Keyboard()} 快捷键指南</div>
+        <button type="button" class="m115-v2-modal-close" title="关闭">${Icons.Close()}</button>
+      </div>
+      <div class="m115-v2-hotkeys-grid">
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">播放 / 暂停</span><kbd class="m115-kbd">空格</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">全屏 / 退出全屏</span><kbd class="m115-kbd">F</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">快退 5 秒</span><kbd class="m115-kbd">←</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">快进 5 秒</span><kbd class="m115-kbd">→</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">音量调节 (±5%)</span><kbd class="m115-kbd">↑ / ↓</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">静音切换</span><kbd class="m115-kbd">M</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">切集 (上一集 / 下一集)</span><kbd class="m115-kbd">[ / ]</kbd></div>
+        <div class="m115-v2-hotkey-row"><span class="m115-v2-hotkey-desc">画面旋转 90°</span><kbd class="m115-kbd">R</kbd></div>
+        <div class="m115-v2-hotkey-row" style="grid-column: span 2;"><span class="m115-v2-hotkey-desc">画面长按</span><kbd class="m115-kbd">2.0x 极速快进</kbd></div>
+      </div>
+    </div>
+
+    <div class="m115-v2-modal m115-v2-modal-about" style="display:none;">
+      <div class="m115-v2-modal-header">
+        <div class="m115-v2-modal-title">${Icons.Info()} 关于 115m</div>
+        <button type="button" class="m115-v2-modal-close" title="关闭">${Icons.Close()}</button>
+      </div>
+      <div class="m115-v2-about-body">
+        <div class="m115-v2-about-badge">v2.0 · Vidstack Engine</div>
+        <p class="m115-v2-about-desc">为 115 网盘打造的沉浸式极简观影扩展<br>原生画质直连 · 纯净毛玻璃中控 · 现代化流媒体体验</p>
+        <div class="m115-v2-about-links">
+          <a href="https://github.com/qh775885/115m" target="_blank" rel="noopener noreferrer" class="m115-v2-about-btn">
+            <span>GitHub 仓库</span>
+            ${Icons.ExternalLink()}
+          </a>
+          <a href="https://t.me/+oTk8LExaev8wYmM1" target="_blank" rel="noopener noreferrer" class="m115-v2-about-btn">
+            <span>发布频道</span>
+            ${Icons.ExternalLink()}
+          </a>
+        </div>
+      </div>
+    </div>
+  `
+  overlay.appendChild(modalMask)
+
+  const updateStatsUI = () => {
+    const stats = statsTracker.getStats()
+    const resEl = contextMenu.querySelector('.m115-v2-stat-res') as HTMLElement
+    const tagEl = contextMenu.querySelector('.m115-v2-stat-tag') as HTMLElement
+    const fpsEl = contextMenu.querySelector('.m115-v2-stat-fps') as HTMLElement
+    const dropEl = contextMenu.querySelector('.m115-v2-stat-drop') as HTMLElement
+
+    if (resEl) resEl.textContent = stats.resolution
+    if (tagEl) {
+      if (stats.tag) {
+        tagEl.textContent = stats.tag
+        tagEl.style.display = 'inline-block'
+      } else {
+        tagEl.style.display = 'none'
+      }
+    }
+    if (fpsEl) fpsEl.textContent = stats.fpsText
+    if (dropEl) {
+      dropEl.textContent = `${stats.droppedFrames} (${stats.dropRateText})`
+    }
+  }
+
+  const closeContextMenu = () => {
+    if (!contextMenu.classList.contains('open')) return
+    contextMenu.classList.remove('open')
+    if (statsTimer) {
+      clearInterval(statsTimer)
+      statsTimer = null
+    }
+    statsTracker.stop()
+  }
+
+  const openContextMenu = (clientX: number, clientY: number) => {
+    closeSheet()
+    const video = options.core.getVideoElement()
+    if (video) statsTracker.attach(video)
+    statsTracker.start()
+    updateStatsUI()
+
+    if (statsTimer) clearInterval(statsTimer)
+    statsTimer = window.setInterval(updateStatsUI, 300)
+
+    contextMenu.classList.add('open')
+
+    const rect = playerPane.getBoundingClientRect()
+    const menuWidth = 228
+    const menuHeight = contextMenu.offsetHeight || 190
+    let left = clientX - rect.left
+    let top = clientY - rect.top
+
+    if (left + menuWidth > rect.width - 12) {
+      left = Math.max(12, left - menuWidth)
+    }
+    if (top + menuHeight > rect.height - 12) {
+      top = Math.max(12, top - menuHeight)
+    }
+
+    contextMenu.style.left = `${Math.round(left)}px`
+    contextMenu.style.top = `${Math.round(top)}px`
+  }
+
+  const closeModal = () => {
+    modalMask.classList.remove('open')
+  }
+
+  const openModal = (type: 'hotkeys' | 'about') => {
+    closeContextMenu()
+    modalMask.classList.add('open')
+    const hotkeysModal = modalMask.querySelector('.m115-v2-modal-hotkeys') as HTMLElement
+    const aboutModal = modalMask.querySelector('.m115-v2-modal-about') as HTMLElement
+    if (type === 'hotkeys') {
+      hotkeysModal.style.display = 'flex'
+      aboutModal.style.display = 'none'
+    } else {
+      hotkeysModal.style.display = 'none'
+      aboutModal.style.display = 'flex'
+    }
+  }
+
+  // 右键菜单项点击
+  contextMenu.querySelector('.m115-ctx-hotkeys')?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openModal('hotkeys')
+  })
+
+  contextMenu.querySelector('.m115-ctx-about')?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    openModal('about')
+  })
+
+  // 模态框内部关闭按钮
+  modalMask.querySelectorAll('.m115-v2-modal-close').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      closeModal()
+    })
+  })
+
+  // 点击外部空白区域，自动优雅关闭微卡片面板与右键菜单
   window.addEventListener('click', (e) => {
     if (!sheet.contains(e.target as Node)) {
       closeSheet()
+    }
+    if (!contextMenu.contains(e.target as Node)) {
+      closeContextMenu()
+    }
+    if (modalMask.classList.contains('open') && e.target === modalMask) {
+      closeModal()
     }
   })
 
@@ -390,11 +589,13 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
-  // 按 Escape 快捷键亦可一键收回面板与侧边栏
+  // 按 Escape 快捷键亦可一键收回面板、弹窗与侧边栏
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (sheet.classList.contains('open')) closeSheet()
-      if (playlistAside.classList.contains('open')) togglePlaylist(false)
+      if (modalMask.classList.contains('open')) closeModal()
+      else if (contextMenu.classList.contains('open')) closeContextMenu()
+      else if (sheet.classList.contains('open')) closeSheet()
+      else if (playlistAside.classList.contains('open')) togglePlaylist(false)
     }
   })
 
@@ -779,7 +980,9 @@ export function mountCleanView(options: CleanViewOptions) {
     idleTimer = setTimeout(() => {
       const isPlaylistOpen = playlistAside.classList.contains('open')
       const isSheetOpen = sheet.classList.contains('open')
-      if (!options.core.store.get().paused && !isPlaylistOpen && !isSheetOpen) {
+      const isContextOpen = contextMenu.classList.contains('open')
+      const isModalOpen = modalMask.classList.contains('open')
+      if (!options.core.store.get().paused && !isPlaylistOpen && !isSheetOpen && !isContextOpen && !isModalOpen) {
         playerPane.classList.add('idle')
       }
     }, 2500)
@@ -796,11 +999,21 @@ export function mountCleanView(options: CleanViewOptions) {
     || toggleHandle.contains(target)
     || playlistAside.contains(target)
     || previewEl.contains(target)
+    || contextMenu.contains(target)
+    || modalMask.contains(target)
 
   playerPane.addEventListener('click', (e) => {
     if (isControlTarget(e.target as Node)) return
     if (window.getSelection()?.toString()) return
     options.core.toggle()
+  })
+
+  // 右键视频画面弹出专业信息与上下文菜单
+  playerPane.addEventListener('contextmenu', (e) => {
+    if (isControlTarget(e.target as Node)) return
+    e.preventDefault()
+    e.stopPropagation()
+    openContextMenu(e.clientX, e.clientY)
   })
 
   // 挂入整体结构
@@ -812,6 +1025,8 @@ export function mountCleanView(options: CleanViewOptions) {
   return {
     viewport,
     destroy() {
+      if (statsTimer) clearInterval(statsTimer)
+      statsTracker.destroy()
       unsubscribe()
       unsubscribeContent()
       disposePlaylistCovers?.()
