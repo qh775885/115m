@@ -250,6 +250,7 @@ export function createPhotoSwipeController(
 
   const close = () => {
     overlay.classList.remove('active')
+    doc.documentElement.classList.remove('m115-viewer-locked')
     imageEl.src = ''
     if (pswpInstance) {
       pswpInstance.destroy()
@@ -508,6 +509,7 @@ export function createPhotoSwipeController(
       thumbButtons = []
       updateZoomUi(1)
       overlay.classList.add('active')
+      doc.documentElement.classList.add('m115-viewer-locked')
       render()
 
       // 如果当前不是受限的无窗口 JSDOM 测试环境，初始化 PhotoSwipe 工业级手势核心

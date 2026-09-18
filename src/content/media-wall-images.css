@@ -61,6 +61,11 @@
   z-index: 9999999;
 }
 
+html.m115-viewer-locked,
+body.m115-viewer-locked {
+  overflow: hidden !important;
+}
+
 .m115-viewer {
   background: rgba(17, 17, 19, 0.94);
   backdrop-filter: blur(20px) saturate(180%);
@@ -198,13 +203,13 @@
   justify-content: center;
   width: 100%;
   min-height: 0;
-  padding: 4px 18px 72px; /* 展开状态下为胶卷条留出安全间距，绝对不遮挡图片 */
+  padding: 8px 24px 84px; /* 展开状态下为胶卷条充分留出 84px 净空，绝对不遮挡任何图片像素 */
   box-sizing: border-box;
   transition: padding-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .m115-viewer-stage.thumbs-collapsed {
-  padding-bottom: 4px; /* 收起状态下占满全屏 */
+  padding-bottom: 12px; /* 收起状态下占满全屏并保持安全留白 */
 }
 
 .m115-viewer-frame {

@@ -715,14 +715,27 @@ function createLightboxController(doc: Document, sendRuntimeMessageSafe: typeof 
   }
 }
 
+function resolveViewerRootDoc(doc: Document): Document {
+  try {
+    const topDoc = doc.defaultView?.top?.document
+    if (topDoc && topDoc.body) {
+      return topDoc
+    }
+  } catch {
+    // 跨域或安全环境降级
+  }
+  return doc
+}
+
 export function createImageModule(sendRuntimeMessageSafe: typeof import('./runtime').sendRuntimeMessageSafe) {
   const lightboxByDoc = new WeakMap<Document, LightboxController>()
 
   const getLightboxController = (doc: Document): LightboxController => {
-    const existing = lightboxByDoc.get(doc)
+    const rootDoc = resolveViewerRootDoc(doc)
+    const existing = lightboxByDoc.get(rootDoc)
     if (existing) return existing
-    const created = createPhotoSwipeController(doc, sendRuntimeMessageSafe)
-    lightboxByDoc.set(doc, created)
+    const created = createPhotoSwipeController(rootDoc, sendRuntimeMessageSafe)
+    lightboxByDoc.set(rootDoc, created)
     return created
   }
 
