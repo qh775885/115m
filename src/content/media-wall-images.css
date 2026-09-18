@@ -387,7 +387,8 @@
   color: hsl(210, 42%, 72%);
 }
 
-.m115-viewer-nav {
+.m115-viewer-nav,
+.pswp__button--arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -405,27 +406,48 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; /* 平时完全隐匿，零遮挡观图 */
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.m115-viewer-nav:hover {
-  background: rgba(17, 17, 19, 0.92);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  transform: translateY(-50%) scale(1.06);
+.m115-viewer-prev,
+.pswp__button--arrow--prev {
+  left: 20px;
+  transform: translateY(-50%) translateX(-6px);
+}
+
+.m115-viewer-next,
+.pswp__button--arrow--next {
+  right: 20px;
+  transform: translateY(-50%) translateX(6px);
+}
+
+/* 鼠标在查看器中活动悬停时，左右按钮优雅浮现 */
+.m115-viewer:hover .m115-viewer-nav,
+.pswp:hover .pswp__button--arrow,
+.m115-viewer:hover .pswp__button--arrow,
+.m115-viewer-nav:focus-visible,
+.pswp__button--arrow:focus-visible {
+  opacity: 0.75;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* 直接悬停到切图按钮上时：外扩高亮 */
+.m115-viewer-nav:hover,
+.pswp__button--arrow:hover {
+  background: rgba(17, 17, 19, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.06) !important;
+  pointer-events: auto;
 }
 
 .m115-viewer-nav svg {
   width: 20px;
   height: 20px;
-}
-
-.m115-viewer-prev {
-  left: 20px;
-}
-
-.m115-viewer-next {
-  right: 20px;
 }
 
 /* 缩略图胶卷条 */
@@ -450,12 +472,12 @@
   transform: translateY(100%);
 }
 
-/* 底部胶卷条展开/收起手柄 (效仿播放器侧键感应轨设计语言) */
+/* 底部胶卷条展开/收起手柄 (效仿播放器侧键设计语言：平时完全隐匿，悬停时优雅浮现) */
 .m115-viewer-thumbs-toggle {
   position: absolute;
   top: -8px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(4px);
   width: 90px;
   height: 8px;
   padding: 0;
@@ -472,9 +494,20 @@
   justify-content: center;
   cursor: pointer;
   z-index: 1060;
-  opacity: 0.45;
+  opacity: 0; /* 平时完全隐匿，零遮挡看图 */
+  pointer-events: none;
   user-select: none;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 鼠标在查看器悬停或靠近底部时浮现 */
+.m115-viewer:hover .m115-viewer-thumbs-toggle,
+.pswp:hover .m115-viewer-thumbs-toggle,
+.m115-viewer-thumbs-wrap:hover .m115-viewer-thumbs-toggle,
+.m115-viewer-thumbs-toggle:focus-visible {
+  opacity: 0.55;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 /* 内部纤薄发丝微光微芯 (横向) */
@@ -487,14 +520,15 @@
   pointer-events: none;
 }
 
-/* 触碰悬停：翼根外扩提亮，发丝发光 */
+/* 触碰手柄悬停：翼根外扩提亮，发丝发光 */
 .m115-viewer-thumbs-toggle:hover {
-  opacity: 0.95;
+  opacity: 0.95 !important;
   height: 12px;
   top: -12px;
   background: rgba(24, 24, 26, 0.75);
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
 }
 
 .m115-viewer-thumbs-toggle:hover .m115-v2-handle-filament {
@@ -504,29 +538,35 @@
 }
 
 /* 展开激活状态：低饱和冷灰蓝微光，融入中性体系 */
-.m115-viewer-thumbs-toggle.open {
-  opacity: 0.85;
-}
-
 .m115-viewer-thumbs-toggle.open .m115-v2-handle-filament {
   background: hsla(210deg, 45%, 76%, 0.85);
   box-shadow: 0 0 4px hsla(210deg, 45%, 70%, 0.3);
 }
 
-/* 胶卷条收起状态：手柄贴合在视口最底部，悬停时随时呼出 */
+/* 胶卷条收起状态：平时完全隐匿，悬停时贴合在视口最底部随时呼出 */
 .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle {
   top: -14px;
   height: 14px;
-  opacity: 0.6;
+  opacity: 0;
+  pointer-events: none;
   background: rgba(17, 17, 19, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-bottom: none;
 }
 
+.m115-viewer:hover .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle,
+.pswp:hover .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle,
+.m115-viewer-thumbs-wrap.is-collapsed:hover .m115-viewer-thumbs-toggle {
+  opacity: 0.65;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
 .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle:hover {
-  opacity: 1;
+  opacity: 1 !important;
   height: 18px;
   top: -18px;
+  pointer-events: auto;
 }
 
 .m115-viewer-thumbs {
