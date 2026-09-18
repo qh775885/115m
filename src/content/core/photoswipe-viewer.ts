@@ -218,7 +218,9 @@ export function createPhotoSwipeController(
     imageEl.src = current.originalUrl
     imageEl.alt = current.title
     updateZoomUi(1)
-    imageEl.style.transform = `translate(-50%, -50%) scale(1)`
+    panX = 0
+    panY = 0
+    imageEl.style.transform = 'scale(1)'
     accumulatedWheel = 0
 
     preloader.schedule(currentIndex, index => items[index]?.originalUrl ?? null)
@@ -348,7 +350,13 @@ export function createPhotoSwipeController(
     } else {
       const nextZoom = zoomScale > 1.05 ? 1 : 2
       updateZoomUi(nextZoom)
-      imageEl.style.transform = `translate(-50%, -50%) scale(${nextZoom})`
+      if (nextZoom === 1) {
+        panX = 0
+        panY = 0
+        imageEl.style.transform = 'scale(1)'
+      } else {
+        imageEl.style.transform = `scale(${nextZoom})`
+      }
     }
   }
 
@@ -356,12 +364,16 @@ export function createPhotoSwipeController(
     const next = Math.max(1, Math.min(5, level))
     const finalZoom = Math.abs(next - 1) < 0.05 ? 1 : next
     updateZoomUi(finalZoom)
+    if (finalZoom === 1) {
+      panX = 0
+      panY = 0
+    }
     if (pswpInstance?.currSlide) {
       const slide = pswpInstance.currSlide
       const initial = slide.zoomLevels?.initial || 1
       slide.zoomTo(finalZoom * initial, point || { x: window.innerWidth / 2, y: window.innerHeight / 2 }, 150)
     } else {
-      imageEl.style.transform = `translate(-50%, -50%) scale(${finalZoom})`
+      imageEl.style.transform = finalZoom === 1 ? 'scale(1)' : `translate(${panX}px, ${panY}px) scale(${finalZoom})`
     }
   }
 
@@ -370,6 +382,42 @@ export function createPhotoSwipeController(
     e.stopPropagation()
     toggleZoomAt({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
   })
+
+  // 放大状态下的平移拖拽支持
+  let isDragging = false
+  let startX = 0
+  let startY = 0
+  let panX = 0
+  let panY = 0
+
+  imageEl.addEventListener('pointerdown', (e) => {
+    if (zoomScale <= 1) return
+    isDragging = true
+    startX = e.clientX - panX
+    startY = e.clientY - panY
+    try {
+      imageEl.setPointerCapture(e.pointerId)
+    } catch {}
+    e.preventDefault()
+  })
+
+  imageEl.addEventListener('pointermove', (e) => {
+    if (!isDragging) return
+    panX = e.clientX - startX
+    panY = e.clientY - startY
+    imageEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`
+  })
+
+  const endDrag = (e: PointerEvent) => {
+    if (!isDragging) return
+    isDragging = false
+    try {
+      imageEl.releasePointerCapture(e.pointerId)
+    } catch {}
+  }
+
+  imageEl.addEventListener('pointerup', endDrag)
+  imageEl.addEventListener('pointercancel', endDrag)
 
   imageEl.addEventListener('click', (e) => {
     e.stopPropagation()
@@ -425,6 +473,18 @@ export function createPhotoSwipeController(
     if (!el) return false
     return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
   }
+
+  // 窗口尺寸变化自适应
+  window.addEventListener('resize', () => {
+    if (!overlay.classList.contains('active')) return
+    if (pswpInstance) {
+      pswpInstance.updateSize(true)
+    } else if (zoomScale <= 1) {
+      panX = 0
+      panY = 0
+      imageEl.style.transform = 'scale(1)'
+    }
+  })
 
   doc.addEventListener('keydown', (e) => {
     if (!overlay.classList.contains('active')) return
