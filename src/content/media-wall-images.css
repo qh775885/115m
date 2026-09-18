@@ -67,13 +67,13 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer {
-  background: rgba(17, 17, 19, 0.94);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--m115-bg-obsidian);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--m115-duration-normal) var(--m115-ease-out);
   pointer-events: none;
   visibility: hidden;
 }
@@ -84,15 +84,7 @@ body.m115-viewer-locked {
   visibility: visible;
 }
 
-.pswp__bg {
-  background: rgba(17, 17, 19, 0.94) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  opacity: 1 !important;
-}
-
-.m115-viewer-toolbar,
-.pswp__top-bar {
+.m115-viewer-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,11 +93,11 @@ body.m115-viewer-locked {
   height: 52px;
   padding: 0 18px;
   box-sizing: border-box;
-  color: #fff;
-  background: rgba(17, 17, 19, 0.72) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  color: var(--m115-text-title);
+  background: var(--m115-bg-glass-card);
+  border-bottom: var(--m115-border-subtle);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   z-index: 1050;
 }
@@ -119,16 +111,16 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-title {
-  flex: 0 1 420px;
+  flex: 0 1 480px;
   min-width: 0;
-  max-width: min(40vw, 420px);
+  max-width: min(50vw, 480px);
   font-size: 13.5px;
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--m115-text-regular);
   letter-spacing: 0.2px;
 }
 
@@ -139,17 +131,17 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-tool-btn {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border: var(--m115-border-subtle);
+  border-radius: var(--m115-radius-btn);
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.88);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--m115-text-regular);
+  background: var(--m115-bg-glass-btn);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--m115-duration-fast) var(--m115-ease-out);
   user-select: none;
 }
 
@@ -159,15 +151,15 @@ body.m115-viewer-locked {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background-image: linear-gradient(0deg, hsla(210, 100%, 70%, 0.14) 0%, transparent 50%);
-  box-shadow: inset 0 -1px 0 0 hsl(210, 100%, 70%);
+  background-image: linear-gradient(0deg, hsla(210deg, 100%, 70%, 0.14) 0%, transparent 50%);
+  box-shadow: inset 0 -1px 0 0 var(--m115-aurora-hover);
   opacity: 0;
-  transition: opacity 0.16s ease;
+  transition: opacity var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-tool-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--m115-bg-glass-btn-hover);
+  border-color: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
@@ -190,11 +182,6 @@ body.m115-viewer-locked {
   stroke-width: 2px;
 }
 
-.m115-viewer-tool-btn.is-icon:hover {
-  background: rgba(255,255,255,.18);
-  border-color: rgba(255,255,255,.28);
-}
-
 .m115-viewer-stage {
   position: relative;
   flex: 1;
@@ -205,7 +192,7 @@ body.m115-viewer-locked {
   min-height: 0;
   padding: 8px 24px 84px; /* 展开状态下为胶卷条充分留出 84px 净空，绝对不遮挡任何图片像素 */
   box-sizing: border-box;
-  transition: padding-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: padding-bottom var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 .m115-viewer-stage.thumbs-collapsed {
@@ -235,24 +222,22 @@ body.m115-viewer-locked {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border-radius: 8px;
-  background: rgba(17, 17, 19, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.82);
+  border-radius: var(--m115-radius-btn);
+  background: var(--m115-bg-glass-card);
+  border: var(--m115-border-subtle);
+  color: var(--m115-text-regular);
   font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.25px;
   cursor: pointer;
   opacity: 0; /* 平时完全隐匿，零遮挡观图 */
   pointer-events: none;
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  box-shadow: 
-    0 8px 24px -4px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: var(--m115-shadow-floating), var(--m115-inset-highlight);
   user-select: none;
   overflow: hidden;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 /* 胶卷条收起时位置下移，贴紧底部安全区 */
@@ -262,7 +247,6 @@ body.m115-viewer-locked {
 
 /* 鼠标悬停在画面时优雅浮现 */
 .m115-viewer:hover .m115-viewer-frame-delete,
-.pswp:hover .m115-viewer-frame-delete,
 .m115-viewer-frame-delete:focus-visible {
   opacity: 0.75;
   pointer-events: auto;
@@ -286,20 +270,20 @@ body.m115-viewer-locked {
   background-image: linear-gradient(
     0deg,
     #ffffff,
-    #f87171,
+    var(--m115-danger),
     rgba(248, 113, 113, 0.5),
     12%,
     transparent
   );
   opacity: 0;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 .m115-viewer-frame-delete:hover {
   opacity: 1 !important;
-  background: rgba(248, 113, 113, 0.16);
-  border-color: rgba(248, 113, 113, 0.45);
-  color: #f87171;
+  background: var(--m115-danger-bg);
+  border-color: var(--m115-danger-border);
+  color: var(--m115-danger);
   transform: scale(1.04);
   box-shadow: 0 8px 24px rgba(248, 113, 113, 0.25);
   pointer-events: auto;
@@ -310,7 +294,7 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-frame-delete:hover svg {
-  color: #f87171;
+  color: var(--m115-danger);
   filter: drop-shadow(0 0 3px rgba(248, 113, 113, 0.6));
 }
 
@@ -346,14 +330,14 @@ body.m115-viewer-locked {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: 20px;
-  background: rgba(17, 17, 19, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  border-radius: var(--m115-radius-pill);
+  background: var(--m115-bg-mask);
+  border: var(--m115-border-subtle);
+  color: var(--m115-text-regular);
   font-size: 12px;
   line-height: 1;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   opacity: 0;
   visibility: hidden;
   transition: opacity .15s ease, visibility .15s ease;
@@ -371,8 +355,8 @@ body.m115-viewer-locked {
   height: 14px;
   flex: 0 0 auto;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.25);
-  border-top-color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--m115-aurora-hover);
   animation: m115-viewer-spin .7s linear infinite;
 }
 
@@ -394,10 +378,10 @@ body.m115-viewer-locked {
   align-items: center;
   min-height: 24px;
   padding: 0 8px;
-  border-radius: 4px;
-  background: hsla(210, 42%, 72%, 0.14);
-  border: 1px solid hsla(210, 42%, 72%, 0.25);
-  color: hsl(210, 42%, 72%);
+  border-radius: var(--m115-radius-badge);
+  background: hsla(210deg, 42%, 72%, 0.14);
+  border: 1px solid hsla(210deg, 42%, 72%, 0.25);
+  color: var(--m115-accent-active);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
@@ -412,55 +396,54 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-zoom-badge {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border: var(--m115-border-subtle);
+  border-radius: var(--m115-radius-btn);
   min-width: 60px;
   padding: 6px 10px;
   font-size: 11.5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 500;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--m115-text-regular);
+  background: var(--m115-bg-glass-btn);
   cursor: pointer;
   backdrop-filter: blur(12px);
-  transition: all 0.16s ease;
+  transition: all var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-zoom-badge:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--m115-bg-glass-btn-hover);
+  border-color: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
 .m115-viewer-zoom-badge.is-active {
-  border-color: hsla(210, 42%, 72%, 0.35);
-  background: hsla(210, 42%, 72%, 0.12);
-  color: hsl(210, 42%, 72%);
+  border-color: hsla(210deg, 42%, 72%, 0.35);
+  background: hsla(210deg, 42%, 72%, 0.12);
+  color: var(--m115-accent-active);
 }
 
-.m115-viewer-nav,
-.pswp__button--arrow {
+.m115-viewer-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 1040;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(17, 17, 19, 0.75);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  border-radius: var(--m115-radius-panel);
+  border: var(--m115-border-subtle);
+  color: var(--m115-text-regular);
+  background: var(--m115-bg-glass-card);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
+  box-shadow: var(--m115-shadow-floating);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0; /* 平时完全隐匿，零遮挡观图 */
   pointer-events: none;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 .m115-viewer-prev,
@@ -487,8 +470,7 @@ body.m115-viewer-locked {
 }
 
 /* 直接悬停到切图按钮上时：外扩高亮 */
-.m115-viewer-nav:hover,
-.pswp__button--arrow:hover {
+.m115-viewer-nav:hover {
   background: rgba(17, 17, 19, 0.92) !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
   color: #fff !important;
@@ -509,15 +491,15 @@ body.m115-viewer-locked {
   right: 0;
   bottom: 0;
   height: 72px;
-  background: rgba(17, 17, 19, 0.82);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  background: var(--m115-bg-mask);
+  border-top: var(--m115-border-subtle);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   display: flex;
   align-items: center;
   z-index: 1050;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 .m115-viewer-thumbs-wrap.is-collapsed {
@@ -534,10 +516,9 @@ body.m115-viewer-locked {
   height: 8px;
   padding: 0;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--m115-bg-glass-btn);
+  border: var(--m115-border-subtle);
   border-bottom: none;
-  /* 翼根长弧：靠底边为根，向上平缓收尖 */
   border-radius: 14% 14% 0 0 / 100% 100% 0 0;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -549,7 +530,7 @@ body.m115-viewer-locked {
   opacity: 0.55; /* 展开状态下一直常驻显示 */
   pointer-events: auto;
   user-select: none;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--m115-duration-normal) var(--m115-ease-out);
 }
 
 /* 内部纤薄发丝微光微芯 (横向) */
@@ -592,12 +573,11 @@ body.m115-viewer-locked {
   opacity: 0; /* 收起时平时完全隐形 */
   pointer-events: none;
   background: rgba(17, 17, 19, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: var(--m115-border-subtle);
   border-bottom: none;
 }
 
 .m115-viewer:hover .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle,
-.pswp:hover .m115-viewer-thumbs-wrap.is-collapsed .m115-viewer-thumbs-toggle,
 .m115-viewer-thumbs-wrap.is-collapsed:hover .m115-viewer-thumbs-toggle {
   opacity: 0.65;
   transform: translateX(-50%) translateY(0);
@@ -632,13 +612,13 @@ body.m115-viewer-locked {
   flex: 0 0 auto;
   width: 52px;
   height: 52px;
-  border-radius: 6px;
+  border-radius: var(--m115-radius-thumb);
   border: 1.5px solid transparent;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--m115-bg-glass-btn);
   cursor: pointer;
   overflow: hidden;
   padding: 0;
-  transition: all 0.16s ease;
+  transition: all var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-thumb:hover {
@@ -647,8 +627,8 @@ body.m115-viewer-locked {
 }
 
 .m115-viewer-thumb.is-active {
-  border-color: hsl(210, 42%, 72%);
-  box-shadow: 0 0 10px hsla(210, 42%, 72%, 0.35);
+  border-color: var(--m115-accent-active);
+  box-shadow: 0 0 10px hsla(210deg, 42%, 72%, 0.35);
 }
 
 .m115-viewer-thumb img {
@@ -656,7 +636,7 @@ body.m115-viewer-locked {
   height: 100%;
   object-fit: cover;
   opacity: 0.6;
-  transition: opacity 0.16s ease;
+  transition: opacity var(--m115-duration-fast) ease;
 }
 
 .m115-viewer-thumb:hover img {
@@ -674,14 +654,14 @@ body.m115-viewer-locked {
   transform: translateX(-50%);
   z-index: 10000000;
   padding: 8px 16px;
-  border-radius: 20px;
-  background: rgba(17, 17, 19, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--m115-radius-pill);
+  background: var(--m115-bg-obsidian);
+  border: var(--m115-border-subtle);
   color: #fff;
   font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.3px;
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  backdrop-filter: var(--m115-glass-blur);
+  -webkit-backdrop-filter: var(--m115-glass-blur);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
 }

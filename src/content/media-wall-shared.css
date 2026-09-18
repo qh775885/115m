@@ -1,3 +1,44 @@
+/* ====== 115m Design Tokens (统一设计语言令牌体系) ====== */
+:root {
+  /* 1. 色彩与透明度 Tokens */
+  --m115-bg-obsidian: rgba(17, 17, 19, 0.94);
+  --m115-bg-mask: rgba(17, 17, 19, 0.82);
+  --m115-bg-glass-card: rgba(17, 17, 19, 0.75);
+  --m115-bg-glass-btn: rgba(255, 255, 255, 0.06);
+  --m115-bg-glass-btn-hover: rgba(255, 255, 255, 0.12);
+
+  /* 2. 文本灰阶 Tokens */
+  --m115-text-title: #ffffff;
+  --m115-text-regular: rgba(255, 255, 255, 0.88);
+  --m115-text-muted: rgba(255, 255, 255, 0.55);
+
+  /* 3. 双蓝角色 & 危险珊瑚红 Tokens */
+  --m115-aurora-hover: hsl(210deg, 100%, 70%);     /* 瞬时极光（亮） */
+  --m115-accent-active: hsl(210deg, 42%, 72%);     /* 常驻选中（暗） */
+  --m115-danger: #f87171;                         /* 珊瑚红危险色 */
+  --m115-danger-bg: rgba(248, 113, 113, 0.16);
+  --m115-danger-border: rgba(248, 113, 113, 0.45);
+
+  /* 4. 发丝微光与晶体材质 Tokens */
+  --m115-border-subtle: 1px solid rgba(255, 255, 255, 0.1);
+  --m115-border-hover: 1px solid rgba(255, 255, 255, 0.22);
+  --m115-glass-blur: blur(24px) saturate(190%);
+  --m115-shadow-floating: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  --m115-inset-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
+
+  /* 5. 圆角阶梯 Tokens (超椭圆系) */
+  --m115-radius-badge: 4px;
+  --m115-radius-thumb: 6px;
+  --m115-radius-btn: 8px;
+  --m115-radius-panel: 12px;
+  --m115-radius-pill: 20px;
+
+  /* 6. 动效曲线与速度 Tokens */
+  --m115-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --m115-duration-fast: 0.16s;
+  --m115-duration-normal: 0.22s;
+}
+
 /* ====== media wall shared ====== */
 .list-contents li.m115-wall-hidden-item {
   position: absolute !important;
