@@ -1,7 +1,7 @@
 # 115m
 
 <p align="center">
-  <img src="public/icons/icon.png" width="112" height="112" alt="115m Logo" />
+  <img src="public/icons/icon128.png" width="112" height="112" alt="115m Logo" />
 </p>
 
 <h3 align="center">115 网盘现代流媒体播放器与全屏多媒体增强套件</h3>

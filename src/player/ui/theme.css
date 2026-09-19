@@ -920,7 +920,9 @@ video {
 }
 
 /* 响应式智能折叠：当播放列表展开挤压视口时，文字优雅隐去，仅保留纯图标，100% 杜绝垂直折行！ */
-.m115-v2-viewport.playlist-open .m115-btn-text,
+.m115-v2-viewport.playlist-open .m115-btn-text {
+  display: none !important;
+}
 @media (max-width: 980px) {
   .m115-btn-text {
     display: none !important;

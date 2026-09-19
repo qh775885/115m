@@ -12,8 +12,8 @@ export default defineConfig({
       ...(mode === 'production' ? { 'process.env.NODE_ENV': JSON.stringify('production') } : {}),
     },
     build: {
-      minify: false,
-      sourcemap: 'inline',
+      minify: mode === 'production',
+      sourcemap: mode === 'development' ? 'inline' : false,
     },
   }),
   zip: {
