@@ -46,10 +46,13 @@ export function mountToolbar(doc: Document, store: ViewerStore): HTMLElement {
 
   // 状态订阅驱动更新
   store.subscribe((state, prev) => {
-    if (!state.isOpen) return
+    if (!state.isOpen) {
+      zoomHint.classList.remove('is-active')
+      return
+    }
 
-    // 1. 标题与序号
-    if (state.currentIndex !== prev.currentIndex || state.items !== prev.items) {
+    // 1. 标题与序号即时刷新
+    if (state.currentIndex !== prev.currentIndex || state.items !== prev.items || !prev.isOpen) {
       const current = state.items[state.currentIndex]
       if (current) {
         const short = current.title.length > 28 ? `${current.title.slice(0, 28)}…` : current.title

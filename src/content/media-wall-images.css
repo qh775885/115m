@@ -58,12 +58,18 @@
   max-height: 100%;
   overflow: hidden;
   box-sizing: border-box;
-  z-index: 9999999;
+  z-index: 2147483647;
 }
 
 html.m115-viewer-locked,
 body.m115-viewer-locked {
   overflow: hidden !important;
+}
+
+/* 屏蔽 115 官方全屏防截屏倾斜数字水印 (挂载在 body 根部，类名以 fp- 开头，z-index 顶格) */
+html.m115-viewer-locked body > div[class^="fp-"],
+html.m115-viewer-locked div[class^="fp-"] {
+  display: none !important;
 }
 
 .m115-viewer {
@@ -293,7 +299,7 @@ body.m115-viewer-locked {
   user-select: none;
   pointer-events: auto;
   transform-origin: center center;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
   z-index: 1;
 }
 

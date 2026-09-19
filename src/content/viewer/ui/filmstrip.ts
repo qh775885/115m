@@ -37,9 +37,20 @@ export function mountFilmstrip(doc: Document, store: ViewerStore): HTMLElement {
     thumbs.scrollLeft += e.deltaY || e.deltaX
   }, { passive: false })
 
-  const ensureActiveThumbVisible = () => {
+  const ensureActiveThumbVisible = (smooth = true) => {
+    if (store.get().isFilmstripCollapsed) return
     const active = thumbs.querySelector<HTMLElement>('.m115-viewer-thumb.is-active')
-    active?.scrollIntoView?.({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    if (!active) return
+
+    const targetLeft = active.offsetLeft - (thumbs.clientWidth - active.offsetWidth) / 2
+    if (smooth && typeof thumbs.scrollTo === 'function') {
+      thumbs.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: 'smooth',
+      })
+    } else {
+      thumbs.scrollLeft = Math.max(0, targetLeft)
+    }
   }
 
   const renderThumbs = () => {
@@ -65,7 +76,7 @@ export function mountFilmstrip(doc: Document, store: ViewerStore): HTMLElement {
       thumbs.appendChild(btn)
       return btn
     })
-    window.setTimeout(ensureActiveThumbVisible, 0)
+    window.setTimeout(() => ensureActiveThumbVisible(false), 0)
   }
 
   const updateActiveIndex = (nextIndex: number, prevIndex: number) => {
@@ -73,7 +84,7 @@ export function mountFilmstrip(doc: Document, store: ViewerStore): HTMLElement {
       thumbButtons[prevIndex]?.classList.remove('is-active')
     }
     thumbButtons[nextIndex]?.classList.add('is-active')
-    window.setTimeout(ensureActiveThumbVisible, 0)
+    window.setTimeout(() => ensureActiveThumbVisible(true), 0)
   }
 
   store.subscribe((state, prev) => {
@@ -85,6 +96,9 @@ export function mountFilmstrip(doc: Document, store: ViewerStore): HTMLElement {
       toggleBtn.classList.toggle('open', !state.isFilmstripCollapsed)
       toggleBtn.title = state.isFilmstripCollapsed ? '展开缩略图' : '收起缩略图'
       toggleBtn.setAttribute('aria-label', toggleBtn.title)
+      if (!state.isFilmstripCollapsed) {
+        window.setTimeout(() => ensureActiveThumbVisible(false), 0)
+      }
     }
 
     // 2. 项目列表变更

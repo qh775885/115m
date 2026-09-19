@@ -124,19 +124,67 @@ export function mountStage(doc: Document, store: ViewerStore): HTMLElement {
   imageEl.addEventListener('pointerup', endPointerDrag)
   imageEl.addEventListener('pointercancel', endPointerDrag)
 
+  let currentLoadUrl = ''
+
   // 状态订阅驱动
   store.subscribe((state, prev) => {
-    if (!state.isOpen) return
+    if (!state.isOpen) {
+      // 查看器关闭时，彻底清理渲染位图与残留状态，避免下次打开时闪现历史旧图
+      currentLoadUrl = ''
+      imageEl.removeAttribute('src')
+      imageEl.style.opacity = '0'
+      imageEl.style.transform = 'scale(1)'
+      loadingEl.classList.remove('is-visible')
+      return
+    }
 
     // 1. 胶卷条折叠状态与视口高度避让
     stage.classList.toggle('thumbs-collapsed', state.isFilmstripCollapsed)
 
-    // 2. 图片源切换
-    if (state.currentIndex !== prev.currentIndex || state.items !== prev.items) {
+    // 2. 图片源切换与防残影处理
+    if (state.currentIndex !== prev.currentIndex || state.items !== prev.items || !prev.isOpen) {
       const current = state.items[state.currentIndex]
       if (current) {
-        imageEl.src = current.originalUrl
         imageEl.alt = current.title
+        const targetUrl = current.originalUrl
+
+        if (currentLoadUrl !== targetUrl || !imageEl.getAttribute('src')) {
+          currentLoadUrl = targetUrl
+
+          // 优先检查浏览器缓存是否已准备就绪
+          const probe = new Image()
+          probe.src = targetUrl
+
+          if (probe.complete && probe.naturalWidth > 0) {
+            imageEl.src = targetUrl
+            imageEl.style.opacity = '1'
+            loadingEl.classList.remove('is-visible')
+          } else {
+            // 未命中缓存需网络拉取：立即将当前图片置为透明，物理切断旧图残影
+            imageEl.style.opacity = '0'
+            imageEl.src = targetUrl
+
+            let timer: number | null = window.setTimeout(() => {
+              if (store.get().isOpen && currentLoadUrl === targetUrl && imageEl.style.opacity === '0') {
+                loadingEl.classList.add('is-visible')
+              }
+            }, 80)
+
+            const onLoaded = () => {
+              if (timer) {
+                window.clearTimeout(timer)
+                timer = null
+              }
+              if (currentLoadUrl === targetUrl) {
+                imageEl.style.opacity = '1'
+                loadingEl.classList.remove('is-visible')
+              }
+            }
+
+            imageEl.onload = onLoaded
+            imageEl.onerror = onLoaded
+          }
+        }
       }
     }
 

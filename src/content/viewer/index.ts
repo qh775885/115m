@@ -34,6 +34,17 @@ function preloadImage(url: string, release: () => void) {
   img.src = url
 }
 
+function suppressWatermarks(doc: Document) {
+  try {
+    const marks = doc.querySelectorAll<HTMLElement>('div[class^="fp-"]')
+    marks.forEach((el) => {
+      el.style.setProperty('display', 'none', 'important')
+    })
+  } catch {
+    // 忽略异常
+  }
+}
+
 export function createImageViewer(
   hostDoc: Document,
   sendRuntimeMessageSafe: typeof import('../core/runtime').sendRuntimeMessageSafe,
@@ -60,7 +71,11 @@ export function createImageViewer(
   // 3. 预加载器
   const preloader = new NeighborPreloader((url, release) => preloadImage(url, release))
 
-  // 4. 点击遮罩背景空白处关闭
+  // 4. 点击遮罩背景空白处关闭，并锁定遮罩防止垂直微滚
+  overlay.addEventListener('scroll', () => {
+    if (overlay.scrollTop !== 0) overlay.scrollTop = 0
+  })
+
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay || e.target === stage || (e.target as HTMLElement).classList.contains('m115-viewer-frame')) {
       store.close()
@@ -118,6 +133,10 @@ export function createImageViewer(
     if (state.isOpen !== prev.isOpen) {
       overlay.classList.toggle('active', state.isOpen)
       rootDoc.documentElement.classList.toggle('m115-viewer-locked', state.isOpen)
+      if (state.isOpen) {
+        overlay.scrollTop = 0
+        suppressWatermarks(rootDoc)
+      }
     }
 
     // 邻居图片预加载

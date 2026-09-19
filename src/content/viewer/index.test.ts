@@ -87,4 +87,77 @@ describe('ImageViewer Orchestrator', () => {
     const titleEl = document.querySelector<HTMLElement>('.m115-viewer-title')
     expect(titleEl?.textContent).toContain('图 2.jpg')
   })
+
+  it('手动折叠把手后切图保持折叠，且再次点击单次即生效切换', async () => {
+    const sendSafe = vi.fn() as any
+    const viewer = createImageViewer(document, sendSafe)
+    const images = makeImages(5)
+    viewer.open(images, 0)
+
+    const thumbsWrap = document.querySelector<HTMLElement>('.m115-viewer-thumbs-wrap')
+    const toggleBtn = document.querySelector<HTMLElement>('.m115-viewer-thumbs-toggle')
+    const overlay = document.querySelector<HTMLElement>('.m115-viewer')
+
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(false)
+    expect(toggleBtn?.classList.contains('open')).toBe(true)
+
+    // 1. 用户手动折叠
+    toggleBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(true)
+    expect(toggleBtn?.classList.contains('open')).toBe(false)
+
+    // 2. 切图（模拟连续切图 3 次）
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    await new Promise(resolve => setTimeout(resolve, 20))
+
+    // 3. 切图后必须依然严格保持折叠状态，且遮罩层 scrollTop 绝不偏移
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(true)
+    expect(toggleBtn?.classList.contains('open')).toBe(false)
+    expect(overlay?.scrollTop).toBe(0)
+
+    // 4. 再次手动点击折叠把手：仅需 1 次点击，立即恢复展开，状态绝不混乱
+    toggleBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(thumbsWrap?.classList.contains('is-collapsed')).toBe(false)
+    expect(toggleBtn?.classList.contains('open')).toBe(true)
+  })
+
+  it('关闭查看器后再打开新目录图片，旧图残影被彻底清理并直指新图', () => {
+    const sendSafe = vi.fn() as any
+    const viewer = createImageViewer(document, sendSafe)
+    const folderAImages = makeImages(2)
+    const folderBImages = [
+      {
+        id: '100',
+        title: 'B目录首图.jpg',
+        thumbUrl: 'https://example.com/b_thumb_0.jpg',
+        originalUrl: 'https://example.com/b_orig_0.jpg',
+        fileId: '100',
+        parentId: '10',
+        pickCode: 'p_100',
+        sourceItem: document.createElement('li'),
+        open: () => {},
+        select: () => {},
+        contextMenu: () => {},
+      },
+    ]
+
+    // 1. 在 A 目录查看第 1 张图片
+    viewer.open(folderAImages, 0)
+    const imageEl = document.querySelector<HTMLImageElement>('.m115-viewer-image')
+    expect(imageEl?.src).toContain('orig_0.jpg')
+
+    // 2. 关闭查看器
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    // 关闭后应清理 src 与透明度，杜绝旧图常驻
+    expect(imageEl?.getAttribute('src')).toBeNull()
+    expect(imageEl?.style.opacity).toBe('0')
+
+    // 3. 在 B 目录打开新图片
+    viewer.open(folderBImages, 0)
+    expect(imageEl?.src).toContain('b_orig_0.jpg')
+    const titleEl = document.querySelector<HTMLElement>('.m115-viewer-title')
+    expect(titleEl?.textContent).toContain('B目录首图.jpg')
+  })
 })
