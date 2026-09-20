@@ -117,11 +117,29 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
       renderBrowsePane(body)
     }
     else if (currentTab === 'nav') {
-      renderNavPane(body, footer)
+      renderNavPane(body)
     }
     else if (currentTab === 'about') {
       renderAboutPane(body)
     }
+
+    const leftActions = doc.createElement('div')
+    leftActions.className = 'm115-settings-footer-left'
+    if (currentTab === 'nav') {
+      const resetBtn = doc.createElement('button')
+      resetBtn.type = 'button'
+      resetBtn.className = 'm115-settings-reset-btn'
+      resetBtn.textContent = '恢复导航默认'
+      resetBtn.addEventListener('click', () => {
+        enabledNavIds.clear()
+        DEFAULT_SIDEBAR_IDS.forEach(id => enabledNavIds.add(id))
+        updateSettings({ sidebarEnabledIds: Array.from(enabledNavIds) })
+        options?.onSidebarChange?.(enabledNavIds)
+        renderPanes()
+      })
+      leftActions.appendChild(resetBtn)
+    }
+    footer.appendChild(leftActions)
 
     const doneBtn = doc.createElement('button')
     doneBtn.type = 'button'
@@ -183,7 +201,7 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
   }
 
   // 渲染【左侧导航】面板
-  const renderNavPane = (container: HTMLElement, footerEl: HTMLElement) => {
+  const renderNavPane = (container: HTMLElement) => {
     const pane = doc.createElement('div')
     pane.className = 'm115-settings-pane'
 
@@ -224,20 +242,6 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
     })
 
     container.appendChild(pane)
-
-    // 左侧底部放置“恢复默认”
-    const resetBtn = doc.createElement('button')
-    resetBtn.type = 'button'
-    resetBtn.className = 'm115-settings-reset-btn'
-    resetBtn.textContent = '恢复导航默认'
-    resetBtn.addEventListener('click', () => {
-      enabledNavIds.clear()
-      DEFAULT_SIDEBAR_IDS.forEach(id => enabledNavIds.add(id))
-      updateSettings({ sidebarEnabledIds: Array.from(enabledNavIds) })
-      options?.onSidebarChange?.(enabledNavIds)
-      renderPanes()
-    })
-    footerEl.appendChild(resetBtn)
   }
 
   // 渲染【关于】面板
