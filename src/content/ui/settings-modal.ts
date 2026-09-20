@@ -180,7 +180,7 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
 
     const cardDesc = doc.createElement('div')
     cardDesc.className = 'm115-settings-card-desc'
-    cardDesc.textContent = '在网盘文件列表与搜索结果页中，为视频生成多帧预览条并支持悬停扫轴'
+    cardDesc.textContent = '在网盘文件列表与搜索页下方展示多帧截帧条（不影响播放器内进度条悬停预览）'
 
     cardInfo.appendChild(cardTitle)
     cardInfo.appendChild(cardDesc)
