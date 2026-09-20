@@ -1392,9 +1392,28 @@ video {
 /* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
 .m115-v2-drawer-body .m115-pl-item {
   position: relative;
-  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
   gap: 10px !important;
-  padding: 8px !important;
+  width: 100% !important;
+  padding: 8px 10px !important;
+  border: none !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.m115-v2-drawer-body .m115-pl-item.is-active:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
 }
 
 /* 紧凑极简模式：去除缩略图框，行高减半，提升长列表信息密度 */
@@ -1403,21 +1422,83 @@ video {
 }
 
 .m115-v2-drawer-body.compact .m115-pl-item {
-  padding: 8px 10px !important;
-  min-height: 44px;
+  padding: 7px 10px !important;
+  min-height: 42px;
+}
+
+/* 紧凑模式序号 */
+.m115-pl-compact-num {
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.m115-pl-item.is-active .m115-pl-compact-num {
+  color: var(--m115-engine-blue, #38bdf8);
+  font-weight: 600;
+}
+
+/* 卡片信息区 */
+.m115-pl-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.m115-pl-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.m115-pl-item.is-active .m115-pl-title {
+  color: #ffffff;
+}
+
+.m115-pl-compact .m115-pl-title {
+  white-space: nowrap;
+  display: block;
+}
+
+.m115-pl-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.m115-pl-size,
+.m115-pl-dur {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.38);
+  font-variant-numeric: tabular-nums;
+}
+
+.m115-pl-size-spacer {
+  flex: 1;
 }
 
 /* 缩略图框：固定高度，宽度按视频真实比例自适应（竖屏竖框 / 横屏横框），不裁剪也不留大黑边 */
 .m115-v2-drawer-body .m115-pl-thumb {
   position: relative !important;
-  height: 62px !important;
-  width: 110px !important;
-  min-width: 80px;
-  max-width: 116px;
+  height: 60px !important;
+  width: 106px !important;
+  flex: 0 0 106px !important;
   aspect-ratio: 16 / 9;
   border-radius: 7px !important;
   overflow: hidden !important;
-  background: #151518 !important;
+  background: #141416 !important;
 }
 
 /* 缩略图序号悬浮角标 (左上角微型磨砂药丸) */
@@ -1469,13 +1550,13 @@ video {
   object-position: center !important;
 }
 
-/* 卡片元数据行（文件大小 + 右侧操作按钮）：绝不遮挡上方标题，充分利用横向空白 */
+/* 卡片元数据行（文件大小 + 右侧操作按钮）：绝不遮挡上方标题，安全呼吸间距 */
 .m115-pl-meta-row {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   min-height: 24px;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .m115-v2-drawer-body .m115-pl-actions {
@@ -1485,7 +1566,8 @@ video {
   gap: 4px !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: opacity 0.16s ease !important;
+  transition: opacity 0.18s ease !important;
+  margin-right: 2px;
 }
 
 .m115-v2-drawer-body .m115-pl-item:hover .m115-pl-actions {
@@ -1493,46 +1575,42 @@ video {
   pointer-events: auto !important;
 }
 
-.m115-v2-drawer-body .m115-pl-item.is-active {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-.m115-v2-drawer-body .m115-pl-item.is-active > span:first-child {
-  color: var(--m115-accent) !important;
-}
-
 .m115-v2-drawer-body [data-role="playlist-progress-bar"] {
   background: var(--m115-engine-blue) !important;
 }
 
-/* 条目操作按钮：超椭圆黑曜石玻璃，删除悬停转珊瑚红 */
+/* 条目操作按钮：纯净微型黑曜石按钮，不改变盒模型尺寸，绝对不溢出边缘 */
 .m115-v2-drawer-body .m115-pl-action {
-  width: 26px !important;
-  height: 26px !important;
-  border-radius: 9px !important;
-  background: rgba(255, 255, 255, 0.06) !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease !important;
 }
 
 .m115-v2-drawer-body .m115-pl-action svg {
-  width: 14px !important;
-  height: 14px !important;
+  width: 13px !important;
+  height: 13px !important;
 }
 
 .m115-v2-drawer-body .m115-pl-action:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
   color: #ffffff !important;
-  transform: scale(1.06);
 }
 
 .m115-v2-drawer-body .m115-pl-action[data-action="delete"]:hover {
-  background: rgba(248, 113, 113, 0.16) !important;
-  border-color: rgba(248, 113, 113, 0.42) !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
   color: #f87171 !important;
-  box-shadow: 0 0 10px -2px rgba(248, 113, 113, 0.5);
 }
 
 /* 剧集卡片 (注入三联同款黑曜石微透底与地平线微光，彻底消除生硬大蓝框) */

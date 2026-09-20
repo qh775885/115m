@@ -46,25 +46,25 @@ export function buildPlaylistHtml(
     if (mode === 'compact') {
       return `
         <div class="m115-pl-item m115-pl-compact${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
-          style="position:relative;display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
-          <span style="flex-shrink:0;width:24px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.45)'}">${num}</span>
-          <div style="min-width:0;flex:1;overflow:hidden">
-            <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-              ${item.size ? `<span style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0;">${escapeHtml(item.size)}</span>` : ''}
-              ${durationText ? `<span style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0;">${durationText}</span>` : ''}
-              <div style="flex:1;min-width:0;">
-                ${renderPlaylistProgress(item, active)}
+          style="background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};">
+          <span class="m115-pl-compact-num">${num}</span>
+          <div class="m115-pl-info">
+            <div class="m115-pl-title" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="m115-pl-meta-row">
+              <div class="m115-pl-meta-tags">
+                ${item.size ? `<span class="m115-pl-size">${escapeHtml(item.size)}</span>` : ''}
+                ${durationText ? `<span class="m115-pl-dur">${durationText}</span>` : ''}
+              </div>
+              <div class="m115-pl-actions">
+                <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频">
+                  ${Icons.Move()}
+                </button>
+                <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频">
+                  ${Icons.Trash()}
+                </button>
               </div>
             </div>
-          </div>
-          <div class="m115-pl-actions" style="display:flex;align-items:center;gap:4px;flex:0 0 auto;opacity:0;pointer-events:none;transition:opacity .15s;">
-            <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-              ${Icons.Move()}
-            </button>
-            <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-              ${Icons.Trash()}
-            </button>
+            ${renderPlaylistProgress(item, active)}
           </div>
         </div>
       `
@@ -72,21 +72,21 @@ export function buildPlaylistHtml(
 
     return `
       <div class="m115-pl-item${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
-        style="position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:none;border-radius:10px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
-        <div class="m115-pl-thumb" style="position:relative;width:112px;height:62px;border-radius:8px;flex-shrink:0;background:#161618;overflow:hidden;display:flex;align-items:center;justify-content:center">
-          <span class="m115-pl-thumb-placeholder" style="color:rgba(255,255,255,.18);pointer-events:none;">${Icons.Play()}</span>
+        style="background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};">
+        <div class="m115-pl-thumb">
+          <span class="m115-pl-thumb-placeholder">${Icons.Play()}</span>
           <span class="m115-pl-badge-num ${active ? 'is-active' : ''}">${num}</span>
           ${durationText ? `<span class="m115-pl-badge-dur">${durationText}</span>` : ''}
         </div>
-        <div class="m115-pl-info" style="min-width:0;flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">
-          <div class="m115-pl-title" title="${escapeHtml(item.name)}" style="font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
-          <div class="m115-pl-meta-row" style="display:flex;align-items:center;justify-content:space-between;min-height:22px;margin-top:3px;">
-            ${item.size ? `<span class="m115-pl-size" style="font-size:11px;color:rgba(255,255,255,.38);font-variant-numeric:tabular-nums;">${escapeHtml(item.size)}</span>` : '<span style="flex:1;"></span>'}
-            <div class="m115-pl-actions" style="display:flex;align-items:center;gap:3px;opacity:0;pointer-events:none;transition:opacity .15s;">
-              <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+        <div class="m115-pl-info">
+          <div class="m115-pl-title" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+          <div class="m115-pl-meta-row">
+            ${item.size ? `<span class="m115-pl-size">${escapeHtml(item.size)}</span>` : '<span class="m115-pl-size-spacer"></span>'}
+            <div class="m115-pl-actions">
+              <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频">
                 ${Icons.Move()}
               </button>
-              <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+              <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频">
                 ${Icons.Trash()}
               </button>
             </div>
@@ -106,52 +106,27 @@ export function bindPlaylistInteractions(
 ) {
   listEl.querySelectorAll<HTMLElement>('.m115-pl-item').forEach((node) => {
     const pc = node.dataset.pickcode || ''
-    const item = items[parseInt(node.dataset.index || '-1', 10)]
-    const isActive = pc === currentPickCode
-    const actionsEl = node.querySelector<HTMLElement>('.m115-pl-actions')
 
-    node.addEventListener('mouseenter', () => {
-      node.style.background = isActive ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.06)'
-      if (actionsEl) {
-        actionsEl.style.opacity = '1'
-        actionsEl.style.pointerEvents = 'auto'
-      }
-    })
-    node.addEventListener('mouseleave', () => {
-      node.style.background = isActive ? 'rgba(255,255,255,.12)' : ''
-      if (actionsEl) {
-        actionsEl.style.opacity = '0'
-        actionsEl.style.pointerEvents = 'none'
-      }
-    })
     node.addEventListener('click', (event) => {
       const target = event.target as HTMLElement | null
       if (target?.closest('.m115-pl-action')) return
       if (pc) handlers.onPlay(pc, true)
     })
 
-    node.querySelectorAll<HTMLButtonElement>('.m115-pl-action').forEach((button) => {
-      button.addEventListener('mouseenter', () => {
-        button.style.background = 'rgba(255,255,255,.16)'
-        button.style.color = '#fff'
-      })
-      button.addEventListener('mouseleave', () => {
-        button.style.background = 'rgba(255,255,255,.08)'
-        button.style.color = 'rgba(255,255,255,.72)'
-      })
-      button.addEventListener('click', (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        if (!item) return
-        button.style.pointerEvents = 'none'
-        button.style.opacity = '.55'
-        const action = button.dataset.action
-        const work = action === 'move' ? handlers.onMove(item) : handlers.onDelete(item)
-        Promise.resolve(work).finally(() => {
-          button.style.pointerEvents = ''
-          button.style.opacity = ''
-        })
-      })
+    const moveBtn = node.querySelector<HTMLButtonElement>('[data-action="move"]')
+    moveBtn?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const idx = parseInt(node.dataset.index || '-1', 10)
+      const item = items[idx]
+      if (item) void handlers.onMove(item)
+    })
+
+    const deleteBtn = node.querySelector<HTMLButtonElement>('[data-action="delete"]')
+    deleteBtn?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const idx = parseInt(node.dataset.index || '-1', 10)
+      const item = items[idx]
+      if (item) void handlers.onDelete(item)
     })
   })
 }
