@@ -613,18 +613,18 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
-  const switchToggle = playlistAside.querySelector('.m115-pl-switch-toggle') as HTMLElement | null
-  const updateSwitchState = (el: HTMLElement, mode: PlaylistViewMode) => {
+  const viewToggleBtn = playlistAside.querySelector('.m115-pl-view-btn') as HTMLElement | null
+  const updateViewToggleState = (el: HTMLElement, mode: PlaylistViewMode) => {
     const isCard = mode === 'card'
-    el.classList.toggle('is-checked', isCard)
-    el.setAttribute('aria-checked', isCard ? 'true' : 'false')
+    el.classList.toggle('is-active', isCard)
+    el.setAttribute('aria-pressed', isCard ? 'true' : 'false')
   }
 
-  switchToggle?.addEventListener('click', (e) => {
+  viewToggleBtn?.addEventListener('click', (e) => {
     e.stopPropagation()
     const nextMode = togglePlaylistViewMode()
-    if (switchToggle) {
-      updateSwitchState(switchToggle, nextMode)
+    if (viewToggleBtn) {
+      updateViewToggleState(viewToggleBtn, nextMode)
     }
     renderEpisodes(lastPlaylist, lastPickCode)
   })

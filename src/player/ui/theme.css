@@ -1260,70 +1260,52 @@ video {
   white-space: nowrap;
 }
 
-/* 抽屉头部右侧工具区：Switch开关 + 关闭小钮，右对齐呼吸布局 */
+/* 抽屉头部右侧工具区：同族微型按钮对齐 */
 .m115-v2-drawer-tools {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* 极简扁条预览图开关 Switch */
-.m115-pl-switch-toggle {
-  position: relative;
-  display: inline-flex;
+/* 播放列表预览图开关小钮（与关闭按钮完全同族：28x28 超椭圆黑曜石玻璃） */
+.m115-pl-view-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  background: transparent;
   cursor: pointer;
-  user-select: none;
-  border-radius: 999px;
-  outline: none;
-}
-
-.m115-pl-switch-track {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0;
   box-sizing: border-box;
-  transition: background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.m115-pl-switch-toggle:hover .m115-pl-switch-track {
-  background: rgba(255, 255, 255, 0.24);
-  border-color: rgba(255, 255, 255, 0.22);
+.m115-pl-view-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
-.m115-pl-switch-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+.m115-pl-view-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
-/* 激活状态：极光蓝背景，滑块右移 */
-.m115-pl-switch-toggle.is-checked .m115-pl-switch-track {
-  background: var(--m115-engine-blue, #2563eb);
+/* 激活态（图文模式已开启）：低调内敛的极光微青蓝，绝不刺眼 */
+.m115-pl-view-btn.is-active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.28);
+  color: #38bdf8;
+}
+
+.m115-pl-view-btn.is-active:hover {
+  background: rgba(56, 189, 248, 0.2);
   border-color: rgba(56, 189, 248, 0.4);
-}
-
-.m115-pl-switch-toggle.is-checked:hover .m115-pl-switch-track {
-  background: #3b82f6;
-}
-
-.m115-pl-switch-toggle.is-checked .m115-pl-switch-thumb {
-  transform: translateX(16px);
+  color: #38bdf8;
 }
 
 /* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */

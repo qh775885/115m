@@ -50,10 +50,8 @@ export function renderPlaylistViewModeSwitch(currentMode: PlaylistViewMode): str
   const isChecked = currentMode === 'card'
   const title = '播放列表预览图开关'
   return `
-    <button type="button" class="m115-pl-switch-toggle ${isChecked ? 'is-checked' : ''}" role="switch" aria-checked="${isChecked}" title="${title}" aria-label="${title}">
-      <span class="m115-pl-switch-track">
-        <span class="m115-pl-switch-thumb"></span>
-      </span>
+    <button type="button" class="m115-v2-icon-action m115-pl-view-btn ${isChecked ? 'is-active' : ''}" title="${title}" aria-label="${title}" aria-pressed="${isChecked}">
+      ${Icons.Image()}
     </button>
   `
 }
