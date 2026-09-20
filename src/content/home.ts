@@ -4,7 +4,7 @@ import { openPlayer } from './core/player-open'
 import { injectActionButtons } from './core/action-buttons'
 import { addDownloadIntercept } from './core/download-intercept'
 
-import { renderPreview } from './core/preview'
+import { renderPreview, removePreview } from './core/preview'
 import { previewObserverRegistry } from './core/observer-registry'
 import { renderMediaWall } from './core/media-wall'
 import { initSidebar, injectSidebarPrehide } from './core/sidebar'
@@ -14,6 +14,7 @@ import { injectUnarchiveButton, setupUnarchiveActions } from './core/unarchive-a
 import { HomePlayBinder } from './core/home-play-binder'
 import { watchWangpanFrame } from './core/home-frame'
 import { HomeScrollBinder } from './core/home-scroll-binder'
+import { getSettings, subscribeSettings } from '../shared/settings'
 
 function isSearchDocument(doc: Document): boolean {
   if (doc.querySelector?.('.lstc-search')) return true
@@ -32,6 +33,7 @@ class HomeController {
   private playBinder = new HomePlayBinder((file, playlist) => openPlayer(file!, playlist))
   private scrollBinder = new HomeScrollBinder()
   private stopWatchFrame: (() => void) | null = null
+  private unsubscribeSettings: (() => void) | null = null
 
   init() {
     this.bindDocument(document)
@@ -40,13 +42,36 @@ class HomeController {
       doc => this.unbindDocument(doc),
     )
     globalThis.chrome?.runtime?.onMessage?.addListener(this.handleRuntimeMessage)
+    this.unsubscribeSettings = subscribeSettings((settings) => {
+      this.handleSettingsChange(settings.enableVideoPreview)
+    })
   }
 
   destroy() {
-    [...this.boundDocs].forEach(doc => this.unbindDocument(doc))
+    this.unsubscribeSettings?.()
+    this.unsubscribeSettings = null
+    ;[...this.boundDocs].forEach(doc => this.unbindDocument(doc))
     this.stopWatchFrame?.()
     this.stopWatchFrame = null
     globalThis.chrome?.runtime?.onMessage?.removeListener(this.handleRuntimeMessage)
+  }
+
+  private handleSettingsChange(enableVideoPreview: boolean) {
+    this.processedItemPickCodes = new WeakMap()
+    for (const doc of this.boundDocs) {
+      if (!enableVideoPreview) {
+        previewObserverRegistry.clearDocument(doc)
+        const items = doc.querySelectorAll<HTMLElement>('.with-ext-video-cover, .m115-cover-container')
+        items.forEach((el) => {
+          const item = el.classList.contains('with-ext-video-cover') ? el : (el.closest('.with-ext-video-cover') as HTMLElement | null)
+          if (item) removePreview(item)
+          else el.remove()
+        })
+      }
+      else {
+        this.scheduleScanAndRender(doc)
+      }
+    }
   }
 
   private handleRuntimeMessage = (message: any) => {
@@ -196,7 +221,12 @@ class HomeController {
 
     this.playBinder.bindItemPlay(item)
     injectActionButtons(item, file)
-    renderPreview(item, file)
+    if (getSettings().enableVideoPreview) {
+      renderPreview(item, file)
+    }
+    else {
+      removePreview(item)
+    }
   }
 }
 

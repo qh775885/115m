@@ -1,3 +1,6 @@
+import { getSettings, subscribeSettings } from '../../shared/settings'
+import { openSettingsModal } from '../ui/settings-modal'
+
 interface SidebarNavItem {
   id: string
   title: string
@@ -8,9 +11,7 @@ interface SidebarNavItem {
 }
 
 const SIDEBAR_ID = 'm115-sidebar-nav'
-const SIDEBAR_SETTINGS_ID = 'm115-sidebar-settings'
 const SIDEBAR_PREHIDE_ID = 'm115-sidebar-prehide'
-const SIDEBAR_STORAGE_KEY = 'm115_sidebar_enabled'
 const ICON_BASE = 'https://115.com/icons'
 const NAV_ITEMS: SidebarNavItem[] = [
   { id: 'wangpan', title: '网盘', icon: `${ICON_BASE}/storage_allcloudfiles.svg`, href: 'https://115.com/?cid=0&offset=0&mode=wangpan', defaultEnabled: true },
@@ -35,29 +36,6 @@ export function getSortedItems(items: SidebarNavItem[]): SidebarNavItem[] {
 
   specialItems.sort((a, b) => specialOrder.indexOf(a.id) - specialOrder.indexOf(b.id))
   return [...normalItems, ...specialItems]
-}
-
-function getEnabledIds(doc: Document): Set<string> {
-  try {
-    const raw = doc.defaultView?.localStorage?.getItem(SIDEBAR_STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as string[]
-      if (Array.isArray(parsed)) return new Set(parsed)
-    }
-  }
-  catch {
-    // ignore
-  }
-  return new Set(NAV_ITEMS.filter(item => item.defaultEnabled).map(item => item.id))
-}
-
-function saveEnabledIds(doc: Document, ids: Set<string>) {
-  try {
-    doc.defaultView?.localStorage?.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify([...ids]))
-  }
-  catch {
-    // ignore
-  }
 }
 
 export function injectSidebarPrehide(doc: Document) {
@@ -97,10 +75,6 @@ function updateSelection(doc: Document) {
   const tab = params.get('tab') || ''
   const current = doc.querySelector<HTMLElement>(tab ? `.m115-nav-item[data-nav="${tab}"]` : '.m115-nav-item[data-id="wangpan"]')
   current?.classList.add('current')
-}
-
-function closeSettings(doc: Document) {
-  doc.getElementById(SIDEBAR_SETTINGS_ID)?.remove()
 }
 
 function renderSidebar(doc: Document, enabledIds: Set<string>) {
@@ -155,100 +129,18 @@ function renderSidebar(doc: Document, enabledIds: Set<string>) {
   settingsBtn.type = 'button'
   settingsBtn.className = 'm115-nav-link m115-nav-settings-btn'
   settingsBtn.innerHTML = `<i class="m115-nav-icon" style="background-image:url('https://115.com/icons/life/life_settings.svg')"></i><span class="m115-nav-text">设置</span>`
-  settingsBtn.addEventListener('click', () => openSettings(doc, enabledIds))
+  settingsBtn.addEventListener('click', () => {
+    openSettingsModal(doc, {
+      activeTab: 'nav',
+      onSidebarChange: (nextIds) => {
+        renderSidebar(doc, nextIds)
+      },
+    })
+  })
   settingsLi.appendChild(settingsBtn)
   bottomList.appendChild(settingsLi)
 
   updateSelection(doc)
-}
-
-function openSettings(doc: Document, enabledIds: Set<string>) {
-  closeSettings(doc)
-
-  const overlay = doc.createElement('div')
-  overlay.id = SIDEBAR_SETTINGS_ID
-  overlay.className = 'm115-sidebar-settings-overlay'
-
-  const panel = doc.createElement('div')
-  panel.className = 'm115-sidebar-settings-panel'
-
-  const header = doc.createElement('div')
-  header.className = 'm115-sidebar-settings-header'
-  const title = doc.createElement('strong')
-  title.textContent = '115左侧栏设置'
-  const closeX = doc.createElement('button')
-  closeX.type = 'button'
-  closeX.className = 'm115-sidebar-settings-close'
-  closeX.textContent = '×'
-  closeX.addEventListener('click', () => closeSettings(doc))
-  header.appendChild(title)
-  header.appendChild(closeX)
-
-  const body = doc.createElement('div')
-  body.className = 'm115-sidebar-settings-body'
-
-  getSortedItems(NAV_ITEMS.filter(item => item.id !== 'wangpan')).forEach((item) => {
-    const row = doc.createElement('label')
-    row.className = 'm115-sidebar-settings-row'
-
-    const itemMain = doc.createElement('span')
-    itemMain.className = 'm115-sidebar-settings-item-main'
-
-    const itemIcon = doc.createElement('i')
-    itemIcon.className = 'm115-sidebar-settings-item-icon'
-    itemIcon.style.backgroundImage = `url("${item.icon}")`
-
-    const checkbox = doc.createElement('input')
-    checkbox.type = 'checkbox'
-    checkbox.checked = enabledIds.has(item.id)
-    checkbox.addEventListener('change', () => {
-      if (checkbox.checked) enabledIds.add(item.id)
-      else enabledIds.delete(item.id)
-      saveEnabledIds(doc, enabledIds)
-      renderSidebar(doc, enabledIds)
-    })
-
-    const text = doc.createElement('span')
-    text.textContent = item.title
-
-    itemMain.appendChild(itemIcon)
-    itemMain.appendChild(text)
-    row.appendChild(itemMain)
-    row.appendChild(checkbox)
-    body.appendChild(row)
-  })
-
-  const footer = doc.createElement('div')
-  footer.className = 'm115-sidebar-settings-footer'
-
-  const resetBtn = doc.createElement('button')
-  resetBtn.type = 'button'
-  resetBtn.textContent = '重置默认'
-  resetBtn.addEventListener('click', () => {
-    const next = new Set(NAV_ITEMS.filter(item => item.defaultEnabled).map(item => item.id))
-    enabledIds.clear()
-    next.forEach(id => enabledIds.add(id))
-    saveEnabledIds(doc, enabledIds)
-    renderSidebar(doc, enabledIds)
-    closeSettings(doc)
-  })
-
-  const closeBtn = doc.createElement('button')
-  closeBtn.type = 'button'
-  closeBtn.textContent = '关闭'
-  closeBtn.addEventListener('click', () => closeSettings(doc))
-
-  footer.appendChild(resetBtn)
-  footer.appendChild(closeBtn)
-
-  panel.appendChild(header)
-  panel.appendChild(body)
-  panel.appendChild(footer)
-  overlay.appendChild(panel)
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) closeSettings(doc)
-  })
-  doc.body.appendChild(overlay)
 }
 
 export function initSidebar(doc: Document) {
@@ -267,8 +159,13 @@ export function initSidebar(doc: Document) {
     (node.parentElement as HTMLElement | null)?.style.setProperty('display', 'none')
   })
 
-  const enabledIds = getEnabledIds(doc)
+  const settings = getSettings()
+  const enabledIds = new Set(settings.sidebarEnabledIds)
   renderSidebar(doc, enabledIds)
+
+  subscribeSettings((nextSettings) => {
+    renderSidebar(doc, new Set(nextSettings.sidebarEnabledIds))
+  })
 
   if (!doc.body.dataset.m115SidebarObserved) {
     doc.body.dataset.m115SidebarObserved = '1'

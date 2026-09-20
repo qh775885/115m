@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 describe('home search doc handling', () => {
   it('identifies search document via .lstc-search or search query', async () => {

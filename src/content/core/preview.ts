@@ -74,17 +74,24 @@ interface PreviewState {
 const previewStates = new WeakMap<HTMLElement, PreviewState>()
 
 /**
- * 渲染预览图（带可见性检测和滚动优化）
+ * 卸载并清理单个列表项的预览状态与 DOM
  */
-export function renderPreview(item: HTMLElement, file: FileInfo) {
-  // 115 列表复用同一 DOM 节点展示新文件：先销毁该节点旧预览的所有资源
-  // （可见性/滚动观察器、转码轮询与订阅、封面任务），防止残留监听继续发请求。
+export function removePreview(item: HTMLElement) {
   const existing = previewStates.get(item)
   if (existing && !existing.disposed) {
     existing.dispose?.()
   }
   item.querySelector('.m115-cover-container')?.remove()
   item.classList.remove('with-ext-video-cover')
+}
+
+/**
+ * 渲染预览图（带可见性检测和滚动优化）
+ */
+export function renderPreview(item: HTMLElement, file: FileInfo) {
+  // 115 列表复用同一 DOM 节点展示新文件：先销毁该节点旧预览的所有资源
+  // （可见性/滚动观察器、转码轮询与订阅、封面任务），防止残留监听继续发请求。
+  removePreview(item)
 
   const doc = item.ownerDocument
 
