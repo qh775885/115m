@@ -5,6 +5,7 @@ import {
 } from '../../shared/settings'
 
 export const SETTINGS_MODAL_ID = 'm115-settings-modal'
+export const EXTENSION_VERSION = globalThis.chrome?.runtime?.getManifest?.()?.version || '2.0.2'
 
 export interface SidebarNavOption {
   id: string
@@ -66,7 +67,7 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
 
   const badge = doc.createElement('span')
   badge.className = 'm115-settings-badge'
-  badge.textContent = 'v2.0.1'
+  badge.textContent = `v${EXTENSION_VERSION}`
 
   titleGroup.appendChild(title)
   titleGroup.appendChild(badge)
@@ -262,7 +263,7 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
     specs.className = 'm115-settings-about-specs'
 
     const specRows = [
-      { label: '当前版本', value: '2.0.1 (正式版)' },
+      { label: '当前版本', value: `${EXTENSION_VERSION} (正式版)` },
       { label: '核心流媒体底座', value: 'Vidstack v1.15.6' },
       { label: '高清大图底座', value: 'PhotoSwipe v5' },
       { label: '开源许可证', value: 'GPL-3.0 License' },
