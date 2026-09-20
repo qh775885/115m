@@ -19,8 +19,9 @@ import {
 } from './overlay-playlist'
 import {
   getPlaylistViewMode,
+  setPlaylistViewMode,
   togglePlaylistViewMode,
-  renderPlaylistViewModeToggleBtn,
+  renderPlaylistViewModeSwitch,
   type PlaylistViewMode,
 } from './playlist-view-mode'
 import { formatCompactTime } from './hover-utils'
@@ -584,13 +585,13 @@ export function mountCleanView(options: CleanViewOptions) {
   playlistAside.className = 'm115-v2-playlist-aside'
   playlistAside.innerHTML = `
     <div class="m115-v2-drawer-head">
-      <span class="m115-v2-drawer-heading">播放列表 (5)</span>
-      <div class="m115-v2-drawer-tools">
-        ${renderPlaylistViewModeToggleBtn(getPlaylistViewMode())}
-        <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
-          ${Icons.Close()}
-        </button>
+      <div class="m115-v2-drawer-head-left">
+        <span class="m115-v2-drawer-heading">播放列表 (5)</span>
+        ${renderPlaylistViewModeSwitch(getPlaylistViewMode())}
       </div>
+      <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
+        ${Icons.Close()}
+      </button>
     </div>
     <div class="m115-v2-drawer-body"></div>
   `
@@ -612,20 +613,31 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
-  const viewToggleBtn = playlistAside.querySelector('.m115-playlist-view-toggle') as HTMLElement | null
-  const updateToggleBtnState = (btn: HTMLElement, mode: PlaylistViewMode) => {
+  const pillSwitch = playlistAside.querySelector('.m115-pl-pill-switch') as HTMLElement | null
+  const updatePillSwitchState = (el: HTMLElement, mode: PlaylistViewMode) => {
     const isCard = mode === 'card'
-    btn.classList.toggle('active', isCard)
-    const title = isCard ? '切换为紧凑列表（隐藏预览图）' : '切换为图文列表（显示预览图）'
-    btn.title = title
-    btn.setAttribute('aria-label', title)
+    el.classList.toggle('is-card', isCard)
+    el.classList.toggle('is-compact', !isCard)
+    const cardBtn = el.querySelector<HTMLElement>('.opt-card')
+    const compactBtn = el.querySelector<HTMLElement>('.opt-compact')
+    cardBtn?.setAttribute('aria-selected', isCard ? 'true' : 'false')
+    compactBtn?.setAttribute('aria-selected', !isCard ? 'true' : 'false')
+    el.title = isCard ? '当前显示图文（点击切为紧凑）' : '当前显示紧凑（点击切为图文）'
   }
 
-  viewToggleBtn?.addEventListener('click', (e) => {
+  pillSwitch?.addEventListener('click', (e) => {
     e.stopPropagation()
-    const nextMode = togglePlaylistViewMode()
-    if (viewToggleBtn) {
-      updateToggleBtnState(viewToggleBtn, nextMode)
+    const target = (e.target as HTMLElement).closest<HTMLElement>('.m115-pl-pill-btn')
+    let nextMode: PlaylistViewMode
+    if (target?.dataset.mode === 'card' || target?.dataset.mode === 'compact') {
+      nextMode = target.dataset.mode
+      setPlaylistViewMode(nextMode)
+    }
+    else {
+      nextMode = togglePlaylistViewMode()
+    }
+    if (pillSwitch) {
+      updatePillSwitchState(pillSwitch, nextMode)
     }
     renderEpisodes(lastPlaylist, lastPickCode)
   })

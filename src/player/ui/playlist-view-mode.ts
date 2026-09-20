@@ -46,6 +46,18 @@ export function onPlaylistViewModeChange(callback: (mode: PlaylistViewMode) => v
   }
 }
 
+export function renderPlaylistViewModeSwitch(currentMode: PlaylistViewMode): string {
+  const isCard = currentMode === 'card'
+  const title = isCard ? '当前显示图文（点击切为紧凑）' : '当前显示紧凑（点击切为图文）'
+  return `
+    <div class="m115-pl-pill-switch ${isCard ? 'is-card' : 'is-compact'}" role="tablist" title="${title}" aria-label="切换列表模式">
+      <button type="button" class="m115-pl-pill-btn opt-card" data-mode="card" role="tab" aria-selected="${isCard}">图文</button>
+      <button type="button" class="m115-pl-pill-btn opt-compact" data-mode="compact" role="tab" aria-selected="${!isCard}">紧凑</button>
+      <div class="m115-pl-pill-slider" aria-hidden="true"></div>
+    </div>
+  `
+}
+
 export function renderPlaylistViewModeToggleBtn(currentMode: PlaylistViewMode): string {
   const isCard = currentMode === 'card'
   const title = isCard ? '切换为紧凑列表（隐藏预览图）' : '切换为图文列表（显示预览图）'

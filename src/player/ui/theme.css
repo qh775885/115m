@@ -1257,51 +1257,92 @@ video {
   font-weight: 600;
   color: #fff;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
-/* 抽屉头部右侧工具栏 */
-.m115-v2-drawer-tools {
+/* 抽屉头部左侧标题与视图切换区 */
+.m115-v2-drawer-head-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  min-width: 0;
 }
 
-/* 播放列表视图模式切换小钮（图文/紧凑切换） */
-.m115-playlist-view-toggle {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
+/* 播放列表视图模式扁条胶囊开关 (Pill Segment) */
+.m115-pl-pill-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 2px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-sizing: border-box;
+  user-select: none;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.m115-playlist-view-toggle:hover {
-  background: rgba(255, 255, 255, 0.16);
+.m115-pl-pill-switch:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.m115-pl-pill-btn {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+  transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.m115-pl-pill-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.m115-pl-pill-btn[aria-selected="true"] {
   color: #ffffff;
-  transform: scale(1.06);
+  font-weight: 600;
 }
 
-.m115-playlist-view-toggle.active {
-  background: rgba(56, 189, 248, 0.16);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
+/* 极光滑块：超轻薄玻璃高亮，平滑滑动过渡 */
+.m115-pl-pill-slider {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
 }
 
-.m115-playlist-view-toggle.active:hover {
-  background: rgba(56, 189, 248, 0.24);
-  color: #38bdf8;
+.m115-pl-pill-switch.is-card .m115-pl-pill-slider {
+  transform: translateX(0);
 }
 
-.m115-playlist-view-toggle svg {
-  width: 15px;
-  height: 15px;
+.m115-pl-pill-switch.is-compact .m115-pl-pill-slider {
+  transform: translateX(100%);
+}
+
+.m115-pl-pill-switch.is-card .opt-card {
+  color: #ffffff;
+}
+
+.m115-pl-pill-switch.is-compact .opt-compact {
+  color: #ffffff;
 }
 
 /* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */

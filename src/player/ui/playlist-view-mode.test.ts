@@ -6,6 +6,7 @@ import {
   togglePlaylistViewMode,
   onPlaylistViewModeChange,
   renderPlaylistViewModeToggleBtn,
+  renderPlaylistViewModeSwitch,
   PLAYLIST_VIEW_MODE_STORAGE_KEY,
 } from './playlist-view-mode'
 
@@ -57,5 +58,15 @@ describe('playlist-view-mode', () => {
     const compactBtnHtml = renderPlaylistViewModeToggleBtn('compact')
     expect(compactBtnHtml).not.toContain(' active')
     expect(compactBtnHtml).toContain('切换为图文列表')
+  })
+
+  it('正确渲染扁条胶囊分段开关 HTML', () => {
+    const cardSwitchHtml = renderPlaylistViewModeSwitch('card')
+    expect(cardSwitchHtml).toContain('m115-pl-pill-switch')
+    expect(cardSwitchHtml).toContain('is-card')
+    expect(cardSwitchHtml).toContain('aria-selected="true"')
+
+    const compactSwitchHtml = renderPlaylistViewModeSwitch('compact')
+    expect(compactSwitchHtml).toContain('is-compact')
   })
 })
