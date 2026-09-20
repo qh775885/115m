@@ -41,16 +41,18 @@ export function buildPlaylistHtml(
   return items.map((item, index) => {
     const active = item.pickCode === currentPickCode
     const num = index + 1
+    const durationText = item.duration && item.duration > 0 ? formatCompactTime(item.duration) : ''
 
     if (mode === 'compact') {
       return `
         <div class="m115-pl-item m115-pl-compact${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
-          style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
-          <span style="flex-shrink:0;width:22px;text-align:center;font-size:11px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.35)'}">${num}</span>
+          style="position:relative;display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
+          <span style="flex-shrink:0;width:24px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.45)'}">${num}</span>
           <div style="min-width:0;flex:1;overflow:hidden">
             <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
               ${item.size ? `<span style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0;">${escapeHtml(item.size)}</span>` : ''}
+              ${durationText ? `<span style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0;">${durationText}</span>` : ''}
               <div style="flex:1;min-width:0;">
                 ${renderPlaylistProgress(item, active)}
               </div>
@@ -70,21 +72,24 @@ export function buildPlaylistHtml(
 
     return `
       <div class="m115-pl-item${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
-        style="display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
-        <span style="flex-shrink:0;width:22px;text-align:center;font-size:11px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.35)'}">${num}</span>
-        <div class="m115-pl-thumb" style="position:relative;width:120px;height:68px;border-radius:6px;flex-shrink:0;background:#1a1a1a;overflow:hidden;display:flex;align-items:center;justify-content:center">
-          <span style="color:rgba(255,255,255,.15)">${Icons.Play()}</span>
+        style="position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:none;border-radius:10px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
+        <div class="m115-pl-thumb" style="position:relative;width:112px;height:62px;border-radius:8px;flex-shrink:0;background:#161618;overflow:hidden;display:flex;align-items:center;justify-content:center">
+          <span class="m115-pl-thumb-placeholder" style="color:rgba(255,255,255,.18);pointer-events:none;">${Icons.Play()}</span>
+          <span class="m115-pl-badge-num ${active ? 'is-active' : ''}">${num}</span>
+          ${durationText ? `<span class="m115-pl-badge-dur">${durationText}</span>` : ''}
         </div>
-        <div style="min-width:0;flex:1;overflow:hidden">
-          <div style="font-size:13px;font-weight:500;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.78)'}">${escapeHtml(item.name)}</div>
-          ${item.size ? `<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px">${escapeHtml(item.size)}</div>` : ''}
+        <div class="m115-pl-info" style="min-width:0;flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">
+          <div class="m115-pl-title" title="${escapeHtml(item.name)}" style="font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
+          <div class="m115-pl-meta" style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            ${item.size ? `<span class="m115-pl-size" style="font-size:11px;color:rgba(255,255,255,.38);font-variant-numeric:tabular-nums;">${escapeHtml(item.size)}</span>` : ''}
+          </div>
           ${renderPlaylistProgress(item, active)}
         </div>
-        <div class="m115-pl-actions" style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto;opacity:0;pointer-events:none;transition:opacity .15s;">
-          <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+        <div class="m115-pl-actions" style="position:absolute;top:6px;right:6px;display:flex;align-items:center;gap:4px;opacity:0;pointer-events:none;transition:opacity .15s;background:rgba(20,20,24,0.85);backdrop-filter:blur(8px);padding:3px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.4);">
+          <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
             ${Icons.Move()}
           </button>
-          <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+          <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
             ${Icons.Trash()}
           </button>
         </div>
@@ -207,7 +212,15 @@ export function lazyLoadPlaylistCovers(listEl: HTMLElement, items: OverlayPlayli
       .then((covers) => {
         state.loaded = true
         if (covers.length > 0 && state.thumbEl.isConnected) {
-          state.thumbEl.innerHTML = `<img src="${covers[0].imgUrl}" alt="" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block" />`
+          const placeholder = state.thumbEl.querySelector('.m115-pl-thumb-placeholder')
+          placeholder?.remove()
+          const existingImg = state.thumbEl.querySelector('img')
+          existingImg?.remove()
+          const img = document.createElement('img')
+          img.src = covers[0].imgUrl
+          img.alt = ''
+          img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;display:block;'
+          state.thumbEl.prepend(img)
         }
         observer.unobserve(state.thumbEl)
       })

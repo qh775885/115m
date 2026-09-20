@@ -1260,89 +1260,70 @@ video {
   white-space: nowrap;
 }
 
-/* 抽屉头部左侧标题与视图切换区 */
-.m115-v2-drawer-head-left {
+/* 抽屉头部右侧工具区：Switch开关 + 关闭小钮，右对齐呼吸布局 */
+.m115-v2-drawer-tools {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 12px;
 }
 
-/* 播放列表视图模式扁条胶囊开关 (Pill Segment) */
-.m115-pl-pill-switch {
+/* 极简扁条预览图开关 Switch */
+.m115-pl-switch-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 24px;
-  padding: 2px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-sizing: border-box;
-  user-select: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.m115-pl-pill-switch:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.m115-pl-pill-btn {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  padding: 0 8px;
+  justify-content: center;
+  width: 36px;
+  height: 20px;
+  padding: 0;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 20px;
   cursor: pointer;
-  transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
+  user-select: none;
+  border-radius: 999px;
+  outline: none;
 }
 
-.m115-pl-pill-btn:hover {
-  color: rgba(255, 255, 255, 0.85);
+.m115-pl-switch-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  transition: background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
 }
 
-.m115-pl-pill-btn[aria-selected="true"] {
-  color: #ffffff;
-  font-weight: 600;
+.m115-pl-switch-toggle:hover .m115-pl-switch-track {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* 极光滑块：超轻薄玻璃高亮，平滑滑动过渡 */
-.m115-pl-pill-slider {
+.m115-pl-switch-thumb {
   position: absolute;
   top: 2px;
-  bottom: 2px;
   left: 2px;
-  width: calc(50% - 2px);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1;
 }
 
-.m115-pl-pill-switch.is-card .m115-pl-pill-slider {
-  transform: translateX(0);
+/* 激活状态：极光蓝背景，滑块右移 */
+.m115-pl-switch-toggle.is-checked .m115-pl-switch-track {
+  background: var(--m115-engine-blue, #2563eb);
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
-.m115-pl-pill-switch.is-compact .m115-pl-pill-slider {
-  transform: translateX(100%);
+.m115-pl-switch-toggle.is-checked:hover .m115-pl-switch-track {
+  background: #3b82f6;
 }
 
-.m115-pl-pill-switch.is-card .opt-card {
-  color: #ffffff;
-}
-
-.m115-pl-pill-switch.is-compact .opt-compact {
-  color: #ffffff;
+.m115-pl-switch-toggle.is-checked .m115-pl-switch-thumb {
+  transform: translateX(16px);
 }
 
 /* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */
@@ -1410,8 +1391,10 @@ video {
 
 /* 复用旧版播放列表卡片（序号 + 缩略图 + 进度 + 移动/删除），按抽屉宽度与设计语言微调 */
 .m115-v2-drawer-body .m115-pl-item {
+  position: relative;
   border-radius: 10px !important;
-  gap: 8px !important;
+  gap: 10px !important;
+  padding: 8px !important;
 }
 
 /* 紧凑极简模式：去除缩略图框，行高减半，提升长列表信息密度 */
@@ -1426,12 +1409,58 @@ video {
 
 /* 缩略图框：固定高度，宽度按视频真实比例自适应（竖屏竖框 / 横屏横框），不裁剪也不留大黑边 */
 .m115-v2-drawer-body .m115-pl-thumb {
-  height: 58px !important;
-  width: auto !important;
-  min-width: 44px;
-  max-width: 112px;
+  position: relative !important;
+  height: 62px !important;
+  width: 110px !important;
+  min-width: 80px;
+  max-width: 116px;
   aspect-ratio: 16 / 9;
-  border-radius: 6px !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+  background: #151518 !important;
+}
+
+/* 缩略图序号悬浮角标 (左上角微型磨砂药丸) */
+.m115-pl-badge-num {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.68);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.m115-pl-badge-num.is-active {
+  background: var(--m115-engine-blue, #2563eb);
+  color: #ffffff;
+}
+
+/* 缩略图时长角标 (右下角) */
+.m115-pl-badge-dur {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  z-index: 2;
+  padding: 1px 4px;
+  font-size: 9px;
+  line-height: 12px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: none;
 }
 
 /* 缩略图完整显示不裁剪（竖屏/横屏都等比缩放） */
@@ -1443,6 +1472,35 @@ video {
 .m115-v2-drawer-body .m115-pl-actions {
   align-self: center;
   justify-content: center !important;
+}
+
+/* 卡片右上角悬浮操作按钮区 (移动/删除) */
+.m115-v2-drawer-body .m115-pl-item:not(.m115-pl-compact) .m115-pl-actions {
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  z-index: 3;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 3px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.16s ease, transform 0.16s ease !important;
+  transform: translateY(-2px);
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.m115-v2-drawer-body .m115-pl-item:not(.m115-pl-compact):hover .m115-pl-actions {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0);
 }
 
 .m115-v2-drawer-body .m115-pl-item.is-active {

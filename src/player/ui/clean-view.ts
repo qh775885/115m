@@ -585,13 +585,13 @@ export function mountCleanView(options: CleanViewOptions) {
   playlistAside.className = 'm115-v2-playlist-aside'
   playlistAside.innerHTML = `
     <div class="m115-v2-drawer-head">
-      <div class="m115-v2-drawer-head-left">
-        <span class="m115-v2-drawer-heading">播放列表 (5)</span>
+      <span class="m115-v2-drawer-heading">播放列表 (5)</span>
+      <div class="m115-v2-drawer-tools">
         ${renderPlaylistViewModeSwitch(getPlaylistViewMode())}
+        <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
+          ${Icons.Close()}
+        </button>
       </div>
-      <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
-        ${Icons.Close()}
-      </button>
     </div>
     <div class="m115-v2-drawer-body"></div>
   `
@@ -613,31 +613,18 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
-  const pillSwitch = playlistAside.querySelector('.m115-pl-pill-switch') as HTMLElement | null
-  const updatePillSwitchState = (el: HTMLElement, mode: PlaylistViewMode) => {
+  const switchToggle = playlistAside.querySelector('.m115-pl-switch-toggle') as HTMLElement | null
+  const updateSwitchState = (el: HTMLElement, mode: PlaylistViewMode) => {
     const isCard = mode === 'card'
-    el.classList.toggle('is-card', isCard)
-    el.classList.toggle('is-compact', !isCard)
-    const cardBtn = el.querySelector<HTMLElement>('.opt-card')
-    const compactBtn = el.querySelector<HTMLElement>('.opt-compact')
-    cardBtn?.setAttribute('aria-selected', isCard ? 'true' : 'false')
-    compactBtn?.setAttribute('aria-selected', !isCard ? 'true' : 'false')
-    el.title = isCard ? '当前显示图文（点击切为紧凑）' : '当前显示紧凑（点击切为图文）'
+    el.classList.toggle('is-checked', isCard)
+    el.setAttribute('aria-checked', isCard ? 'true' : 'false')
   }
 
-  pillSwitch?.addEventListener('click', (e) => {
+  switchToggle?.addEventListener('click', (e) => {
     e.stopPropagation()
-    const target = (e.target as HTMLElement).closest<HTMLElement>('.m115-pl-pill-btn')
-    let nextMode: PlaylistViewMode
-    if (target?.dataset.mode === 'card' || target?.dataset.mode === 'compact') {
-      nextMode = target.dataset.mode
-      setPlaylistViewMode(nextMode)
-    }
-    else {
-      nextMode = togglePlaylistViewMode()
-    }
-    if (pillSwitch) {
-      updatePillSwitchState(pillSwitch, nextMode)
+    const nextMode = togglePlaylistViewMode()
+    if (switchToggle) {
+      updateSwitchState(switchToggle, nextMode)
     }
     renderEpisodes(lastPlaylist, lastPickCode)
   })

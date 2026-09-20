@@ -60,13 +60,16 @@ describe('playlist-view-mode', () => {
     expect(compactBtnHtml).toContain('切换为图文列表')
   })
 
-  it('正确渲染扁条胶囊分段开关 HTML', () => {
+  it('正确渲染微型扁条 Switch 开关 HTML', () => {
     const cardSwitchHtml = renderPlaylistViewModeSwitch('card')
-    expect(cardSwitchHtml).toContain('m115-pl-pill-switch')
-    expect(cardSwitchHtml).toContain('is-card')
-    expect(cardSwitchHtml).toContain('aria-selected="true"')
+    expect(cardSwitchHtml).toContain('m115-pl-switch-toggle')
+    expect(cardSwitchHtml).toContain('is-checked')
+    expect(cardSwitchHtml).toContain('aria-checked="true"')
+    expect(cardSwitchHtml).toContain('播放列表预览图开关')
 
     const compactSwitchHtml = renderPlaylistViewModeSwitch('compact')
-    expect(compactSwitchHtml).toContain('is-compact')
+    expect(compactSwitchHtml).toContain('m115-pl-switch-toggle')
+    expect(compactSwitchHtml).not.toContain('is-checked')
+    expect(compactSwitchHtml).toContain('aria-checked="false"')
   })
 })
