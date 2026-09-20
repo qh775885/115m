@@ -7,7 +7,7 @@
 <h3 align="center">115 网盘现代流媒体播放器与全屏多媒体增强套件</h3>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v2.0.1-38bdf8?style=flat-square&logo=googlechrome&logoColor=white" alt="Version 2.0.1" />
+  <img src="https://img.shields.io/badge/Release-v2.0.2-38bdf8?style=flat-square&logo=googlechrome&logoColor=white" alt="Version 2.0.2" />
   <img src="https://img.shields.io/badge/Manifest-MV3-2563eb?style=flat-square" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/Engine-Vidstack_v1.15-0ea5e9?style=flat-square" alt="Engine Vidstack" />
   <img src="https://img.shields.io/badge/Viewer-PhotoSwipe_v5-8b5cf6?style=flat-square" alt="Viewer PhotoSwipe" />
@@ -70,6 +70,8 @@
 
 ### 3. 网盘列表与浏览增强（Media Wall & Pro Tools）
 
+- **搜索结果页全面接管**：网盘全局搜索页视频深度集成，支持多帧抽帧封面与进度悬停，点击直接呼出 115m 自研播放器。
+- **全局独立设置中心**：统一偏好配置架构，纯正 115 科技蓝白风格，提供「视频列表预览」即时启停与侧边栏深度定制。
 - **文件夹封面卡片**：列表页智能提取并渲染媒体封面，查找分类更一目了然。
 - **列表瀑布流图片聚合**：目录内图片聚合缩略图直观排布，支持框选与批量操作。
 - **VIP 转码快捷加速**：针对具有官方 VIP 权益的用户，在文件列表预览区提供一键批量提交转码加速，告别反复进入播放器。
@@ -111,7 +113,7 @@
 
 ### 推荐方式：下载预编译版本（适合普通用户）
 
-1. 前往本仓库的 **[Releases 页面](../../releases)** 下载最新版本的发布压缩包（如 `115m-v2.0.1.zip`）；
+1. 前往本仓库的 **[Releases 页面](../../releases)** 下载最新版本的发布压缩包（如 `115m-v2.0.2.zip`）；
 2. 解压至本地固定目录（请勿解压在临时目录，安装后需长期保留该文件夹）；
 3. 打开 Chrome 浏览器，访问：`chrome://extensions/`；
 4. 开启页面右上角的 **开发者模式** 开关；
