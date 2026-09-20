@@ -2,32 +2,13 @@ import { escapeHtml } from '../../shared/utils'
 import { Icons } from '../../shared/icons'
 import { getVideoCovers } from '../../lib/videoThumbnail'
 import { formatCompactTime } from './hover-utils'
+import { PlaylistCoverScheduler, TaskCancelledError } from './playlist-scheduler'
 import type { OverlayPlaylistItem } from '../types/overlay-types'
 
 const esc = escapeHtml
 const PLAYLIST_COVER_FEATURE_ENABLED = true
-const PLAYLIST_COVER_CONCURRENCY = 3
-let activePlaylistCoverTasks = 0
-const playlistCoverTaskQueue: Array<() => void> = []
-
-function runPlaylistCoverTask<T>(task: () => Promise<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const run = () => {
-      activePlaylistCoverTasks += 1
-      task().then(resolve, reject).finally(() => {
-        activePlaylistCoverTasks -= 1
-        playlistCoverTaskQueue.shift()?.()
-      })
-    }
-
-    if (activePlaylistCoverTasks < PLAYLIST_COVER_CONCURRENCY) {
-      run()
-      return
-    }
-
-    playlistCoverTaskQueue.push(run)
-  })
-}
+const PLAYLIST_COVER_CONCURRENCY = 2
+const SCROLL_STOP_DEBOUNCE_MS = 250
 
 export function renderPlaylistProgress(item: OverlayPlaylistItem, active: boolean) {
   const visible = !!item.progressPercent && item.progressPercent > 0
@@ -143,40 +124,138 @@ export function scrollActivePlaylistNodeIntoView(listEl: HTMLElement, currentPic
   activeNode?.scrollIntoView({ block: 'center', behavior: 'instant' })
 }
 
+interface ItemCoverState {
+  item: OverlayPlaylistItem
+  thumbEl: HTMLElement
+  visible: boolean
+  loaded: boolean
+  loading: boolean
+  cancel?: () => void
+}
+
 export function lazyLoadPlaylistCovers(listEl: HTMLElement, items: OverlayPlaylistItem[]) {
   if (!PLAYLIST_COVER_FEATURE_ENABLED) {
     return () => {}
   }
 
+  const scheduler = new PlaylistCoverScheduler(PLAYLIST_COVER_CONCURRENCY)
+  const states = new Map<string, ItemCoverState>()
   const thumbEls = listEl.querySelectorAll<HTMLElement>('.m115-pl-thumb')
-  const loadedSet = new Set<string>()
+
+  thumbEls.forEach((thumbEl) => {
+    const node = thumbEl.closest<HTMLElement>('.m115-pl-item')
+    const idx = parseInt(node?.dataset.index || '-1', 10)
+    const item = items[idx]
+    if (item) {
+      states.set(item.pickCode, {
+        item,
+        thumbEl,
+        visible: false,
+        loaded: false,
+        loading: false,
+      })
+    }
+  })
+
+  let isScrolling = false
+  let scrollStopTimer: number | null = null
+
+  const scheduleItemLoad = (state: ItemCoverState) => {
+    if (state.loaded || state.loading || (state.item.duration || 0) <= 0) return
+    state.loading = true
+
+    const { promise, cancel } = scheduler.add(() => getVideoCovers(state.item.pickCode, state.item.duration || 0, 1))
+    state.cancel = cancel
+
+    promise
+      .then((covers) => {
+        state.loaded = true
+        if (covers.length > 0 && state.thumbEl.isConnected) {
+          state.thumbEl.innerHTML = `<img src="${covers[0].imgUrl}" alt="" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block" />`
+        }
+        observer.unobserve(state.thumbEl)
+      })
+      .catch((err) => {
+        if (err instanceof TaskCancelledError) {
+          return
+        }
+        console.warn(`[115m] 播放列表封面抽帧失败 ${state.item.pickCode}:`, err)
+      })
+      .finally(() => {
+        state.loading = false
+        state.cancel = undefined
+      })
+  }
+
+  const scheduleVisibleItems = () => {
+    if (isScrolling) return
+    states.forEach((state) => {
+      if (state.visible && !state.loaded && !state.loading) {
+        scheduleItemLoad(state)
+      }
+    })
+  }
+
+  const onScroll = () => {
+    isScrolling = true
+    if (scrollStopTimer !== null) {
+      window.clearTimeout(scrollStopTimer)
+    }
+    scrollStopTimer = window.setTimeout(() => {
+      isScrolling = false
+      scrollStopTimer = null
+      scheduleVisibleItems()
+    }, SCROLL_STOP_DEBOUNCE_MS)
+  }
+
+  listEl.addEventListener('scroll', onScroll, { passive: true })
 
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
-      if (!entry.isIntersecting) continue
-      const node = entry.target.closest<HTMLElement>('.m115-pl-item')
+      const thumbEl = entry.target as HTMLElement
+      const node = thumbEl.closest<HTMLElement>('.m115-pl-item')
       const idx = parseInt(node?.dataset.index || '-1', 10)
       const item = items[idx]
-      if (!item || loadedSet.has(item.pickCode)) continue
-      loadedSet.add(item.pickCode)
-      observer.unobserve(entry.target)
+      if (!item) continue
 
-      const thumbEl = entry.target as HTMLElement
-      const duration = item.duration || 0
-      if (duration <= 0) return
+      const state = states.get(item.pickCode)
+      if (!state) continue
 
-      void runPlaylistCoverTask(() => getVideoCovers(item.pickCode, duration, 1)).then((covers) => {
-        if (covers.length > 0 && thumbEl.isConnected) {
-          thumbEl.innerHTML = `<img src="${covers[0].imgUrl}" alt="" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block" />`
+      if (entry.isIntersecting) {
+        state.visible = true
+        if (!isScrolling) {
+          scheduleItemLoad(state)
         }
-      }).catch((error) => {
-        console.warn(`[115m] 播放列表封面抽帧失败 ${item.pickCode}:`, error)
-      })
+      }
+      else {
+        state.visible = false
+        // 离开视口：未运行的任务立即撤销，释放排队槽位
+        if (state.cancel) {
+          state.cancel()
+          state.cancel = undefined
+          state.loading = false
+        }
+      }
     }
-  }, { root: listEl, rootMargin: '200px 0px' })
+  }, { root: listEl, rootMargin: '40px 0px' })
 
   thumbEls.forEach(el => observer.observe(el))
 
-  return () => observer.disconnect()
+  return () => {
+    if (scrollStopTimer !== null) {
+      window.clearTimeout(scrollStopTimer)
+      scrollStopTimer = null
+    }
+    listEl.removeEventListener('scroll', onScroll)
+    observer.disconnect()
+    scheduler.clear()
+    states.forEach((state) => {
+      if (state.cancel) {
+        state.cancel()
+        state.cancel = undefined
+      }
+    })
+    states.clear()
+  }
 }
 
