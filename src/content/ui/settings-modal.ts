@@ -60,10 +60,6 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
   const titleGroup = doc.createElement('div')
   titleGroup.className = 'm115-settings-title-group'
 
-  const titleIcon = doc.createElement('div')
-  titleIcon.className = 'm115-settings-title-icon'
-  titleIcon.textContent = 'M'
-
   const title = doc.createElement('span')
   title.className = 'm115-settings-title'
   title.textContent = '115m 扩展设置'
@@ -72,7 +68,6 @@ export function openSettingsModal(doc: Document, options?: SettingsModalOptions)
   badge.className = 'm115-settings-badge'
   badge.textContent = 'v2.0.1'
 
-  titleGroup.appendChild(titleIcon)
   titleGroup.appendChild(title)
   titleGroup.appendChild(badge)
 

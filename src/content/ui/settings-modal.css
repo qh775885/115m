@@ -53,21 +53,7 @@
 .m115-settings-title-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.m115-settings-title-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #2b85e4, #1d68b8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(43, 133, 228, 0.3);
+  gap: 8px;
 }
 
 .m115-settings-title {
