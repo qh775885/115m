@@ -1469,38 +1469,28 @@ video {
   object-position: center !important;
 }
 
-.m115-v2-drawer-body .m115-pl-actions {
-  align-self: center;
-  justify-content: center !important;
+/* 卡片元数据行（文件大小 + 右侧操作按钮）：绝不遮挡上方标题，充分利用横向空白 */
+.m115-pl-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 24px;
+  margin-top: 3px;
 }
 
-/* 卡片右上角悬浮操作按钮区 (移动/删除) */
-.m115-v2-drawer-body .m115-pl-item:not(.m115-pl-compact) .m115-pl-actions {
-  position: absolute !important;
-  top: 6px !important;
-  right: 6px !important;
-  z-index: 3;
+.m115-v2-drawer-body .m115-pl-actions {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 3px !important;
+  gap: 4px !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: opacity 0.16s ease, transform 0.16s ease !important;
-  transform: translateY(-2px);
-  background: rgba(18, 18, 22, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.16s ease !important;
 }
 
-.m115-v2-drawer-body .m115-pl-item:not(.m115-pl-compact):hover .m115-pl-actions {
+.m115-v2-drawer-body .m115-pl-item:hover .m115-pl-actions {
   opacity: 1 !important;
   pointer-events: auto !important;
-  transform: translateY(0);
 }
 
 .m115-v2-drawer-body .m115-pl-item.is-active {

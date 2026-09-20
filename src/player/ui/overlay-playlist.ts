@@ -80,18 +80,18 @@ export function buildPlaylistHtml(
         </div>
         <div class="m115-pl-info" style="min-width:0;flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">
           <div class="m115-pl-title" title="${escapeHtml(item.name)}" style="font-size:13px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
-          <div class="m115-pl-meta" style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            ${item.size ? `<span class="m115-pl-size" style="font-size:11px;color:rgba(255,255,255,.38);font-variant-numeric:tabular-nums;">${escapeHtml(item.size)}</span>` : ''}
+          <div class="m115-pl-meta-row" style="display:flex;align-items:center;justify-content:space-between;min-height:22px;margin-top:3px;">
+            ${item.size ? `<span class="m115-pl-size" style="font-size:11px;color:rgba(255,255,255,.38);font-variant-numeric:tabular-nums;">${escapeHtml(item.size)}</span>` : '<span style="flex:1;"></span>'}
+            <div class="m115-pl-actions" style="display:flex;align-items:center;gap:3px;opacity:0;pointer-events:none;transition:opacity .15s;">
+              <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+                ${Icons.Move()}
+              </button>
+              <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+                ${Icons.Trash()}
+              </button>
+            </div>
           </div>
           ${renderPlaylistProgress(item, active)}
-        </div>
-        <div class="m115-pl-actions" style="position:absolute;top:6px;right:6px;display:flex;align-items:center;gap:4px;opacity:0;pointer-events:none;transition:opacity .15s;background:rgba(20,20,24,0.85);backdrop-filter:blur(8px);padding:3px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.4);">
-          <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-            ${Icons.Move()}
-          </button>
-          <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
-            ${Icons.Trash()}
-          </button>
         </div>
       </div>
     `
