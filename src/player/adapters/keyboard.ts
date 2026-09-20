@@ -6,6 +6,7 @@
 export interface KeyboardHandlers {
   togglePlay: () => void
   seekBy: (delta: number) => void
+  seekToRatio: (ratio: number) => void
   volumeBy: (delta: number) => void
   toggleMute: () => void
   toggleFullscreen: () => void
@@ -24,6 +25,23 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export function bindKeyboard(handlers: KeyboardHandlers): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
     if (isTypingTarget(e.target)) return
+
+    // 数字键 0 - 9：跳转到视频 0% - 90% 对应进度（支持主键盘与数字小键盘，屏蔽组合修饰键）
+    if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+      let digit: number | null = null
+      const match = e.code.match(/^(?:Digit|Numpad)([0-9])$/)
+      if (match) {
+        digit = Number.parseInt(match[1], 10)
+      } else if (e.key >= '0' && e.key <= '9') {
+        digit = Number.parseInt(e.key, 10)
+      }
+
+      if (digit !== null) {
+        e.preventDefault()
+        handlers.seekToRatio(digit * 0.1)
+        return
+      }
+    }
 
     switch (e.key) {
       case ' ':
