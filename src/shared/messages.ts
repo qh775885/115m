@@ -120,6 +120,10 @@ export interface MsgOpenTab {
   url: string
 }
 
+export interface MsgCloseTab {
+  type: 'CLOSE_TAB'
+}
+
 export interface MsgFetchM3u8 {
   type: 'FETCH_M3U8'
   data: { pickCode: string }
@@ -207,6 +211,7 @@ export type RuntimeMessage =
   | MsgGetNativeHistoryMap
   | MsgSetNativeHistory
   | MsgOpenTab
+  | MsgCloseTab
   | MsgFetchM3u8
   | MsgFetchM3u8Text
   | MsgFetchSubtitles
@@ -228,6 +233,7 @@ export interface RuntimeMessageResponseMap {
   PING: { pong: true }
   SET_COOKIE: RuntimeSuccessResponse
   OPEN_TAB: OpenTabResponse
+  CLOSE_TAB: RuntimeSuccessResponse
   GET_NATIVE_HISTORY: NativePlayHistoryRecord | null
   GET_NATIVE_HISTORY_MAP: Record<string, NativePlayHistoryRecord>
   SET_NATIVE_HISTORY: { success: boolean }

@@ -21,6 +21,7 @@ import {
 import { getPlaylistPosition, getDeleteFallback } from '../stream/playlist-navigation'
 import { MoveDialog } from '../ui/move-dialog'
 import { buildNavigateToVideoUrl, readPathFromLocation } from '../services/player-query'
+import { exitPlayer } from '../services/exit'
 import type { QualityOption } from '../types/types'
 import type { SubtitleItem } from '../services/subtitles'
 
@@ -181,7 +182,7 @@ export class PlaybackSession {
         void this.switchTo(fallback.nextPickCode, { autoPlay: true, keepPlaylistOpen: true })
       }
       else {
-        window.history.back()
+        void exitPlayer({ cid: this.params.cid || this.content.get().cid })
       }
     }
   }

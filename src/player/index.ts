@@ -7,6 +7,7 @@ import { mountCleanView } from './ui/clean-view'
 import { PlayerCore } from './controller/player-core'
 import { PlaybackSession } from './controller/session'
 import { bindKeyboard } from './adapters/keyboard'
+import { exitPlayer } from './services/exit'
 
 let currentBlobUrl: string | null = null
 
@@ -101,7 +102,10 @@ export async function ignitePlayer() {
       core,
       content: session.content,
       subtitles: session.subtitles,
-      onBack: () => window.history.back(),
+      onBack: () => {
+        const currentCid = session.content.get().cid || params.get('cid') || ''
+        void exitPlayer({ cid: currentCid })
+      },
       onBreadcrumbClick: (item) => {
         const url = `https://115.com/?cid=${encodeURIComponent(item.cid)}&offset=0&tab=&mode=wangpan`
         window.open(url, '_blank', 'noopener')

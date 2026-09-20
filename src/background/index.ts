@@ -142,6 +142,14 @@ async function handleMessage(message: RuntimeMessage, sender?: chrome.runtime.Me
       return { success: true }
     }
 
+    case 'CLOSE_TAB': {
+      if (sender.tab?.id) {
+        await chrome.tabs.remove(sender.tab.id)
+        return { success: true }
+      }
+      return { success: false }
+    }
+
     case 'REQUEST_MOVE_REFRESH':
       return handleMoveSuccessRefresh(sender)
 
