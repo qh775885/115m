@@ -95,14 +95,15 @@ export class Scheduler {
 export function findScrollContainer(element: HTMLElement): HTMLElement | Window {
   let node: HTMLElement | null = element.parentElement
   while (node) {
-    const style = getComputedStyle(node)
+    const win = node.ownerDocument.defaultView
+    const style = win?.getComputedStyle ? win.getComputedStyle(node) : getComputedStyle(node)
     const overflowY = style.overflowY
     if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
       return node
     }
     node = node.parentElement
   }
-  return window
+  return element.ownerDocument.defaultView || window
 }
 
 /**
@@ -118,7 +119,8 @@ export function createVisibilityObserver(
   onHidden: () => void,
   options?: IntersectionObserverInit,
 ): { destroy: () => void } {
-  const observer = new IntersectionObserver(
+  const ObserverClass = element.ownerDocument.defaultView?.IntersectionObserver || IntersectionObserver
+  const observer = new ObserverClass(
     (entries) => {
       const entry = entries[0]
       if (entry?.isIntersecting) {

@@ -99,4 +99,41 @@ describe('watchWangpanFrame', () => {
 
     expect(onDetached).toHaveBeenCalledWith(firstDocument)
   })
+
+  it('supports search result frame (.wrap-view iframe) and detaches when removed', () => {
+    const wangpanDoc = { id: 'wangpan-doc' } as unknown as Document
+    const searchDoc = { id: 'search-doc' } as unknown as Document
+    const wangpanFrame = {
+      contentDocument: wangpanDoc,
+      addEventListener: vi.fn(),
+    } as unknown as HTMLIFrameElement
+    const searchFrame = {
+      contentDocument: searchDoc,
+      addEventListener: vi.fn(),
+    } as unknown as HTMLIFrameElement
+
+    let activeFrames = [wangpanFrame, searchFrame]
+
+    vi.stubGlobal('document', {
+      documentElement: {},
+      querySelectorAll: vi.fn(() => activeFrames),
+      contains: vi.fn((el: any) => activeFrames.includes(el)),
+    })
+    vi.stubGlobal('MutationObserver', TestMutationObserver)
+
+    const onReady = vi.fn()
+    const onDetached = vi.fn()
+    watchWangpanFrame(onReady, onDetached)
+
+    expect(onReady).toHaveBeenCalledWith(wangpanDoc)
+    expect(onReady).toHaveBeenCalledWith(searchDoc)
+
+    // 搜索页关闭，searchFrame 从 DOM 移除
+    activeFrames = [wangpanFrame]
+    const observer = TestMutationObserver.instances[0]
+    observer.callback([], observer as any)
+
+    expect(onDetached).toHaveBeenCalledWith(searchDoc)
+    expect(onDetached).not.toHaveBeenCalledWith(wangpanDoc)
+  })
 })

@@ -15,6 +15,13 @@ import { HomePlayBinder } from './core/home-play-binder'
 import { watchWangpanFrame } from './core/home-frame'
 import { HomeScrollBinder } from './core/home-scroll-binder'
 
+function isSearchDocument(doc: Document): boolean {
+  if (doc.querySelector?.('.lstc-search')) return true
+  const search = doc.location?.search || ''
+  const href = doc.location?.href || ''
+  return search.includes('ac=search') || href.includes('ac=search') || href.includes('mode=search')
+}
+
 class HomeController {
   private boundDocs = new Set<Document>()
   private processedItemPickCodes = new WeakMap<HTMLElement, string>()
@@ -50,9 +57,7 @@ class HomeController {
   private removeDeletedItem(fileId?: string, pickCode?: string) {
     if (!fileId && !pickCode) return
 
-    const docs = [document]
-    const frame = document.querySelector('iframe[name="wangpan"]') as HTMLIFrameElement | null
-    if (frame?.contentDocument) docs.push(frame.contentDocument)
+    const docs = this.boundDocs.size > 0 ? Array.from(this.boundDocs) : [document]
 
     for (const doc of docs) {
       const selectors: string[] = []
@@ -72,11 +77,14 @@ class HomeController {
     this.boundDocs.add(doc)
 
     injectSidebarPrehide(doc)
-    if (!this.unarchiveCleanups.has(doc)) {
-      this.unarchiveCleanups.set(doc, initUnarchiveHelper(doc))
-    }
-    if (!this.unarchiveActionCleanups.has(doc)) {
-      this.unarchiveActionCleanups.set(doc, setupUnarchiveActions(doc))
+    const isSearch = isSearchDocument(doc)
+    if (!isSearch) {
+      if (!this.unarchiveCleanups.has(doc)) {
+        this.unarchiveCleanups.set(doc, initUnarchiveHelper(doc))
+      }
+      if (!this.unarchiveActionCleanups.has(doc)) {
+        this.unarchiveActionCleanups.set(doc, setupUnarchiveActions(doc))
+      }
     }
     this.injectStyles(doc)
     this.scanAndRender(doc)
@@ -131,18 +139,21 @@ class HomeController {
       const list = doc.querySelector('.list-contents')
       if (!list) return
 
-      try {
-        renderMediaWall(doc)
-      }
-      catch (error) {
-        console.warn('[115m] media wall render failed:', error)
-      }
+      const isSearch = isSearchDocument(doc)
+      if (!isSearch) {
+        try {
+          renderMediaWall(doc)
+        }
+        catch (error) {
+          console.warn('[115m] media wall render failed:', error)
+        }
 
-      try {
-        setupUnarchiveActions(doc)
-      }
-      catch (error) {
-        console.warn('[115m] unarchive actions setup failed:', error)
+        try {
+          setupUnarchiveActions(doc)
+        }
+        catch (error) {
+          console.warn('[115m] unarchive actions setup failed:', error)
+        }
       }
 
       const items = list.querySelectorAll('li[pick_code],li[pickcode],div[pick_code],div[pickcode]')
