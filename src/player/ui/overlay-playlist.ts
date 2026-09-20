@@ -4,6 +4,7 @@ import { getVideoCovers } from '../../lib/videoThumbnail'
 import { formatCompactTime } from './hover-utils'
 import { PlaylistCoverScheduler, TaskCancelledError } from './playlist-scheduler'
 import type { OverlayPlaylistItem } from '../types/overlay-types'
+import type { PlaylistViewMode } from './playlist-view-mode'
 
 const esc = escapeHtml
 const PLAYLIST_COVER_FEATURE_ENABLED = true
@@ -32,10 +33,41 @@ export interface PlaylistItemActionHandlers {
   onDelete: (item: OverlayPlaylistItem) => Promise<void> | void
 }
 
-export function buildPlaylistHtml(items: OverlayPlaylistItem[], currentPickCode: string) {
+export function buildPlaylistHtml(
+  items: OverlayPlaylistItem[],
+  currentPickCode: string,
+  mode: PlaylistViewMode = 'card',
+) {
   return items.map((item, index) => {
     const active = item.pickCode === currentPickCode
     const num = index + 1
+
+    if (mode === 'compact') {
+      return `
+        <div class="m115-pl-item m115-pl-compact${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
+          style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
+          <span style="flex-shrink:0;width:22px;text-align:center;font-size:11px;font-variant-numeric:tabular-nums;${active ? 'color:#38bdf8;font-weight:600' : 'color:rgba(255,255,255,.35)'}">${num}</span>
+          <div style="min-width:0;flex:1;overflow:hidden">
+            <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${active ? 'color:#fff' : 'color:rgba(255,255,255,.82)'}">${escapeHtml(item.name)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+              ${item.size ? `<span style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0;">${escapeHtml(item.size)}</span>` : ''}
+              <div style="flex:1;min-width:0;">
+                ${renderPlaylistProgress(item, active)}
+              </div>
+            </div>
+          </div>
+          <div class="m115-pl-actions" style="display:flex;align-items:center;gap:4px;flex:0 0 auto;opacity:0;pointer-events:none;transition:opacity .15s;">
+            <button type="button" class="m115-pl-action" data-action="move" title="移动视频" aria-label="移动视频" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+              ${Icons.Move()}
+            </button>
+            <button type="button" class="m115-pl-action" data-action="delete" title="删除视频" aria-label="删除视频" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);cursor:pointer;transition:background .15s,color .15s;">
+              ${Icons.Trash()}
+            </button>
+          </div>
+        </div>
+      `
+    }
+
     return `
       <div class="m115-pl-item${active ? ' is-active' : ''}" data-pickcode="${esc(item.pickCode)}" data-index="${index}" ${active ? 'aria-current="true"' : ''}
         style="display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;border:none;border-radius:8px;cursor:pointer;transition:background .15s;background:${active ? 'rgba(255,255,255,.12)' : 'transparent'};text-align:left;box-sizing:border-box;">
@@ -138,9 +170,13 @@ export function lazyLoadPlaylistCovers(listEl: HTMLElement, items: OverlayPlayli
     return () => {}
   }
 
+  const thumbEls = listEl.querySelectorAll<HTMLElement>('.m115-pl-thumb')
+  if (thumbEls.length === 0) {
+    return () => {}
+  }
+
   const scheduler = new PlaylistCoverScheduler(PLAYLIST_COVER_CONCURRENCY)
   const states = new Map<string, ItemCoverState>()
-  const thumbEls = listEl.querySelectorAll<HTMLElement>('.m115-pl-thumb')
 
   thumbEls.forEach((thumbEl) => {
     const node = thumbEl.closest<HTMLElement>('.m115-pl-item')

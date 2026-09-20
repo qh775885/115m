@@ -57,6 +57,23 @@ describe('overlay playlist helpers', () => {
     expect(html).toContain('data-action="delete"')
   })
 
+  it('紧凑模式下不渲染缩略图容器，且 lazyLoadPlaylistCovers 零开销直接退出', () => {
+    const html = buildPlaylistHtml([
+      { pickCode: 'pc1', fileId: '1', name: 'Test', size: '1 MB' },
+    ], 'pc1', 'compact')
+
+    expect(html).toContain('m115-pl-compact')
+    expect(html).not.toContain('m115-pl-thumb')
+
+    const listEl = document.createElement('div')
+    listEl.innerHTML = html
+    const cleanup = lazyLoadPlaylistCovers(listEl, [
+      { pickCode: 'pc1', fileId: '1', name: 'Test', size: '1 MB' },
+    ])
+    expect(observedElements.length).toBe(0)
+    cleanup()
+  })
+
   it('进入视口时发起封面抽帧并填充图片', async () => {
     mockGetVideoCovers.mockResolvedValue([{ imgUrl: 'https://test/img1.webp', time: 10 }])
 

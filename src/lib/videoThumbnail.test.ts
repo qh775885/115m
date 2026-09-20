@@ -66,6 +66,28 @@ describe('videoThumbnail 时间轴封顶', () => {
   it('getVideoCovers 无 m3u8 源时抛出 M3u8UnavailableError', async () => {
     await expect(getVideoCovers('pick-no-m3u8', 600, 5)).rejects.toThrow(/m3u8 not found/i)
   })
+
+  it('单图请求在未命中 default_1 时，能够跨 Scope 复用已有的 list-v3_5 缓存', async () => {
+    const listV3Key = `115m_covers_${CACHE_VERSION}_list-v3_pick-fallback_5`
+    const fiveCovers = makeCovers(5) // time: 0, 10, 20, 30, 40
+    let savedData: any = null
+
+    ;(globalThis as any).chrome.storage.local.get = async (key: string) => {
+      if (key === listV3Key) {
+        return { [listV3Key]: fiveCovers }
+      }
+      return {}
+    }
+    ;(globalThis as any).chrome.storage.local.set = async (obj: any) => {
+      savedData = obj
+    }
+
+    // 请求 1 张图，预期命中 list-v3 的中间帧并返回，且写回自身的 cacheKey
+    const results = await getVideoCovers('pick-fallback', 100, 1)
+    expect(results.length).toBe(1)
+    expect(results[0].imgUrl).toBe('https://example.com/thumb-4.png') // 接近 targetTime=50 的是 thumb-4 (time=40)
+    expect(savedData).toHaveProperty(`115m_covers_${CACHE_VERSION}_default_pick-fallback_1`)
+  })
 })
 
 describe('videoThumbnail 纯函数', () => {

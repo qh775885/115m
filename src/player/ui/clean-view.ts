@@ -17,6 +17,12 @@ import {
   lazyLoadPlaylistCovers,
   scrollActivePlaylistNodeIntoView,
 } from './overlay-playlist'
+import {
+  getPlaylistViewMode,
+  togglePlaylistViewMode,
+  renderPlaylistViewModeToggleBtn,
+  type PlaylistViewMode,
+} from './playlist-view-mode'
 import { formatCompactTime } from './hover-utils'
 import type { SubtitleController } from '../controller/subtitles'
 import { VideoStatsTracker } from '../adapters/video-stats'
@@ -579,9 +585,12 @@ export function mountCleanView(options: CleanViewOptions) {
   playlistAside.innerHTML = `
     <div class="m115-v2-drawer-head">
       <span class="m115-v2-drawer-heading">播放列表 (5)</span>
-      <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
-        ${Icons.Close()}
-      </button>
+      <div class="m115-v2-drawer-tools">
+        ${renderPlaylistViewModeToggleBtn(getPlaylistViewMode())}
+        <button type="button" class="m115-v2-icon-action m115-drawer-close" style="width:28px;height:28px;" title="收起">
+          ${Icons.Close()}
+        </button>
+      </div>
     </div>
     <div class="m115-v2-drawer-body"></div>
   `
@@ -603,6 +612,24 @@ export function mountCleanView(options: CleanViewOptions) {
     togglePlaylist(false)
   })
 
+  const viewToggleBtn = playlistAside.querySelector('.m115-playlist-view-toggle') as HTMLElement | null
+  const updateToggleBtnState = (btn: HTMLElement, mode: PlaylistViewMode) => {
+    const isCard = mode === 'card'
+    btn.classList.toggle('active', isCard)
+    const title = isCard ? '切换为紧凑列表（隐藏预览图）' : '切换为图文列表（显示预览图）'
+    btn.title = title
+    btn.setAttribute('aria-label', title)
+  }
+
+  viewToggleBtn?.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const nextMode = togglePlaylistViewMode()
+    if (viewToggleBtn) {
+      updateToggleBtnState(viewToggleBtn, nextMode)
+    }
+    renderEpisodes(lastPlaylist, lastPickCode)
+  })
+
   // 按 Escape 快捷键亦可一键收回面板、弹窗与侧边栏
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -616,6 +643,8 @@ export function mountCleanView(options: CleanViewOptions) {
   const drawerHeading = playlistAside.querySelector('.m115-v2-drawer-heading') as HTMLElement
   const drawerBody = playlistAside.querySelector('.m115-v2-drawer-body') as HTMLElement
 
+  let lastPlaylist: OverlayPlaylistItem[] = []
+  let lastPickCode = ''
   let disposePlaylistCovers: (() => void) | null = null
   let thumbAspectObserver: MutationObserver | null = null
 
@@ -645,16 +674,22 @@ export function mountCleanView(options: CleanViewOptions) {
   }
 
   const renderEpisodes = (items: OverlayPlaylistItem[], curPickCode: string) => {
+    lastPlaylist = items
+    lastPickCode = curPickCode
     disposePlaylistCovers?.()
     disposePlaylistCovers = null
 
-    drawerBody.innerHTML = buildPlaylistHtml(items, curPickCode)
+    const mode = getPlaylistViewMode()
+    drawerBody.classList.toggle('compact', mode === 'compact')
+    drawerBody.innerHTML = buildPlaylistHtml(items, curPickCode, mode)
     bindPlaylistInteractions(drawerBody, curPickCode, items, {
       onPlay: (pickCode) => options.onSelectEpisode?.(pickCode),
       onMove: (item) => options.onMoveEpisode?.(item.pickCode),
       onDelete: (item) => options.onDeleteEpisode?.(item.pickCode),
     })
-    disposePlaylistCovers = lazyLoadPlaylistCovers(drawerBody, items)
+    if (mode === 'card') {
+      disposePlaylistCovers = lazyLoadPlaylistCovers(drawerBody, items)
+    }
     scrollActivePlaylistNodeIntoView(drawerBody, curPickCode)
   }
 

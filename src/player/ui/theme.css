@@ -1259,6 +1259,51 @@ video {
   letter-spacing: 0.3px;
 }
 
+/* 抽屉头部右侧工具栏 */
+.m115-v2-drawer-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 播放列表视图模式切换小钮（图文/紧凑切换） */
+.m115-playlist-view-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m115-playlist-view-toggle:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: scale(1.06);
+}
+
+.m115-playlist-view-toggle.active {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.m115-playlist-view-toggle.active:hover {
+  background: rgba(56, 189, 248, 0.24);
+  color: #38bdf8;
+}
+
+.m115-playlist-view-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
 /* 右上角关闭小钮 (超椭圆圆角，与全局控件同族) */
 .m115-drawer-close {
   width: 28px;
@@ -1326,6 +1371,16 @@ video {
 .m115-v2-drawer-body .m115-pl-item {
   border-radius: 10px !important;
   gap: 8px !important;
+}
+
+/* 紧凑极简模式：去除缩略图框，行高减半，提升长列表信息密度 */
+.m115-v2-drawer-body.compact {
+  gap: 4px;
+}
+
+.m115-v2-drawer-body.compact .m115-pl-item {
+  padding: 8px 10px !important;
+  min-height: 44px;
 }
 
 /* 缩略图框：固定高度，宽度按视频真实比例自适应（竖屏竖框 / 横屏横框），不裁剪也不留大黑边 */

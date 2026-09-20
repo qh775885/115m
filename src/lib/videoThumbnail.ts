@@ -466,6 +466,51 @@ async function readTimelineCovers(pickCode: string): Promise<VideoThumbnail[]> {
   return []
 }
 
+async function readFallbackCovers(
+  pickCode: string,
+  duration: number,
+  coverNum: number,
+  storageArea: ChromeStorageArea | null,
+): Promise<VideoThumbnail[]> {
+  if (!storageArea) {
+    return []
+  }
+
+  const fallbackKeys = [
+    getBatchCacheKey(pickCode, 5, 'list-v3'),
+    getBatchCacheKey(pickCode, 5, 'default'),
+  ]
+
+  for (const key of fallbackKeys) {
+    const inMem = normalizeCachedCovers(memoryCoverCache.get(key))
+    if (inMem.length > 0) {
+      const selected = selectCoverSet(inMem, duration, coverNum)
+      if (selected.length >= coverNum) {
+        return selected
+      }
+    }
+
+    try {
+      const cached = await storageArea.get(key)
+      const hit = normalizeCachedCovers(cached[key] as VideoThumbnail[] | undefined)
+      if (hit.length > 0) {
+        memoryCoverCache.set(key, hit)
+        const selected = selectCoverSet(hit, duration, coverNum)
+        if (selected.length >= coverNum) {
+          return selected
+        }
+      }
+    }
+    catch (error) {
+      if (isContextInvalidated(error)) {
+        return []
+      }
+    }
+  }
+
+  return []
+}
+
 export function coversSignature(covers: VideoThumbnail[]): string {
   return covers.map(cover => `${cover.time}:${cover.imgUrl.length}:${cover.imgUrl}`).join('|')
 }
@@ -585,6 +630,16 @@ export async function getVideoCovers(pickCode: string, duration: number, coverNu
       return inMemory
     }
     console.warn('[115m] 读取缓存失败:', error)
+  }
+
+  // 跨 Scope 降级查找：若已有 list-v3(5帧) 或 default(5帧) 缓存，直接复用以节省抽帧
+  const fallbackCovers = await readFallbackCovers(pickCode, duration, coverNum, storageArea)
+  if (fallbackCovers.length >= coverNum) {
+    memoryCoverCache.set(cacheKey, fallbackCovers)
+    if (storageArea) {
+      void storageArea.set({ [cacheKey]: fallbackCovers }).catch(() => {})
+    }
+    return fallbackCovers
   }
 
   const clipper = await openClipper(pickCode)
